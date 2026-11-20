@@ -1,0 +1,17 @@
+# A field taken, grown and stored back; a record emptied by `own`.
+record Row:
+    items: int[]
+    name: str
+
+
+func grow(own r: Row) -> Row:
+    mut rows = own r
+    append(mut rows.items, 3)
+    return rows
+
+
+func main(out: Stream) -> int:
+    const r = Row(items=[1, 2], name="x")
+    const g = grow(own r)
+    print(out, len(g.items), g.name)
+    return 0

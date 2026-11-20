@@ -1,0 +1,75 @@
+# A wide record carries independently owned text, bytes and nested lists.
+record Row:
+    rank: int
+    ordinal: int
+    label: str
+    payload: bytes
+    children: int[][]
+
+
+func rows() -> Row[]:
+    mut result: Row[] = []
+    for i in range(97):
+        append(mut result, Row(rank=(i * 13) % 7, ordinal=i, label=str((i * 13) % 7), payload=b"owned", children=[[i], [i + 100]]))
+    return result
+
+
+func by_rank(row: Row) -> int:
+    return row.rank
+
+
+func by_label(row: Row) -> str:
+    return copy(row.label)
+
+
+record RankLabelKey:
+    rank: int
+    label: str
+
+
+func by_rank_label(row: Row) -> RankLabelKey:
+    return RankLabelKey(rank=row.rank, label=copy(row.label))
+
+
+func by_float_rank(row: Row) -> float:
+    return float(row.rank)
+
+
+func valid(values: Row[], reverse: bool) -> bool:
+    mut i = 0
+    for row in values:
+        if row.label != str(row.rank) or row.payload != b"owned" or row.children != [[row.ordinal], [row.ordinal + 100]]:
+            return False
+        if i > 0:
+            if values[i - 1].rank == row.rank and values[i - 1].ordinal > row.ordinal:
+                return False
+            if reverse and values[i - 1].rank < row.rank:
+                return False
+            if not reverse and values[i - 1].rank > row.rank:
+                return False
+        i += 1
+    return True
+
+
+func main(out: Stream) -> int:
+    mut original = rows()
+    mut numeric = sorted(original, key=by_rank)
+    assert valid(numeric, False)
+    # A separately owned output cannot change the source's nested children.
+    append(mut numeric[0].children[0], 999)
+    assert len(original[0].children[0]) == 1
+    sort(mut original, key=by_rank, reverse=True)
+    assert valid(original, True)
+    sort(mut original, key=by_label)
+    assert valid(original, False)
+    sort(mut original, key=by_rank_label, reverse=True)
+    assert valid(original, True)
+    sort(mut original, key=by_float_rank)
+    assert valid(original, False)
+    mut empty: Row[] = []
+    sort(mut empty, key=by_rank)
+    mut singleton = [Row(rank=0, ordinal=0, label="0", payload=b"owned", children=[[0], [100]])]
+    sort(mut singleton, key=by_rank, reverse=True)
+    assert valid(singleton, True)
+    print(out, "owned keyed sorting preserved children and stability")
+    return 0

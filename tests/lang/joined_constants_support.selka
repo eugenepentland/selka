@@ -1,0 +1,15 @@
+# Constants that joined_constants.selka joins through an import (F-54).
+public const ORDER: str = "parse,check,build"
+
+
+public const PREFIX: bytes = b"MY"
+
+
+# An imported constant may itself be joined from this module's constants.
+public const STAMP: str = "v" + MAJOR + "." + MINOR
+
+
+const MAJOR: str = "1"
+
+
+const MINOR: str = "2"

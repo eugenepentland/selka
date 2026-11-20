@@ -1,0 +1,15 @@
+import buffers
+
+# spec-case: NEW-CORE-BUFFER-S4-1
+public func test_numeric_buffer_spelling_and_snapshots() -> bool:
+    mut buffer = byte_buffer([])
+    mut saved = copy(buffer)
+    buffers.append_int(mut buffer, -9223372036854775808)
+    buffers.append_int(mut buffer, 9223372036854775807)
+    buffers.append_float(mut buffer, -0.0)
+    buffers.append_float(mut buffer, 1.5)
+    return bytes(saved) == b"" and bytes(buffer) == b"-92233720368547758089223372036854775807-0.01.5"
+
+
+func main() -> int:
+    return 0

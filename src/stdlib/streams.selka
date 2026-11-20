@@ -1,0 +1,15 @@
+# A capturing stream for tests: what is printed to it is kept, and `text` reads it back. It needs no grant and writes
+# nothing to the process's output.
+public func memory() -> Stream:
+    return __stream_memory(0)
+
+
+# The text printed to a capturing stream so far, as one string.
+public func text(stream: Stream) -> str:
+    return __stream_text(stream)
+
+
+# An in-memory input for tests and for code that reads an `Input` it was handed: `read`, `read_exact` and `read_line`
+# answer the octets of `data` in order, then the end of the input. It needs no grant and reads nothing from the process.
+public func input_from(data: bytes) -> Input:
+    return __stand_in[Input](data)

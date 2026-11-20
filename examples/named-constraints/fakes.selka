@@ -1,0 +1,11 @@
+public record FixedPrices:
+    value: int
+
+
+public func make(amount: int) -> FixedPrices:
+    return FixedPrices(value=amount)
+
+
+public func price(policy: FixedPrices, subtotal: int) -> int:
+    _ = subtotal
+    return policy.value

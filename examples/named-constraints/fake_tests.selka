@@ -1,0 +1,10 @@
+import checkout
+import fakes
+
+func main() -> int:
+    assert test_checkout()
+    return 0
+
+
+public func test_checkout() -> bool:
+    return checkout.total(fakes.make(1750), 2000, domain_op_P_price=fakes.price) == 2250

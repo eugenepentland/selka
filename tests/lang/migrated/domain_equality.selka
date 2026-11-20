@@ -1,0 +1,8 @@
+import domain_equality_case_1 as c1
+
+public func test_domain_equality_participates_in_generic_equa() -> bool:
+    return c1.program() == 1
+
+
+func main() -> int:
+    return 0

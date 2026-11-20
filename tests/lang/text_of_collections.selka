@@ -1,0 +1,295 @@
+import sets
+import streams
+import text_of_collections_support as support
+
+# `str(x)` and `repr(x)` of a list, a set, a dictionary or an option (F-38, D-F38-1, docs/text.md#the-text-of-a-collection):
+# the text is the text `print` writes, so every test here writes a value to a capturing stream with `print` and compares
+# that line with `str(x)` as well as pinning the text itself. `str`, `repr`, a format string's hole and `print` all go
+# through one renderer, so a pin that holds for `print` holds for the three others.
+record Point:
+    x: int
+    y: int
+
+
+record Basket:
+    label: str
+    items: int[]
+    note: str?
+
+
+enum Kind:
+    alpha
+    beta
+
+
+enum Shape:
+    circle(value: int)
+    dot
+
+
+# The one line `print` writes for `values`, with its line end removed.
+func line_of_print(capture: Stream) -> str:
+    const written = streams.text(capture)
+    return copy(written[0:len(written) - 1])
+
+
+# A text with the characters that need an escape or a quote choice, and one that is not ASCII.
+func awkward() -> str[]:
+    return ["a", "it's", 'say "hi"', "x\ny", "tab\t", "é", "日本"]
+
+
+public func test_str_of_a_list_of_numbers_is_the_line_print_writes() -> bool:
+    const order = [3, 1, 2]
+    const ratios = [1.5, 2.0, -0.5]
+    const flags = [True, False]
+    const bytes_small: u8[] = [1, 255]
+    const capture = streams.memory()
+    print(capture, order, ratios, flags, bytes_small)
+    const same = line_of_print(capture) == str(order) + " " + str(ratios) + " " + str(flags) + " " + str(bytes_small)
+    return same and str(order) == "[3, 1, 2]" and str(ratios) == "[1.5, 2.0, -0.5]" and str(flags) == "[True, False]" and str(bytes_small) == "[1, 255]"
+
+
+public func test_str_of_an_empty_collection_is_the_line_print_writes() -> bool:
+    const nothing: int[] = []
+    const none_found: str[] = []
+    const seen: set[int] = set()
+    const table: dict[str, int] = {}
+    const capture = streams.memory()
+    print(capture, nothing, none_found, seen, table)
+    const same = line_of_print(capture) == str(nothing) + " " + str(none_found) + " " + str(seen) + " " + str(table)
+    return same and str(nothing) == "[]" and str(seen) == "set()" and str(table) == "{}" and repr(seen) == "set()"
+
+
+public func test_text_elements_are_quoted_and_escaped_as_print_shows_them() -> bool:
+    const words = awkward()
+    const capture = streams.memory()
+    print(capture, words)
+    const shown = "['a', \"it's\", 'say \"hi\"', 'x\\ny', 'tab\\t', 'é', '日本']"
+    return line_of_print(capture) == str(words) and str(words) == shown and repr(words) == shown
+
+
+public func test_bytes_elements_keep_their_byte_spelling() -> bool:
+    const blobs = [b"ab", b"\x00\xff", b""]
+    const capture = streams.memory()
+    print(capture, blobs)
+    return line_of_print(capture) == str(blobs) and str(blobs) == "[b'ab', b'\\x00\\xff', b'']"
+
+
+public func test_a_nested_list_three_deep_is_the_line_print_writes() -> bool:
+    const deep = [[[1], [2, 3]], [[]]]
+    const rows = [["a"], [], ["b", "c"]]
+    const capture = streams.memory()
+    print(capture, deep, rows)
+    const same = line_of_print(capture) == str(deep) + " " + str(rows)
+    return same and str(deep) == "[[[1], [2, 3]], [[]]]" and str(rows) == "[['a'], [], ['b', 'c']]"
+
+
+# A set shows its elements in the order they were first added; it is not sorted and no address or hash decides it.
+public func test_a_set_is_shown_in_insertion_order() -> bool:
+    mut seen: set[int] = set()
+    sets.include(mut seen, 5)
+    sets.include(mut seen, 1)
+    sets.include(mut seen, 3)
+    sets.include(mut seen, 1)
+    const capture = streams.memory()
+    print(capture, seen)
+    mut other: set[int] = set()
+    sets.include(mut other, 1)
+    sets.include(mut other, 3)
+    sets.include(mut other, 5)
+    return line_of_print(capture) == str(seen) and str(seen) == "{5, 1, 3}" and str(other) == "{1, 3, 5}" and seen == other
+
+
+public func test_a_removed_and_added_again_set_element_moves_to_the_end() -> bool:
+    mut seen: set[str] = set()
+    sets.include(mut seen, "a")
+    sets.include(mut seen, "b")
+    sets.include(mut seen, "c")
+    sets.discard(mut seen, "a")
+    sets.include(mut seen, "a")
+    return str(seen) == "{'b', 'c', 'a'}" and repr(seen) == str(seen)
+
+
+# Growth past the small table, removals and a re-insertion keep the order of first insertion, and the text follows it.
+public func test_a_large_set_keeps_insertion_order_through_removals() -> bool:
+    mut seen: set[int] = set()
+    mut expected: int[] = []
+    for i in range(300):
+        sets.include(mut seen, (i * 13) % 301)
+        append(mut expected, (i * 13) % 301)
+    mut kept: int[] = []
+    for value in expected:
+        if value % 3 == 0:
+            sets.discard(mut seen, value)
+        else:
+            append(mut kept, value)
+    sets.include(mut seen, 0)
+    append(mut kept, 0)
+    const shown = str(seen)
+    return shown == "{" + str(kept)[1:len(str(kept)) - 1] + "}" and len(seen) == len(kept)
+
+
+# A dictionary shows its entries in the order its keys were first assigned; assigning an existing key keeps its place.
+public func test_a_dictionary_is_shown_in_insertion_order() -> bool:
+    mut table: dict[str, int] = {}
+    table["b"] = 2
+    table["a"] = 1
+    table["b"] = 3
+    const capture = streams.memory()
+    print(capture, table)
+    return line_of_print(capture) == str(table) and str(table) == "{'b': 3, 'a': 1}"
+
+
+public func test_a_dictionary_with_list_values_and_number_keys() -> bool:
+    mut lists: dict[str, int[]] = {}
+    lists["x"] = [1, 2]
+    lists["y"] = []
+    mut squares: dict[int, int] = {}
+    squares[3] = 9
+    squares[1] = 1
+    const capture = streams.memory()
+    print(capture, lists, squares)
+    return line_of_print(capture) == str(lists) + " " + str(squares) and str(lists) == "{'x': [1, 2], 'y': []}" and str(squares) == "{3: 9, 1: 1}"
+
+
+public func test_str_of_an_option_is_the_line_print_writes() -> bool:
+    const found: int? = Some(3)
+    const missing: int? = None
+    const word: str? = Some("hi")
+    const inner: int[]? = Some([1, 2])
+    const both: int?[] = [Some(1), None]
+    const capture = streams.memory()
+    print(capture, found, missing, word, inner, both)
+    const same = line_of_print(capture) == str(found) + " " + str(missing) + " " + str(word) + " " + str(inner) + " " + str(both)
+    return same and str(found) == "Some(3)" and str(missing) == "None" and str(word) == "Some('hi')" and str(inner) == "Some([1, 2])" and str(both) == "[Some(1), None]"
+
+
+public func test_records_enums_and_fixed_arrays_inside_a_collection() -> bool:
+    const points = [Point(x=1, y=2)]
+    const kinds = [Kind.alpha, Kind.beta]
+    const shapes = [Shape.circle(value=3), Shape.dot]
+    const grid = [FixedArray[int, 2]([1, 2])]
+    const basket = [Basket(label="b", items=[1], note=Some("n"))]
+    const found: Point? = Some(Point(x=3, y=4))
+    const capture = streams.memory()
+    print(capture, points, kinds, shapes, grid, basket, found)
+    const same = line_of_print(capture) == str(points) + " " + str(kinds) + " " + str(shapes) + " " + str(grid) + " " + str(basket) + " " + str(found)
+    return same and str(points) == "[Point(x=1, y=2)]" and str(kinds) == "[Kind.alpha, Kind.beta]" and str(shapes) == "[Shape.circle(value=3), Shape.dot]" and str(grid) == "[[1, 2]]" and str(basket) == "[Basket(label='b', items=[1], note=Some('n'))]" and str(found) == "Some(Point(x=3, y=4))"
+
+
+# For a text, a collection and an option, `repr` is `str`: print already quotes a text inside a collection.
+public func test_repr_of_a_collection_is_its_str() -> bool:
+    const words = ["a", "b"]
+    mut table: dict[str, int] = {}
+    table["k"] = 1
+    const found: str? = Some("v")
+    const capture = streams.memory()
+    print(capture, words, table, found)
+    return line_of_print(capture) == repr(words) + " " + repr(table) + " " + repr(found) and repr(words) == "['a', 'b']" and repr(found) == "Some('v')" and repr(words) == str(words)
+
+
+public func test_a_format_string_hole_takes_the_same_text() -> bool:
+    const order = [3, 1, 2]
+    const found: int? = Some(7)
+    mut table: dict[str, int] = {}
+    table["k"] = 1
+    return f"{order}" == str(order) and f"order {order}, {found}, {table}" == "order [3, 1, 2], Some(7), {'k': 1}" and f"{[Kind.beta]}" == str([Kind.beta])
+
+
+public func test_str_of_a_list_does_not_follow_later_changes() -> bool:
+    mut items = [1, 2]
+    const before = str(items)
+    append(mut items, 3)
+    return before == "[1, 2]" and str(items) == "[1, 2, 3]"
+
+
+func made() -> int[]:
+    return [7, 8]
+
+
+func owned_text(own items: int[]) -> str:
+    return str(items)
+
+
+func changed_text(mut items: int[]) -> str:
+    append(mut items, 9)
+    return str(items)
+
+
+func fails_text(items: int[], limit: int) -> str fails str:
+    if len(items) > limit:
+        fail "too long: " + str(items)
+    return str(items)
+
+
+# The value is borrowed where it is read, a fresh value is destroyed after the call, and a parameter in any mode is read.
+public func test_str_reads_a_borrowed_owned_and_fresh_list() -> bool:
+    mut loop_text = ""
+    for i in range(3):
+        loop_text += str([i, i + 1])
+    const basket = Basket(label="b", items=[4, 5], note=None)
+    mut changing = [1]
+    return str(made()) == "[7, 8]" and owned_text([5, 6]) == "[5, 6]" and changed_text(mut changing) == "[1, 9]" and str(changing) == "[1, 9]" and str(basket.items) == "[4, 5]" and str(basket.note) == "None" and loop_text == "[0, 1][1, 2][2, 3]"
+
+
+# The text a call to fails_text ends with, the success or the failure.
+func outcome(items: int[], limit: int) -> str:
+    match fails_text(items, limit):
+        case Ok(text):
+            return text
+        case Err(problem):
+            return problem
+
+
+public func test_str_in_a_fallible_function_and_a_match_arm() -> bool:
+    mut slot: int[]? = Some([1, 2])
+    mut shown = ""
+    match mut slot:
+        case Some(inner):
+            append(mut inner, 3)
+            shown = str(inner)
+        case None:
+            shown = "none"
+    return shown == "[1, 2, 3]" and outcome([1, 2, 3], 2) == "too long: [1, 2, 3]" and outcome([1], 2) == "[1]"
+
+
+public func test_str_of_a_list_a_module_receives() -> bool:
+    mut table: dict[str, int[]] = {}
+    table["a"] = [1]
+    return support.list_text([1, 2]) == "[1, 2]" and support.names_repr(["x"]) == "['x']" and support.table_text(table) == "{'a': [1]}" and support.found_text(Some([3])) == "Some([3])" and support.found_text(None) == "None"
+
+
+func show_list[T](items: T[]) -> str:
+    return str(items)
+
+
+func show_literal[T](value: T) -> str:
+    return str([1, 2]) + repr(["x"])
+
+
+public func test_str_of_a_list_in_a_generic_function() -> bool:
+    return show_list([1, 2]) == "[1, 2]" and show_list(["a"]) == "['a']" and show_literal(3) == "[1, 2]['x']" and show_list([Point(x=1, y=2)]) == "[Point(x=1, y=2)]"
+
+
+# The text of a long list is one linear pass: 99,999 separators, 488,890 digits and two brackets.
+public func test_str_of_a_long_list() -> bool:
+    mut big: int[] = []
+    for i in range(100000):
+        append(mut big, i)
+    const text = str(big)
+    const capture = streams.memory()
+    print(capture, big)
+    return len(text) == 688890 and text[0:9] == "[0, 1, 2," and text[len(text) - 15:len(text)] == ", 99998, 99999]" and len(streams.text(capture)) == len(text) + 1
+
+
+# 20,000 quoted names: 88,890 digits, 3 characters of quote and `n` each, 19,999 separators and two brackets.
+public func test_str_of_a_long_list_of_text_has_each_element_quoted() -> bool:
+    mut names: str[] = []
+    for i in range(20000):
+        append(mut names, f"n{i}")
+    const text = str(names)
+    return len(text) == 188890 and text[0:12] == "['n0', 'n1'," and text[len(text) - 11:len(text)] == ", 'n19999']"
+
+
+func main() -> int:
+    return 0

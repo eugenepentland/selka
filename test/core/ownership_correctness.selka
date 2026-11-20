@@ -1,0 +1,52 @@
+import lists
+
+record BorrowedField:
+    values: str[]
+
+
+func copied_index(rows: str[][]) -> str[]:
+    return copy(rows[0])
+
+
+func copied_field(owner: BorrowedField) -> str[]:
+    return copy(owner.values)
+
+
+func copied_callback(values: str[]) -> str[]:
+    return copy(values)
+
+
+# spec: OWNERSHIP-ADVERSARIAL-1
+public func test_borrowed_index_copy_survives_owner_replacement() -> bool:
+    mut rows = [["nested-" + str(7)], ["second-" + str(8)]]
+    mut saved = copied_index(rows)
+    lists.clear(mut rows)
+    append(mut saved, "new")
+    return saved == ["nested-7", "new"] and len(rows) == 0
+
+
+# spec-case: OWNERSHIP-ADVERSARIAL-1
+public func test_field_copy_survives_whole_owner_move() -> bool:
+    const owner = BorrowedField(values=["field-" + str(7)])
+    mut saved = copied_field(owner)
+    mut moved = own owner
+    lists.clear(mut moved.values)
+    append(mut saved, "new")
+    return saved == ["field-7", "new"] and len(moved.values) == 0
+
+
+# spec-case: OWNERSHIP-ADVERSARIAL-1
+public func test_callback_copy_outlives_source() -> bool:
+    const callback: func(str[]) -> str[] = copied_callback
+    mut source = ["callback-" + str(7)]
+    mut saved = callback(source)
+    lists.clear(mut source)
+    append(mut saved, "new")
+    return saved == ["callback-7", "new"] and len(source) == 0
+
+
+func main() -> int:
+    assert test_borrowed_index_copy_survives_owner_replacement()
+    assert test_field_copy_survives_whole_owner_move()
+    assert test_callback_copy_outlives_source()
+    return 0

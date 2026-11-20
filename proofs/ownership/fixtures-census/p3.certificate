@@ -1,0 +1,14 @@
+ownership-certificate-v2
+class call Call
+class record_get Project
+class list_new Fresh
+class drop Drop
+function emptied result scalar from - unchecked -
+callee 0 call runtime take scalar -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 call Call reads - consumes %0 state emptied parents - slots f1 from - callee 0
+inst %2 record_get Project reads %1 consumes - state owned parents - slot f1
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end

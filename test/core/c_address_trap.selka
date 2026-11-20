@@ -1,0 +1,16 @@
+# A call through a null handle traps R_FOREIGN_TARGET at the call, before any jump (MCU-NOC3, docs/c-ffi.md "Calls
+# through an address"). Built with `--link test/core/c_address.c`, whose `ffi_no_function` answers NULL.
+extern type Function
+
+
+extern func ffi_no_function(host: Host) -> Function
+
+
+@address
+extern func weigh_through(host: Host, target: Function, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64
+
+
+func main(host: Host, out: Stream) -> int:
+    print(out, "before")
+    print(out, weigh_through(host, ffi_no_function(host), 1, 2, 3, 4, 5, 6, 7, 8))
+    return 0

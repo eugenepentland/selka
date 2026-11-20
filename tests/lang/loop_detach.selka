@@ -1,0 +1,299 @@
+# `for x in detach place:` (LOOPDETACH): the loop sets a record's collection aside, so its body may change the record,
+# and puts the collection back at every exit. The refusals and the trap of a place written while set aside are in
+# `src/loop_detach_test.zig`.
+import parallel
+
+record Entry:
+    name: str
+    expr: int
+    kids: int[]
+
+
+record Env:
+    items: Entry[]
+    names: str[]
+    count: int = 0
+    seen: int = 0
+
+
+record Group:
+    items: Entry[]
+
+
+record Groups:
+    groups: Group[]
+    count: int = 0
+
+
+record Bag[T]:
+    values: T[]
+    count: int = 0
+
+
+func entry(name: str, expr: int) -> Entry:
+    return Entry(name=copy(name), expr=expr, kids=[expr, expr + 1])
+
+
+func make() -> Env:
+    return Env(items=[entry("a", 1), entry("b", 3), entry("c", 7)], names=["x", "y"])
+
+
+func resolve(expr: int, mut ev: Env):
+    ev.count += expr
+    ev.seen += len(ev.items)
+
+
+func check(n: int) -> int fails str:
+    if n > 5:
+        fail "too big"
+    return n
+
+
+func run_out(mut ev: Env):
+    for it in detach ev.items:
+        resolve(it.expr, mut ev)
+
+
+func stop_after(mut ev: Env, limit: int):
+    for it in detach ev.items:
+        if it.expr > limit:
+            break
+        resolve(it.expr, mut ev)
+
+
+func skip_three(mut ev: Env):
+    for it in detach ev.items:
+        if it.expr == 3:
+            continue
+        resolve(it.expr, mut ev)
+
+
+# The returned value is evaluated before the put-back, where the place is still empty.
+func length_inside(mut ev: Env, limit: int) -> int:
+    for it in detach ev.items:
+        resolve(it.expr, mut ev)
+        if it.expr > limit:
+            return len(ev.items) + 100
+    return -1
+
+
+func name_over(mut ev: Env, limit: int) -> str:
+    for it in detach ev.items:
+        resolve(it.expr, mut ev)
+        if it.expr > limit:
+            return copy(it.name)
+    return ""
+
+
+func checked(mut ev: Env) -> int fails str:
+    for it in detach ev.items:
+        const value = try check(it.expr)
+        resolve(value, mut ev)
+    return ev.count
+
+
+func failing(mut ev: Env) -> int fails str:
+    for it in detach ev.items:
+        if it.expr == 3:
+            fail "three"
+        resolve(it.expr, mut ev)
+    return ev.count
+
+
+func returned_try(mut ev: Env) -> int fails str:
+    for it in detach ev.items:
+        resolve(it.expr, mut ev)
+        if it.expr > 1:
+            const tripled = try check(it.expr * 3)
+            return tripled
+    return 0
+
+
+func nested_places(mut ev: Env) -> int:
+    for it in detach ev.items:
+        for name in detach ev.names:
+            resolve(it.expr, mut ev)
+            if name == "y" and it.expr == 3:
+                return len(ev.items) + len(ev.names)
+    return -1
+
+
+func kid_over(mut ev: Env, limit: int) -> int:
+    for it in detach ev.items:
+        for kid in it.kids:
+            resolve(kid, mut ev)
+            if kid > limit:
+                return kid
+    return -1
+
+
+func odd(n: int) -> int?:
+    if n % 2 == 1:
+        return Some(n)
+    return None
+
+
+func first_odd(mut ev: Env) -> int:
+    for it in detach ev.items:
+        resolve(it.expr, mut ev)
+        if odd(it.expr) is Some(value):
+            if value > 1:
+                return value
+    return -1
+
+
+func cleaned(mut ev: Env, mut log: int[]) -> int fails str:
+    on fail: append(mut log, ev.count)
+    for it in detach ev.items:
+        const value = try check(it.expr)
+        resolve(value, mut ev)
+    return ev.count
+
+
+func element_place(mut gs: Groups) -> int:
+    const at = 1
+    for it in detach gs.groups[at].items:
+        gs.count += it.expr + len(gs.groups[at].items)
+    return gs.count
+
+
+func bag_total[T](mut bag: Bag[T]) -> int:
+    for value in detach bag.values:
+        bag.count += 1
+    return bag.count
+
+
+func bump[T](mut bag: Bag[T]):
+    bag.count += 1
+
+
+# A `return` in a generic body puts the list back as in any other.
+func first_over[T](mut bag: Bag[T], limit: int) -> int:
+    mut at = 0
+    for value in detach bag.values:
+        bump(mut bag)
+        if at >= limit:
+            return at + len(bag.values)
+        at += 1
+    return -1
+
+
+# A postcondition checks the value the `return` held, after the put-back.
+@ensures(result >= 0)
+func guarded(mut ev: Env) -> int:
+    for it in detach ev.items:
+        ev.count += it.expr
+        if it.expr > 1:
+            return it.expr
+    return 0
+
+
+func task_body(n: int) -> int:
+    mut ev = make()
+    for it in detach ev.items:
+        resolve(it.expr * n, mut ev)
+        if it.expr > 5:
+            return ev.count + len(ev.items)
+    return -1
+
+
+func error_of_checked(mut ev: Env) -> str:
+    if checked(mut ev) is Err(message):
+        return message
+    return ""
+
+
+func error_of_failing(mut ev: Env) -> str:
+    if failing(mut ev) is Err(message):
+        return message
+    return ""
+
+
+func error_of_returned_try(mut ev: Env) -> str:
+    if returned_try(mut ev) is Err(message):
+        return message
+    return ""
+
+
+func cleaned_failed(mut ev: Env, mut log: int[]) -> bool:
+    if cleaned(mut ev, mut log) is Err:
+        return True
+    return False
+
+
+public func test_detach_runs_out() -> bool:
+    mut ev = make()
+    run_out(mut ev)
+    return ev.count == 11 and ev.seen == 0 and len(ev.items) == 3 and ev.items[2].name == "c"
+
+
+public func test_detach_break_and_continue() -> bool:
+    mut stopped = make()
+    stop_after(mut stopped, 2)
+    mut skipped = make()
+    skip_three(mut skipped)
+    return stopped.count == 1 and len(stopped.items) == 3 and skipped.count == 8 and len(skipped.items) == 3
+
+
+public func test_detach_return_puts_back() -> bool:
+    mut ev = make()
+    const inside = length_inside(mut ev, 2)
+    mut named = make()
+    const name = name_over(mut named, 2)
+    return inside == 100 and len(ev.items) == 3 and name == "b" and len(named.items) == 3
+
+
+public func test_detach_try_and_fail_put_back() -> bool:
+    mut tried = make()
+    const tried_message = error_of_checked(mut tried)
+    mut failed = make()
+    const failed_message = error_of_failing(mut failed)
+    mut returned = make()
+    const returned_message = error_of_returned_try(mut returned)
+    const tried_back = tried_message == "too big" and tried.count == 4 and len(tried.items) == 3
+    const failed_back = failed_message == "three" and failed.count == 1 and len(failed.items) == 3
+    return tried_back and failed_back and returned_message == "too big" and len(returned.items) == 3
+
+
+public func test_detach_nested_loops_put_back() -> bool:
+    mut ev = make()
+    const inner = nested_places(mut ev)
+    mut kids = make()
+    const kid = kid_over(mut kids, 3)
+    mut odds = make()
+    const first = first_odd(mut odds)
+    return inner == 0 and len(ev.items) == 3 and len(ev.names) == 2 and kid == 4 and len(kids.items) == 3 and first == 3 and len(odds.items) == 3
+
+
+public func test_detach_on_fail_clause_runs() -> bool:
+    mut ev = make()
+    mut log: int[] = []
+    const failed = cleaned_failed(mut ev, mut log)
+    return failed and len(log) == 1 and log[0] == 4 and len(ev.items) == 3
+
+
+public func test_detach_element_place() -> bool:
+    mut gs = Groups(groups=[Group(items=[entry("a", 1)]), Group(items=[entry("b", 2), entry("c", 3)])])
+    const total = element_place(mut gs)
+    return total == 5 and len(gs.groups[1].items) == 2 and len(gs.groups[0].items) == 1
+
+
+public func test_detach_generic_bag() -> bool:
+    mut bag = Bag[str](values=["a", "b", "c"])
+    return bag_total(mut bag) == 3 and len(bag.values) == 3
+
+
+public func test_detach_generic_and_postcondition_returns() -> bool:
+    mut bag = Bag[str](values=["a", "b", "c"])
+    const found = first_over(mut bag, 1)
+    mut ev = make()
+    const guard = guarded(mut ev)
+    return found == 1 and bag.count == 2 and len(bag.values) == 3 and guard == 3 and ev.count == 4 and len(ev.items) == 3
+
+
+public func test_detach_in_task() -> bool:
+    mut total = 0
+    with parallel.group() as g:
+        const t = g.submit(task_body, 2)
+        total = t.result()
+    return total == 22

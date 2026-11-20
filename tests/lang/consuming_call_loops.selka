@@ -1,0 +1,133 @@
+# `for x in own CALL():` (F-16): a consuming loop takes the new list a call returns, as it takes an owned local. The
+# loop owns the list and each `x` owns its element, exactly as `mut items = CALL()` then `for x in own items:` would; an
+# element the body does not move is dropped at the end of its iteration, and an early exit drops the rest.
+import consuming_call_loops_support as support
+import strings
+import testing
+
+record Row:
+    name: str
+    tags: str[]
+
+
+enum Slot:
+    full(rows: Row[])
+    empty
+
+
+func rows(n: int) -> Row[]:
+    mut out: Row[] = []
+    for i in range(n):
+        append(mut out, Row(name="r" + str(i), tags=["t" + str(i), "x"]))
+    return out
+
+
+func maybe_names() -> str?[]:
+    return [Some("a"), None, Some("c")]
+
+
+func make_list[T](own first: T, own second: T) -> T[]:
+    return [own first, own second]
+
+
+func collect[T](own first: T, own second: T) -> T[]:
+    mut out: T[] = []
+    for item in own make_list(own first, own second):
+        append(mut out, own item)
+    return out
+
+
+func first_long(limit: int) -> str fails str:
+    for row in own rows(4):
+        if len(row.name) > limit:
+            return own row.name
+        if row.name == "r2":
+            fail "reached " + row.name
+    fail "none"
+
+
+public func test_a_consuming_loop_takes_the_list_a_call_returns() -> bool:
+    mut kept: Row[] = []
+    for row in own rows(3):
+        append(mut kept, own row)
+    assert len(kept) == 3
+    assert kept[2].name == "r2"
+    return kept[1].tags == ["t1", "x"]
+
+
+public func test_a_consuming_loop_takes_a_call_of_another_module_and_moves_fields() -> bool:
+    mut pins: str[] = []
+    mut names: str[] = []
+    for net in own support.nets():
+        append(mut names, own net.name)
+    for net in own support.nets():
+        mut held = own net.pins
+        for pin in own held:
+            append(mut pins, own pin)
+    assert names == ["vcc", "gnd"]
+    return pins == ["1", "2", "3"]
+
+
+public func test_a_consuming_loop_takes_a_library_call_and_options() -> bool:
+    mut words: str[] = []
+    for word in own strings.split("a,b,c", ","):
+        append(mut words, own word)
+    mut present = 0
+    for name in own maybe_names():
+        match own name:
+            case Some(text):
+                append(mut words, own text)
+                present += 1
+            case None:
+                pass
+    assert present == 2
+    return words == ["a", "b", "c", "a", "c"]
+
+
+public func test_an_early_exit_drops_the_rest_of_the_list_a_call_returned() -> bool:
+    mut seen = 0
+    for row in own rows(5):
+        seen += 1
+        if row.name == "r1":
+            break
+    assert seen == 2
+    match first_long(9):
+        case Ok(_):
+            return False
+        case Err(message):
+            assert message == "reached r2"
+    return true_if_found()
+
+
+func true_if_found() -> bool:
+    for row in own rows(3):
+        if row.name == "r1":
+            return len(row.tags) == 2
+    return False
+
+
+public func test_a_consuming_loop_over_a_call_runs_in_an_outer_loop_and_a_match_mut_arm() -> bool:
+    mut total = 0
+    for i in range(3):
+        for row in own rows(i):
+            total += len(row.tags)
+    mut slot = Slot.full(rows=rows(1))
+    match mut slot:
+        case full(rows=listed):
+            for row in own rows(2):
+                append(mut listed, own row)
+        case empty:
+            pass
+    match slot:
+        case full(rows=listed):
+            assert len(listed) == 3
+        case empty:
+            return False
+    return total == 6
+
+
+public func test_a_consuming_loop_over_a_generic_call_moves_each_element() -> bool:
+    const texts = collect("x", "y")
+    const lists = collect(["a"], ["b", "c"])
+    assert texts == ["x", "y"]
+    return len(lists[1]) == 2

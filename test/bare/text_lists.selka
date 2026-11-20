@@ -1,0 +1,9 @@
+# A list of texts: append, index, length (lists whose elements are blocks).
+func main() -> int:
+    mut names: str[] = []
+    for i in range(30):
+        append(mut names, f"name{i}")
+    mut total = 0
+    for n in names:
+        total += len(n)
+    return (total + len(names[29])) % 256

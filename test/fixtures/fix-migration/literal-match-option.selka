@@ -1,0 +1,63 @@
+func kind(head: bytes?) -> int:
+    if head == b"instance":
+        return 1
+    elif head == b"net":
+        return 2
+    elif head == b"section":
+        return 3
+    elif head == b"port":
+        return 4
+    else:
+        return 0
+
+
+func word_kind(word: str?) -> int:
+    if word == "a":
+        return 1
+    elif word == "b":
+        return 2
+    elif word == "c":
+        return 3
+    else:
+        return 0
+
+
+func after_none(head: bytes?) -> int:
+    if head is None:
+        return 9
+    elif head == b"net":
+        return 2
+    elif head == b"section":
+        return 3
+    elif head == b"port":
+        return 4
+    else:
+        return 0
+
+
+func plain(head: bytes) -> int:
+    if head == b"instance":
+        return 1
+    elif head == b"net":
+        return 2
+    elif head == b"port":
+        return 4
+    else:
+        return 0
+
+
+func sign_option(c: int?) -> bool:
+    return c == 43 or c == 45 or c == 47
+
+
+func sign_float(c: float) -> bool:
+    return c == 43 or c == 45 or c == 47
+
+
+func main(out: Stream) -> int:
+    print(out, kind(Some(b"net")) + kind(None))
+    print(out, word_kind(Some("c")) + word_kind(None))
+    print(out, after_none(None) + after_none(Some(b"port")))
+    print(out, plain(b"port") + plain(b"other"))
+    print(out, sign_option(Some(43)), sign_float(45.0))
+    return 0

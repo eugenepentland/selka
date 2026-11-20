@@ -1,0 +1,5 @@
+# A public `max` this module never calls bare: accepted.
+public func max(a: int, b: int) -> int:
+    _ = a
+    _ = b
+    return 100

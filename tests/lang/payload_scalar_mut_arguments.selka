@@ -1,0 +1,250 @@
+# A scalar passed `mut` that is an element or a field reached through a `match mut` payload binding (`bump(mut vals[0])`
+# in `case pairs(keys, vals):`). `check` accepted these and `build` refused them (E_CORE_UNSUPPORTED, rule Z3, or the
+# validator's J8 for a scrutinee that is a list element) until lane FR76: the value was stored back after the call
+# through a borrowed read of the payload, where an assignment through the binding takes the payload out of its union.
+# Each test compares the call with the same program written with plain assignments. The list-element scrutinee
+# (`match mut ts[0]:`) is tested in `src/core/validate_ownership_pipeline_test.zig`: verify-ir-proof caps that shape.
+enum Pairs:
+    pairs(keys: str[], vals: int[])
+    nothing
+
+
+record Bag:
+    n: int
+    vals: int[]
+
+
+enum Slot:
+    full(value: Bag)
+    empty
+
+
+record Holder:
+    name: str
+    p: Pairs
+
+
+enum Table:
+    table(name: str, index: dict[str, int])
+    blank
+
+
+enum Outer:
+    held(title: str, inner: Pairs)
+    bare
+
+
+record Rec:
+    keys: str[]
+    vals: int[]
+
+
+func bump1(mut a: int):
+    a = a + 1
+
+
+func bump_value(a: int) -> int:
+    return a + 1
+
+
+func swap2(mut a: int, mut b: int):
+    const t = a
+    a = b
+    b = t
+
+
+func bump_and_name(mut a: int, mut names: str[]):
+    a = a + 1
+    append(mut names, "n")
+
+
+func next(mut n: int) -> int:
+    n = n + 1
+    return n
+
+
+func add_or_fail(mut a: int, fails_now: bool) -> Unit fails str:
+    a = a + 10
+    if fails_now:
+        fail "stop"
+
+
+func outcome(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func fresh() -> Pairs:
+    return Pairs.pairs(keys=["x", "y"], vals=[1, 2, 3])
+
+
+public func test_one_scalar_element() -> bool:
+    mut t = fresh()
+    mut seen = 0
+    match mut t:
+        case pairs(keys, vals):
+            bump1(mut vals[0])
+            seen = len(keys)
+        case nothing:
+            pass
+    mut u = fresh()
+    match mut u:
+        case pairs(keys=_, vals):
+            vals[0] = bump_value(vals[0])
+        case nothing:
+            pass
+    return t == u and seen == 2 and f"{t}" == "Pairs.pairs(keys=['x', 'y'], vals=[2, 2, 3])"
+
+
+public func test_two_scalar_elements_of_one_list() -> bool:
+    mut t = fresh()
+    match mut t:
+        case pairs(keys=_, vals):
+            swap2(mut vals[0], mut vals[1])
+        case nothing:
+            pass
+    return f"{t}" == "Pairs.pairs(keys=['x', 'y'], vals=[2, 1, 3])"
+
+
+public func test_a_scalar_element_and_a_managed_sibling_in_one_call() -> bool:
+    mut t = fresh()
+    match mut t:
+        case pairs(keys, vals):
+            bump_and_name(mut vals[1], mut keys)
+        case nothing:
+            pass
+    mut u = fresh()
+    match mut u:
+        case pairs(keys, vals):
+            vals[1] = bump_value(vals[1])
+            append(mut keys, "n")
+        case nothing:
+            pass
+    return t == u and f"{t}" == "Pairs.pairs(keys=['x', 'y', 'n'], vals=[1, 3, 3])"
+
+
+public func test_a_field_and_an_element_of_a_record_payload() -> bool:
+    mut s = Slot.full(value=Bag(n=1, vals=[1, 2]))
+    match mut s:
+        case full(value=p):
+            bump1(mut p.n)
+            bump1(mut p.vals[1])
+        case empty:
+            pass
+    mut r = Slot.full(value=Bag(n=1, vals=[1, 2]))
+    match mut r:
+        case full(value=p):
+            p.n = bump_value(p.n)
+            p.vals[1] = bump_value(p.vals[1])
+        case empty:
+            pass
+    return s == r and f"{s}" == "Slot.full(value=Bag(n=2, vals=[1, 3]))"
+
+
+func bump_through(mut t: Pairs):
+    match mut t:
+        case pairs(keys=_, vals):
+            bump1(mut vals[0])
+            bump1(mut vals[2])
+        case nothing:
+            pass
+
+
+public func test_a_scrutinee_that_is_a_mut_parameter() -> bool:
+    mut t = fresh()
+    bump_through(mut t)
+    return f"{t}" == "Pairs.pairs(keys=['x', 'y'], vals=[2, 2, 4])"
+
+
+public func test_a_scrutinee_that_is_a_field_of_a_local() -> bool:
+    mut h = Holder(name="h", p=fresh())
+    match mut h.p:
+        case pairs(keys=_, vals):
+            bump1(mut vals[1])
+        case nothing:
+            pass
+    return f"{h}" == "Holder(name='h', p=Pairs.pairs(keys=['x', 'y'], vals=[1, 3, 3]))"
+
+
+public func test_a_dynamic_index_and_an_index_with_an_effect() -> bool:
+    mut t = fresh()
+    const i = len("ab")
+    mut n = 0
+    match mut t:
+        case pairs(keys=_, vals):
+            bump1(mut vals[i])
+            bump1(mut vals[next(mut n)])
+        case nothing:
+            pass
+    mut u = fresh()
+    mut m = 0
+    match mut u:
+        case pairs(keys=_, vals):
+            vals[i] = bump_value(vals[i])
+            vals[next(mut m)] += 1
+        case nothing:
+            pass
+    return t == u and n == 1 and m == 1 and f"{t}" == "Pairs.pairs(keys=['x', 'y'], vals=[1, 3, 4])"
+
+
+public func test_in_a_loop() -> bool:
+    mut t = fresh()
+    match mut t:
+        case pairs(keys=_, vals):
+            for i in range(3):
+                bump1(mut vals[i])
+                bump1(mut vals[0])
+        case nothing:
+            pass
+    return f"{t}" == "Pairs.pairs(keys=['x', 'y'], vals=[5, 3, 4])"
+
+
+public func test_a_dictionary_bindings_scalar_value() -> bool:
+    mut t = Table.table(name="t", index={"a": 1, "b": 2})
+    match mut t:
+        case table(name=_, index):
+            bump1(mut index["a"])
+        case blank:
+            pass
+    return f"{t}" == "Table.table(name='t', index={'a': 2, 'b': 2})"
+
+
+public func test_a_nested_match_mut() -> bool:
+    mut o = Outer.held(title="o", inner=fresh())
+    match mut o:
+        case held(title=_, inner):
+            match mut inner:
+                case pairs(keys=_, vals):
+                    bump1(mut vals[0])
+                case nothing:
+                    pass
+        case bare:
+            pass
+    return f"{o}" == "Outer.held(title='o', inner=Pairs.pairs(keys=['x', 'y'], vals=[2, 2, 3]))"
+
+
+func through_payload(mut t: Pairs, fails_now: bool) -> Unit fails str:
+    match mut t:
+        case pairs(keys=_, vals):
+            try add_or_fail(mut vals[0], fails_now)
+        case nothing:
+            pass
+
+
+func through_record(mut r: Rec, fails_now: bool) -> Unit fails str:
+    try add_or_fail(mut r.vals[0], fails_now)
+
+
+# After a failure the place holds what the callee wrote before it failed, as it does for a record's field.
+public func test_a_callee_that_fails_leaves_what_it_wrote_as_a_record_field_does() -> bool:
+    mut t = Pairs.pairs(keys=["x"], vals=[1, 2])
+    mut r = Rec(keys=["x"], vals=[1, 2])
+    const failed = outcome(through_payload(mut t, True))
+    const record_failed = outcome(through_record(mut r, True))
+    const after_failure = f"{t}" == "Pairs.pairs(keys=['x'], vals=[11, 2])" and r.vals == [11, 2]
+    const passed = outcome(through_payload(mut t, False))
+    _ = outcome(through_record(mut r, False))
+    return failed == "stop" and record_failed == "stop" and after_failure and passed == "ok" and f"{t}" == "Pairs.pairs(keys=['x'], vals=[21, 2])" and r.vals == [21, 2]

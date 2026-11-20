@@ -1,0 +1,9 @@
+[Unit]
+Description=Selka nightly complete integration verification
+
+[Service]
+Type=oneshot
+WorkingDirectory=@WORKTREE@
+ExecStart=@COMMAND@
+Nice=10
+TimeoutStartSec=infinity

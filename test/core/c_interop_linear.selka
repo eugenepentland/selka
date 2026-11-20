@@ -1,0 +1,75 @@
+# `@linear` wrappers around `extern type` handles (D-FFI-11) against c_interop.c: every owner is consumed on every path,
+# and the C side counts the objects still live (0 at the end).
+extern type Thing
+
+
+extern func ffi_thing_new(host: Host, value: i64) -> Thing
+
+
+extern func ffi_thing_value(host: Host, thing: Thing) -> i64
+
+
+extern func ffi_thing_free(host: Host, thing: Thing) -> Unit
+
+
+extern func ffi_live_things(host: Host) -> i64
+
+
+@linear
+record Owned:
+    thing: Thing
+    label: int = 0
+
+
+record Holder:
+    owned: Owned
+    count: int
+
+
+func make(host: Host, value: i64) -> Owned:
+    return Owned(thing=ffi_thing_new(host, value), label=int(value))
+
+
+func release(host: Host, own owned: Owned):
+    const thing = own owned.thing
+    ffi_thing_free(host, thing)
+
+
+func current(host: Host, mut owned: Owned) -> i64:
+    return ffi_thing_value(host, owned.thing)
+
+
+func checked(host: Host, n: i64) -> Owned fails str:
+    if n < 0:
+        fail "negative"
+    return make(host, n)
+
+
+func c_interop_linear_sum(host: Host, n: int) -> i64 fails str:
+    mut total = i64(0)
+    for i in range(n):
+        mut owned = try checked(host, i64(i))
+        total += current(host, mut owned)
+        if i == 7:
+            release(host, own owned)
+            break
+        release(host, own owned)
+    return total
+
+
+func main(host: Host, out: Stream) -> int:
+    match c_interop_linear_sum(host, 100):
+        case Ok(total):
+            print(out, total)
+        case Err(message):
+            print(out, message)
+    match c_interop_linear_sum(host, 3):
+        case Ok(total):
+            print(out, total)
+        case Err(message):
+            print(out, message)
+    const holder = Holder(owned=make(host, 41), count=1)
+    print(out, holder.count, ffi_live_things(host))
+    release(host, own holder.owned)
+    print(out, ffi_live_things(host))
+    return 0

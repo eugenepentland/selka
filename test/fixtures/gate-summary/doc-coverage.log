@@ -1,0 +1,20 @@
+build-slot: gate slot 1, FIFO ticket 3131 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 42e5838afdb0)
+guardian: diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1: 0/1298 source file(s) in scope for the 50 per-file check(s); 36 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 37 finding(s), none in scope — report-only (--verbose for detail)
+guardian: repeated-string-literal: 272 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 86 checks — 0 blocking, 1 report-only — diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1, 0 file(s) in scope
+verification-doc-coverage
++- verification action doc-coverage member 0 failure
+error: process exited with code 1
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/selka-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/
+
+----------------------------------------------------------------------
+Ran 46 tests in 3.509s
+
+OK (skipped=2)
+Build Summary: 123/125 steps succeeded (1 failed); 6482/72188 tests passed (65706 skipped)
+verification-doc-coverage transitive failure
++- verification action doc-coverage member 0 failure
+
+  ! declared-borrowed-results: 'docs/managed-memory.md' has no heading with anchor 'declared-borrowed-results'

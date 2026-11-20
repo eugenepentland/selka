@@ -1,0 +1,13 @@
+# Two spellings that come from Python: a conversion in a format string hole, and a text times an integer.
+func label(text: str, count: int) -> str:
+    return f"{text!r} twice {count!s:>4} {len(text) + count!r}"
+
+
+func rule(width: int) -> str:
+    return "=" * width + " end"
+
+
+func main(out: Stream) -> int:
+    print(out, label("ab", 7))
+    print(out, rule(3))
+    return 0

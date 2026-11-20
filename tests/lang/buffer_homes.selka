@@ -1,0 +1,142 @@
+import buffers
+import byte_builder
+import testing
+
+# `append_byte` answers whether it wrote: an octet 0..255 is written, and any other
+# value is refused with nothing written.
+public func test_append_byte_answers_whether_it_wrote() -> bool:
+    mut data = buffers.empty()
+    const written: bool = buffers.append_byte(mut data, 255)
+    const too_large: bool = buffers.append_byte(mut data, 256)
+    const negative: bool = buffers.append_byte(mut data, -1)
+    return written and not too_large and not negative and len(data) == 1 and bytes(data) == b"\xff"
+
+
+# `append_range` answers whether a range with nonnegative endpoints is valid, and
+# writes nothing for one that is not `start <= end <= len(piece)`; an empty range is
+# valid. A negative endpoint traps (`R_LIST_BOUNDS`, pinned by the K1 bounds test in
+# `test/wave1_cleanup_k1_test.zig`), so it is not an answer here.
+public func test_append_range_answers_whether_the_range_is_valid() -> bool:
+    mut data = buffers.empty()
+    const piece: bytes = b"0123"
+    const inside: bool = buffers.append_range(mut data, piece, 1, 3)
+    const backwards: bool = buffers.append_range(mut data, piece, 3, 1)
+    const beyond: bool = buffers.append_range(mut data, piece, 0, 5)
+    const past: bool = buffers.append_range(mut data, piece, 5, 6)
+    const empty: bool = buffers.append_range(mut data, piece, 4, 4)
+    return inside and not backwards and not beyond and not past and empty and bytes(data) == b"12"
+
+
+# `reserve` answers whether the request is valid and grows no length.
+public func test_reserve_answers_and_keeps_the_length() -> bool:
+    mut data = buffers.empty()
+    buffers.append(mut data, b"ab")
+    const room: bool = buffers.reserve(mut data, 4096)
+    const negative: bool = buffers.reserve(mut data, -1)
+    return room and not negative and len(data) == 2 and bytes(data) == b"ab"
+
+
+# The writes that always write answer nothing, so each is a statement with no `_ =`,
+# and each writes its own text.
+public func test_always_writing_homes_are_statements() -> bool:
+    mut data = buffers.empty()
+    buffers.append(mut data, b"A")
+    buffers.append_int(mut data, -12)
+    buffers.append_float(mut data, 1.5)
+    buffers.append_utf8(mut data, "é")
+    return bytes(data) == b"A-121.5\xc3\xa9"
+
+
+# A copy of a home's buffer is independent of the buffer written after it.
+public func test_copy_of_a_home_buffer_is_independent() -> bool:
+    mut data = buffers.empty()
+    buffers.append_int(mut data, 7)
+    const store: byte_buffer = copy(data)
+    buffers.append_int(mut data, 8)
+    return bytes(store) == b"7" and bytes(data) == b"78"
+
+
+# `clear` empties the buffer and answers nothing, so it is a statement with no `_ =`; the buffer is written again
+# from its start.
+# spec: BUFFER-CLEAR-1
+public func test_clear_empties_the_buffer_and_it_is_written_again() -> bool:
+    mut data = buffers.empty()
+    buffers.append(mut data, b"abc")
+    buffers.clear(mut data)
+    const emptied: bool = len(data) == 0 and bytes(data) == b""
+    buffers.append(mut data, b"xy")
+    buffers.clear(mut data)
+    buffers.clear(mut data)
+    _ = buffers.append_byte(mut data, 65)
+    return emptied and len(data) == 1 and bytes(data) == b"A"
+
+
+# A copy taken before `clear` keeps what the buffer held.
+# spec-case: BUFFER-CLEAR-1
+public func test_clear_leaves_an_earlier_copy_alone() -> bool:
+    mut data = buffers.empty()
+    buffers.append(mut data, b"abc")
+    const store: byte_buffer = copy(data)
+    buffers.clear(mut data)
+    buffers.append(mut data, b"x")
+    return bytes(store) == b"abc" and bytes(data) == b"x"
+
+
+# The buffer may be a place of a record: a `byte_builder` is reused by emptying its `buffer`.
+# spec-case: BUFFER-CLEAR-1
+public func test_clear_of_a_builders_buffer_reuses_the_builder() -> bool:
+    mut builder = byte_builder.create()
+    byte_builder.append_text(mut builder, "hello")
+    buffers.clear(mut builder.buffer)
+    byte_builder.append_text(mut builder, "yo")
+    return byte_builder.finish(builder) == b"yo"
+
+
+@noalloc
+func reset(mut data: byte_buffer):
+    buffers.clear(mut data)
+
+
+# `clear` allocates nothing, so a `@noalloc` function may call it, and a `mut` parameter is the buffer it empties.
+# spec-case: BUFFER-CLEAR-1
+public func test_clear_runs_in_a_noalloc_function_on_a_mut_parameter() -> bool:
+    mut data = buffers.empty()
+    buffers.append(mut data, b"abc")
+    reset(mut data)
+    buffers.append(mut data, b"d")
+    return len(data) == 1 and bytes(data) == b"d"
+
+
+const LINE: bytes = b"0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+
+
+func fill_one_buffer(count: int) -> int:
+    mut data = buffers.empty()
+    mut total = 0
+    for _ in range(count):
+        buffers.append(mut data, LINE)
+        total += len(data)
+        buffers.clear(mut data)
+    return total
+
+
+func fill_a_new_buffer_each_time(count: int) -> int:
+    mut total = 0
+    for _ in range(count):
+        mut data = buffers.empty()
+        buffers.append(mut data, LINE)
+        total += len(data)
+    return total
+
+
+# One buffer cleared between 1,000 fills allocates what the first fill needs (the buffer and the room for one line),
+# the same as for 10 fills; a new buffer for each fill allocates for each.
+# spec-case: BUFFER-CLEAR-1
+public func test_a_buffer_reused_across_1000_fills_allocates_once() -> bool:
+    const first = testing.allocations(fill_one_buffer, 10)
+    return first <= 2 and testing.allocations(fill_one_buffer, 1000) == first and fill_one_buffer(1000) == 100000
+
+
+# spec-case: BUFFER-CLEAR-1
+public func test_a_new_buffer_for_each_fill_allocates_for_each() -> bool:
+    return testing.allocations(fill_a_new_buffer_each_time, 1000) >= 1000

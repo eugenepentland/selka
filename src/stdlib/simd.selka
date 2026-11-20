@@ -1,0 +1,41 @@
+# Lane operations on `Simd` values, which the compiler supplies (`builtin func`). It checks each
+# call against its operands, and `splat` and `load` take their lane count from the Simd type their
+# context expects. The declarations are written at float-4 signatures; a call takes every approved
+# lane type and length. An operation is not a function value (`E_BUILTIN_FUNCTION_VALUE`): call it
+# directly, or pass a named function that calls it.
+#
+# Every lane of a new Simd holds `value`; the lane count comes from the expected Simd type.
+public builtin func splat(value: float) -> Simd[float, 4]
+
+
+# The lanes of a Simd read from a list starting at `index`, one checked element each, as a
+# Simd of the expected type.
+public builtin func load(values: float[], index: int) -> Simd[float, 4]
+
+
+# Writes the lanes of a Simd into a list from `index`, one checked element each.
+public builtin func store(mut values: float[], index: int, value: Simd[float, 4])
+
+
+# Lane `i` of the result is `a` where `mask` holds lane `i`, else `b`.
+public builtin func select(mask: Simd[bool, 4], a: Simd[float, 4], b: Simd[float, 4]) -> Simd[float, 4]
+
+
+# The sum of the lanes, added in lane order.
+public builtin func sum(value: Simd[float, 4]) -> float
+
+
+# The least lane, the earlier one on a tie.
+public builtin func min(value: Simd[float, 4]) -> float
+
+
+# The greatest lane, the earlier one on a tie.
+public builtin func max(value: Simd[float, 4]) -> float
+
+
+# The square root of each lane, correctly rounded per lane.
+public builtin func sqrt(value: Simd[float, 4]) -> Simd[float, 4]
+
+
+# `a * b + c` on each lane, with one rounding per lane.
+public builtin func fma(a: Simd[float, 4], b: Simd[float, 4], c: Simd[float, 4]) -> Simd[float, 4]

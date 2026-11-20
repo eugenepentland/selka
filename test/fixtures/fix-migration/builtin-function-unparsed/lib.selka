@@ -1,0 +1,6 @@
+public func len(n: int) -> int:
+    return n + 1
+
+
+public func twice(n: int) -> int:
+    return len(n) * 2

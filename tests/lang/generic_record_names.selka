@@ -1,0 +1,46 @@
+# A generic record's printed name is its source name and its type arguments as the source writes them, each without its module:
+# the arguments hold module qualifiers of their own, and a name cut at the last `::` printed `PathKind>(value=...)`. Since FR24
+# the arguments are spelled as in source (`Holder[int]`, not the checked `Holder<i64>`).
+import filesystem
+
+record Holder[T]:
+    value: T
+
+
+record Pair[A, B]:
+    left: A
+    right: B
+
+
+enum Choice[T]:
+    some_value(item: T)
+    nothing
+
+
+public func test_a_generic_record_with_a_module_type_argument_prints_its_type_name() -> bool:
+    const holder = Holder[filesystem.PathKind](value=filesystem.PathKind.Regular)
+    return f"{holder}" == "Holder[PathKind](value=PathKind.Regular)"
+
+
+public func test_a_generic_record_with_a_local_type_argument_prints_the_same_way() -> bool:
+    const holder = Holder[int](value=3)
+    return f"{holder}" == "Holder[int](value=3)"
+
+
+public func test_a_generic_enum_with_a_module_type_argument_prints_its_type_name() -> bool:
+    const choice: Choice[filesystem.PathKind] = Choice.some_value(item=filesystem.PathKind.Symlink)
+    return f"{choice}" == "Choice.some_value[PathKind](item=PathKind.Symlink)"
+
+
+public func test_the_type_arguments_are_spelled_as_source_spells_them() -> bool:
+    const pair = Pair[int, str](left=1, right="x")
+    assert f"{pair}" == "Pair[int, str](left=1, right='x')"
+    const nested = Holder[Holder[float]](value=Holder[float](value=1.5))
+    assert f"{nested}" == "Holder[Holder[float]](value=Holder[float](value=1.5))"
+    const items = Holder[int[]](value=[1, 2])
+    assert f"{items}" == "Holder[int[]](value=[1, 2])"
+    const empty: Choice[int] = Choice.nothing
+    assert f"{empty}" == "Choice[int].nothing"
+    assert str(pair) == f"{pair}"
+    assert repr(pair) == f"{pair}"
+    return True

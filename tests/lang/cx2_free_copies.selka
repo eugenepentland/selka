@@ -1,0 +1,29 @@
+# Copies the verifier could not see, now free (lane CX2). Appending a text to a byte buffer reads the text's octets in
+# place (a span append), so it costs what appending the same octets as bytes costs. The measure is the growth from 100
+# to 200 calls, as in `list_view_params.selka`: both shapes build one buffer per call, and a copy per call would make the
+# text growth exceed the bytes growth by about one block per call.
+import buffers
+import testing
+
+func append_text(n: int) -> int:
+    const text = "hello world, this is a text of some length"
+    mut total = 0
+    for i in range(n):
+        mut buffer = byte_buffer([])
+        buffers.append_utf8(mut buffer, text)
+        total += len(buffer)
+    return total
+
+
+func append_bytes(n: int) -> int:
+    const data = b"hello world, this is a text of some length"
+    mut total = 0
+    for i in range(n):
+        mut buffer = byte_buffer([])
+        _ = buffers.append_range(mut buffer, data, 0, len(data))
+        total += len(buffer)
+    return total
+
+
+public func test_appending_text_costs_no_more_than_appending_its_bytes() -> bool:
+    return testing.allocations(append_text, 200) - testing.allocations(append_text, 100) <= testing.allocations(append_bytes, 200) - testing.allocations(append_bytes, 100)

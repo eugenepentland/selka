@@ -1,0 +1,78 @@
+import lists
+
+record Holder:
+    seen: set[str]
+    names: str[]
+    table: dict[str, int]
+
+
+func has(seen: set[str], name: str) -> bool:
+    return name in seen
+
+
+func negated(seen: set[str], name: str) -> bool:
+    return name not in seen
+
+
+func combined(seen: set[str], name: str, other: str) -> bool:
+    return name in seen and other not in seen
+
+
+func compared(seen: set[str], name: str, flag: bool) -> bool:
+    return (name in seen) == flag
+
+
+func low(seen: set[str], name: str, other: str) -> bool:
+    return name + other in seen
+
+
+func field(h: Holder, name: str) -> int:
+    if name in h.seen:
+        return 1
+    if lists.contains(h.names, name):
+        return 2
+    if name in h.table:
+        return 3
+    return 0
+
+
+func text(body: str, part: str) -> bool:
+    return part in body
+
+
+func bytes_in(data: bytes, part: bytes) -> bool:
+    return part in data
+
+
+func items(xs: int[], value: int) -> bool:
+    return lists.contains(xs, value)
+
+
+func call_arg(seen: set[str], name: str) -> int:
+    const flags = [name in seen, "z" in seen]
+    return len(flags)
+
+
+func main() -> int:
+    const seen: set[str] = {"a"}
+    const h = Holder(seen={"a"}, names=["a"], table={"a": 1})
+    mut n = 0
+    if has(seen, "a"):
+        n += 1
+    if negated(seen, "b"):
+        n += 1
+    if combined(seen, "a", "b"):
+        n += 1
+    if compared(seen, "a", True):
+        n += 1
+    if low(seen, "", "a"):
+        n += 1
+    n += field(h, "a")
+    if text("abc", "b"):
+        n += 1
+    if bytes_in(b"abc", b"b"):
+        n += 1
+    if items([1, 2], 2):
+        n += 1
+    n += call_arg(seen, "a")
+    return n

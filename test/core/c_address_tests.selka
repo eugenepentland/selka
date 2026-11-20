@@ -1,0 +1,38 @@
+# Guest tests that call C through an address (MCU-NOC3): `selka test --allow-host --link test/core/c_address.c`
+# hands each test the live Host; the function pointers come from C, as a handle and as a `u64`.
+extern type Function
+
+
+extern func ffi_weigh_handle(host: Host) -> Function
+
+
+extern func ffi_weigh_address(host: Host) -> u64
+
+
+extern func ffi_count_handle(host: Host) -> Function
+
+
+@address
+extern func weigh_through(host: Host, target: Function, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64
+
+
+@address
+extern func weigh_at(host: Host, target: u64, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64
+
+
+@address
+extern func count_through(host: Host, target: Function, text: str, byte: u8, mut count: i64) -> bool
+
+
+public func test_through_a_handle(host: Host) -> bool:
+    return weigh_through(host, ffi_weigh_handle(host), 1, 2, 3, 4, 5, 6, 7, 8) == 8000000000140
+
+
+public func test_through_an_address(host: Host) -> bool:
+    return weigh_at(host, ffi_weigh_address(host), -1, -2, -3, -4, -5, -6, -7, 3) == 2999999999860
+
+
+public func test_span_and_out_parameter(host: Host) -> bool:
+    mut count = 0
+    const found = count_through(host, ffi_count_handle(host), "a banana", u8(110), mut count)
+    return found and count == 2

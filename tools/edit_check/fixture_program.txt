@@ -1,0 +1,57 @@
+const std = @import("std");
+
+inline fn helper(x: u32) u32 {
+    return x *% 7 +% 1;
+}
+
+fn caller(x: u32) u32 {
+    return helper(x) +% 2;
+}
+
+fn Counter(comptime T: type) type {
+    return struct {
+        fn bump(v: T) T {
+            return v +% 1;
+        }
+    };
+}
+
+fn untested(x: u32) u32 {
+    return x -% 1;
+}
+
+fn childOnly(x: u32) u32 {
+    return x ^ 3;
+}
+
+fn scrubbedOnly(x: u32) u32 {
+    return x *% 5;
+}
+
+pub fn main(init: std.process.Init) !void {
+    const args = try init.minimal.args.toSlice(init.arena.allocator());
+    var result: u32 = 0;
+    if (std.mem.eql(u8, args[1], "inline")) {
+        result = caller(@intCast(args.len));
+    } else if (std.mem.eql(u8, args[1], "u32")) {
+        result = Counter(u32).bump(1);
+    } else if (std.mem.eql(u8, args[1], "u64")) {
+        result = @truncate(Counter(u64).bump(2));
+    } else if (std.mem.eql(u8, args[1], "child")) {
+        result = childOnly(1);
+    } else if (std.mem.eql(u8, args[1], "parent")) {
+        const outcome = try std.process.run(init.gpa, init.io, .{ .argv = &.{ args[0], "child" } });
+        init.gpa.free(outcome.stdout);
+        init.gpa.free(outcome.stderr);
+    } else if (std.mem.eql(u8, args[1], "scrubbed")) {
+        // The child gets a cleared environment, as a test's spawn helper may give it.
+        var empty: std.process.Environ.Map = .init(init.gpa);
+        defer empty.deinit();
+        const outcome = try std.process.run(init.gpa, init.io, .{ .argv = &.{ args[0], "scrubbed-child" }, .environ_map = &empty });
+        init.gpa.free(outcome.stdout);
+        init.gpa.free(outcome.stderr);
+    } else if (std.mem.eql(u8, args[1], "scrubbed-child")) {
+        result = scrubbedOnly(1);
+    }
+    std.process.exit(@intCast(result & 1));
+}

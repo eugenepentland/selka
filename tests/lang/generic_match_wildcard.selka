@@ -1,0 +1,128 @@
+# Lane FR82 (18 November 2026): a `case _:` arm in a generic function is the wildcard, as in a plain function. Until FR82
+# the generic body check read it as a case name and refused it (E_UNKNOWN_VARIANT, "case is not a variant of the matched
+# type"), wherever the `match` sat: in an `else Err(failure):` block, an `else:` block, an `if r is Err(e):` body or the
+# body itself.
+enum Fault:
+    busy
+    timeout(address: u32, mask: u32)
+    bad(code: int)
+
+
+func load(n: int) -> int fails Fault:
+    if n == 0:
+        fail Fault.busy
+    if n == 1:
+        fail Fault.timeout(address=4u32, mask=1u32)
+    if n == 2:
+        fail Fault.bad(code=7)
+    return n
+
+
+func pickup(n: int) -> Fault fails Fault:
+    if n == 0:
+        fail Fault.bad(code=2)
+    return Fault.busy
+
+
+func maybe(n: int) -> int?:
+    if n == 0:
+        return None
+    return n
+
+
+func timed_out[T](result: Result[T, Fault], address: u32) -> int:
+    const value = result else Err(failure):
+        match failure:
+            case timeout(address=a, mask=m):
+                if a == address and m == 1u32:
+                    return -10
+                return -11
+            case _:
+                return -2
+    _ = value
+    return 0
+
+
+func rank[T](value: T, failure: Fault) -> int:
+    _ = value
+    match failure:
+        case busy:
+            return -1
+        case _:
+            return -2
+
+
+func pick[T](chosen: T?, failure: Fault) -> int:
+    const v = chosen else:
+        match failure:
+            case bad(code=c):
+                return c
+            case _:
+                return -2
+    _ = v
+    return 0
+
+
+func tested[T](result: Result[T, Fault]) -> int:
+    if result is Err(e):
+        match e:
+            case busy:
+                return -1
+            case _:
+                return -2
+    return 0
+
+
+func paired[T, U](result: Result[T, Fault], other: U) -> int:
+    _ = other
+    const value = result else Err(failure):
+        match failure:
+            case busy:
+                return -1
+            case _:
+                return -2
+    _ = value
+    return 0
+
+
+func inner[T](result: Result[T, Fault]) -> int:
+    const value = result else Err(failure):
+        match failure:
+            case bad(code=c):
+                return c
+            case _:
+                return -2
+    _ = value
+    return 0
+
+
+func outer[T](result: Result[T, Fault]) -> int:
+    return inner(result) + 100
+
+
+public func test_wildcard_after_a_payload_case_in_else_err() -> bool:
+    return timed_out(load(0), 4u32) == -2 and timed_out(load(1), 4u32) == -10 and timed_out(load(1), 5u32) == -11 and timed_out(load(2), 4u32) == -2 and timed_out(load(5), 4u32) == 0
+
+
+public func test_wildcard_after_a_bare_case_in_the_body() -> bool:
+    return rank(1, Fault.busy) == -1 and rank("x", Fault.bad(code=3)) == -2 and rank(True, Fault.timeout(address=1u32, mask=2u32)) == -2
+
+
+public func test_wildcard_in_an_option_else_block() -> bool:
+    return pick(maybe(0), Fault.bad(code=9)) == 9 and pick(maybe(0), Fault.busy) == -2 and pick(maybe(3), Fault.busy) == 0
+
+
+public func test_wildcard_in_an_is_err_body() -> bool:
+    return tested(load(0)) == -1 and tested(load(1)) == -2 and tested(load(2)) == -2 and tested(load(5)) == 0
+
+
+public func test_wildcard_when_the_ok_type_is_an_enum() -> bool:
+    return timed_out(pickup(0), 4u32) == -2 and timed_out(pickup(1), 4u32) == 0
+
+
+public func test_wildcard_with_two_type_parameters() -> bool:
+    return paired(load(0), "a") == -1 and paired(load(1), 2) == -2 and paired(load(5), True) == 0
+
+
+public func test_wildcard_in_a_generic_called_by_a_generic() -> bool:
+    return outer(load(0)) == 98 and outer(load(2)) == 107 and outer(load(5)) == 100

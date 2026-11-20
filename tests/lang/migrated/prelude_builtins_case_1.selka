@@ -1,0 +1,8 @@
+# This module never writes `sum` bare, so its public `sum` is reached only as `c1.sum(...)` and misleads no reader.
+public func sum(xs: int[]) -> int:
+    _ = xs
+    return 7
+
+
+public func program() -> int:
+    return 7

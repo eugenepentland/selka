@@ -1,0 +1,35 @@
+# parallel.group: tasks with int, text and record results, joined at the end of their block; a second group after it.
+import parallel
+
+record Span:
+    start: int
+    label: str
+
+
+func text_length(t: str) -> int:
+    return len(t) * 3
+
+
+func shout(t: str) -> str:
+    return f"{t}!"
+
+
+func span_of(n: int) -> Span:
+    return Span(start=n * 2, label=f"s{n}")
+
+
+func main() -> int:
+    const first = "abcdef"
+    const second = f"xyz{len(first)}"
+    mut total = 0
+    with parallel.group() as g:
+        const a = g.submit(text_length, first)
+        const b = g.submit(text_length, second)
+        const c = g.submit(shout, second)
+        const d = g.submit(span_of, 7)
+        const span = d.result()
+        total = a.result() * 10 + b.result() + len(c.result()) * 5 + span.start + len(span.label)
+    with parallel.group() as h:
+        const e = h.submit(text_length, "later")
+        total += e.result()
+    return total % 256

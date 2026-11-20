@@ -1,0 +1,22 @@
+public record Wire:
+    n: int
+
+
+public result Decoded:
+    ok: Positive,
+    err: int
+
+
+@invariant(self.value > 0, "a positive value is greater than zero")
+public record Positive:
+    value: int
+
+
+public func from_wire(x: Wire) -> Decoded:
+    if x.n <= 0:
+        return Err(-1)
+    return Ok(Positive(value=x.n))
+
+
+public func to_wire(x: Positive) -> Wire:
+    return Wire(n=x.value)

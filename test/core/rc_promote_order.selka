@@ -1,0 +1,37 @@
+# A list field read after its record was already consumed by an earlier update
+# (a copy's field rebound through `mut`) is borrowed, not promoted: updating it
+# while a snapshot of the record is still live copies (NEW-CORE-RC-13).
+record Bucket:
+    count: int
+    items: int[]
+
+
+func replace_once(mut xs: int[], k: int):
+    xs = [k]
+
+
+func replace_loop(mut xs: int[], k: int):
+    for phase in range(k % 4):
+        append(mut xs, phase)
+        xs = [(k + phase) % 1009]
+        append(mut xs, phase)
+
+
+func main(out: Stream) -> int:
+    mut xs = [1, 2, 3]
+    mut b = Bucket(count=3, items=copy(xs))
+    mut c = copy(b)
+    replace_once(mut c.items, 9)
+    append(mut xs, 4)
+    mut snap = copy(b)
+    append(mut b.items, 5)
+    print(out, xs, b.items, c.items, snap.items)
+    mut ys = [7, 8]
+    mut d = Bucket(count=2, items=copy(ys))
+    mut e = copy(d)
+    replace_loop(mut e.items, 3)
+    append(mut ys, 9)
+    mut keep = copy(d)
+    append(mut d.items, 10)
+    print(out, ys, d.items, e.items, keep.items, len(keep.items) * 5 + len(d.items))
+    return 0

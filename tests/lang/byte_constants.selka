@@ -1,0 +1,75 @@
+const EQUALS: int = ord("=")
+
+
+const BANG: int = b"!"[0]
+
+
+const NEWLINE: int = ord("\n")
+
+
+const QUOTE: int = ord('"')
+
+
+const THIRD: int = b"abc"[2]
+
+
+const SUM: int = ord("a") + ord("b")
+
+
+# `ord` of a one-byte literal, and a literal indexed by an integer literal, are numbers wherever a constant is.
+public func test_byte_constants_fold_to_their_numbers() -> bool:
+    return EQUALS == 61 and BANG == 33 and NEWLINE == 10 and QUOTE == 34 and THIRD == 99 and SUM == 195
+
+
+func classify(ch: int) -> int:
+    match ch:
+        case ord("+") | ord("-"):
+            return 1
+        case ord("*"):
+            return 2
+        case b"/"[0]:
+            return 3
+        case EQUALS:
+            return 4
+        case 0x30 | ord("a"):
+            return 5
+        case _:
+            return 0
+
+
+# A match arm names a character by itself; alternatives and plain numbers mix in one arm.
+public func test_match_arms_take_ord_of_a_byte_and_an_indexed_literal() -> bool:
+    return classify(43) == 1 and classify(45) == 1 and classify(42) == 2 and classify(47) == 3 and classify(61) == 4 and classify(48) == 5 and classify(97) == 5 and classify(33) == 0
+
+
+func narrow(ch: u8) -> int:
+    match ch:
+        case ord("a"):
+            return 1
+        case ord("z"):
+            return 2
+        case _:
+            return 0
+
+
+# The arm's number takes the matched integer type.
+public func test_an_arm_takes_the_type_of_the_matched_value() -> bool:
+    return narrow(97) == 1 and narrow(122) == 2 and narrow(98) == 0
+
+
+func text_kind(text: bytes) -> int:
+    mut total = 0
+    for ch in text:
+        match ch:
+            case ord("a") | ord("e") | ord("i") | ord("o") | ord("u"):
+                total += 10
+            case ord(" "):
+                total += 1
+            case _:
+                total += 0
+    return total
+
+
+# A scan loop reads as the characters it tests.
+public func test_a_scan_counts_vowels_and_spaces_by_character() -> bool:
+    return text_kind(b"a quiet room") == 62

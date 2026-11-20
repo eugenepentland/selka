@@ -1,0 +1,61 @@
+import lists
+
+record Row:
+    cells: int[]
+
+
+# A named local the caller owns, not used again: its repair gives it away with `own`.
+func owned_local(mut rows: int[][]) -> int:
+    const row = [1, 2]
+    const former = lists.exchange(mut rows, 0, row)
+    return len(former)
+
+
+# An `own` parameter belongs to the callee, so passing it on is `own` too.
+func owned_param(mut rows: int[][], own row: int[]) -> int:
+    const former = lists.exchange(mut rows, 0, row)
+    return len(former)
+
+
+# A local read after the call keeps its value: its repair is a copy, the copy the
+# library used to make.
+func read_after(mut rows: int[][]) -> int:
+    const row = [3, 4]
+    const former = lists.exchange(mut rows, 1, row)
+    return len(former) + len(row)
+
+
+# A plain parameter, a loop variable and a field of a borrowed record only borrow,
+# so each takes its copy at the call.
+func borrowed_param(mut rows: int[][], row: int[]) -> int:
+    const former = lists.exchange(mut rows, 0, row)
+    return len(former)
+
+
+func borrowed_loop(mut rows: int[][], spares: int[][]) -> int:
+    mut total = 0
+    for spare in spares:
+        const former = lists.exchange(mut rows, 0, spare)
+        total += len(former)
+    return total
+
+
+func borrowed_field(mut rows: int[][], holder: Row) -> int:
+    const former = lists.exchange(mut rows, 0, holder.cells)
+    return len(former)
+
+
+# A fresh value, a copy and a scalar carry no marker and are left alone.
+func fresh(mut rows: int[][], mut counts: int[], seed: int[]) -> int:
+    const a = lists.exchange(mut rows, 0, [5])
+    const b = lists.exchange(mut rows, 1, copy(seed))
+    const c = lists.exchange(mut counts, 0, 7)
+    return len(a) + len(b) + c
+
+
+func main(out: Stream) -> int:
+    mut rows = [[0], [0, 0]]
+    mut counts = [1, 2]
+    const total = owned_local(mut rows) + owned_param(mut rows, [8]) + read_after(mut rows) + borrowed_param(mut rows, [9]) + borrowed_loop(mut rows, [[1], [2, 2]]) + borrowed_field(mut rows, Row(cells=[3])) + fresh(mut rows, mut counts, [6, 6])
+    print(out, total)
+    return 0

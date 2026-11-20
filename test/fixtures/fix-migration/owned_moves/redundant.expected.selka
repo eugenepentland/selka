@@ -1,0 +1,46 @@
+record Box:
+    items: int[]
+
+
+func consume(own values: int[]) -> int:
+    return values[0]
+
+
+func scalar(value: int) -> int:
+    return value
+
+
+# A bare return transfers its owner without a marker.
+func returned(own values: int[]) -> int[]:
+    return values
+
+
+# A field return consumes its carrier and must retain its marker.
+func carrier() -> int[]:
+    const box = Box(items=[6])
+    return own box.items
+
+
+func main(out: Stream) -> int:
+    const number = 1
+    const scalar_alias = number
+    const fresh_list = [2]
+    const fresh_call = returned([3])
+    const fresh_copy = fresh_list
+    const fresh_record = Box(items=[4])
+    const fresh_nested = [[5]]
+    const payload: int? = Some(7)
+    const text = ("a" + "b")
+    const plain_scalar = scalar(number)
+    const fresh_argument = consume([8])
+    const from_carrier = carrier()
+    match payload:
+        case Some(value):
+            const total = scalar_alias + fresh_list[0] + fresh_call[0] + fresh_copy[0] + fresh_record.items[0] + fresh_nested[0][0] + value + len(text) + plain_scalar + fresh_argument + from_carrier[0]
+            assert total == 41
+            print(out, total)
+            return 0
+        case None:
+            return 1
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

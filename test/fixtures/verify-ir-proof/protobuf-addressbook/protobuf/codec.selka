@@ -1,0 +1,395 @@
+# Typed field readers and writers over `protobuf.wire`: the calls generated code makes.
+#
+# A reader takes `data`, the `mut at` cursor and the `end` of the enclosing message, reads the
+# value of one field whose key was just consumed, and fails with a `wire.Error` instead of
+# trapping.  A `read_packed_*` reader takes a length-delimited payload and appends every element
+# to `out`.  A writer appends a key and a value (`put_*`) or a packed payload (`put_packed_*`,
+# which writes nothing for an empty list).  Enum fields travel as `int32`.
+import binary
+import byte_builder
+import math
+import protobuf.wire as wire
+
+# ---- singular readers ----
+public func read_int32(data: bytes, mut at: int, end: int) -> i32 fails wire.Error:
+    const v = try wire.read_varint(data, mut at, end)
+    return wire.u32_as_i32(wire.low32(v))
+
+
+public func read_int64(data: bytes, mut at: int, end: int) -> i64 fails wire.Error:
+    const v = try wire.read_varint(data, mut at, end)
+    return wire.u64_as_i64(v)
+
+
+public func read_uint32(data: bytes, mut at: int, end: int) -> u32 fails wire.Error:
+    const v = try wire.read_varint(data, mut at, end)
+    return wire.low32(v)
+
+
+public func read_uint64(data: bytes, mut at: int, end: int) -> u64 fails wire.Error:
+    return try wire.read_varint(data, mut at, end)
+
+
+public func read_sint32(data: bytes, mut at: int, end: int) -> i32 fails wire.Error:
+    const v = try wire.read_varint(data, mut at, end)
+    return wire.unzigzag32(wire.low32(v))
+
+
+public func read_sint64(data: bytes, mut at: int, end: int) -> i64 fails wire.Error:
+    const v = try wire.read_varint(data, mut at, end)
+    return wire.unzigzag64(v)
+
+
+public func read_bool(data: bytes, mut at: int, end: int) -> bool fails wire.Error:
+    const v = try wire.read_varint(data, mut at, end)
+    return v != 0u64
+
+
+public func read_fixed32(data: bytes, mut at: int, end: int) -> u32 fails wire.Error:
+    return try wire.read_fixed32(data, mut at, end)
+
+
+public func read_fixed64(data: bytes, mut at: int, end: int) -> u64 fails wire.Error:
+    return try wire.read_fixed64(data, mut at, end)
+
+
+public func read_sfixed32(data: bytes, mut at: int, end: int) -> i32 fails wire.Error:
+    const v = try wire.read_fixed32(data, mut at, end)
+    return wire.u32_as_i32(v)
+
+
+public func read_sfixed64(data: bytes, mut at: int, end: int) -> i64 fails wire.Error:
+    const v = try wire.read_fixed64(data, mut at, end)
+    return wire.u64_as_i64(v)
+
+
+public func read_float(data: bytes, mut at: int, end: int) -> f32 fails wire.Error:
+    const v = try wire.read_fixed32(data, mut at, end)
+    return math.f32_from_bits(v)
+
+
+public func read_double(data: bytes, mut at: int, end: int) -> float fails wire.Error:
+    const v = try wire.read_fixed64(data, mut at, end)
+    return math.from_bits(v)
+
+
+# A `string` field: the length-delimited payload must be valid UTF-8.
+public func read_string(data: bytes, mut at: int, end: int) -> str fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const text = try wire.read_text(data, at, at + n)
+    at += n
+    return text
+
+
+public func read_bytes(data: bytes, mut at: int, end: int) -> bytes fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const start = at
+    at += n
+    return copy(data[start:at])
+
+
+# ---- packed readers ----
+public func read_packed_int32(data: bytes, mut at: int, end: int, mut out: i32[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, wire.u32_as_i32(wire.low32(v)))
+
+
+public func read_packed_int64(data: bytes, mut at: int, end: int, mut out: i64[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, wire.u64_as_i64(v))
+
+
+public func read_packed_uint32(data: bytes, mut at: int, end: int, mut out: u32[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, wire.low32(v))
+
+
+public func read_packed_uint64(data: bytes, mut at: int, end: int, mut out: u64[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, v)
+
+
+public func read_packed_sint32(data: bytes, mut at: int, end: int, mut out: i32[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, wire.unzigzag32(wire.low32(v)))
+
+
+public func read_packed_sint64(data: bytes, mut at: int, end: int, mut out: i64[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, wire.unzigzag64(v))
+
+
+public func read_packed_bool(data: bytes, mut at: int, end: int, mut out: bool[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_varint(data, mut at, stop)
+        append(mut out, v != 0u64)
+
+
+public func read_packed_fixed32(data: bytes, mut at: int, end: int, mut out: u32[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_fixed32(data, mut at, stop)
+        append(mut out, v)
+
+
+public func read_packed_fixed64(data: bytes, mut at: int, end: int, mut out: u64[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_fixed64(data, mut at, stop)
+        append(mut out, v)
+
+
+public func read_packed_sfixed32(data: bytes, mut at: int, end: int, mut out: i32[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_fixed32(data, mut at, stop)
+        append(mut out, wire.u32_as_i32(v))
+
+
+public func read_packed_sfixed64(data: bytes, mut at: int, end: int, mut out: i64[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_fixed64(data, mut at, stop)
+        append(mut out, wire.u64_as_i64(v))
+
+
+public func read_packed_float(data: bytes, mut at: int, end: int, mut out: f32[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_fixed32(data, mut at, stop)
+        append(mut out, math.f32_from_bits(v))
+
+
+public func read_packed_double(data: bytes, mut at: int, end: int, mut out: float[]) -> Unit fails wire.Error:
+    const n = try wire.read_length(data, mut at, end)
+    const stop = at + n
+    while at < stop:
+        const v = try wire.read_fixed64(data, mut at, stop)
+        append(mut out, math.from_bits(v))
+
+
+# ---- singular writers ----
+public func put_int32(mut out: byte_builder.Builder, number: int, v: i32):
+    wire.put_key(mut out, number, wire.VARINT)
+    wire.put_varint(mut out, wire.i64_as_u64(i64(v)))
+
+
+public func put_int64(mut out: byte_builder.Builder, number: int, v: i64):
+    wire.put_key(mut out, number, wire.VARINT)
+    wire.put_varint(mut out, wire.i64_as_u64(v))
+
+
+public func put_uint32(mut out: byte_builder.Builder, number: int, v: u32):
+    wire.put_key(mut out, number, wire.VARINT)
+    wire.put_varint(mut out, u64(v))
+
+
+public func put_uint64(mut out: byte_builder.Builder, number: int, v: u64):
+    wire.put_key(mut out, number, wire.VARINT)
+    wire.put_varint(mut out, v)
+
+
+public func put_sint32(mut out: byte_builder.Builder, number: int, v: i32):
+    wire.put_key(mut out, number, wire.VARINT)
+    wire.put_varint(mut out, u64(wire.zigzag32(v)))
+
+
+public func put_sint64(mut out: byte_builder.Builder, number: int, v: i64):
+    wire.put_key(mut out, number, wire.VARINT)
+    wire.put_varint(mut out, wire.zigzag64(v))
+
+
+public func put_bool(mut out: byte_builder.Builder, number: int, v: bool):
+    wire.put_key(mut out, number, wire.VARINT)
+    if v:
+        wire.put_varint(mut out, 1u64)
+    else:
+        wire.put_varint(mut out, 0u64)
+
+
+public func put_fixed32(mut out: byte_builder.Builder, number: int, v: u32):
+    wire.put_key(mut out, number, wire.FIXED32)
+    binary.put_u32_le(mut out, v)
+
+
+public func put_fixed64(mut out: byte_builder.Builder, number: int, v: u64):
+    wire.put_key(mut out, number, wire.FIXED64)
+    binary.put_u64_le(mut out, v)
+
+
+public func put_sfixed32(mut out: byte_builder.Builder, number: int, v: i32):
+    wire.put_key(mut out, number, wire.FIXED32)
+    binary.put_u32_le(mut out, wire.i32_as_u32(v))
+
+
+public func put_sfixed64(mut out: byte_builder.Builder, number: int, v: i64):
+    wire.put_key(mut out, number, wire.FIXED64)
+    binary.put_u64_le(mut out, wire.i64_as_u64(v))
+
+
+public func put_float(mut out: byte_builder.Builder, number: int, v: f32):
+    wire.put_key(mut out, number, wire.FIXED32)
+    binary.put_u32_le(mut out, math.f32_bits(v))
+
+
+public func put_double(mut out: byte_builder.Builder, number: int, v: float):
+    wire.put_key(mut out, number, wire.FIXED64)
+    binary.put_u64_le(mut out, math.bits(v))
+
+
+public func put_string(mut out: byte_builder.Builder, number: int, v: str):
+    wire.put_text_field(mut out, number, v)
+
+
+public func put_bytes(mut out: byte_builder.Builder, number: int, v: bytes):
+    wire.put_len_field(mut out, number, v)
+
+
+# ---- packed writers ----
+func finish_packed(mut out: byte_builder.Builder, number: int, mut payload: byte_builder.Builder):
+    wire.put_len_field(mut out, number, byte_builder.finish(payload))
+
+
+public func put_packed_int32(mut out: byte_builder.Builder, number: int, values: i32[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        wire.put_varint(mut payload, wire.i64_as_u64(i64(v)))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_int64(mut out: byte_builder.Builder, number: int, values: i64[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        wire.put_varint(mut payload, wire.i64_as_u64(v))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_uint32(mut out: byte_builder.Builder, number: int, values: u32[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        wire.put_varint(mut payload, u64(v))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_uint64(mut out: byte_builder.Builder, number: int, values: u64[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        wire.put_varint(mut payload, v)
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_sint32(mut out: byte_builder.Builder, number: int, values: i32[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        wire.put_varint(mut payload, u64(wire.zigzag32(v)))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_sint64(mut out: byte_builder.Builder, number: int, values: i64[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        wire.put_varint(mut payload, wire.zigzag64(v))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_bool(mut out: byte_builder.Builder, number: int, values: bool[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        if v:
+            wire.put_varint(mut payload, 1u64)
+        else:
+            wire.put_varint(mut payload, 0u64)
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_fixed32(mut out: byte_builder.Builder, number: int, values: u32[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        binary.put_u32_le(mut payload, v)
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_fixed64(mut out: byte_builder.Builder, number: int, values: u64[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        binary.put_u64_le(mut payload, v)
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_sfixed32(mut out: byte_builder.Builder, number: int, values: i32[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        binary.put_u32_le(mut payload, wire.i32_as_u32(v))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_sfixed64(mut out: byte_builder.Builder, number: int, values: i64[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        binary.put_u64_le(mut payload, wire.i64_as_u64(v))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_float(mut out: byte_builder.Builder, number: int, values: f32[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        binary.put_u32_le(mut payload, math.f32_bits(v))
+    finish_packed(mut out, number, mut payload)
+
+
+public func put_packed_double(mut out: byte_builder.Builder, number: int, values: float[]):
+    if len(values) == 0:
+        return
+    mut payload = byte_builder.create()
+    for v in values:
+        binary.put_u64_le(mut payload, math.bits(v))
+    finish_packed(mut out, number, mut payload)

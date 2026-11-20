@@ -1,0 +1,23 @@
+# Scalar-domain replacements keep ordinary record and callback behavior.
+public record Count:
+    value: int
+
+
+func count(value: int) -> Count:
+    return Count(value=value)
+
+
+func score(item: Count) -> int:
+    return item.value
+
+
+func evaluate[T: copy](item: T, operation: func(T) -> int) -> int:
+    return operation(item)
+
+
+public func test_record_roundtrip(item: Count) -> bool:
+    return count(item.value) == item
+
+
+public func test_callback_uses_record() -> bool:
+    return evaluate[Count](Count(value=7), score) == 7

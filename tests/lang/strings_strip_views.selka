@@ -1,0 +1,62 @@
+import strings
+
+# The text `strip` method's whitespace, spelled as the explicit character set the
+# method takes: the ASCII controls 9 to 13 and 28 to 32, and the Unicode spaces.
+func whitespace() -> str:
+    return "\u0009\u000a\u000b\u000c\u000d \u001c\u001d\u001e\u001f\u0085                 　"
+
+
+# The one-scalar text for a code point, or the empty text for a rejected code.
+func scalar(code: int) -> str:
+    match strings.chr(code):
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+# Whether the three strip functions answer what the explicit-set methods answer.
+func agrees(text: str) -> bool:
+    const chars = whitespace()
+    return strings.strip(text) == strings.strip_chars(text, chars) and strings.lstrip(text) == strings.lstrip_chars(text, chars) and strings.rstrip(text) == strings.rstrip_chars(text, chars)
+
+
+# Every ASCII octet alone, and with text on one or both sides of it.
+# spec: STDLIB-TEXT-STRIP-1
+public func test_strip_agrees_on_every_ascii_octet_alone_and_bracketed() -> bool:
+    mut ok = True
+    for code in range(0, 128):
+        const one = scalar(code)
+        ok = ok and agrees(one) and agrees("x" + one) and agrees(one + "x") and agrees(one + one + "x" + one)
+    return ok
+
+
+# The empty text, text made only of whitespace, and text with none.
+public func test_strip_answers_empty_and_all_whitespace_texts() -> bool:
+    return agrees("") and agrees(" ") and agrees(" \t\n\r ") and agrees(" \u0009\u000b\u000c") and strings.strip("") == "" and strings.strip("   ") == "" and strings.lstrip("  ") == "" and strings.rstrip("  ") == "" and agrees("value")
+
+
+# Leading only, trailing only, and both, with exact expected texts.
+public func test_strip_removes_leading_trailing_and_both_whitespace() -> bool:
+    return strings.lstrip("  value  ") == "value  " and strings.rstrip("  value  ") == "  value" and strings.strip("  value  ") == "value" and strings.strip("\tvalue\n") == "value" and agrees("  value  ") and agrees("value  ") and agrees("  value")
+
+
+# The Unicode spaces the native method strips, alone and beside scalars that are
+# not spaces: U+0084 and U+00A1 flank U+0085 and U+00A0, and U+167F, U+200B and
+# U+3001 flank the spaces around them.
+public func test_strip_agrees_on_unicode_spaces_and_their_neighbours() -> bool:
+    return agrees("\u0085") and agrees(" x　") and agrees(" ") and agrees("  ") and agrees("  ") and agrees("  ") and agrees("\u0084x¡") and agrees("ᙿx​") and agrees("、x　、")
+
+
+# Multi-byte scalars at each end, which the strip must step over whole.
+public func test_strip_steps_over_whole_multibyte_scalars() -> bool:
+    return strings.strip("é 中 \U0001f600 ") == "é 中 \U0001f600" and strings.strip("  中  ") == "中" and agrees("é") and agrees("\U0001f600 é") and agrees("中　")
+
+
+# The answers are views of the argument: a stripped text equals the same octets
+# as its slice, and the view keeps its source's contents.
+public func test_strip_answers_the_octets_between_the_whitespace() -> bool:
+    mut data = "  abcdefgh  "
+    data = data + " "
+    const stripped = strings.strip(data)
+    return stripped == "abcdefgh" and len(stripped) == 8 and len(strings.lstrip(data)) == 11 and len(strings.rstrip(data)) == 10

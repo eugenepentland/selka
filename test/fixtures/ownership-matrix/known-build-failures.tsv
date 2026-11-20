@@ -1,0 +1,3 @@
+# cell	mode	code: a cell `selka check` accepts that a build mode refuses (ownership_matrix_cli_test.zig; why, and the options,
+# in experiments/ownership-matrix-20261109/DECISIONS.md, stage O5). Delete a line when its cell builds; the test says when.
+# Empty since D8 (10 November 2026): the check refuses a text or bytes slice given to an own parameter (W4).

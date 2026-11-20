@@ -1,0 +1,280 @@
+{
+  "captured_utc": "2026-10-09T13:21:20.822373+00:00",
+  "host": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "compiler_sha256": "85c1ac298272f4c96c8ce5e4ed5cd64cb73c8d5b4ed7caaa0a99ac3e726ece71",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "target_flags": [
+    "-target",
+    "x86_64-linux-gnu.2.31",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6"
+  ],
+  "scope": "Same Release-generated LLVM, runtime objects, target and linker; only the requested zig cc -O2/-O3 flag changes. No timing claims.",
+  "driver": {
+    "ll": {
+      "source": "define i32 @main() { ret i32 0 }\n",
+      "levels": {
+        "-O0": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O0",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.ll",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O0"
+          ]
+        },
+        "-O1": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O1",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.ll",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O2"
+          ]
+        },
+        "-O2": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O2",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.ll",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O2"
+          ]
+        },
+        "-O3": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O3",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.ll",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O2"
+          ]
+        }
+      }
+    },
+    "c": {
+      "source": "int main(void) { return 0; }\n",
+      "levels": {
+        "-O0": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O0",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.c",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O0"
+          ]
+        },
+        "-O1": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O1",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.c",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O2"
+          ]
+        },
+        "-O2": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O2",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.c",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O2"
+          ]
+        },
+        "-O3": {
+          "command": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-###",
+            "-c",
+            "-O3",
+            "-target",
+            "x86_64-linux-gnu.2.31",
+            "-march=native",
+            "-mllvm",
+            "-x86-experimental-pref-innermost-loop-alignment=6",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.c",
+            "-o",
+            "/home/epentland/.cache/mylang-optimization-driver-20261009/driver.o"
+          ],
+          "clang_version": "clang version 22.1.8",
+          "effective_flags": [
+            "-O2"
+          ]
+        }
+      }
+    }
+  },
+  "cases": {
+    "intloop": {
+      "source_sha256": "5c87ad1b5dd29e5f974a371f0e40ec8c033e13bb04334e206e1aa822728d331c",
+      "llvm_sha256": "d6f179b40d42c84c9711c8744c9570bcf82f8ea407ab29263dea6e906efbce35",
+      "expected_stdout": "28665\n",
+      "O2": {
+        "text_bytes": 199718,
+        "text_sha256": "352bbd6aa0e2403870795aed363c2a1bd6b49e571181643ef0407f709d730252"
+      },
+      "O3": {
+        "text_bytes": 199718,
+        "text_sha256": "352bbd6aa0e2403870795aed363c2a1bd6b49e571181643ef0407f709d730252"
+      },
+      "identical_text": true
+    },
+    "calls": {
+      "source_sha256": "678b2fab83fd1b862c7b2575aa5396192dddb60128721d7f6b75a1ffcb184e05",
+      "llvm_sha256": "d31bc21cd52a02bfc8d536f1aaedbb8f39465bb3d6958048ab4c79f96c6a6df2",
+      "expected_stdout": "4095\n",
+      "O2": {
+        "text_bytes": 199654,
+        "text_sha256": "e69c41b4678cfc13f26d1e86c6e2ae9360e000adc58347e365de256817b4cea3"
+      },
+      "O3": {
+        "text_bytes": 199654,
+        "text_sha256": "e69c41b4678cfc13f26d1e86c6e2ae9360e000adc58347e365de256817b4cea3"
+      },
+      "identical_text": true
+    },
+    "bytes_scan": {
+      "source_sha256": "69c6963084fd70982320ba6d293a69693003f2086bab2916db6b74c89e2020c6",
+      "llvm_sha256": "25058cfa9a478f7f42f4e064e14b9c90f60d8859f30fe75481c34dc9d7d648e2",
+      "expected_stdout": "8388728\n",
+      "O2": {
+        "text_bytes": 200230,
+        "text_sha256": "8393086eb8c0815c411e6fa0a54a90f2121dac7f7e5180e066000c2a347afbf4"
+      },
+      "O3": {
+        "text_bytes": 200230,
+        "text_sha256": "8393086eb8c0815c411e6fa0a54a90f2121dac7f7e5180e066000c2a347afbf4"
+      },
+      "identical_text": true
+    },
+    "list_append_sum": {
+      "source_sha256": "c375c624810dca5d5a783c0b48af0af8500c1287badc4c3d0c3aadbe2447e73e",
+      "llvm_sha256": "a281660958715c2d5fcae7ad65ce55e6d464d1632a64adf47a4034c15de3f55f",
+      "expected_stdout": "127999992000000\n",
+      "O2": {
+        "text_bytes": 199590,
+        "text_sha256": "351185ccea8ea46e6258a7ae67c7faf2f768be544adbb8e0b63db1dfd945defe"
+      },
+      "O3": {
+        "text_bytes": 199590,
+        "text_sha256": "351185ccea8ea46e6258a7ae67c7faf2f768be544adbb8e0b63db1dfd945defe"
+      },
+      "identical_text": true
+    },
+    "dict_count": {
+      "source_sha256": "222c81d8b05404aa9b0b4c1954f436c04b124020e9f7c6cf8801f7b19aafa76d",
+      "llvm_sha256": "ec02f2d7bba440c7003cbd000b344551a29e0fa0a2229ba1f29660ba56f9fe96",
+      "expected_stdout": "779967\n",
+      "O2": {
+        "text_bytes": 200870,
+        "text_sha256": "71fa1375ff2c86463f379a5bd4c8c7468d952cbd89125d90fd5bee174a03e58f"
+      },
+      "O3": {
+        "text_bytes": 200870,
+        "text_sha256": "71fa1375ff2c86463f379a5bd4c8c7468d952cbd89125d90fd5bee174a03e58f"
+      },
+      "identical_text": true
+    },
+    "matmul": {
+      "source_sha256": "b3b037e201278c421b3461712c07d166c8d408b50efca18936137cf8a6b83371",
+      "llvm_sha256": "eca9645cc51ae48f0550463b2a70cd2abc41cd67d83b11823f2d9e246b5237c4",
+      "expected_stdout": "62489758\n31249063032\n",
+      "O2": {
+        "text_bytes": 201190,
+        "text_sha256": "e7821000a215875b4c67e3442d25755fe1b7d604c24b591c5dbf2ff23e8043ae"
+      },
+      "O3": {
+        "text_bytes": 201190,
+        "text_sha256": "e7821000a215875b4c67e3442d25755fe1b7d604c24b591c5dbf2ff23e8043ae"
+      },
+      "identical_text": true
+    }
+  }
+}

@@ -1,0 +1,183 @@
+# F-19: a format string may be triple-quoted (`f"""..."""`, `f'''...'''`). Its text is the text of the plain triple-quoted string
+# of the same source, with holes (docs/text.md#triple-quoted-text): nothing stripped or dedented, a line end kept as written, a
+# single quote of either kind needing no escape. A hole is what it is in the one-line form, and closes on the line it opens.
+import dicts
+import strings
+
+record Point:
+    x: int
+    y: int
+
+
+record Row:
+    name: str
+    tags: str[]
+
+
+func twice(n: int) -> int:
+    return n * 2
+
+
+# The shape of F-19's friction entry: markup with holes in it, returned whole.
+func card(id: str, title: str) -> str:
+    return f"""<li class="card" id="project-{id}">
+  <a href="/p/{id}/">{title}</a>
+</li>"""
+
+
+func card_by_plus(id: str, title: str) -> str:
+    return '<li class="card" id="project-' + id + '">\n  <a href="/p/' + id + '/">' + title + "</a>\n</li>"
+
+
+func row_html(row: Row) -> str:
+    return f'''<tr id='{row.name}'>
+  <td>{strings.join(row.tags, ", ")}</td>
+  <td>{len(row.tags)}</td>
+</tr>'''
+
+
+public func test_a_triple_quoted_format_string_is_the_text_built_by_plus_byte_for_byte() -> bool:
+    const name = "ada"
+    const n = 3
+    const built = "first " + name + "\n  second\t" + str(n + 1) + "\n\"q\" 'q'\n\nlast"
+    const spelled = f"""first {name}
+  second	{n + 1}
+"q" 'q'
+
+last"""
+    return built == spelled and len(spelled) == len(built)
+
+
+public func test_the_single_quoted_spelling_is_the_same_text() -> bool:
+    const name = "ada"
+    const double = f"""a "{name}" b 'c'
+d"""
+    const single = f'''a "{name}" b 'c'
+d'''
+    return double == single and double == "a \"ada\" b 'c'\nd"
+
+
+public func test_quote_characters_of_either_kind_need_no_escape_and_a_doubled_one_is_text() -> bool:
+    const word = "x"
+    const text = f"""say "hi" and 'bye' and "" and '' {word}"""
+    const other = f'''say "hi" and 'bye' and "" and '' {word}'''
+    return text == "say \"hi\" and 'bye' and \"\" and '' x" and text == other
+
+
+public func test_blank_lines_and_the_first_and_last_line_ends_are_kept() -> bool:
+    const name = "ada"
+    const lead = f"""
+{name}
+"""
+    const tail = f"""{name}
+
+"""
+    return lead == "\nada\n" and tail == "ada\n\n" and f"""{name}""" == "ada" and len(f"""
+
+""") == 2
+
+
+public func test_indentation_and_tabs_inside_the_text_are_kept() -> bool:
+    const name = "ada"
+    const indented = f"""
+        {name}
+    	tabbed
+  """
+    return indented == "\n        ada\n    \ttabbed\n  "
+
+
+public func test_doubled_braces_are_single_braces_and_a_hole_may_follow_one() -> bool:
+    const name = "ada"
+    const text = f"""{{"name": "{name}", "ids": [{{}}]}}
+{{{name}}}"""
+    return text == '{"name": "ada", "ids": [{}]}\n{ada}'
+
+
+public func test_escapes_decode_as_in_the_plain_form() -> bool:
+    const n = 7
+    const text = f"""tab\t{n}\nnext\\line \"q\" \'q\' caf\u00e9"""
+    return text == "tab\t7\nnext\\line \"q\" 'q' caf\u00e9"
+
+
+public func test_a_text_that_ends_in_a_quote_escapes_it() -> bool:
+    const word = "hi"
+    return f"""say \"{word}\"""" == 'say "hi"' and f'''it\'s {word}\'''' == "it's hi'"
+
+
+public func test_holes_may_call_read_fields_do_arithmetic_and_show_collections() -> bool:
+    const point = Point(x=4, y=5)
+    const values = [1, 2, 3]
+    const lookup: dict[str, int] = {"a": 1}
+    const found: int? = Some(point.x)
+    const text = f"""call {twice(point.x)}
+field {point.y} sum {point.x + point.y} cmp {point.x < point.y}
+list {values} dict {lookup} option {found}
+last {twice(1)}"""
+    return text == "call 8\nfield 5 sum 9 cmp True\nlist [1, 2, 3] dict {'a': 1} option Some(4)\nlast 2"
+
+
+public func test_a_hole_may_hold_a_text_of_either_quote_and_a_nested_one_line_format_string() -> bool:
+    const table: dict[str, str] = {"k": "v"}
+    const n = 2
+    const text = f"""a {table["k"]} b {table['k']}
+c {f"inner {n}"} d {f'inner {n + 1}'}"""
+    return text == "a v b v\nc inner 2 d inner 3"
+
+
+public func test_format_specifications_work_on_every_line() -> bool:
+    const n = 42
+    const ratio = 3.14159
+    const text = f"""{n:>6}|
+{ratio:.2f}|{n:05d}|
+{"ab":>4}"""
+    return text == "    42|\n3.14|00042|\n  ab"
+
+
+public func test_a_hole_may_stand_first_last_alone_or_with_nothing_around() -> bool:
+    const name = "ada"
+    return f"""{name} is first""" == "ada is first" and f"""the last is {name}""" == "the last is ada" and f"""{name}{name}""" == "adaada" and f"""""" == ""
+
+
+public func test_the_one_line_and_triple_spellings_agree() -> bool:
+    const n = 9
+    const name = "ada"
+    return f"""x {n} {name}""" == f"x {n} {name}" and f'''x {n} {name}''' == f"x {n} {name}"
+
+
+public func test_the_friction_programs_shape_is_the_plus_chain_it_replaces() -> bool:
+    return card("a", "b") == card_by_plus("a", "b") and card("p-1", "T <t>") == card_by_plus("p-1", "T <t>")
+
+
+public func test_managed_values_in_holes_and_a_text_built_in_a_loop_free_their_storage() -> bool:
+    const row = Row(name="r1", tags=["x", "y", "z"])
+    const html = row_html(row)
+    mut parts: str[] = []
+    for index in range(5):
+        append(
+            mut parts,
+            f"""item {index}
+  {row.name} {row.tags}
+""",
+        )
+    const joined = strings.join(parts, "")
+    mut counts: dict[str, int] = {}
+    for tag in row.tags:
+        counts[tag] = len(f"""<{tag}>
+{tag}
+</{tag}>""")
+    assert html == "<tr id='r1'>\n  <td>x, y, z</td>\n  <td>3</td>\n</tr>"
+    assert len(parts) == 5
+    assert joined == "item 0\n  r1 ['x', 'y', 'z']\nitem 1\n  r1 ['x', 'y', 'z']\nitem 2\n  r1 ['x', 'y', 'z']\nitem 3\n  r1 ['x', 'y', 'z']\nitem 4\n  r1 ['x', 'y', 'z']\n"
+    assert counts["y"] == 10
+    assert dicts.get(counts, "z", 0) == 10
+    return True
+
+
+public func test_a_triple_quoted_format_string_inside_a_call_may_continue_the_expression() -> bool:
+    const name = "ada"
+    const joined = strings.upper(f"""a {name}
+b""") + (
+        f"""
+{name}""" + "!"
+    )
+    return joined == "A ADA\nB\nada!"

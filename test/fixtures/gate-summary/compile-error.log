@@ -1,0 +1,34 @@
+build-slot: build slot 2, FIFO ticket 36700 after 0s
+verification-prepare
+      +- compile test debug native 1 errors
+src/diagnostic_codes.zig:524:5: error: dl4 probe: a compile error in the compiler
+    @compileError("dl4 probe: a compile error in the compiler");
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    codes: src/ownership_rules_test.zig:5:23
+    test.evaluation temporary limitations have no live refusal code: src/ownership_rules_test.zig:206:15
+    1 reference(s) hidden; use '-freference-trace=3' to see all references
+error: 1 compilation errors
+failed command: /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test .zig-cache/o/4c97392a0fe7357cb3738fea423e3ed9/juice_bytes_hash.o -ferror-tracing -ODebug -I .zig-cache/o/f77856bf22d15753e2ef722d1f09ae46 --dep build_identity --dep memory_budget --dep test_release_options --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/me
+
+verification-prepare
+      +- compile exe selka debug native 1 errors
+src/diagnostic_codes.zig:524:5: error: dl4 probe: a compile error in the compiler
+    @compileError("dl4 probe: a compile error in the compiler");
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+referenced by:
+    diagnostic_codes: src/reference.zig:19:34
+    gatherCodes: src/reference.zig:955:26
+    14 reference(s) hidden; use '-freference-trace=16' to see all references
+error: 1 compilation errors
+failed command: /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -ODebug --dep selka --dep memory_budget --dep compiler_root=root --dep user-doc/primer --dep user-doc/syntax --dep user-doc/statements --dep user-doc/records --dep user-doc/functions --dep user-doc/errors --dep user-doc/text --dep user-doc/bytes --dep user-doc/io --dep user-doc/effects --dep user-doc/contracts --dep user-doc/modules --dep user-doc/memory --dep user-doc/ownership --dep user-doc/sets --dep user-doc/stdlib --dep user-doc/tests --dep user-doc/build --dep user-doc/navigation --dep user-doc/conte
+
+Build Summary: 25/32 steps succeeded (2 failed)
+verification-prepare transitive failure
++- install transitive failure
+|  +- install selka transitive failure
+|  |  +- compile exe selka debug native 1 errors
++- install generated to artifacts.json transitive failure
+   +- run python3 (artifacts.json) transitive failure
+      +- compile test debug native 1 errors
+

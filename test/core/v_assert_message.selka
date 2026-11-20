@@ -1,0 +1,29 @@
+func describe(n: int) -> str:
+    return 'bad "n"=' + str(n)
+
+
+func check(n: int) -> int:
+    assert n < 3, describe(n)
+    return n
+
+
+func failure(n: int) -> int fails str:
+    if n > 2:
+        fail "too big: " + str(n)
+    return n
+
+
+func value_of(n: int) -> int:
+    match failure(n):
+        case Ok(value):
+            return value
+        case Err(e):
+            assert False, e
+    return 0
+
+
+func main(out: Stream) -> int:
+    print(out, check(1))
+    print(out, value_of(2))
+    print(out, check(7))
+    return 0

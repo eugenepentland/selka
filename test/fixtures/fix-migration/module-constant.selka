@@ -1,0 +1,13 @@
+# SP1-F-3, W3-F-4: a module constant written without its type, `const NAME = value`. When the value is one literal of a
+# plain type (int, float, str, bool), `selka fix` inserts the type after the name; any other value keeps its message.
+const LIMIT = 40
+public const OFFSET = -2
+const RATIO = 0.5
+const GREETING = "hello"
+const VERBOSE = True
+
+
+func main(out: Stream) -> int:
+    if VERBOSE:
+        print(out, GREETING)
+    return LIMIT + OFFSET + int(RATIO * 4.0)

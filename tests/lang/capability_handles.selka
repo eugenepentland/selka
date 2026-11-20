@@ -1,0 +1,185 @@
+# Capabilities are shareable handles (5C): a capability is copied, stored in any record, list, dictionary, option or
+# union payload, passed to parallel tasks and returned, with no `own`. Copies share their provider: two copies of a
+# memory filesystem see one tree and two copies of a seeded entropy draw from one stream. A narrowing makes a new handle
+# that every copy keeps as narrow. A test's capabilities are fresh stand-ins for each trial.
+import filesystem
+import parallel
+import random
+
+record Ctx:
+    fs: Filesystem
+    label: str
+
+
+record App:
+    ctx: Ctx
+    count: int
+
+
+enum Slot:
+    held(fs: Filesystem)
+    empty
+
+
+func first_word(entropy: Entropy) -> u64:
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            mut drawn = copy(generator)
+            return random.next_word(mut drawn)
+        case Err(_):
+            return 0u64
+
+
+func written(result: Result[Unit, str]) -> bool:
+    match result:
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+func text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(value):
+            return copy(value)
+        case Err(message):
+            return "error: " + message
+
+
+func make_ctx(fs: Filesystem, label: str) -> Ctx:
+    return Ctx(fs=fs, label=copy(label))
+
+
+func checked_ctx(fs: Filesystem) -> Ctx fails str:
+    if not fs.exists("ready"):
+        fail "not ready"
+    return Ctx(fs=fs, label="ready")
+
+
+# A task computes and returns; it takes no capability (W28). The caller writes what the tasks return.
+func note(index: int) -> str:
+    return "task-" + str(index)
+
+
+# A task may make its own stand-in: nothing else holds it, so no other task's calls wait for or interleave with its own.
+func private_tree(index: int) -> bool:
+    const fs = filesystem.memory()
+    assert written(fs.write_text("mine", str(index)))
+    return text(fs.read_text("mine")) == str(index) and not fs.exists("task-0")
+
+
+public func test_copies_of_a_memory_filesystem_share_one_tree() -> bool:
+    const fs = filesystem.memory()
+    const twin = fs
+    const copied = copy(fs)
+    assert written(twin.write_text("shared.txt", "one tree"))
+    return text(fs.read_text("shared.txt")) == "one tree" and copied.exists("shared.txt")
+
+
+public func test_copies_of_a_seeded_entropy_draw_from_one_stream() -> bool:
+    const entropy = random.seeded_entropy(3)
+    const twin = entropy
+    const first = first_word(entropy)
+    const second = first_word(twin)
+    const fresh = random.seeded_entropy(3)
+    const expected_first = first_word(fresh)
+    const expected_second = first_word(fresh)
+    return first != second and first == expected_first and second == expected_second
+
+
+public func test_a_capability_is_held_by_a_list_a_dictionary_and_a_nested_record() -> bool:
+    const fs = filesystem.memory()
+    const listed: Filesystem[] = [fs, fs]
+    mut named: dict[str, Filesystem] = {}
+    named["main"] = fs
+    const app = App(ctx=make_ctx(fs, "nested"), count=2)
+    const apps = [copy(app), App(ctx=make_ctx(listed[1], "second"), count=1)]
+    assert written(apps[1].ctx.fs.write_text("from-list", "x"))
+    assert written(named["main"].write_text("from-dict", "y"))
+    return fs.exists("from-list") and listed[0].exists("from-dict") and len(apps) == 2 and app.ctx.label == "nested"
+
+
+public func test_a_capability_rides_in_an_option_a_union_and_a_result() -> bool:
+    const fs = filesystem.memory()
+    assert written(fs.write_text("ready", "1"))
+    const maybe: Filesystem? = Some(fs)
+    const slot = Slot.held(fs=fs)
+    mut seen = 0
+    match maybe:
+        case Some(held):
+            if held.exists("ready"):
+                seen = seen + 1
+        case None:
+            pass
+    match slot:
+        case held(fs=inner):
+            if inner.exists("ready"):
+                seen = seen + 1
+        case empty:
+            pass
+    match checked_ctx(fs):
+        case Ok(ctx):
+            if ctx.fs.exists("ready"):
+                seen = seen + 1
+        case Err(_):
+            pass
+    return seen == 3
+
+
+public func test_a_record_of_capabilities_is_copied_and_its_copy_shares_the_provider() -> bool:
+    const original = make_ctx(filesystem.memory(), "first")
+    mut twin = copy(original)
+    twin.label = "second"
+    assert written(twin.fs.write_text("note", "z"))
+    return original.label == "first" and original.fs.exists("note")
+
+
+public func test_a_narrowed_copy_stays_narrow() -> bool:
+    const fs = filesystem.memory()
+    assert written(fs.mkdir("data"))
+    assert written(fs.write_text("top.txt", "outside"))
+    const data = fs.dir("data")
+    const copies = [data, copy(data)]
+    const frozen = copies[1].read_only()
+    assert written(copies[0].write_text("inside.txt", "inside"))
+    assert not written(frozen.write_text("refused.txt", "no"))
+    with fs.dir("data") as scoped:
+        assert scoped.exists("inside.txt")
+    return fs.exists("data/inside.txt") and not copies[1].exists("top.txt") and frozen.exists("inside.txt")
+
+
+public func test_parallel_tasks_return_values_that_the_caller_writes() -> bool:
+    const fs = filesystem.memory()
+    const names = parallel.map([0, 1, 2, 3, 4, 5, 6, 7], note)
+    for name in names:
+        assert written(fs.write_text(name, "done"))
+    for index in range(8):
+        assert fs.exists("task-" + str(index))
+    return len(names) == 8
+
+
+public func test_parallel_tasks_each_make_their_own_memory_filesystem() -> bool:
+    const kept = parallel.map([0, 1, 2, 3, 4, 5, 6, 7], private_tree)
+    for ok in kept:
+        assert ok
+    return len(kept) == 8
+
+
+public func test_memory_filesystems_made_in_a_loop_each_keep_their_own_tree() -> bool:
+    mut made: Filesystem[] = []
+    for index in range(200):
+        const fs = filesystem.memory()
+        assert written(fs.write_text("index", str(index)))
+        append(mut made, fs)
+    return text(made[0].read_text("index")) == "0" and text(made[199].read_text("index")) == "199"
+
+
+# A test's capability parameter is a fresh stand-in per trial: what one trial writes, the next one does not see.
+public func test_a_trial_filesystem_starts_empty_and_is_written(fs: Filesystem) -> bool:
+    assert not fs.exists("trial-mark")
+    return written(fs.write_text("trial-mark", "first"))
+
+
+public func test_a_second_trial_filesystem_starts_empty_too(fs: Filesystem) -> bool:
+    assert not fs.exists("trial-mark")
+    return written(fs.write_text("trial-mark", "second"))

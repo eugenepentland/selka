@@ -1,0 +1,329 @@
+# Standard-library accessors return borrows (borrowed returns R5): `dicts.find`, `dicts.get`, `dicts.setdefault`,
+# `lists.last`, `pool.get`, the json accessors, the `message` helpers, `http.header` and `random.choice` hand back the
+# managed value they find by reference, so a call allocates nothing for it. A caller that keeps the value past the
+# owner's next change writes `copy(...)`. Each growth test measures one accessor at two sizes; the copy test pins
+# that `copy(...)` gives an independent value.
+import csv
+import dicts
+import http
+import json
+import lists
+import pool
+import random
+import testing
+
+record Item:
+    name: str
+    tags: str[]
+
+
+# A record that holds itself through an option: a directly recursive record, which the checker does not lend.
+record Node:
+    value: int
+    next: Node?
+
+
+func find_work(n: int) -> int:
+    mut index: dict[int, str[]] = {}
+    for k in range(10):
+        mut names: str[] = []
+        append(mut names, f"name-{k}")
+        append(mut names, f"other-{k}")
+        index[k] = own names
+    mut total = 0
+    for i in range(n):
+        const found = dicts.find(index, i % 10)
+        match found:
+            case Some(items):
+                total += len(items)
+            case None:
+                total += 0
+    return total
+
+
+func get_work(n: int) -> int:
+    mut index: dict[int, str[]] = {}
+    for k in range(10):
+        mut names: str[] = []
+        append(mut names, f"name-{k}")
+        append(mut names, f"other-{k}")
+        index[k] = own names
+    const fallback: str[] = ["none"]
+    mut total = 0
+    for i in range(n):
+        total += len(dicts.get(index, i % 10, fallback))
+    return total
+
+
+func setdefault_work(n: int) -> int:
+    mut counts: dict[int, str[]] = {}
+    mut total = 0
+    for i in range(n):
+        total += len(dicts.setdefault(mut counts, i % 10, ["x", "y"]))
+    return total
+
+
+func last_work(n: int) -> int:
+    mut rows: str[][] = []
+    for k in range(4):
+        append(mut rows, ["a", "bb", f"row-{k}"])
+    mut total = 0
+    for i in range(n):
+        const tail = lists.last(rows[i % 4])
+        match tail:
+            case Some(text):
+                total += len(text)
+            case None:
+                total += 0
+    return total
+
+
+func pool_work(n: int) -> int:
+    mut items: Item[] = []
+    for k in range(10):
+        append(mut items, Item(name=f"item{k}", tags=["a", "b", "c"]))
+    mut store = pool.create(items)
+    const handles = pool.handles(store)
+    mut total = 0
+    for i in range(n):
+        const found = pool.get(store, handles[i % 10])
+        match found:
+            case Some(item):
+                total += len(item.tags)
+            case None:
+                total += 0
+    return total
+
+
+func member_work(n: int) -> int:
+    mut fields: dict[str, json.Json] = {}
+    fields["tags"] = json.array([json.text("a"), json.text("b")])
+    fields["name"] = json.text("widget")
+    const document = json.object(fields)
+    mut total = 0
+    for i in range(n):
+        const member = json.get(document, "tags")
+        match member:
+            case Some(value):
+                const items = json.as_list(value)
+                match items:
+                    case Some(elements):
+                        total += len(elements)
+                    case None:
+                        total += 0
+            case None:
+                total += 0
+    return total
+
+
+func element_work(n: int) -> int:
+    const array = json.array([json.text("ab"), json.text("cde")])
+    mut total = 0
+    for i in range(n):
+        const element = json.at(array, 1)
+        match element:
+            case Some(value):
+                const text = json.as_str(value)
+                match text:
+                    case Some(body):
+                        total += len(body)
+                    case None:
+                        total += 0
+            case None:
+                total += 0
+    return total
+
+
+func message_work(n: int) -> int:
+    const error = csv.Error.UnterminatedQuote(value="open quote")
+    mut total = 0
+    for i in range(n):
+        total += len(csv.message(error))
+    return total
+
+
+func header_work(n: int) -> int:
+    const fields = [http.Header(name="Host", value="example.test"), http.Header(name="Accept", value="text/plain")]
+    mut total = 0
+    for i in range(n):
+        const found = http.header(fields, "accept")
+        match found:
+            case Some(value):
+                total += len(value)
+            case None:
+                total += 0
+    return total
+
+
+func choice_work(n: int) -> int:
+    mut generator = random.seeded(7)
+    const items = ["alpha", "beta", "gamma"]
+    mut total = 0
+    for i in range(n):
+        const pick = random.choice(mut generator, items)
+        match pick:
+            case Some(text):
+                total += len(text)
+            case None:
+                total += 0
+    return total
+
+
+# `dicts.find`, `lists.last` and `pool.get` keep their copy: their bodies are generic, and the checker refuses a borrowed
+# `Some` of a directly recursive record (`next: Node?`) at instantiation. These tests pin that the copies still check.
+public func test_dicts_find_still_answers_the_value() -> bool:
+    return find_work(3) == 6
+
+
+public func test_dicts_get_allocates_nothing_per_call() -> bool:
+    return get_work(3) == 6 and testing.allocations(get_work, 200) - testing.allocations(get_work, 100) == 0
+
+
+# `dicts.setdefault` takes its fallback owned (it moves into the mapping), so each call's literal allocates in the
+# caller; the answer it returns is a borrow and is not counted here.
+public func test_dicts_setdefault_answers_the_stored_value() -> bool:
+    return setdefault_work(3) == 6
+
+
+public func test_lists_last_still_answers_the_value() -> bool:
+    return last_work(3) == 15
+
+
+public func test_pool_get_still_answers_the_value() -> bool:
+    return pool_work(3) == 9
+
+
+public func test_recursive_records_still_check_through_the_copying_accessors() -> bool:
+    mut index: dict[str, Node] = {"a": Node(value=2, next=None)}
+    const found = dicts.find(index, "a")
+    mut seed: Node[] = [Node(value=1, next=None)]
+    const last = lists.last(seed)
+    mut store = pool.create(seed)
+    const handles = pool.handles(store)
+    const kept = pool.get(store, handles[0])
+    match found:
+        case Some(two):
+            match last:
+                case Some(one):
+                    match kept:
+                        case Some(three):
+                            return two.value + one.value + three.value == 4
+                        case None:
+                            return False
+                case None:
+                    return False
+        case None:
+            return False
+
+
+public func test_json_get_and_as_list_allocate_nothing_per_call() -> bool:
+    return member_work(3) == 6 and testing.allocations(member_work, 200) - testing.allocations(member_work, 100) == 0
+
+
+public func test_json_at_and_as_str_allocate_nothing_per_call() -> bool:
+    return element_work(3) == 9 and testing.allocations(element_work, 200) - testing.allocations(element_work, 100) == 0
+
+
+# The `message` helpers keep their copy: a borrowed payload return in a multi-case enum makes the checker's cached
+# re-check report a spurious E_SINGLE_OWNER_OVERLAP in the module (see experiments/borrowed-returns-20261020/R5.md, D-R5-10).
+public func test_csv_message_answers_the_text() -> bool:
+    return message_work(3) == 30
+
+
+# `http.header` encodes its name argument on every call (one block); the returned value adds nothing. A copy of the
+# value would add a second block per call.
+public func test_http_header_returns_the_value_without_a_copy() -> bool:
+    return header_work(3) == 30 and testing.allocations(header_work, 200) - testing.allocations(header_work, 100) == 100
+
+
+# `random.choice` keeps its copy: a borrowed return from a match on the fallible `randint` call is refused by Core
+# (E_CORE_UNSUPPORTED), so its value is still an owned copy and this test checks only the value.
+public func test_random_choice_answers_an_element() -> bool:
+    const total = choice_work(3)
+    return 12 <= total <= 15
+
+
+public func test_copy_makes_an_independent_value() -> bool:
+    mut index: dict[str, str[]] = {"a": ["x"]}
+    mut owned = copy(dicts.find(index, "a"))
+    index["a"] = ["y", "z"]
+    match owned:
+        case Some(items):
+            return len(items) == 1 and items[0] == "x"
+        case None:
+            return False
+
+
+public func test_borrowed_lookup_reads_the_current_value() -> bool:
+    mut index: dict[str, str[]] = {"a": ["x"]}
+    const found = dicts.find(index, "a")
+    match found:
+        case Some(items):
+            return len(items) == 1 and items[0] == "x"
+        case None:
+            return False
+
+
+# 4e: a `from` accessor may return `[]` beside its borrows, as it may return `None` or `""`: the empty list is the
+# runtime's static one, so the result owns nothing and the call allocates nothing.
+record Shelf:
+    labels: str[]?
+    counts: int[][]
+
+
+func labels_of(shelf: Shelf) -> str[] from shelf:
+    match shelf.labels:
+        case Some(labels):
+            return labels
+        case None:
+            return []
+
+
+func count_row(shelf: Shelf, i: int) -> int[]? from shelf:
+    if i < len(shelf.counts):
+        return Some(shelf.counts[i])
+    if i == 99:
+        return Some([])
+    return None
+
+
+public func test_a_from_accessor_returns_an_empty_list_beside_its_borrows() -> bool:
+    const full = Shelf(labels=Some(["a", "bb"]), counts=[[1, 2]])
+    const empty = Shelf(labels=None, counts=[])
+    mut seen = 0
+    for label in labels_of(full):
+        seen += len(label)
+    for label in labels_of(empty):
+        seen += 100
+    mut rows = 0
+    match count_row(empty, 99):
+        case Some(row):
+            rows += 10 + len(row)
+        case None:
+            rows += 1000
+    match count_row(full, 0):
+        case Some(row):
+            rows += len(row)
+        case None:
+            rows += 1000
+    return seen == 3 and len(labels_of(empty)) == 0 and rows == 12 and count_row(empty, 5) is None
+
+
+public func test_a_copy_of_the_empty_list_an_accessor_returns_grows_independently() -> bool:
+    const empty = Shelf(labels=None, counts=[])
+    mut labels = copy(labels_of(empty))
+    append(mut labels, "new")
+    append(mut labels, "more")
+    return len(labels) == 2 and labels[1] == "more" and len(labels_of(empty)) == 0
+
+
+func empty_labels(n: int) -> int:
+    const empty = Shelf(labels=None, counts=[])
+    mut total = 0
+    for i in range(n):
+        total += len(labels_of(empty)) + 1
+    return total
+
+
+public func test_an_empty_list_from_an_accessor_allocates_nothing() -> bool:
+    return empty_labels(1000) == 1000 and testing.allocations(empty_labels, 10) == testing.allocations(empty_labels, 1000)

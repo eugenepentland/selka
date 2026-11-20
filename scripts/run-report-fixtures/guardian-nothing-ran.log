@@ -1,0 +1,16 @@
+test-golden
++- verification action golden member 0 failure
+test: 0 test(s) selected by filter: "buffer"
+  NOTHING YOU ASKED FOR RAN. A zero-match filter proves nothing. Zig's
+  --test-filter omits tests at compile time; Guardian's runtime filter skips
+  them before execution. No selected name matched this request. Exiting 0
+  would be indistinguishable from a green suite, so this run fails instead.
+  fix: correct the filter text (`guardian-check test-filter . --args` derives
+  one from your diff), or drop the filter and run the whole suite.
+  opt out (a project that genuinely has no tests yet): SELKA_TEST_ALLOW_EMPTY=1
+test: FAIL — nothing the filter named ran
+test: RESULT {"passed":0,"failed":0,"skipped":0,"aborted":true}
+error: test process unexpectedly exited with code 1
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id golden --member 0 --root-id test/go...
+
+Build Summary: 17/19 steps succeeded (1 failed)

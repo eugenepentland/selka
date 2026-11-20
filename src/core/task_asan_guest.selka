@@ -1,0 +1,25 @@
+import parallel
+
+func total(values: int[]) -> int:
+    mut answer = 0
+    for value in values:
+        answer += value
+    return answer
+
+
+func large_values() -> int[]:
+    mut values: int[] = []
+    for value in range(400):
+        append(mut values, value)
+    return values
+
+
+func main(out: Stream) -> int:
+    const rows = [large_values(), large_values()]
+    with parallel.group() as group:
+        const left = rows[0]
+        const right = rows[1]
+        const first = group.submit(total, left)
+        const second = group.submit(total, right)
+        print(out, first.result() + second.result())
+    return 0

@@ -1,0 +1,23 @@
+import generic_inference_case_1 as c1
+import generic_inference_case_2 as c2
+import generic_inference_case_3 as c3
+import generic_inference_case_4 as c4
+
+public func test_generic_inference_follows_arrays_nominal_app_1() -> bool:
+    return c1.program() == 7
+
+
+public func test_generic_inference_follows_arrays_nominal_app_2() -> bool:
+    return c2.program() == 9
+
+
+public func test_generic_inference_follows_arrays_nominal_app_3() -> bool:
+    return c3.program() == 8
+
+
+public func test_generic_inference_follows_arrays_nominal_app_4() -> bool:
+    return c4.program() == 5
+
+
+func main() -> int:
+    return 0

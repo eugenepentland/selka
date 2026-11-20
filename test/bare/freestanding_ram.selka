@@ -1,0 +1,40 @@
+# A device `main` whose `@freestanding(ram)` functions do the work (MCU-NOC2B): their code is in the section `.ramfunc`,
+# which QEMU's linker script puts first in `.data` (a device that boots from flash copies it to RAM there), and the build
+# checks the linked image: nothing they refer to is in `.text` or `.rodata`. They write QEMU's UART0 (as `uart_qemu.selka`
+# does) and do arithmetic: 0x11 + 0x22 + 0x33 + 0x44 = 0xAA, shifted and masked to 0x2A, the status 42.
+# bare-platform: qemu
+# bare-status: 42
+# bare-serial: OK
+import registers
+
+const UART_DATA: u32 = 0x40004000
+const UART_CONTROL: u32 = 0x40004008
+
+
+const UART_BAUD: u32 = 0x40004010
+
+
+@freestanding(ram)
+func mix(words: FixedArray[u32, 4]) -> u32:
+    mut total: u32 = 0
+    for i in range(4):
+        total = total + words[i]
+    return bit_and(bit_xor(total, 0x80), 0x3F)
+
+
+@freestanding(ram)
+func uart_send(reg: Registers, byte: u32):
+    registers.write32(reg, UART_DATA, byte)
+
+
+@freestanding(ram)
+func uart_greet(reg: Registers):
+    registers.write32(reg, UART_BAUD, 16)
+    registers.write32(reg, UART_CONTROL, 1)
+    uart_send(reg, 0x4F)
+    uart_send(reg, 0x4B)
+
+
+func main(reg: Registers) -> int:
+    uart_greet(reg)
+    return int(mix(FixedArray[u32, 4]([0x11, 0x22, 0x33, 0x44])))

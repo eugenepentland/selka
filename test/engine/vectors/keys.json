@@ -1,0 +1,43 @@
+{
+  "format": "selka-engine-vectors-v1",
+  "keys": [
+    {
+      "name": "an empty argument",
+      "kind": "test-plan",
+      "identity_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+      "argument_hex": "",
+      "key_hex": "7888d418fd3b32d4feb59670e627db0f0f6a5baefbbf577bea0ad5835ba977fe"
+    },
+    {
+      "name": "a path as the argument",
+      "kind": "test-exec",
+      "identity_hex": "9fdd426b8b9e465887d1da059cfc6b89794e5bc6f5590cd03765c21e8d0a2f34",
+      "argument_hex": "74657374732f6c616e672f737472696e67732e73656c6b613a3a746573745f73706c6974",
+      "key_hex": "979625ada5e35e5f1e5e41dcc21d6dd0732586a184821645b2da1092396abb57"
+    },
+    {
+      "name": "a one mebibyte argument",
+      "kind": "engine-probe",
+      "identity_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "argument_pattern": {
+        "generator": "byte_i_mod_251",
+        "length": 1048576
+      },
+      "key_hex": "82e4906b0fb41e28f57f157e54ba2ac41be66efc25aebe93899954c5130005cd"
+    }
+  ],
+  "listings": [
+    {
+      "names": [],
+      "digest_hex": "3082a5f9da3cbb07e091dd086555cae2ecf5ecef5182b64457739a4e881378ac"
+    },
+    {
+      "names": [
+        "main.selka",
+        "helpers.selka",
+        "Zeta.selka"
+      ],
+      "digest_hex": "002f960c595ce6b48a0f963a2fae69159c1a0652bb9edde9fe24692ae74cf498"
+    }
+  ]
+}

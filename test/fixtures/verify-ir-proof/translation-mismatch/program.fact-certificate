@@ -1,0 +1,113 @@
+fact-certificate-v1
+function compiler___signed_division_and_remainder_implement_trun_5::test_signed_division_and_remainder_implement_trun_5 linkage internal addr 0 params - ret bool
+returns 0 1
+block b- reach preds -
+inst %0 iconst i64 none a - b - x - imm 7 aux 0 range -
+inst %1 iconst i64 none a - b - x - imm 3 aux 0 range -
+inst %4 iconst i64 none a - b - x - imm 1 aux 0 range -
+inst %7 iconst u64 none a - b - x - imm 1 aux 0 range -
+block b0 reach preds -
+inst %10 call void none a #11 b - x - imm 0 aux 0 range -
+inst %8 call void none a #9 b - x %7 imm 0 aux 0 range -
+inst %2 neg i64 proven a %1 b - x - imm 0 aux 0 range -9223372036854775808 9223372036854775807
+inst %3 rem i64 exact a %0 b %0 x - imm 0 aux 0 range -9223372036854775808 9223372036854775807
+inst %5 cmp bool none a %3 b %4 x - imm 0 aux 0 range 0 1
+inst %9 call void none a #12 b - x - imm 0 aux 0 range -
+term ret %5
+site %2 3:3
+end
+function __test_encode_78a78977d1191463680e9a1928fe57d1 linkage internal addr 0 params bool ret void
+param 0 0 1
+returns -
+block b- reach preds -
+inst %0 param bool none a - b - x - imm 0 aux 0 range 0 1
+block b0 reach preds -
+inst %1 call void none a #7 b - x %0 imm 0 aux 0 range -
+term ret -
+end
+function __test_trial_139b772eafbe4757f0d5cde977b32848 linkage internal addr 1 params - ret void
+returns -
+block b- reach preds -
+inst %3 iconst u64 none a - b - x - imm 1000000 aux 0 range -
+inst %4 iconst u32 none a - b - x - imm 60000 aux 0 range -
+block b0 reach preds -
+inst %5 call void none a #8 b - x %3,%4 imm 0 aux 0 range -
+inst %0 call bool none a #0 b - x - imm 0 aux 0 range 0 1
+inst %1 call void none a #1 b - x %0 imm 0 aux 0 range -
+term ret -
+end
+function myl_core_test_register linkage other addr 0 params other ret void
+param 0 -
+returns -
+block b- reach preds -
+end
+function myl_core_test_open linkage other addr 0 params other,other ret bool
+param 0 -
+param 1 -
+returns -
+block b- reach preds -
+end
+function myl_core_test_run linkage other addr 0 params - ret i64
+returns -
+block b- reach preds -
+end
+function __test_main linkage internal addr 0 params list ret i64
+param 0 -
+returns -9223372036854775808 9223372036854775807
+block b- reach preds -
+inst %2 param list none a - b - x - imm 0 aux 0 range -
+inst %4 iconst u64 none a - b - x - imm 2 aux 0 range -
+inst %7 iconst u64 none a - b - x - imm 0 aux 0 range -
+inst %9 iconst u64 none a - b - x - imm 1 aux 0 range -
+inst %15 iconst i64 none a - b - x - imm 64 aux 0 range -
+inst %17 iconst u32 none a - b - x - imm 1024 aux 0 range -
+inst %18 iconst u64 none a - b - x - imm 536870912 aux 0 range -
+block b0 reach preds -
+inst %19 call void none a #10 b - x %17,%18 imm 0 aux 0 range -
+inst %0 func_ref other none a - b - x - imm 2 aux 0 range -
+inst %1 call void none a #3 b - x %0 imm 0 aux 0 range -
+inst %3 list_len u64 none a %2 b - x - imm 0 aux 0 range 0 140737488355328
+inst %5 cmp bool none a %3 b %4 x - imm 5 aux 0 range 0 1
+term branch %5 b1 b3
+block b1 reach preds b0
+inst %8 list_get other none a %2 b %7 x - imm 0 aux 0 range -
+inst %10 list_get other none a %2 b %9 x - imm 0 aux 0 range -
+inst %11 call bool none a #4 b - x %8,%10 imm 0 aux 0 range 0 1
+term branch %11 b2 b3
+block b2 reach preds b1
+inst %13 call i64 none a #5 b - x - imm 0 aux 0 range -9223372036854775808 9223372036854775807
+term ret %13
+block b3 reach preds b0,b1
+term ret %15
+bound %3 %2 loose
+end
+function myl_core_test_write_bool linkage other addr 0 params bool ret void
+param 0 -
+returns -
+block b- reach preds -
+end
+function myl_core_test_limits linkage other addr 0 params u64,u32 ret void
+param 0 -
+param 1 -
+returns -
+block b- reach preds -
+end
+function myl_core_test_tick linkage other addr 0 params u64 ret void
+param 0 -
+returns -
+block b- reach preds -
+end
+function myl_core_test_ceilings linkage other addr 0 params u32,u64 ret void
+param 0 -
+param 1 -
+returns -
+block b- reach preds -
+end
+function myl_core_test_enter linkage other addr 0 params - ret void
+returns -
+block b- reach preds -
+end
+function myl_core_test_leave linkage other addr 0 params - ret void
+returns -
+block b- reach preds -
+end

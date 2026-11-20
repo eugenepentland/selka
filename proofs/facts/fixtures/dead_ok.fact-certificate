@@ -1,0 +1,13 @@
+fact-certificate-v1
+function f linkage other addr 0 params - ret i64
+returns -
+block b- reach preds -
+inst %0 iconst bool none a - b - x - imm 1 aux 0 range -
+inst %1 iconst i64 none a - b - x - imm 1 aux 0 range -
+block b0 reach preds -
+term branch %0 b1 b2
+block b1 reach preds b0
+term ret %1
+block b2 dead preds b0
+term ret %1
+end

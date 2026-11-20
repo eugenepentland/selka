@@ -1,0 +1,2 @@
+public func total[P: copy](policy: P, subtotal: int, named domain_op_P_price: func(P, int) -> int) -> int:
+    return domain_op_P_price(policy, subtotal) + 500

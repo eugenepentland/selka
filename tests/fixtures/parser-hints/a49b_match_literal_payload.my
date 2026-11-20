@@ -1,0 +1,8 @@
+# oracle: cpython
+func main() -> int:
+    const found = Some(3)
+    match found:
+        case Some(3):
+            return 0
+        case None:
+            return 1

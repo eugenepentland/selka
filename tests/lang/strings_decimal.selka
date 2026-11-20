@@ -1,0 +1,73 @@
+import strings
+
+func text_of(result: Result[str, strings.Error]) -> str:
+    match result:
+        case Ok(text):
+            return copy(text)
+        case Err(error):
+            return "error: " + strings.message(error)
+
+
+func decimal(value: float, places: int) -> str:
+    return text_of(strings.format_decimal(value, places))
+
+
+# spec: STRINGS-DECIMAL-1
+public func test_format_decimal_rounds_the_shortest_digits_half_up() -> bool:
+    if decimal(6.475, 2) != "6.48":
+        return False
+    if decimal(2.675, 2) != "2.68":
+        return False
+    if decimal(0.125, 2) != "0.13":
+        return False
+    if decimal(1.005, 2) != "1.01":
+        return False
+    if decimal(2.5, 0) != "3":
+        return False
+    if decimal(0.5, 0) != "1":
+        return False
+    return True
+
+
+# spec-case: STRINGS-DECIMAL-1
+public func test_format_decimal_carries_pads_and_keeps_the_sign() -> bool:
+    if decimal(9.995, 2) != "10.00":
+        return False
+    if decimal(999.9996, 3) != "1000.000":
+        return False
+    if decimal(1.0, 3) != "1.000":
+        return False
+    if decimal(100.0, 1) != "100.0":
+        return False
+    if decimal(-6.475, 2) != "-6.48":
+        return False
+    if decimal(-0.001, 2) != "-0.00":
+        return False
+    if decimal(0.001, 2) != "0.00":
+        return False
+    if decimal(1e21, 2) != "1000000000000000000000.00":
+        return False
+    return True
+
+
+# spec-case: STRINGS-DECIMAL-1
+public func test_format_decimal_differs_from_format_float_exactly_on_decimal_ties() -> bool:
+    if text_of(strings.format_float(6.475, 2)) != "6.47":
+        return False
+    if decimal(6.475, 2) != "6.48":
+        return False
+    return decimal(0.1, 17) == "0.10000000000000000"
+
+
+# spec-case: STRINGS-DECIMAL-1
+public func test_format_decimal_passes_non_finite_values_and_rejects_bad_precision() -> bool:
+    const infinity = 1.0 / 0.0
+    if decimal(infinity, 2) != "inf":
+        return False
+    if decimal(0.0 - infinity, 2) != "-inf":
+        return False
+    if decimal(infinity - infinity, 2) != "nan":
+        return False
+    if decimal(1.5, 18) != "error: decimal count must be between 0 and 17":
+        return False
+    return decimal(1.5, -1) == "error: decimal count must be between 0 and 17"

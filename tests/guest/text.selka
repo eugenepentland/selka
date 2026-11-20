@@ -1,0 +1,48 @@
+import strings
+
+public func test_indexing_and_slicing() -> bool:
+    mut greeting = "héllo"
+    if strings.char_count(greeting) != 5 or strings.char_at(greeting, 1) != "é" or strings.char_at(greeting, strings.char_count(greeting) - 1) != "o":
+        return False
+    if strings.char_slice(greeting, 1, 3) != "él" or strings.char_count(strings.char_slice(greeting, 2, 99)) != 3 or strings.char_count(strings.char_slice(greeting, 3, 1)) != 0:
+        return False
+    mut joined = greeting + " " + "world"
+    mut parts = strings.split(joined, " ")
+    return len(parts) == 2 and strings.join(parts, "-") == "héllo-world"
+
+
+public func test_methods() -> bool:
+    mut padded = "  ready  "
+    if strings.strip(padded) != "ready" or strings.lstrip(padded) != "ready  " or strings.rstrip(padded) != "  ready":
+        return False
+    if strings.upper("Selka") != "SELKA" or strings.lower("Selka") != "selka":
+        return False
+    if strings.zfill("7", 3) != "007" or strings.zfill("-7", 4) != "-007":
+        return False
+    if strings.replace("banana", "na", "NA") != "baNANA":
+        return False
+    if strings.char_find(("banana"), "na") != 2 or strings.char_find(("banana"), "zz") != -1 or strings.count("banana", "na") != 2:
+        return False
+    if not strings.starts_with("banana", "ban") or not strings.ends_with("banana", "ana"):
+        return False
+    if not strings.is_digit("42") or strings.is_digit("") or not strings.is_alpha("abc") or not strings.is_space(" \t"):
+        return False
+    mut lines = strings.lines("a\nb\r\nc")
+    if len(lines) != 3 or padded != "  ready  ":
+        return False
+    return "ell" in "hello" and "z" not in "hello"
+
+
+public func test_interpolation_and_conversion() -> bool:
+    mut name = "ada"
+    mut count = 3
+    mut label = f"{name} has {count} items"
+    if label != "ada has 3 items":
+        return False
+    if str(7) != "7" or str(True) != "True" or str(2.5) != "2.5":
+        return False
+    return strings.char_count(f"") == 0 and f"{{literal}}" == "{literal}"
+
+
+func main() -> int:
+    return 0

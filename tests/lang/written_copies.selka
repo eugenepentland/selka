@@ -1,0 +1,250 @@
+# Rule C (plan §4b): a copy is written where the source spells `copy(...)`. Each
+# repaired shape of the hidden copies (C1 to C3) makes exactly the copies its
+# `copy(...)` writes, counted per run by the `testing` module, and a pure view
+# return of `str` makes none. The sources move with `i`, so no copy is folded into
+# a constant. A copy that is only read is elided by the optimizer, so the counted
+# shapes modify the copy as well: a concatenation makes one more managed value per
+# run, and a list copy takes an append in place.
+import testing
+
+# C1: an owned text local takes a copy of a slice, then a new value is made from it.
+func assigned_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut cur = "start"
+    mut total = 0
+    for i in range(n):
+        cur = copy(data[i % 4:i % 4 + 2])
+        cur = cur + "x"
+        total += len(cur)
+    return total
+
+
+# C1: a declared owned text local takes a copy of a slice, then a new value.
+func declared_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        mut cur = copy(data[i % 4:i % 4 + 2])
+        cur = cur + "x"
+        total += len(cur)
+    return total
+
+
+# C1: a list slice assigned to an owned list local, then appended to.
+func list_assigned_copy(n: int) -> int:
+    const xs = [1, 2, 3, 4, 5, 6]
+    mut part: int[] = []
+    mut total = 0
+    for i in range(n):
+        part = copy(xs[i % 3:i % 3 + 2])
+        append(mut part, 9)
+        total += len(part)
+    return total
+
+
+# C1: a list slice declared as an owned list local, then appended to.
+func list_declared_copy(n: int) -> int:
+    const xs = [1, 2, 3, 4, 5, 6]
+    mut total = 0
+    for i in range(n):
+        mut part = copy(xs[i % 3:i % 3 + 2])
+        append(mut part, 9)
+        total += len(part)
+    return total
+
+
+# C1: a bytes slice declared as an owned local, then a new value is made from it.
+func bytes_declared_copy(n: int) -> int:
+    const data = b"abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        mut part = copy(data[i % 4:i % 4 + 4])
+        part = part + b"x"
+        total += len(part)
+    return total
+
+
+# C1: a deferred const that is a copy on one path and a literal on the other.
+func deferred_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        const h: str
+        if i < n:
+            h = copy(data[i % 4:i % 4 + 2])
+        else:
+            h = "zz"
+        total += len(h)
+    return total
+
+
+# C1: an owned local takes a copy of a view binding and modifies it, once per run.
+func view_binding_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        const piece = data[i % 4:i % 4 + 4]
+        mut cur = copy(piece)
+        cur = cur + "x"
+        total += len(cur)
+    return total
+
+
+# C1: an owned local takes a copy of a view binding and only reads it: the copy is elided (no allocation).
+func view_binding_copy_read_only(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        const piece = data[i % 4:i % 4 + 4]
+        mut cur = copy(piece)
+        total += len(cur)
+    return total
+
+
+# C2: a bytes slice returned from a function that is not a view return.
+func head_bytes(source: bytes) -> bytes:
+    return copy(source[0:4])
+
+
+func bytes_copy(n: int) -> int:
+    const data = b"abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        total += len(head_bytes(data))
+    return total
+
+
+# C3: a view on one path and a literal on another, the view copied.
+func line_at(text: str, n: int) -> str:
+    if n < 0:
+        return "none"
+    return copy(text[0:n])
+
+
+func mixed_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        total += len(line_at(data, 4))
+    return total
+
+
+# C3: a view wrapped in Some, the view copied inside Some.
+func first_some(source: str) -> str?:
+    if len(source) < 4:
+        return None
+    return Some(copy(source[0:4]))
+
+
+func some_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        total += len(first_some(data).unwrap_or(""))
+    return total
+
+
+# C3: a view returned as the success of a fallible function, the view copied.
+func first_result(source: str) -> str fails str:
+    if len(source) < 4:
+        fail "short"
+    return copy(source[0:4])
+
+
+func result_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        match first_result(data):
+            case Ok(text):
+                total += len(text)
+            case Err(message):
+                total -= len(message)
+    return total
+
+
+# C3: a view binding of the parameter returned on a mixed path, the binding copied.
+func piece_return(text: str, n: int) -> str:
+    if n < 0:
+        return "none"
+    const piece = text[0:n]
+    return copy(piece)
+
+
+func piece_copy(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        total += len(piece_return(data, 4))
+    return total
+
+
+# A pure view return of `str` is free: the view of the parameter is returned, and
+# nothing is copied, whatever the count.
+func head(source: str) -> str from source:
+    return source[0:4]
+
+
+func pure_view(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        total += len(head(data))
+    return total
+
+
+# Each text and bytes shape makes one copy and one new value per run: 2 * n.
+public func test_an_assigned_text_slice_copy_makes_one_copy_per_run() -> bool:
+    return testing.allocations(assigned_copy, 100) == 200
+
+
+public func test_a_declared_text_slice_copy_makes_one_copy_per_run() -> bool:
+    return testing.allocations(declared_copy, 100) == 200
+
+
+public func test_an_assigned_list_slice_copy_makes_one_copy_per_run() -> bool:
+    return testing.allocations(list_assigned_copy, 100) == 100
+
+
+public func test_a_declared_list_slice_copy_makes_one_copy_per_run() -> bool:
+    return testing.allocations(list_declared_copy, 100) == 100
+
+
+public func test_a_declared_bytes_slice_copy_makes_one_copy_per_run() -> bool:
+    return testing.allocations(bytes_declared_copy, 100) == 200
+
+
+public func test_a_deferred_slice_copy_makes_one_copy_per_run_on_its_path() -> bool:
+    return testing.allocations(deferred_copy, 100) == 100
+
+
+public func test_a_view_binding_copy_makes_one_copy_per_run() -> bool:
+    return testing.allocations(view_binding_copy, 100) == 200
+
+
+public func test_a_view_binding_copy_that_is_only_read_is_elided() -> bool:
+    return testing.allocations(view_binding_copy_read_only, 100) == 0
+
+
+public func test_a_returned_bytes_copy_makes_one_copy_per_call() -> bool:
+    return testing.allocations(bytes_copy, 100) == 100
+
+
+public func test_a_mixed_view_return_copies_only_the_view() -> bool:
+    return testing.allocations(mixed_copy, 100) == 100
+
+
+public func test_a_view_wrapped_in_some_is_copied_inside_some() -> bool:
+    return testing.allocations(some_copy, 100) == 100
+
+
+public func test_a_view_returned_as_a_fallible_success_is_copied_inside_it() -> bool:
+    return testing.allocations(result_copy, 100) == 100
+
+
+public func test_a_mixed_view_binding_return_copies_the_binding() -> bool:
+    return testing.allocations(piece_copy, 100) == 100
+
+
+public func test_a_pure_view_return_of_str_makes_no_copy() -> bool:
+    return testing.allocations(pure_view, 100) == 0

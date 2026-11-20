@@ -1,0 +1,36 @@
+import buffers
+
+record Packet:
+    body: byte_buffer
+
+
+# spec-case: NEW-CORE-S3-NUMBER-1
+public func test_byte_buffer_snapshots_copies_and_places() -> bool:
+    mut source = [1, 2, 3]
+    mut buffer = byte_buffer(source)
+    mut saved = copy(buffer)
+    mut snapshot = bytes(buffer)
+    if not buffers.append_byte(mut buffer, 4):
+        return False
+    if saved != b"\x01\x02\x03" or snapshot != saved or len(source) != 3 or source[0] != 1 or source[1] != 2 or source[2] != 3:
+        return False
+    mut packet = Packet(body=copy(buffer))
+    if not buffers.append_byte(mut packet.body, 5):
+        return False
+    return packet.body == b"\x01\x02\x03\x04\x05" and buffer == b"\x01\x02\x03\x04"
+
+
+# spec-case: NEW-CORE-S3-NUMBER-1
+public func test_buffer_append_range_utf8_and_float_preserve_inputs() -> bool:
+    mut buffer = byte_buffer([])
+    if not buffers.reserve(mut buffer, 32):
+        return False
+    buffers.append_utf8(mut buffer, "λ")
+    buffers.append_float(mut buffer, -0.0)
+    if buffers.append_byte(mut buffer, 256) or buffers.append_range(mut buffer, b"abc", 2, 1):
+        return False
+    return bytes(buffer) == b"\xce\xbb-0.0"
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,27 @@
+# Unions with payloads and a match over them.
+enum Shape:
+    square(side: int)
+    rect(w: int, h: int)
+    empty
+
+
+func area(s: Shape) -> int:
+    match s:
+        case square(side):
+            return side * side
+        case rect(w, h):
+            return w * h
+        case empty:
+            return 0
+
+
+func main() -> int:
+    mut total = 0
+    for i in range(12):
+        if i % 3 == 0:
+            total += area(Shape.square(side=i))
+        elif i % 3 == 1:
+            total += area(Shape.rect(w=i, h=2))
+        else:
+            total += area(Shape.empty)
+    return total % 256

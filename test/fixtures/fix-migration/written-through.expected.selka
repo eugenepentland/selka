@@ -1,0 +1,34 @@
+# A `mut` local stored once from a place borrows it (D4, lane OC's H1), so each write through it is refused at the write,
+# with `copy(...)` at the binding as the structured repair; a bare owner may be given with `own` instead.
+record Item:
+    name: str
+    count: int
+
+
+record Shelf:
+    item: Item
+    counts: int[]
+
+
+func grown(shelf: Shelf) -> int:
+    mut counts = copy(shelf.counts)
+    append(mut counts, 4)
+    return len(counts)
+
+
+func renamed(shelf: Shelf) -> int:
+    mut item = copy(shelf.item)
+    item.count = item.count + 1
+    return item.count
+
+
+func first_set(shelf: Shelf) -> int:
+    mut counts = copy(shelf.counts)
+    counts[0] = 9
+    return counts[0]
+
+
+func main(out: Stream) -> int:
+    const shelf = Shelf(item=Item(name="a", count=1), counts=[1, 2, 3])
+    print(out, grown(shelf), renamed(shelf), first_set(shelf), shelf.counts[0], shelf.item.count)
+    return 0

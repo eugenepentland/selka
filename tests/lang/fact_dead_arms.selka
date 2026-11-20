@@ -1,0 +1,65 @@
+# Facts about a join that a branch the facts call dead still reaches. `--verify-facts` emits every block, dead ones
+# included, and snapshots the length a bound names where the bound's source is defined; a `bytes` value defined on the
+# live arm alone does not dominate the join (the dead arm reaches it too), so the bound must not name it.
+# These tests run `bytes` joins whose condition the facts decide, in the default `--verify-facts` lang run.
+func ab() -> bytes:
+    return b"ab"
+
+
+func cd() -> bytes:
+    return b"cd"
+
+
+func joined_with_first_live(first: bool) -> int:
+    const got: bytes
+    if first:
+        got = ab()
+    else:
+        got = cd()
+    return len(got)
+
+
+func joined_with_second_live(first: bool) -> int:
+    const got: bytes
+    if first:
+        got = ab()
+    else:
+        got = cd()
+    return len(got) + int(got[0])
+
+
+public func test_a_bytes_value_assigned_in_both_arms_of_a_decided_branch_is_read_after_the_join() -> bool:
+    const ok = True
+    const got: bytes
+    if ok:
+        got = ab()
+    else:
+        got = cd()
+    return len(got) == 2 and got[0] == 97
+
+
+public func test_the_dead_arm_may_be_the_first_one() -> bool:
+    const ok = False
+    const got: bytes
+    if ok:
+        got = ab()
+    else:
+        got = cd()
+    return len(got) == 2 and got[1] == 100
+
+
+public func test_a_loop_bounded_by_the_joined_length_reads_every_octet() -> bool:
+    const ok = True
+    const got: bytes
+    if ok:
+        got = ab()
+    else:
+        got = cd()
+    mut total = 0
+    for at in range(len(got)):
+        total += got[at]
+    return total == 195
+
+
+public func test_a_constant_argument_decides_the_branch_inside_the_callee() -> bool:
+    return joined_with_first_live(True) == 2 and joined_with_second_live(False) == 101

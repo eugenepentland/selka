@@ -1,0 +1,8 @@
+# SHA-256 of a known text (the portable compression).
+import hashes
+
+func main() -> int:
+    const digest = hashes.sha256(b"abc")
+    if digest != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
+        return 1
+    return len(digest) + 3

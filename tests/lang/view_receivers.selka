@@ -1,0 +1,1433 @@
+# N5 (12 November 2026): every library operation that can receive a text, bytes or list view, called on a parameter, an
+# inline slice and a slice binding. The build checks that no copy is hidden (E_CORE_HIDDEN_COPY); `strings.char_stride` on a
+# view used to leave one. `lists.stride` on a list view (view_92) was refused E_CORE_UNSUPPORTED until lane FX.
+import buffers
+import bytes
+import lists
+import strings
+
+func apply(f: func(str) -> str, text: str) -> str:
+    return f(text)
+
+
+# strings.is_digit
+func view_00(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.is_digit(s)
+    if len(t) > 0:
+        _ = strings.is_digit(s[1:6])
+    if len(t) > 0:
+        _ = strings.is_digit(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.is_alpha
+func view_01(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.is_alpha(s)
+    if len(t) > 0:
+        _ = strings.is_alpha(s[1:6])
+    if len(t) > 0:
+        _ = strings.is_alpha(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.is_alnum
+func view_02(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.is_alnum(s)
+    if len(t) > 0:
+        _ = strings.is_alnum(s[1:6])
+    if len(t) > 0:
+        _ = strings.is_alnum(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.is_space
+func view_03(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.is_space(s)
+    if len(t) > 0:
+        _ = strings.is_space(s[1:6])
+    if len(t) > 0:
+        _ = strings.is_space(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.starts_with
+func view_04(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.starts_with(s, t)
+    if len(t) > 0:
+        _ = strings.starts_with(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.starts_with(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.starts_with(needle)
+func view_05(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.starts_with(t, s)
+    if len(t) > 0:
+        _ = strings.starts_with(t, s[1:6])
+    if len(t) > 0:
+        _ = strings.starts_with(t, sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.ends_with
+func view_06(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.ends_with(s, t)
+    if len(t) > 0:
+        _ = strings.ends_with(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.ends_with(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.find
+func view_07(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.find(s, t)
+    if len(t) > 0:
+        _ = strings.find(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.find(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.find(needle)
+func view_08(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.find(t, s)
+    if len(t) > 0:
+        _ = strings.find(t, s[1:6])
+    if len(t) > 0:
+        _ = strings.find(t, sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.count
+func view_09(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.count(s, t)
+    if len(t) > 0:
+        _ = strings.count(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.count(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.lstrip
+func view_10(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.lstrip(s))
+    if len(t) > 0:
+        _ = len(strings.lstrip(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.lstrip(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.rstrip
+func view_11(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.rstrip(s))
+    if len(t) > 0:
+        _ = len(strings.rstrip(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.rstrip(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.strip
+func view_12(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.strip(s))
+    if len(t) > 0:
+        _ = len(strings.strip(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.strip(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.lines
+func view_13(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.lines(s))
+    if len(t) > 0:
+        _ = len(strings.lines(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.lines(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.words
+func view_14(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.words(s))
+    if len(t) > 0:
+        _ = len(strings.words(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.words(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.repeat
+func view_15(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.repeat(s, 2))
+    if len(t) > 0:
+        _ = len(strings.repeat(s[1:6], 2))
+    if len(t) > 0:
+        _ = len(strings.repeat(sv, 2))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.append(builder)
+func view_16(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        mut o = strings.builder()
+        strings.append(mut o, s)
+        _ = len(strings.finish(o))
+    if len(t) > 0:
+        mut o = strings.builder()
+        strings.append(mut o, s[1:6])
+        _ = len(strings.finish(o))
+    if len(t) > 0:
+        mut o = strings.builder()
+        strings.append(mut o, sv)
+        _ = len(strings.finish(o))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.pad_left
+func view_17(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        match strings.pad_left(s, 12, " "):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.pad_left(s[1:6], 12, " "):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.pad_left(sv, 12, " "):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.pad_right
+func view_18(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        match strings.pad_right(s, 12, " "):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.pad_right(s[1:6], 12, " "):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.pad_right(sv, 12, " "):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.upper
+func view_19(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.upper(s))
+    if len(t) > 0:
+        _ = len(strings.upper(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.upper(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.lower
+func view_20(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.lower(s))
+    if len(t) > 0:
+        _ = len(strings.lower(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.lower(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.substitute
+func view_21(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        match strings.substitute(s, t, "z"):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.substitute(s[1:6], t, "z"):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.substitute(sv, t, "z"):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = e
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.to_int
+func view_22(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = parse_int(s)
+    if len(t) > 0:
+        _ = parse_int(s[1:6])
+    if len(t) > 0:
+        _ = parse_int(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.to_float
+func view_23(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = parse_float(s)
+    if len(t) > 0:
+        _ = parse_float(s[1:6])
+    if len(t) > 0:
+        _ = parse_float(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.ord
+func view_24(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        match strings.ord(s):
+            case Ok(v):
+                _ = v
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.ord(s[1:6]):
+            case Ok(v):
+                _ = v
+            case Err(e):
+                _ = e
+    if len(t) > 0:
+        match strings.ord(sv):
+            case Ok(v):
+                _ = v
+            case Err(e):
+                _ = e
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.encode
+func view_25(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.encode(s))
+    if len(t) > 0:
+        _ = len(strings.encode(s[1:6]))
+    if len(t) > 0:
+        _ = len(strings.encode(sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.find_any
+func view_26(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.find_any(s, ["l", "o"])
+    if len(t) > 0:
+        _ = strings.find_any(s[1:6], ["l", "o"])
+    if len(t) > 0:
+        _ = strings.find_any(sv, ["l", "o"])
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.split
+func view_27(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.split(s, t))
+    if len(t) > 0:
+        _ = len(strings.split(s[1:6], t))
+    if len(t) > 0:
+        _ = len(strings.split(sv, t))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.replace
+func view_28(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.replace(s, t, "z"))
+    if len(t) > 0:
+        _ = len(strings.replace(s[1:6], t, "z"))
+    if len(t) > 0:
+        _ = len(strings.replace(sv, t, "z"))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.rfind
+func view_29(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.rfind(s, t)
+    if len(t) > 0:
+        _ = strings.rfind(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.rfind(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.text_index
+func view_30(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.text_index(s, t)
+    if len(t) > 0:
+        _ = strings.text_index(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.text_index(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.text_rindex
+func view_31(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.text_rindex(s, t)
+    if len(t) > 0:
+        _ = strings.text_rindex(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.text_rindex(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# value strings.upper
+func view_32(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(apply(strings.upper, s))
+    if len(t) > 0:
+        _ = len(apply(strings.upper, s[1:6]))
+    if len(t) > 0:
+        _ = len(apply(strings.upper, sv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_count
+func view_33(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_count(s)
+    if len(t) > 0:
+        _ = strings.char_count(s[1:6])
+    if len(t) > 0:
+        _ = strings.char_count(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_at
+func view_34(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.char_at(s, 1))
+    if len(t) > 0:
+        _ = len(strings.char_at(s[1:6], 1))
+    if len(t) > 0:
+        _ = len(strings.char_at(sv, 1))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_slice
+func view_35(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.char_slice(s, 1, 3))
+    if len(t) > 0:
+        _ = len(strings.char_slice(s[1:6], 1, 3))
+    if len(t) > 0:
+        _ = len(strings.char_slice(sv, 1, 3))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_stride
+func view_36(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.char_stride(s, None, None, -1))
+    if len(t) > 0:
+        _ = len(strings.char_stride(s[1:6], None, None, -1))
+    if len(t) > 0:
+        _ = len(strings.char_stride(sv, None, None, -1))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_stride(+2)
+func view_37(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(strings.char_stride(s, 0, 4, 2))
+    if len(t) > 0:
+        _ = len(strings.char_stride(s[1:6], 0, 4, 2))
+    if len(t) > 0:
+        _ = len(strings.char_stride(sv, 0, 4, 2))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.chars
+func view_38(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        for ch in strings.chars(s):
+            _ = len(ch)
+    if len(t) > 0:
+        for ch in strings.chars(s[1:6]):
+            _ = len(ch)
+    if len(t) > 0:
+        for ch in strings.chars(sv):
+            _ = len(ch)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.bytes
+func view_39(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        for o in strings.bytes(s):
+            _ = o
+    if len(t) > 0:
+        for o in strings.bytes(s[1:6]):
+            _ = o
+    if len(t) > 0:
+        for o in strings.bytes(sv):
+            _ = o
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_find
+func view_40(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_find(s, t, 0)
+    if len(t) > 0:
+        _ = strings.char_find(s[1:6], t, 0)
+    if len(t) > 0:
+        _ = strings.char_find(sv, t, 0)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_rfind
+func view_41(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_rfind(s, t, 0, 3)
+    if len(t) > 0:
+        _ = strings.char_rfind(s[1:6], t, 0, 3)
+    if len(t) > 0:
+        _ = strings.char_rfind(sv, t, 0, 3)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_index
+func view_42(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_index(s, "l", 0)
+    if len(t) > 0:
+        _ = strings.char_index(s[1:6], "l", 0)
+    if len(t) > 0:
+        _ = strings.char_index(sv, "l", 0)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_rindex
+func view_43(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_rindex(s, "l", 0, 4)
+    if len(t) > 0:
+        _ = strings.char_rindex(s[1:6], "l", 0, 4)
+    if len(t) > 0:
+        _ = strings.char_rindex(sv, "l", 0, 4)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_count_of
+func view_44(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_count_of(s, t)
+    if len(t) > 0:
+        _ = strings.char_count_of(s[1:6], t)
+    if len(t) > 0:
+        _ = strings.char_count_of(sv, t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_startswith
+func view_45(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_startswith(s, t, 0)
+    if len(t) > 0:
+        _ = strings.char_startswith(s[1:6], t, 0)
+    if len(t) > 0:
+        _ = strings.char_startswith(sv, t, 0)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.char_endswith
+func view_46(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = strings.char_endswith(s, t, 0, 3)
+    if len(t) > 0:
+        _ = strings.char_endswith(s[1:6], t, 0, 3)
+    if len(t) > 0:
+        _ = strings.char_endswith(sv, t, 0, 3)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# len(str)
+func view_47(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(s)
+    if len(t) > 0:
+        _ = len(s[1:6])
+    if len(t) > 0:
+        _ = len(sv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# str in
+func view_48(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = t in s
+    if len(t) > 0:
+        _ = t in s[1:6]
+    if len(t) > 0:
+        _ = t in sv
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# str ==
+func view_49(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = s == t
+    if len(t) > 0:
+        _ = s[1:6] == t
+    if len(t) > 0:
+        _ = sv == t
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# str +
+func view_50(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(s + t)
+    if len(t) > 0:
+        _ = len(s[1:6] + t)
+    if len(t) > 0:
+        _ = len(sv + t)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# f-string
+func view_51(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = len(f"<{s}>")
+    if len(t) > 0:
+        _ = len(f"<{s[1:6]}>")
+    if len(t) > 0:
+        _ = len(f"<{sv}>")
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# str index
+func view_52(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        _ = s[0]
+    if len(t) > 0:
+        _ = s[1:6][0]
+    if len(t) > 0:
+        _ = sv[0]
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.starts_with
+func view_53(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.starts_with(b, c)
+    if len(t) > 0:
+        _ = bytes.starts_with(b[1:5], c)
+    if len(t) > 0:
+        _ = bytes.starts_with(bv, c)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.ends_with
+func view_54(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.ends_with(b, c)
+    if len(t) > 0:
+        _ = bytes.ends_with(b[1:5], c)
+    if len(t) > 0:
+        _ = bytes.ends_with(bv, c)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.find
+func view_55(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.find(b, c)
+    if len(t) > 0:
+        _ = bytes.find(b[1:5], c)
+    if len(t) > 0:
+        _ = bytes.find(bv, c)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.rfind
+func view_56(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.rfind(b, c)
+    if len(t) > 0:
+        _ = bytes.rfind(b[1:5], c)
+    if len(t) > 0:
+        _ = bytes.rfind(bv, c)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.count
+func view_57(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.count(b, c)
+    if len(t) > 0:
+        _ = bytes.count(b[1:5], c)
+    if len(t) > 0:
+        _ = bytes.count(bv, c)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.split
+func view_58(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(bytes.split(b, c))
+    if len(t) > 0:
+        _ = len(bytes.split(b[1:5], c))
+    if len(t) > 0:
+        _ = len(bytes.split(bv, c))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.join(separator)
+func view_59(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(bytes.join([c, c], b))
+    if len(t) > 0:
+        _ = len(bytes.join([c, c], b[1:5]))
+    if len(t) > 0:
+        _ = len(bytes.join([c, c], bv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.replace
+func view_60(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(bytes.replace(b, c, b"z"))
+    if len(t) > 0:
+        _ = len(bytes.replace(b[1:5], c, b"z"))
+    if len(t) > 0:
+        _ = len(bytes.replace(bv, c, b"z"))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.strip
+func view_61(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(bytes.strip(b))
+    if len(t) > 0:
+        _ = len(bytes.strip(b[1:5]))
+    if len(t) > 0:
+        _ = len(bytes.strip(bv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.lstrip
+func view_62(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(bytes.lstrip(b))
+    if len(t) > 0:
+        _ = len(bytes.lstrip(b[1:5]))
+    if len(t) > 0:
+        _ = len(bytes.lstrip(bv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.rstrip
+func view_63(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(bytes.rstrip(b))
+    if len(t) > 0:
+        _ = len(bytes.rstrip(b[1:5]))
+    if len(t) > 0:
+        _ = len(bytes.rstrip(bv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.parse_int_range
+func view_64(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.parse_int_range(b, 0, 1)
+    if len(t) > 0:
+        _ = bytes.parse_int_range(b[1:5], 0, 1)
+    if len(t) > 0:
+        _ = bytes.parse_int_range(bv, 0, 1)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.parse_float_range
+func view_65(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.parse_float_range(b, 0, 1)
+    if len(t) > 0:
+        _ = bytes.parse_float_range(b[1:5], 0, 1)
+    if len(t) > 0:
+        _ = bytes.parse_float_range(bv, 0, 1)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.scalar_count_range
+func view_66(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        match bytes.scalar_count_range(b, 0, 2):
+            case Ok(v):
+                _ = v
+            case Err(e):
+                _ = len(e)
+    if len(t) > 0:
+        match bytes.scalar_count_range(b[1:5], 0, 2):
+            case Ok(v):
+                _ = v
+            case Err(e):
+                _ = len(e)
+    if len(t) > 0:
+        match bytes.scalar_count_range(bv, 0, 2):
+            case Ok(v):
+                _ = v
+            case Err(e):
+                _ = len(e)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.read_u8
+func view_67(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.read_u8(b, 0)
+    if len(t) > 0:
+        _ = bytes.read_u8(b[1:5], 0)
+    if len(t) > 0:
+        _ = bytes.read_u8(bv, 0)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.read_u32_le
+func view_68(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.read_u32_le(b, 0)
+    if len(t) > 0:
+        _ = bytes.read_u32_le(b[1:5], 0)
+    if len(t) > 0:
+        _ = bytes.read_u32_le(bv, 0)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes.read_f64_le
+func view_69(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = bytes.read_f64_le(b + b + b, 0)
+    if len(t) > 0:
+        _ = bytes.read_f64_le(b + b + b[1:5], 0)
+    if len(t) > 0:
+        _ = bytes.read_f64_le(b + b + bv, 0)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# strings.decode
+func view_70(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        match strings.decode(b):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = len(e)
+    if len(t) > 0:
+        match strings.decode(b[1:5]):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = len(e)
+    if len(t) > 0:
+        match strings.decode(bv):
+            case Ok(v):
+                _ = len(v)
+            case Err(e):
+                _ = len(e)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# len(bytes)
+func view_71(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(b)
+    if len(t) > 0:
+        _ = len(b[1:5])
+    if len(t) > 0:
+        _ = len(bv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes index
+func view_72(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = b[0]
+    if len(t) > 0:
+        _ = b[1:5][0]
+    if len(t) > 0:
+        _ = bv[0]
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes ==
+func view_73(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = b == c
+    if len(t) > 0:
+        _ = b[1:5] == c
+    if len(t) > 0:
+        _ = bv == c
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# bytes +
+func view_74(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        _ = len(b + c)
+    if len(t) > 0:
+        _ = len(b[1:5] + c)
+    if len(t) > 0:
+        _ = len(bv + c)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# buffers.append
+func view_75(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        mut o = buffers.empty()
+        buffers.append(mut o, b)
+        _ = len(o)
+    if len(t) > 0:
+        mut o = buffers.empty()
+        buffers.append(mut o, b[1:5])
+        _ = len(o)
+    if len(t) > 0:
+        mut o = buffers.empty()
+        buffers.append(mut o, bv)
+        _ = len(o)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# buffers.append_utf8
+func view_76(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const sv = s[1:6]
+    if len(t) > 0:
+        mut o = buffers.empty()
+        buffers.append_utf8(mut o, s)
+        _ = len(o)
+    if len(t) > 0:
+        mut o = buffers.empty()
+        buffers.append_utf8(mut o, s[1:6])
+        _ = len(o)
+    if len(t) > 0:
+        mut o = buffers.empty()
+        buffers.append_utf8(mut o, sv)
+        _ = len(o)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# buffers.append_range
+func view_77(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const bv = b[1:5]
+    if len(t) > 0:
+        mut o = buffers.empty()
+        _ = buffers.append_range(mut o, b, 0, 2)
+        _ = len(o)
+    if len(t) > 0:
+        mut o = buffers.empty()
+        _ = buffers.append_range(mut o, b[1:5], 0, 2)
+        _ = len(o)
+    if len(t) > 0:
+        mut o = buffers.empty()
+        _ = buffers.append_range(mut o, bv, 0, 2)
+        _ = len(o)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# lists.contains
+func view_78(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = lists.contains(xs, 2)
+    if len(t) > 0:
+        _ = lists.contains(xs[0:2], 2)
+    if len(t) > 0:
+        _ = lists.contains(xv, 2)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# lists.index_of
+func view_79(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = lists.index_of(xs, 3)
+    if len(t) > 0:
+        _ = lists.index_of(xs[0:2], 3)
+    if len(t) > 0:
+        _ = lists.index_of(xv, 3)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# lists.last
+func view_80(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = lists.last(xs)
+    if len(t) > 0:
+        _ = lists.last(xs[0:2])
+    if len(t) > 0:
+        _ = lists.last(xv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# lists.extend(other)
+func view_81(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        mut ys: int[] = []
+        lists.extend(mut ys, xs)
+        _ = len(ys)
+    if len(t) > 0:
+        mut ys: int[] = []
+        lists.extend(mut ys, xs[0:2])
+        _ = len(ys)
+    if len(t) > 0:
+        mut ys: int[] = []
+        lists.extend(mut ys, xv)
+        _ = len(ys)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# len(list)
+func view_82(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = len(xs)
+    if len(t) > 0:
+        _ = len(xs[0:2])
+    if len(t) > 0:
+        _ = len(xv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# list index
+func view_83(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = xs[0]
+    if len(t) > 0:
+        _ = xs[0:2][0]
+    if len(t) > 0:
+        _ = xv[0]
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# list ==
+func view_84(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = xs == [1]
+    if len(t) > 0:
+        _ = xs[0:2] == [1]
+    if len(t) > 0:
+        _ = xv == [1]
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# sorted
+func view_85(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = len(sorted(xs))
+    if len(t) > 0:
+        _ = len(sorted(xs[0:2]))
+    if len(t) > 0:
+        _ = len(sorted(xv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# sum
+func view_86(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = sum(xs)
+    if len(t) > 0:
+        _ = sum(xs[0:2])
+    if len(t) > 0:
+        _ = sum(xv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# min
+func view_87(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = min(xs)
+    if len(t) > 0:
+        _ = min(xs[0:2])
+    if len(t) > 0:
+        _ = min(xv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# max
+func view_88(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = max(xs)
+    if len(t) > 0:
+        _ = max(xs[0:2])
+    if len(t) > 0:
+        _ = max(xv)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# list(...)
+func view_89(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = len(list(xs))
+    if len(t) > 0:
+        _ = len(list(xs[0:2]))
+    if len(t) > 0:
+        _ = len(list(xv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# reversed
+func view_90(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = len(reversed(xs))
+    if len(t) > 0:
+        _ = len(reversed(xs[0:2]))
+    if len(t) > 0:
+        _ = len(reversed(xv))
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# for in list
+func view_91(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        for v in xs:
+            _ = v
+    if len(t) > 0:
+        for v in xs[0:2]:
+            _ = v
+    if len(t) > 0:
+        for v in xv:
+            _ = v
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+# lists.stride
+func view_92(s: str, t: str, b: bytes, c: bytes, xs: int[]) -> int:
+    const xv = xs[0:2]
+    if len(t) > 0:
+        _ = lists.stride(xs, None, None, -1)
+    if len(t) > 0:
+        _ = lists.stride(xs[0:2], None, None, 2)
+    if len(t) > 0:
+        _ = lists.stride(xv, 1, None, 1)
+    # Every parameter is read, so the parameters an operation does not take raise no warning.
+    return 1 + len(s) + len(t) + len(b) + len(c) + len(xs) - len(s) - len(t) - len(b) - len(c) - len(xs)
+
+
+public func test_library_operations_read_views_without_hidden_copies() -> bool:
+    const s = "héllo wörld"
+    const t = "l"
+    const b = b"hello"
+    const c = b"l"
+    const xs = [3, 1, 2]
+    mut n = 0
+    n += view_00(s, t, b, c, xs)
+    n += view_01(s, t, b, c, xs)
+    n += view_02(s, t, b, c, xs)
+    n += view_03(s, t, b, c, xs)
+    n += view_04(s, t, b, c, xs)
+    n += view_05(s, t, b, c, xs)
+    n += view_06(s, t, b, c, xs)
+    n += view_07(s, t, b, c, xs)
+    n += view_08(s, t, b, c, xs)
+    n += view_09(s, t, b, c, xs)
+    n += view_10(s, t, b, c, xs)
+    n += view_11(s, t, b, c, xs)
+    n += view_12(s, t, b, c, xs)
+    n += view_13(s, t, b, c, xs)
+    n += view_14(s, t, b, c, xs)
+    n += view_15(s, t, b, c, xs)
+    n += view_16(s, t, b, c, xs)
+    n += view_17(s, t, b, c, xs)
+    n += view_18(s, t, b, c, xs)
+    n += view_19(s, t, b, c, xs)
+    n += view_20(s, t, b, c, xs)
+    n += view_21(s, t, b, c, xs)
+    n += view_22(s, t, b, c, xs)
+    n += view_23(s, t, b, c, xs)
+    n += view_24(s, t, b, c, xs)
+    n += view_25(s, t, b, c, xs)
+    n += view_26(s, t, b, c, xs)
+    n += view_27(s, t, b, c, xs)
+    n += view_28(s, t, b, c, xs)
+    n += view_29(s, t, b, c, xs)
+    n += view_30(s, t, b, c, xs)
+    n += view_31(s, t, b, c, xs)
+    n += view_32(s, t, b, c, xs)
+    n += view_33(s, t, b, c, xs)
+    n += view_34(s, t, b, c, xs)
+    n += view_35(s, t, b, c, xs)
+    n += view_36(s, t, b, c, xs)
+    n += view_37(s, t, b, c, xs)
+    n += view_38(s, t, b, c, xs)
+    n += view_39(s, t, b, c, xs)
+    n += view_40(s, t, b, c, xs)
+    n += view_41(s, t, b, c, xs)
+    n += view_42(s, t, b, c, xs)
+    n += view_43(s, t, b, c, xs)
+    n += view_44(s, t, b, c, xs)
+    n += view_45(s, t, b, c, xs)
+    n += view_46(s, t, b, c, xs)
+    n += view_47(s, t, b, c, xs)
+    n += view_48(s, t, b, c, xs)
+    n += view_49(s, t, b, c, xs)
+    n += view_50(s, t, b, c, xs)
+    n += view_51(s, t, b, c, xs)
+    n += view_52(s, t, b, c, xs)
+    n += view_53(s, t, b, c, xs)
+    n += view_54(s, t, b, c, xs)
+    n += view_55(s, t, b, c, xs)
+    n += view_56(s, t, b, c, xs)
+    n += view_57(s, t, b, c, xs)
+    n += view_58(s, t, b, c, xs)
+    n += view_59(s, t, b, c, xs)
+    n += view_60(s, t, b, c, xs)
+    n += view_61(s, t, b, c, xs)
+    n += view_62(s, t, b, c, xs)
+    n += view_63(s, t, b, c, xs)
+    n += view_64(s, t, b, c, xs)
+    n += view_65(s, t, b, c, xs)
+    n += view_66(s, t, b, c, xs)
+    n += view_67(s, t, b, c, xs)
+    n += view_68(s, t, b, c, xs)
+    n += view_69(s, t, b, c, xs)
+    n += view_70(s, t, b, c, xs)
+    n += view_71(s, t, b, c, xs)
+    n += view_72(s, t, b, c, xs)
+    n += view_73(s, t, b, c, xs)
+    n += view_74(s, t, b, c, xs)
+    n += view_75(s, t, b, c, xs)
+    n += view_76(s, t, b, c, xs)
+    n += view_77(s, t, b, c, xs)
+    n += view_78(s, t, b, c, xs)
+    n += view_79(s, t, b, c, xs)
+    n += view_80(s, t, b, c, xs)
+    n += view_81(s, t, b, c, xs)
+    n += view_82(s, t, b, c, xs)
+    n += view_83(s, t, b, c, xs)
+    n += view_84(s, t, b, c, xs)
+    n += view_85(s, t, b, c, xs)
+    n += view_86(s, t, b, c, xs)
+    n += view_87(s, t, b, c, xs)
+    n += view_88(s, t, b, c, xs)
+    n += view_89(s, t, b, c, xs)
+    n += view_90(s, t, b, c, xs)
+    n += view_91(s, t, b, c, xs)
+    n += view_92(s, t, b, c, xs)
+    return n == 93

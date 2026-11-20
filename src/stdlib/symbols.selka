@@ -1,0 +1,74 @@
+# Symbols: a name interned once, and a small key that stands for it.
+#
+# A `Table` holds each distinct name once. `intern(mut table, name)` answers the `Symbol` of a name, adding the name the
+# first time it is seen, and `name(table, symbol)` reads the name back as a view of the table's own copy. A `Symbol` is one
+# integer, so it is copied freely, stored in records and lists, compared with `==` and used as a dictionary key; the text
+# is stored once however many places mention it. Repeated net names, reference designators and identifiers become
+# `Symbol`s, and the program reads the text only where it prints or parses it.
+#
+# A `Symbol` belongs to the table that made it: within one table two symbols are equal exactly when their names are equal.
+# Symbols are never removed, so a symbol stays valid for as long as its table does. `name` of a symbol its table did not
+# make traps `R_ASSERT` when the number is out of range, and reads another name when it is not, so keep one table for
+# the names that share a meaning.
+import spans
+
+# The key of an interned name.
+public record Symbol:
+    id: int
+
+
+# The distinct names, in the order they were first interned, and the index from a name to its place in that list.
+# It is sealed: only this module builds or changes one, so the list and the index always agree.
+@sealed
+public record Table:
+    names: bytes[]
+    index: dict[bytes, int]
+
+
+# An empty table.
+public func create() -> Table:
+    mut names: bytes[] = []
+    mut index: dict[bytes, int] = {}
+    return Table(names=own names, index=own index)
+
+
+# How many distinct names the table holds.
+public func count(table: Table) -> int:
+    return len(table.names)
+
+
+# The symbol of the name `text`, adding the name to the table the first time it is seen. The text is borrowed: it is copied
+# into the table only when it is new, so interning a name the table already holds allocates nothing.
+public func intern(mut table: Table, text: bytes) -> Symbol:
+    if text in table.index:
+        return Symbol(id=table.index[text])
+    const id = len(table.names)
+    append(mut table.names, copy(text))
+    table.index[text] = id
+    return Symbol(id=id)
+
+
+# The symbol of the text a span names in `sources`, interned like any other name. The same text at two places, or in two files,
+# is one symbol. The table and the sources are separate values, so a program keeps them in separate fields and reads one while
+# it writes the other.
+public func intern_span(mut table: Table, sources: spans.Sources, span: spans.Span) -> Symbol:
+    return intern(mut table, spans.text(sources, span))
+
+
+# The symbol of the name `text` when the table already holds it, and nothing otherwise. The table does not change.
+public func find(table: Table, text: bytes) -> Symbol?:
+    if text in table.index:
+        return Some(Symbol(id=table.index[text]))
+    return None
+
+
+# Whether `symbol` names an entry of this table.
+public func valid(table: Table, symbol: Symbol) -> bool:
+    return 0 <= symbol.id < len(table.names)
+
+
+# The name of a symbol, a view of the table's copy: no copy, and the table cannot change while the view is used. A symbol
+# outside the table traps `R_ASSERT`.
+public func name(table: Table, symbol: Symbol) -> bytes from table:
+    assert valid(table, symbol), "the symbol does not belong to this table"
+    return table.names[symbol.id]

@@ -1,0 +1,30 @@
+build-slot: gate slot 1, FIFO ticket 3129 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 42e5838afdb0)
+guardian: diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1: 1/1299 source file(s) in scope for the 50 per-file check(s); 36 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 37 finding(s), none in scope — report-only (--verbose for detail)
+guardian: repeated-string-literal: 272 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/86 failed (doc-comments, orphan-files, change-classification) — 1 report-only — diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1, 1 file(s) in scope
+guardian: failures grouped by check (3):
+  doc-comments (1 finding)
+    - src/dl4_probe.zig: pub fn probe: has no /// doc comment
+      fix: add a real /// doc comment above each public declaration (>= 12 non-whitespace chars, no TODO/FIXME).
+  orphan-files (1 finding)
+    - src/dl4_probe.zig: src/dl4_probe.zig
+      fix: import the file from a reachable module, or add it to [orphan_files] roots in guardian.toml.
+  change-classification (1 finding)
+    - src/dl4_probe.zig: 3 behavioral line(s) added
+      fix: commit these lines WITH a test — add or update a `// spec:`-tagged test, or add the behavior as a SPEC.md bullet, in this same change.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+verification-guardian
++- verification action guardian member 0 failure
+error: process exited with code 1
+failed command: ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+
+----------------------------------------------------------------------
+Ran 46 tests in 6.946s
+
+OK (skipped=2)
+Build Summary: 123/125 steps succeeded (1 failed); 6482/72188 tests passed (65706 skipped)
+verification-guardian transitive failure
++- verification action guardian member 0 failure
+

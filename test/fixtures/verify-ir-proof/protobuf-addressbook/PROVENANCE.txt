@@ -1,0 +1,10 @@
+The protobuf library's addressbook example and the modules it imports, copied unchanged from ~/ai/canopy/selka-protobuf
+at 370e260 (lane VL, V4, 11 November 2026) for the verify-ir-proof gate action: a pinned real program whose generated
+decoders hold the union-tag rule's shape R (a field read twice), so the gate checks the generator's real output, not only
+the language suites. main.selka is examples/addressbook/main.selka; pbgen/addressbook.selka and pbgen/google/protobuf/timestamp.selka
+are generated (genpkg/pbgen); protobuf/wire.selka, codec.selka and pjson.selka are the runtime library (lib/protobuf). Refresh the
+copy when the generator changes; the action never reaches outside the repository.
+Lane W13-S4 (15 November 2026) rewrote the spellings W13 retires in protobuf/wire.selka and protobuf/pjson.selka (one
+`decode()`, a `join`, three `math.floor`, a `strings.to_int` and a `math.abs`, whose
+`Result` match goes because `abs` answers the number and the seconds are bounded before it) as `selka fix` and one
+hand edit will in selka-protobuf; nothing else changed.

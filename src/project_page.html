@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project overview</title>
+<style>
+/* A review desk: a module index on the left and a reading pane on the right; one column under 760px. */
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --ink: #1b2126;
+  --muted: #5b6770;
+  --rule: #d9dfe3;
+  --accent: #0d6a6a;
+  --accent-soft: #e0efee;
+  --code-bg: #eef2f3;
+  --ok: #2e7a3a;
+  --warn: #9a5a00;
+  --bad: #b02a22;
+  --display: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111518; --surface: #181d21; --ink: #e2e7ea; --muted: #97a3ab; --rule: #2a3238;
+    --accent: #62c3bd; --accent-soft: #15302f; --code-bg: #1f262b; --ok: #79c784; --warn: #e2a64f; --bad: #f08c82;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111518; --surface: #181d21; --ink: #e2e7ea; --muted: #97a3ab; --rule: #2a3238;
+  --accent: #62c3bd; --accent-soft: #15302f; --code-bg: #1f262b; --ok: #79c784; --warn: #e2a64f; --bad: #f08c82;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, pre, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 0.05em 0.35em; border-radius: 3px; overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--code-bg); padding: 0.7rem 0.85rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; max-width: 100%; }
+pre code { background: none; padding: 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.2; text-wrap: balance; margin: 0; overflow-wrap: anywhere; }
+h1 { font-size: var(--step-3); letter-spacing: -0.01em; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+.label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.bar { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--rule);
+  padding-block: 0.6rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.2rem; max-width: 1280px; margin: 0 auto; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); overflow-wrap: anywhere; }
+.brand span { color: var(--muted); font-weight: 500; }
+.back { font-size: 0.88rem; white-space: nowrap; }
+.search { margin-left: auto; flex: 1 1 14rem; max-width: 22rem; }
+.search input { width: 100%; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); border-radius: 6px; padding: 0.35rem 0.6rem; font: inherit; }
+
+.desk { display: grid; grid-template-columns: minmax(210px, 270px) minmax(0, 1fr); gap: 1.5rem; max-width: 1280px; margin: 0 auto;
+  padding-block: 1.2rem 3rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.index { position: sticky; top: 4.2rem; align-self: start; max-height: calc(100vh - 5.5rem); overflow: auto; padding-right: 0.25rem; }
+.index nav { display: grid; gap: 1rem; }
+.index ul { list-style: none; margin: 0.35rem 0 0; padding: 0; display: grid; gap: 1px; }
+.index a { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--ink); font-size: 0.88rem; }
+.index a .n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.8rem; }
+.index a:hover { background: var(--code-bg); text-decoration: none; }
+.index a[aria-current="true"] { background: var(--accent-soft); font-weight: 600; }
+.index a .mname { min-width: 0; overflow-wrap: anywhere; }
+.pane { min-width: 0; display: grid; gap: 1.6rem; align-content: start; }
+
+.head { display: grid; gap: 0.5rem; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; color: var(--muted); font-size: 0.88rem; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 999px; padding: 0.05rem 0.6rem; font-size: 0.78rem; font-weight: 600; border: 1px solid var(--rule); background: var(--surface); white-space: nowrap; }
+.pill.ok { color: var(--ok); border-color: currentColor; }
+.pill.warn { color: var(--warn); border-color: currentColor; }
+.pill.kind { font-family: var(--mono); font-weight: 500; color: var(--muted); }
+.prose { max-width: 68ch; display: grid; gap: 0.6rem; }
+.prose p { margin: 0; }
+.prose ul { margin: 0; padding-left: 1.2rem; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.fact { background: var(--surface); padding: 0.65rem 0.8rem; display: grid; gap: 0.1rem; align-content: start; }
+.fact .v { font-family: var(--display); font-size: var(--step-2); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.fact .s { font-size: 0.8rem; color: var(--muted); }
+.fact.alert .v { color: var(--warn); }
+
+section.block { display: grid; gap: 0.75rem; min-width: 0; }
+.note { border-left: 3px solid var(--warn); background: var(--surface); padding: 0.7rem 0.9rem; border-radius: 0 6px 6px 0; max-width: 72ch; }
+.note.info { border-left-color: var(--accent); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--bg); }
+tr:last-child td { border-bottom: none; }
+
+.decision { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.1rem; display: grid; gap: 0.6rem; min-width: 0; }
+.decision .dhead { display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; align-items: baseline; justify-content: space-between; }
+.decision .field { display: grid; gap: 0.15rem; max-width: 72ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.chip { font-family: var(--mono); font-size: 0.78rem; border: 1px solid var(--rule); border-radius: 4px; padding: 0.05rem 0.4rem; background: var(--bg); color: var(--ink); overflow-wrap: anywhere; }
+a.chip:hover { border-color: var(--accent); text-decoration: none; }
+ul.sentences { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.15rem; }
+
+.decl { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem 1rem; display: grid; gap: 0.6rem; scroll-margin-top: 5rem; min-width: 0; }
+.decl.target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.decl .dtop { display: flex; flex-wrap: wrap; gap: 0.4rem 0.7rem; align-items: center; }
+.decl .dname { font-family: var(--mono); font-weight: 500; font-size: 0.95rem; overflow-wrap: anywhere; }
+.decl .facts-row { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-size: 0.84rem; color: var(--muted); }
+.decl .facts-row b { color: var(--ink); font-weight: 600; }
+.missing { color: var(--warn); }
+.prose-block { margin: 0; }
+.example { border-left: 3px solid var(--accent); }
+.example .prompt { color: var(--accent); }
+details summary { cursor: pointer; color: var(--muted); font-size: 0.84rem; }
+details ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-family: var(--mono); font-size: 0.78rem; }
+.empty { color: var(--muted); font-style: italic; margin: 0; }
+footer { color: var(--muted); font-size: 0.8rem; max-width: 80ch; }
+@media (max-width: 760px) {
+  .desk { grid-template-columns: minmax(0, 1fr); }
+  .index { position: static; max-height: 16rem; border: 1px solid var(--rule); border-radius: 8px; padding: 0.6rem; background: var(--surface); }
+  .search { margin-left: 0; max-width: none; }
+  h1 { font-size: var(--step-2); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .decl.target { transition: box-shadow 0.3s ease; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-inner">
+    <a class="back" id="back" href="#" hidden>&larr; all projects</a>
+    <div class="brand" id="brand">Project</div>
+    <div class="search"><input id="q" type="search" placeholder="Search declarations, signatures, docs" aria-label="Search declarations"></div>
+  </div>
+</header>
+<div class="desk">
+  <aside class="index" id="index" aria-label="Modules"></aside>
+  <main class="pane" id="pane"></main>
+</div>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function () {
+  'use strict';
+  const DATA = JSON.parse(document.getElementById('data').textContent);
+  const O = DATA.overview;
+  const decisions = O.releases.decisions || [];
+  const notesByRelease = new Map((DATA.release_notes || []).map(r => [r.name, r.titles || []]));
+  const state = { view: 'summary', module: null, target: null, query: '' };
+  const $ = id => document.getElementById(id);
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const fmt = n => Number(n).toLocaleString('en-US');
+  const plural = (n, one, many) => `${fmt(n)} ${n === 1 ? one : (many || one + 's')}`;
+
+  // Declaration lookup for `module::name` references and module names.
+  const declModule = new Map();
+  const moduleNames = new Set();
+  for (const m of O.modules) {
+    moduleNames.add(m.name);
+    for (const d of m.declarations) declModule.set(d.name, m.name);
+  }
+  function refLink(text) {
+    if (declModule.has(text)) return `<a href="#" data-mod="${esc(declModule.get(text))}" data-target="${esc(text)}"><code>${esc(text)}</code></a>`;
+    if (moduleNames.has(text)) return `<a href="#" data-mod="${esc(text)}"><code>${esc(text)}</code></a>`;
+    return `<code>${esc(text)}</code>`;
+  }
+  function inline(text) {
+    return String(text).split(/(`[^`]+`)/g).map(part => {
+      if (part.length > 1 && part.startsWith('`') && part.endsWith('`')) return refLink(part.slice(1, -1));
+      return esc(part);
+    }).join('');
+  }
+  function dedent(text) {
+    const lines = String(text).replace(/\s+$/, '').split('\n');
+    let min = Infinity;
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      min = Math.min(min, lines[i].match(/^ */)[0].length);
+    }
+    if (min === Infinity) min = 0;
+    return [lines[0].trim(), ...lines.slice(1).map(l => l.slice(min))];
+  }
+  // Docstring: paragraphs, "- " lists, indented blocks, and >>> examples with their output.
+  function renderDoc(text) {
+    if (!text || !text.trim()) return '';
+    const lines = dedent(text);
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      if (line.startsWith('>>> ')) {
+        const ex = [];
+        while (i < lines.length && lines[i].trim()) {
+          const l = lines[i];
+          if (l.startsWith('>>> ') || l.startsWith('... ')) ex.push(`<span class="prompt">${esc(l.slice(0, 4))}</span>${esc(l.slice(4))}`);
+          else ex.push(esc(l));
+          i++;
+        }
+        out.push(`<pre class="example"><code>${ex.join('\n')}</code></pre>`);
+        continue;
+      }
+      if (/^ {2,}\S/.test(line)) {
+        const block = [];
+        while (i < lines.length && (/^ {2,}/.test(lines[i]) || (!lines[i].trim() && i + 1 < lines.length && /^ {2,}\S/.test(lines[i + 1])))) { block.push(lines[i]); i++; }
+        const pad = Math.min(...block.filter(b => b.trim()).map(b => b.match(/^ */)[0].length));
+        out.push(`<pre><code>${esc(block.map(b => b.slice(pad)).join('\n'))}</code></pre>`);
+        continue;
+      }
+      if (/^[-*] /.test(line)) {
+        const items = [];
+        while (i < lines.length && lines[i].trim() && !lines[i].startsWith('>>> ')) {
+          if (/^[-*] /.test(lines[i])) items.push(lines[i].slice(2));
+          else if (items.length) items[items.length - 1] += ' ' + lines[i].trim();
+          i++;
+        }
+        out.push('<ul>' + items.map(t => `<li>${inline(t)}</li>`).join('') + '</ul>');
+        continue;
+      }
+      const para = [];
+      while (i < lines.length && lines[i].trim() && !lines[i].startsWith('>>> ') && !/^[-*] /.test(lines[i]) && !/^ {2,}\S/.test(lines[i])) { para.push(lines[i].trim()); i++; }
+      out.push(`<p>${inline(para.join(' '))}</p>`);
+    }
+    return `<div class="prose">${out.join('')}</div>`;
+  }
+  // The release a decision file belongs to: decisions/<release>/..., or '' for pending ones.
+  function releaseOf(path) {
+    const m = String(path).match(/decisions\/([^/]+)\//);
+    return m ? m[1] : '';
+  }
+  function decisionsOf(d) {
+    return (d.decisions || []).map(i => decisions[i]).filter(Boolean);
+  }
+
+  function decisionCard(d) {
+    const meta = d.metadata || {};
+    const rel = releaseOf(d.path);
+    const badge = d.pending ? '<span class="pill warn">pending</span>' : (rel ? `<span class="pill ok">release ${esc(rel)}</span>` : '');
+    return `<article class="decision" id="dec-${esc(d.identity)}">
+      <div class="dhead"><h3>${esc(meta.title || d.path)}</h3><div class="meta">${badge} ${meta.date ? `<span class="mono">${esc(meta.date)}</span>` : ''}</div></div>
+      <div class="field"><div class="label">Changes</div><div class="chips">${(d.changes || []).map(n => declModule.has(n)
+        ? `<a class="chip" href="#" data-mod="${esc(declModule.get(n))}" data-target="${esc(n)}">${esc(n)}</a>` : `<span class="chip">${esc(n)}</span>`).join('')}</div></div>
+      ${meta.why ? `<div class="field"><div class="label">Why</div><div>${inline(meta.why)}</div></div>` : ''}
+      ${meta.rejected ? `<div class="field"><div class="label">Rejected</div><div>${inline(meta.rejected)}</div></div>` : ''}
+      <div class="mono" style="color:var(--muted);font-size:0.78rem;overflow-wrap:anywhere">${esc(d.path)}</div></article>`;
+  }
+
+  function factsHTML() {
+    const c = O.counts;
+    const changes = c.changes.added + c.changes.changed + c.changes.removed;
+    const items = [
+      ['Modules', fmt(c.modules), ''],
+      ['Public functions', fmt(c.functions.total), `${fmt(c.functions.with_examples)} with examples${c.functions.waived ? `, ${c.functions.waived} waived` : ''}`],
+      ['Public types', fmt(c.types), ''],
+      ['Tests', fmt(c.tests), `plus ${fmt(c.examples)} docstring examples`],
+      ['Open holes', fmt(c.holes), c.holes ? 'functions with a hole' : ''],
+      ['Pending changes', fmt(changes), `${plural(c.changes.decisions, 'pending decision')}`],
+    ];
+    return '<div class="facts">' + items.map(([k, v, sub]) => {
+      const alert = k === 'Open holes' && c.holes > 0;
+      return `<div class="fact${alert ? ' alert' : ''}"><div class="label">${k}</div><div class="v">${v}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ''}</div>`;
+    }).join('') + '</div>';
+  }
+
+  function authorityHTML() {
+    const a = O.releases.authority || [];
+    if (!a.length) return '<p class="empty">No function takes a capability: the program reads and writes only what its caller passes in.</p>';
+    return '<div class="table-wrap"><table><thead><tr><th>Capability</th><th>Functions that take it</th></tr></thead><tbody>' +
+      a.map(r => `<tr><td><code>${esc(r.type)}</code></td><td><div class="chips">${r.functions.map(f => declModule.has(f)
+        ? `<a class="chip" href="#" data-mod="${esc(declModule.get(f))}" data-target="${esc(f)}">${esc(f)}</a>` : `<span class="chip">${esc(f)}</span>`).join('')}</div></td></tr>`).join('') +
+      '</tbody></table></div>';
+  }
+
+  function changesHTML() {
+    const rows = O.releases.changes || [];
+    if (!rows.length) return '<p class="empty">No public change since the last release.</p>';
+    return '<div class="table-wrap"><table><thead><tr><th>Public change</th><th>Kind</th><th>Explained by</th></tr></thead><tbody>' +
+      rows.map(c => {
+        const by = (c.decisions || []).map(i => decisions[i]).filter(Boolean);
+        const cell = by.length ? by.map(d => `<a href="#" data-view="decisions" data-dec="${esc(d.identity)}">${esc((d.metadata || {}).title || d.path)}</a>`).join(', ') : '<span class="missing">no decision</span>';
+        return `<tr><td><code>${esc(c.name)}</code></td><td>${esc(c.kind)}</td><td>${cell}</td></tr>`;
+      }).join('') + '</tbody></table></div>';
+  }
+
+  function releaseCard(h) {
+    const titles = notesByRelease.get(h.name) || [];
+    const filed = decisions.filter(d => releaseOf(d.path) === h.name);
+    return `<article class="decision"><div class="dhead"><h3>${esc(h.name)}</h3><div class="meta mono">${plural(h.decisions, 'decision')} · ${plural(titles.length, 'change note')}</div></div>
+      ${titles.length ? `<ul class="sentences">${titles.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : '<p class="empty">No change note was filed under this release.</p>'}
+      ${filed.length ? `<div class="chips">${filed.map(d => `<a class="chip" href="#" data-view="decisions" data-dec="${esc(d.identity)}">${esc((d.metadata || {}).title || d.path)}</a>`).join('')}</div>` : ''}
+    </article>`;
+  }
+
+  function viewSummary() {
+    const o = O;
+    const history = o.releases.history || [];
+    const pending = decisions.filter(d => d.pending);
+    const releases = history.length ? history.map(releaseCard).join('') : '<p class="empty">No release has been cut yet.</p>';
+    const pendingBlock = pending.length
+      ? `<div class="chips">${pending.map(d => `<a class="chip" href="#" data-view="decisions" data-dec="${esc(d.identity)}">${esc((d.metadata || {}).title || d.path)}</a>`).join('')}</div>`
+      : '<p class="empty">No pending decision.</p>';
+    return `<div class="head"><h1>${esc(o.title)}</h1>
+        <div class="meta"><span>${plural(o.counts.modules, 'module')}</span><span>${history.length ? 'released through ' + esc(history[0].name) : 'not released'}</span></div></div>
+      <section class="block"><div class="label">What the project says it is</div>${renderDoc(o.summary) || '<p class="empty">No project docstring.</p>'}</section>
+      <section class="block"><div class="label">At a glance</div>${factsHTML()}</section>
+      <section class="block"><h2>Authority</h2>${authorityHTML()}</section>
+      <section class="block"><h2>Releases</h2>${releases}</section>
+      <section class="block"><h2>Pending</h2>${pendingBlock}<div class="label">Public changes since the last release</div>${changesHTML()}</section>
+      ${footer()}`;
+  }
+
+  function fieldsTable(fields) {
+    return '<div class="table-wrap"><table><thead><tr><th>Field</th><th>Type</th><th>Default</th></tr></thead><tbody>' +
+      fields.map(x => `<tr><td><code>${esc(x.name)}</code></td><td><code>${esc(x.type)}</code></td><td>${x.default == null ? '' : `<code>${esc(x.default)}</code>`}</td></tr>`).join('') +
+      '</tbody></table></div>';
+  }
+
+  function declCard(d) {
+    const f = d.details.function;
+    let facts = '';
+    if (f) {
+      const bits = [];
+      bits.push(f.examples ? `<span><b>${f.examples}</b> example${f.examples === 1 ? '' : 's'}</span>` : (f.waiver ? '' : '<span class="missing">no example</span>'));
+      if (f.waiver) bits.push(`<span>waiver: ${esc(f.waiver)}</span>`);
+      if (f.writes.length) bits.push(`<span>writes <b class="mono">${f.writes.map(esc).join(', ')}</b></span>`);
+      if (f.authority.length) bits.push(`<span>takes ${f.authority.map(a => `<b class="mono">${esc(a.name)}: ${esc(a.type)}</b>`).join(', ')}</span>`);
+      if (f.fails) bits.push(`<span>can fail with <b class="mono">${esc(f.fails)}</b></span>`);
+      if (f.hole) bits.push('<span class="missing">has a hole</span>');
+      facts = `<div class="facts-row">${bits.join('')}</div>`;
+      facts += f.tests.length
+        ? `<details><summary>${f.tests.length} test${f.tests.length === 1 ? '' : 's'} call it directly</summary><ul>${f.tests.map(t => `<li>${esc(t)}</li>`).join('')}</ul></details>`
+        : '<div class="facts-row"><span>no test calls it directly</span></div>';
+    }
+    const details = d.details;
+    let shape = '';
+    if (details.fields && details.fields.length) shape += fieldsTable(details.fields);
+    if (details.cases && details.cases.length) {
+      shape += '<ul class="sentences">' + details.cases.map(c => `<li><code>${esc(c.name)}</code>${c.fields.length ? `(${c.fields.map(x => `${esc(x.name)}: ${esc(x.type)}`).join(', ')})` : ''}</li>`).join('') + '</ul>';
+    }
+    if (details.contracts && details.contracts.length) {
+      shape += `<div class="facts-row">contracts: ${details.contracts.map(c => `<code>${esc(c)}</code>`).join(' ')}</div>`;
+    }
+    const decs = decisionsOf(d);
+    const decLinks = decs.length ? `<div class="facts-row">decision: ${decs.map(x => `<a href="#" data-view="decisions" data-dec="${esc(x.identity)}">${esc((x.metadata || {}).title || x.path)}</a>`).join(', ')}</div>` : '';
+    return `<article class="decl" id="d-${esc(d.name)}">
+      <div class="dtop"><span class="pill kind">${esc(d.kind)}</span><span class="dname">${esc(d.name)}</span></div>
+      <pre><code>${esc(d.signature)}</code></pre>
+      ${renderDoc(d.doc) || (d.kind === 'constant' ? '' : '<p class="missing" style="margin:0">No docstring.</p>')}
+      ${shape}${facts}${decLinks}
+    </article>`;
+  }
+
+  function viewModule(name) {
+    const m = O.modules.find(x => x.name === name);
+    if (!m) return viewSummary();
+    const chipList = list => list.length ? `<div class="chips">${list.map(x => `<a class="chip" href="#" data-mod="${esc(x)}">${esc(x)}</a>`).join('')}</div>` : '<span class="empty">none</span>';
+    return `<div class="head"><h1 style="font-family:var(--mono);font-weight:500;font-size:var(--step-2)">${esc(m.name)}</h1>
+        <div class="meta"><span class="mono">${esc(m.path)}</span><span>${plural(m.declarations.length, 'public declaration')}</span><span>${plural(m.private_functions, 'private function')} (not shown)</span></div></div>
+      ${renderDoc(m.doc) || '<p class="missing">No module docstring.</p>'}
+      <section class="block"><div class="label">Imports</div>${chipList(m.imports)}<div class="label">Imported by</div>${chipList(m.importers)}</section>
+      <section class="block">${m.declarations.length ? m.declarations.map(declCard).join('') : '<p class="empty">No public declarations.</p>'}</section>
+      ${footer()}`;
+  }
+
+  function viewDecisions() {
+    return `<div class="head"><h1>Decisions</h1><p class="prose" style="margin:0">Why each public change was made, one file per decision under <code>decisions/</code>.</p></div>
+      ${decisions.length ? decisions.map(decisionCard).join('') : '<p class="empty">No decision recorded.</p>'}
+      ${footer()}`;
+  }
+
+  function viewSearch(q) {
+    const needle = q.toLowerCase();
+    const hits = [];
+    for (const m of O.modules) for (const d of m.declarations) {
+      if ((d.name + '\n' + d.signature + '\n' + (d.doc || '')).toLowerCase().includes(needle)) hits.push(d);
+    }
+    return `<div class="head"><h1>Search</h1><p class="prose" style="margin:0">${plural(hits.length, 'public declaration')} in ${esc(O.title)} mention “${esc(q)}”.</p></div>
+      ${hits.slice(0, 60).map(declCard).join('')}${hits.length > 60 ? '<p class="empty">Showing the first 60.</p>' : ''}`;
+  }
+
+  function footer() {
+    return `<footer>Built by <code>selka overview</code> from the project's public declarations (overview-v1). The page shows public declarations only, as the overview does.</footer>`;
+  }
+
+  function renderIndex() {
+    const groups = new Map();
+    for (const m of O.modules) {
+      const g = m.name.includes('.') ? m.name.split('.')[0] : '';
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(m);
+    }
+    const keys = [...groups.keys()].sort((a, b) => (a === '' ? -1 : b === '' ? 1 : a.localeCompare(b)));
+    let html = `<nav><div><div class="label">Project</div><ul>
+      <li><a href="#" data-view="summary" aria-current="${state.view === 'summary'}"><span class="mname">Summary</span></a></li>
+      <li><a href="#" data-view="decisions" aria-current="${state.view === 'decisions'}"><span class="mname">Decisions</span><span class="n">${decisions.length}</span></a></li>
+    </ul></div>`;
+    for (const g of keys) {
+      const list = groups.get(g).slice().sort((a, b) => a.name.localeCompare(b.name));
+      html += `<div><div class="label">${g ? esc(g) : 'Top-level modules'}</div><ul>` + list.map(m => {
+        const current = state.view === 'module' && state.module === m.name;
+        return `<li><a href="#" data-mod="${esc(m.name)}" aria-current="${current}"><span class="mname">${esc(m.name)}</span><span class="n">${m.declarations.length}</span></a></li>`;
+      }).join('') + '</ul></div>';
+    }
+    $('index').innerHTML = html + '</nav>';
+  }
+
+  function render() {
+    renderIndex();
+    let html;
+    if (state.query.trim().length >= 2) html = viewSearch(state.query.trim());
+    else if (state.view === 'module') html = viewModule(state.module);
+    else if (state.view === 'decisions') html = viewDecisions();
+    else html = viewSummary();
+    $('pane').innerHTML = html;
+    const token = state.view === 'module' ? 'module~' + state.module : state.view;
+    if (/^[A-Za-z0-9._~-]+$/.test(token) && location.hash.slice(1) !== token) {
+      try { history.replaceState(null, '', '#' + token); } catch (e) { /* the frame may refuse; the page still works */ }
+    }
+    if (state.target) {
+      const el = document.getElementById('d-' + state.target) || document.getElementById('dec-' + state.target);
+      if (el) { el.classList.add('target'); el.scrollIntoView({ block: 'start' }); }
+      state.target = null;
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest && ev.target.closest('[data-mod],[data-view]');
+    if (!a) return;
+    ev.preventDefault();
+    if (a.dataset.mod) { state.view = 'module'; state.module = a.dataset.mod; state.target = a.dataset.target || null; }
+    if (a.dataset.view) { state.view = a.dataset.view; state.module = null; state.target = a.dataset.dec || null; }
+    state.query = '';
+    $('q').value = '';
+    render();
+  });
+  $('q').addEventListener('input', ev => { state.query = ev.target.value; render(); });
+
+  if (DATA.back) {
+    const back = $('back');
+    back.href = DATA.back;
+    back.hidden = false;
+  }
+  $('brand').innerHTML = `${esc(O.title)} <span>project overview</span>`;
+  document.title = `${O.title} project overview`;
+
+  const initial = location.hash.slice(1).split('~');
+  if (initial[0] === 'decisions') state.view = 'decisions';
+  else if (initial[0] === 'module' && initial[1] && O.modules.some(m => m.name === initial[1])) { state.view = 'module'; state.module = initial[1]; }
+  render();
+})();
+</script>
+</body>
+</html>

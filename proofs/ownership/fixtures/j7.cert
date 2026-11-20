@@ -1,0 +1,31 @@
+ownership-certificate-v2
+class drop Drop
+class list_new Fresh
+class list_push Update
+class record_make Construct
+function bad_j7 result owned from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state stack parents -
+term ret %0
+end
+function bad_j7_store result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state stack parents -
+inst %1 record_make Construct reads - consumes %0 state owned parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function bad_j7_drop result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state stack parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function bad_j7_element result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state stack parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 list_push Update reads - consumes %0,%1 state stack parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end

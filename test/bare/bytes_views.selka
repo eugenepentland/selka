@@ -1,0 +1,25 @@
+# Bytes values in a list and a record, slices passed to functions, copies of slices.
+import bytes
+
+record Packet:
+    kind: str
+    payload: bytes
+
+
+func weigh(data: bytes) -> int:
+    mut total = 0
+    for i in range(len(data)):
+        total += int(bytes.read_u8(data, i))
+    return total
+
+
+func main() -> int:
+    const data = b"0123456789abcdef"
+    mut packets: Packet[] = []
+    for i in range(6):
+        append(mut packets, Packet(kind=f"p{i}", payload=copy(data[i:i + 5])))
+    mut total = 0
+    for p in packets:
+        total += weigh(p.payload) + len(p.kind)
+    total += weigh(data[3:9])
+    return total % 256

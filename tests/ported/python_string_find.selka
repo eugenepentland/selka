@@ -1,0 +1,23 @@
+# `str.find` answers the first scalar index for one-scalar, multi-scalar and
+# longer-than-the-receiver needles, including multi-byte scalars whose low byte
+# also occurs inside another scalar (from the retired `qbe_text_test.zig`).
+# spec-case: PY-STR-2
+import strings
+
+public func test_find_answers_the_first_scalar_index_for_short_long_and_overlong_needles() -> bool:
+    mut text = "the quick brown fox"
+    assert strings.char_find(text, "t") == 0
+    assert strings.char_find(text, "q") == 4
+    assert strings.char_find(text, "quick") == 4
+    assert strings.char_find(text, "fox") == 16
+    assert strings.char_find(text, "zebra") == -1
+    assert strings.char_find(("aaa"), "aaaa") == -1
+    assert strings.char_find(("héllo"), "é") == 1
+    assert strings.char_find(("héllo"), "llo") == 2
+    assert strings.char_find(("日本語"), "本") == 1
+    assert strings.char_find(("日本語"), "語日") == -1
+    return True
+
+
+func main() -> int:
+    return 0

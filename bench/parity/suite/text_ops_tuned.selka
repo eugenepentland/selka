@@ -1,0 +1,94 @@
+# text_ops_tuned: the same results as text_ops.selka, written against bytes and
+# byte_buffer so that no per-line or per-field object is ever allocated. What
+# changed, and why:
+# - The text is assembled in one byte_buffer with append_range/append_int/
+#   append_byte (no f-string, no strings.repeat Result, no list of lines, no
+#   join) and published once with bytes(buffer), which copies nothing.
+# - Lines and fields are located with find_any(set, start) and parsed in place
+#   with parse_int_range, instead of text.split("\n") and line.split(",")
+#   materializing 200,000 line strings and 600,000 field strings.
+# - The rewrite appends the unchanged runs between matches into a second
+#   byte_buffer (bytes has no replace), and ",1" is counted with the same scan.
+# The text is ASCII, so byte lengths equal the str lengths text_ops.selka prints.
+import buffers
+import bytes
+
+func build(lines: int) -> bytes:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    for i in range(lines):
+        if i > 0:
+            _ = buffers.append_byte(mut buffer, 10)
+        _ = buffers.append_range(mut buffer, b"item", 0, 4)
+        buffers.append_int(mut buffer, i)
+        _ = buffers.append_byte(mut buffer, 44)
+        buffers.append_int(mut buffer, (i * 7919) % 100003)
+        _ = buffers.append_byte(mut buffer, 44)
+        for _ in range(i % 7):
+            _ = buffers.append_byte(mut buffer, 120)
+    return bytes(buffer)
+
+
+# Every occurrence of "item" replaced by "it", scanning for the first octet and
+# confirming the rest in place.
+func rewrite(text: bytes) -> bytes:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffers.reserve(mut buffer, len(text))
+    mut at = 0
+    while True:
+        mut hit = bytes.find_any(text, b"i", at)
+        if hit < 0:
+            _ = buffers.append_range(mut buffer, text, at, len(text))
+            return bytes(buffer)
+        if hit + 4 <= len(text) and text[hit + 1] == 116 and text[hit + 2] == 101 and text[hit + 3] == 109:
+            _ = buffers.append_range(mut buffer, text, at, hit)
+            _ = buffers.append_range(mut buffer, b"it", 0, 2)
+            at = hit + 4
+        else:
+            _ = buffers.append_range(mut buffer, text, at, hit + 1)
+            at = hit + 1
+
+
+# Non-overlapping occurrences of ",1".
+func count_comma_one(text: bytes) -> int:
+    mut found = 0
+    mut at = 0
+    while True:
+        mut hit = bytes.find_any(text, b",", at)
+        if hit < 0:
+            return found
+        if hit + 1 < len(text) and text[hit + 1] == 49:
+            found += 1
+            at = hit + 2
+        else:
+            at = hit + 1
+
+
+func main(out: Stream) -> int:
+    mut text = build(200000)
+    mut total = 0
+    mut widths = 0
+    mut sevens = 0
+    mut start = 0
+    while True:
+        mut end = bytes.find_any(text, b"\n", start)
+        if end < 0:
+            end = len(text)
+        mut first = bytes.find_any(text, b",", start)
+        mut second = bytes.find_any(text, b",", first + 1)
+        match bytes.parse_int_range(text, first + 1, second):
+            case Some(value):
+                total += value
+            case None:
+                return 1
+        widths += end - (second + 1)
+        if text[first - 1] == 55:
+            sevens += 1
+        if end == len(text):
+            break
+        start = end + 1
+    mut rewritten = rewrite(text)
+    print(out, f"{total} {widths} {sevens}")
+    print(out, f"{len(text)} {len(rewritten)} {count_comma_one(text)}")
+    return 0

@@ -1,0 +1,12 @@
+ownership-certificate-v2
+class call Call
+function caller result scalar from - unchecked -
+callee 0 ghost program - scalar -
+block b0 preds -
+inst - call Call reads - consumes - state none parents - from - callee 0
+term ret -
+end
+function unit result scalar from - unchecked -
+block b0 preds -
+term ret -
+end

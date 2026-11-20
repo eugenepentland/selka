@@ -1,0 +1,78 @@
+# FR14: a `case` arm that names a case carrying a payload and binds nothing. `selka fix` writes the discard after the
+# case name, `(_)` for a single payload and `(..)` for a case with named fields; the arm's body is unchanged.
+result Read:
+    ok: i64,
+    err: i64
+
+
+enum Shape:
+    circle(radius: float)
+    pair(left: int, right: int)
+    blank
+
+
+func half(n: int) -> int fails str:
+    if n % 2 == 1:
+        fail "odd"
+    return n // 2
+
+
+func find(n: int) -> int?:
+    if n > 3:
+        return Some(n)
+    return None
+
+
+func first[T](values: T[]) -> T?:
+    if len(values) == 0:
+        return None
+    return Some(copy(values[0]))
+
+
+func parity(n: int) -> int:
+    match half(n):
+        case Ok:
+            return 0
+        case Err:
+            return 1
+
+
+func found(n: int) -> int:
+    match find(n):
+        case Some:
+            return 1
+        case None:
+            return 0
+
+
+func read(input: Read) -> i64:
+    match input:
+        case ok:
+            return 1
+        case err(code):
+            return -code
+
+
+func corners(shape: Shape) -> int:
+    match shape:
+        case circle | pair:
+            return 0
+        case blank:
+            return 4
+
+
+func has_any[T](values: T[]) -> int:
+    match first(values):
+        case Some:
+            return 1
+        case None:
+            return 0
+
+
+func main(out: Stream) -> int:
+    print(out, parity(4), parity(3), found(5), found(1), read(Ok(42)), read(Err(7)))
+    const none: int[] = []
+    print(out, corners(Shape.circle(radius=1.0)), corners(Shape.blank), has_any([1, 2]), has_any(none))
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

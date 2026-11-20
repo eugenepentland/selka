@@ -1,0 +1,525 @@
+fn_cell_local_fresh_bound
+  at
+  was a
+  after ['new', 'b']
+fn_cell_local_fresh_dropped
+  at
+  after ['new', 'b']
+fn_cell_local_fresh_returned
+  at
+  got a
+fn_cell_local_fresh_passed
+  at
+  passed a
+  after ['new', 'b']
+fn_cell_local_fresh_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+fn_cell_local_own_bound
+  at
+  was a
+  after ['new', 'b']
+fn_cell_local_own_dropped
+  at
+  after ['new', 'b']
+fn_cell_local_own_returned
+  at
+  got a
+fn_cell_local_own_passed
+  at
+  passed a
+  after ['new', 'b']
+fn_cell_local_own_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+fn_cell_local_call_bound
+  at
+  was a
+  after ['new', 'b']
+fn_cell_local_call_dropped
+  at
+  after ['new', 'b']
+fn_cell_local_call_returned
+  at
+  got a
+fn_cell_local_call_passed
+  at
+  passed a
+  after ['new', 'b']
+fn_cell_local_call_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+fn_cell_param_fresh_bound
+  at
+  was a
+  after ['new', 'b']
+fn_cell_param_fresh_dropped
+  at
+  after ['new', 'b']
+fn_cell_param_fresh_returned
+  at
+  got a
+  after ['new', 'b']
+fn_cell_param_fresh_passed
+  at
+  passed a
+  after ['new', 'b']
+fn_cell_param_fresh_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+fn_cell_param_own_bound
+  at
+  was a
+  after ['new', 'b']
+fn_cell_param_own_dropped
+  at
+  after ['new', 'b']
+fn_cell_param_own_returned
+  at
+  got a
+  after ['new', 'b']
+fn_cell_param_own_passed
+  at
+  passed a
+  after ['new', 'b']
+fn_cell_param_own_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+fn_cell_param_call_bound
+  at
+  was a
+  after ['new', 'b']
+fn_cell_param_call_dropped
+  at
+  after ['new', 'b']
+fn_cell_param_call_returned
+  at
+  got a
+  after ['new', 'b']
+fn_cell_param_call_passed
+  at
+  passed a
+  after ['new', 'b']
+fn_cell_param_call_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+fn_cell_field_fresh_bound
+  at
+  was a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_fresh_dropped
+  at
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_fresh_returned
+  at
+  got a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_fresh_passed
+  at
+  passed a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_fresh_passed_own
+  at
+  sunk a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_own_bound
+  at
+  was a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_own_dropped
+  at
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_own_returned
+  at
+  got a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_own_passed
+  at
+  passed a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_own_passed_own
+  at
+  sunk a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_call_bound
+  at
+  was a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_call_dropped
+  at
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_call_returned
+  at
+  got a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_call_passed
+  at
+  passed a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_field_call_passed_own
+  at
+  sunk a
+  after Holder(items=['new', 'b'], tag=0)
+fn_cell_matchmut_fresh_bound
+  at
+  was a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_fresh_returned
+  at
+  got a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_fresh_passed
+  at
+  passed a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_fresh_passed_own
+  at
+  sunk a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_own_bound
+  at
+  was a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_own_dropped
+  at
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_own_returned
+  at
+  got a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_own_passed
+  at
+  passed a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_own_passed_own
+  at
+  sunk a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_call_bound
+  at
+  was a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_call_dropped
+  at
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_call_returned
+  at
+  got a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_call_passed
+  at
+  passed a
+  after Box.full(items=['new', 'b'])
+fn_cell_matchmut_call_passed_own
+  at
+  sunk a
+  after Box.full(items=['new', 'b'])
+builtin_cell_local_fresh_bound
+  at
+  was a
+  after ['new', 'b']
+builtin_cell_local_fresh_dropped
+  at
+  after ['new', 'b']
+builtin_cell_local_fresh_returned
+  at
+  got a
+builtin_cell_local_fresh_passed
+  at
+  passed a
+  after ['new', 'b']
+builtin_cell_local_fresh_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+builtin_cell_local_own_bound
+  at
+  was a
+  after ['new', 'b']
+builtin_cell_local_own_dropped
+  at
+  after ['new', 'b']
+builtin_cell_local_own_returned
+  at
+  got a
+builtin_cell_local_own_passed
+  at
+  passed a
+  after ['new', 'b']
+builtin_cell_local_own_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+builtin_cell_local_call_bound
+  at
+  was a
+  after ['new', 'b']
+builtin_cell_local_call_dropped
+  at
+  after ['new', 'b']
+builtin_cell_local_call_returned
+  at
+  got a
+builtin_cell_local_call_passed
+  at
+  passed a
+  after ['new', 'b']
+builtin_cell_local_call_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+builtin_cell_param_fresh_bound
+  at
+  was a
+  after ['new', 'b']
+builtin_cell_param_fresh_dropped
+  at
+  after ['new', 'b']
+builtin_cell_param_fresh_returned
+  at
+  got a
+  after ['new', 'b']
+builtin_cell_param_fresh_passed
+  at
+  passed a
+  after ['new', 'b']
+builtin_cell_param_fresh_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+builtin_cell_param_own_bound
+  at
+  was a
+  after ['new', 'b']
+builtin_cell_param_own_dropped
+  at
+  after ['new', 'b']
+builtin_cell_param_own_returned
+  at
+  got a
+  after ['new', 'b']
+builtin_cell_param_own_passed
+  at
+  passed a
+  after ['new', 'b']
+builtin_cell_param_own_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+builtin_cell_param_call_bound
+  at
+  was a
+  after ['new', 'b']
+builtin_cell_param_call_dropped
+  at
+  after ['new', 'b']
+builtin_cell_param_call_returned
+  at
+  got a
+  after ['new', 'b']
+builtin_cell_param_call_passed
+  at
+  passed a
+  after ['new', 'b']
+builtin_cell_param_call_passed_own
+  at
+  sunk a
+  after ['new', 'b']
+builtin_cell_field_fresh_bound
+  at
+  was a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_fresh_dropped
+  at
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_fresh_returned
+  at
+  got a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_fresh_passed
+  at
+  passed a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_fresh_passed_own
+  at
+  sunk a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_own_bound
+  at
+  was a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_own_dropped
+  at
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_own_returned
+  at
+  got a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_own_passed
+  at
+  passed a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_own_passed_own
+  at
+  sunk a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_call_bound
+  at
+  was a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_call_dropped
+  at
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_call_returned
+  at
+  got a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_call_passed
+  at
+  passed a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_field_call_passed_own
+  at
+  sunk a
+  after Holder(items=['new', 'b'], tag=0)
+builtin_cell_matchmut_fresh_bound
+  at
+  was a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_fresh_returned
+  at
+  got a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_fresh_passed
+  at
+  passed a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_fresh_passed_own
+  at
+  sunk a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_own_bound
+  at
+  was a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_own_dropped
+  at
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_own_returned
+  at
+  got a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_own_passed
+  at
+  passed a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_own_passed_own
+  at
+  sunk a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_call_bound
+  at
+  was a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_call_dropped
+  at
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_call_returned
+  at
+  got a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_call_passed
+  at
+  passed a
+  after Box.full(items=['new', 'b'])
+builtin_cell_matchmut_call_passed_own
+  at
+  sunk a
+  after Box.full(items=['new', 'b'])
+take_cell_local_none_bound
+  at
+  was a
+  after ['', 'b']
+take_cell_local_none_dropped
+  at
+  after ['', 'b']
+take_cell_local_none_returned
+  at
+  got a
+take_cell_local_none_passed
+  at
+  passed a
+  after ['', 'b']
+take_cell_local_none_passed_own
+  at
+  sunk a
+  after ['', 'b']
+take_cell_param_none_bound
+  at
+  was a
+  after ['', 'b']
+take_cell_param_none_dropped
+  at
+  after ['', 'b']
+take_cell_param_none_returned
+  at
+  got a
+  after ['', 'b']
+take_cell_param_none_passed
+  at
+  passed a
+  after ['', 'b']
+take_cell_param_none_passed_own
+  at
+  sunk a
+  after ['', 'b']
+take_cell_field_none_bound
+  at
+  was a
+  after Holder(items=['', 'b'], tag=0)
+take_cell_field_none_dropped
+  at
+  after Holder(items=['', 'b'], tag=0)
+take_cell_field_none_returned
+  at
+  got a
+  after Holder(items=['', 'b'], tag=0)
+take_cell_field_none_passed
+  at
+  passed a
+  after Holder(items=['', 'b'], tag=0)
+take_cell_field_none_passed_own
+  at
+  sunk a
+  after Holder(items=['', 'b'], tag=0)
+take_cell_matchmut_none_bound
+  at
+  was a
+  after Box.full(items=['', 'b'])
+take_cell_matchmut_none_dropped
+  at
+  after Box.full(items=['', 'b'])
+take_cell_matchmut_none_returned
+  at
+  got a
+  after Box.full(items=['', 'b'])
+take_cell_matchmut_none_passed
+  at
+  passed a
+  after Box.full(items=['', 'b'])
+take_cell_matchmut_none_passed_own
+  at
+  sunk a
+  after Box.full(items=['', 'b'])

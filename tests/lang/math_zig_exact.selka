@@ -1,0 +1,346 @@
+# math.log10, math.exp, math.atan2 and math.pow_float, and their f32_ forms, answer the bits of the pinned Zig toolchain's
+# std.math.log10, exp, atan2 and pow for every input, special values included: NaN, both infinities, both zeros,
+# subnormals and negative bases. The vectors in embed_fixtures/math_zig_exact.txt are a stride sample of the 256,712
+# that experiments/g3-pre-s1-fixes-20261105/math/capture.zig prints (the whole set is checked by verify_math.selka); each line is
+# `NAME IN... OUT`, every value as the hex digits of its IEEE bit pattern. A NaN result matches by NaN-ness.
+#
+# math.ln, atan, acos, asin, tan, expm1, sinh, cosh, tanh, cbrt, sin and cos (binary64) answer the bits of Zig's @log,
+# std.math.atan, acos, asin, @tan, std.math.expm1, sinh, cosh, tanh, cbrt, @sin and @cos the same way. The vectors in
+# embed_fixtures/math_zig_exact_tail.txt are 2,969 of the 1,201,814 that experiments/math-exact-20261106/capture.zig prints
+# (the whole set is checked by that directory's verify_math.selka): the hand-picked edge cases of each function (edges.zig), the
+# special-value block of its capture and 100 evenly spaced random ones (make_fixture.py). Each line is `NAME IN OUT`.
+import math
+import strings
+
+const VECTORS: str = embed_str("embed_fixtures/math_zig_exact.txt")
+
+
+const TAIL: str = embed_str("embed_fixtures/math_zig_exact_tail.txt")
+
+
+# The bit pattern a hex text of up to sixteen digits names.
+func pattern(text: str) -> u64:
+    match bytes.fromhex(text):
+        case Ok(data):
+            mut total = 0u64
+            for octet in data:
+                total = shift_left(total, 8u64) + u64(octet)
+            return total
+        case Err(_):
+            return 0u64
+
+
+func is_nan64(bits: u64) -> bool:
+    return bit_and(bits, 0x7ff0000000000000u64) == 0x7ff0000000000000u64 and bit_and(bits, 0x000fffffffffffffu64) != 0u64
+
+
+func is_nan32(bits: u32) -> bool:
+    return bit_and(bits, 0x7f800000u32) == 0x7f800000u32 and bit_and(bits, 0x007fffffu32) != 0u32
+
+
+# Whether one binary64 vector's result is Zig's.
+func agrees64(name: str, a: u64, b: u64, expected: u64) -> bool:
+    mut got = 0u64
+    if name == "log10":
+        got = math.bits(math.log10(math.from_bits(a)))
+    elif name == "exp":
+        got = math.bits(math.exp(math.from_bits(a)))
+    elif name == "atan2":
+        got = math.bits(math.atan2(math.from_bits(a), math.from_bits(b)))
+    else:
+        got = math.bits(math.pow_float(math.from_bits(a), math.from_bits(b)))
+    if is_nan64(expected):
+        return is_nan64(got)
+    return got == expected
+
+
+# Whether one binary32 vector's result is Zig's.
+func agrees32(name: str, a: u32, b: u32, expected: u32) -> bool:
+    mut got = 0u32
+    if name == "log1032":
+        got = math.f32_bits(math.f32_log10(math.f32_from_bits(a)))
+    elif name == "exp32":
+        got = math.f32_bits(math.f32_exp(math.f32_from_bits(a)))
+    elif name == "atan232":
+        got = math.f32_bits(math.f32_atan2(math.f32_from_bits(a), math.f32_from_bits(b)))
+    else:
+        got = math.f32_bits(math.f32_pow_float(math.f32_from_bits(a), math.f32_from_bits(b)))
+    if is_nan32(expected):
+        return is_nan32(got)
+    return got == expected
+
+
+# Whether one vector of the twelve one-argument binary64 functions is Zig's.
+func agrees_tail(name: str, a: u64, expected: u64) -> bool:
+    const x = math.from_bits(a)
+    mut got = 0u64
+    match name:
+        case "ln":
+            got = math.bits(math.ln(x))
+        case "atan":
+            got = math.bits(math.atan(x))
+        case "acos":
+            got = math.bits(math.acos(x))
+        case "asin":
+            got = math.bits(math.asin(x))
+        case "tan":
+            got = math.bits(math.tan(x))
+        case "expm1":
+            got = math.bits(math.expm1(x))
+        case "sinh":
+            got = math.bits(math.sinh(x))
+        case "cosh":
+            got = math.bits(math.cosh(x))
+        case "tanh":
+            got = math.bits(math.tanh(x))
+        case "cbrt":
+            got = math.bits(math.cbrt(x))
+        case "sin":
+            got = math.bits(math.sin(x))
+        case _:
+            got = math.bits(math.cos(x))
+    if is_nan64(expected):
+        return is_nan64(got)
+    return got == expected
+
+
+# How many vectors of the tail fixture belong to `name`, and how many the module differs from Zig on: wrong * 1000000 + checked.
+func compare_tail(name: str) -> int:
+    mut wrong = 0
+    mut checked = 0
+    for line in strings.lines(TAIL):
+        const fields = strings.split(line, " ")
+        if len(fields) != 3 or fields[0] != name:
+            continue
+        checked += 1
+        if not agrees_tail(name, pattern(fields[1]), pattern(fields[2])):
+            wrong += 1
+    return wrong * 1000000 + checked
+
+
+# How many vectors of `name` the module differs from Zig on, and how many it checked: wrong * 1000000 + checked.
+func compare(name: str) -> int:
+    mut wrong = 0
+    mut checked = 0
+    for line in strings.lines(VECTORS):
+        const fields = strings.split(line, " ")
+        if len(fields) < 3 or fields[0] != name:
+            continue
+        checked += 1
+        mut ok = False
+        const two = len(fields) == 4
+        if len(fields[1]) == 16:
+            if two:
+                ok = agrees64(name, pattern(fields[1]), pattern(fields[2]), pattern(fields[3]))
+            else:
+                ok = agrees64(name, pattern(fields[1]), 0u64, pattern(fields[2]))
+        elif two:
+            ok = agrees32(name, u32(pattern(fields[1])), u32(pattern(fields[2])), u32(pattern(fields[3])))
+        else:
+            ok = agrees32(name, u32(pattern(fields[1])), 0u32, u32(pattern(fields[2])))
+        if not ok:
+            wrong += 1
+    return wrong * 1000000 + checked
+
+
+public func test_log10_is_zigs_bit_for_bit() -> bool:
+    const result = compare("log10")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_exp_is_zigs_bit_for_bit() -> bool:
+    const result = compare("exp")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_atan2_is_zigs_bit_for_bit() -> bool:
+    const result = compare("atan2")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_pow_float_is_zigs_bit_for_bit() -> bool:
+    const result = compare("pow")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_f32_log10_is_zigs_bit_for_bit() -> bool:
+    const result = compare("log1032")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_f32_exp_is_zigs_bit_for_bit() -> bool:
+    const result = compare("exp32")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_f32_atan2_is_zigs_bit_for_bit() -> bool:
+    const result = compare("atan232")
+    assert result >= 100
+    return result < 1000000
+
+
+public func test_f32_pow_float_is_zigs_bit_for_bit() -> bool:
+    const result = compare("pow32")
+    assert result >= 100
+    return result < 1000000
+
+
+# The special cases Zig documents, read straight from the functions.
+public func test_special_values_follow_zigs_documented_cases() -> bool:
+    assert math.log10(1000.0) == 3.0 and math.log10(1.0) == 0.0
+    assert math.log10(0.0) == -math.infinity() and math.log10(-0.0) == -math.infinity()
+    assert math.is_nan(math.log10(-1.0)) and math.is_nan(math.log10(math.nan()))
+    assert math.log10(math.infinity()) == math.infinity()
+    assert math.exp(0.0) == 1.0 and math.exp(-math.infinity()) == 0.0
+    assert math.exp(710.0) == math.infinity() and math.exp(-746.0) == 0.0
+    assert math.is_nan(math.exp(math.nan()))
+    assert math.atan2(0.0, 1.0) == 0.0 and math.atan2(1.0, 0.0) == math.atan2(1.0, -0.0)
+    assert math.bits(math.atan2(-0.0, -1.0)) == math.bits(-math.pi())
+    assert math.bits(math.atan2(0.0, -1.0)) == math.bits(math.pi())
+    assert math.is_nan(math.atan2(math.nan(), 1.0)) and math.is_nan(math.atan2(1.0, math.nan()))
+    assert math.pow_float(2.0, 0.5) == sqrt(2.0) and math.pow_float(2.0, 10.0) == 1024.0
+    assert math.pow_float(0.0, -1.0) == math.infinity() and math.bits(math.pow_float(-0.0, -3.0)) == math.bits(-math.infinity())
+    assert math.pow_float(-8.0, 3.0) == -512.0 and math.is_nan(math.pow_float(-8.0, 1.0 / 3.0))
+    assert math.pow_float(math.nan(), 0.0) == 1.0 and math.pow_float(1.0, math.nan()) == 1.0
+    assert math.pow_float(-1.0, math.infinity()) == 1.0 and math.pow_float(0.5, math.infinity()) == 0.0
+    assert math.f32_log10(1000.0f32) == 3.0f32 and math.f32_exp(0.0f32) == 1.0f32
+    assert math.f32_pow_float(2.0f32, 10.0f32) == 1024.0f32 and math.f32_atan2(0.0f32, 1.0f32) == 0.0f32
+    return True
+
+
+public func test_ln_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("ln")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_atan_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("atan")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_acos_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("acos")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_asin_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("asin")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_tan_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("tan")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_expm1_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("expm1")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_sinh_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("sinh")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_cosh_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("cosh")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_tanh_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("tanh")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_cbrt_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("cbrt")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_sin_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("sin")
+    assert result >= 200
+    return result < 1000000
+
+
+public func test_cos_is_zigs_bit_for_bit() -> bool:
+    const result = compare_tail("cos")
+    assert result >= 200
+    return result < 1000000
+
+
+# The special cases Zig documents for ln, atan, acos and asin, read straight from the functions.
+public func test_ln_atan_acos_asin_follow_zigs_documented_cases() -> bool:
+    assert math.ln(1.0) == 0.0 and math.bits(math.ln(1.0)) == math.bits(0.0)
+    assert math.ln(0.0) == -math.infinity() and math.ln(-0.0) == -math.infinity()
+    assert math.is_nan(math.ln(-1.0)) and math.is_nan(math.ln(math.nan())) and math.is_nan(math.ln(-math.infinity()))
+    assert math.ln(math.infinity()) == math.infinity()
+    assert math.atan(math.infinity()) == math.pi() / 2.0 and math.atan(-math.infinity()) == -math.pi() / 2.0
+    assert math.bits(math.atan(-0.0)) == math.bits(-0.0) and math.bits(math.atan(0.0)) == math.bits(0.0)
+    assert math.atan(1.0) == math.pi() / 4.0 and math.is_nan(math.atan(math.nan()))
+    assert math.atan(1.0e300) == math.pi() / 2.0
+    assert math.acos(1.0) == 0.0 and math.bits(math.acos(-1.0)) == math.bits(math.pi())
+    assert math.acos(0.0) == math.pi() / 2.0
+    assert math.is_nan(math.acos(1.0000000000000002)) and math.is_nan(math.acos(-2.0)) and math.is_nan(math.acos(math.nan()))
+    assert math.is_nan(math.acos(math.infinity()))
+    assert math.asin(1.0) == math.pi() / 2.0 and math.asin(-1.0) == -math.pi() / 2.0
+    assert math.bits(math.asin(-0.0)) == math.bits(-0.0) and math.bits(math.asin(0.0)) == math.bits(0.0)
+    assert math.asin(5.0e-324) == 5.0e-324 and math.asin(-5.0e-324) == -5.0e-324
+    assert math.is_nan(math.asin(2.0)) and math.is_nan(math.asin(-1.0000000000000002)) and math.is_nan(math.asin(math.nan()))
+    return True
+
+
+# The special cases Zig documents for expm1, sinh, cosh, tanh and cbrt.
+public func test_expm1_hyperbolics_and_cbrt_follow_zigs_documented_cases() -> bool:
+    assert math.expm1(0.0) == 0.0 and math.bits(math.expm1(-0.0)) == math.bits(-0.0)
+    assert math.expm1(-math.infinity()) == -1.0 and math.expm1(-60.0) == -1.0
+    assert math.expm1(math.infinity()) == math.infinity() and math.expm1(710.0) == math.infinity()
+    assert math.is_nan(math.expm1(math.nan()))
+    assert math.sinh(0.0) == 0.0 and math.bits(math.sinh(-0.0)) == math.bits(-0.0)
+    assert math.sinh(math.infinity()) == math.infinity() and math.sinh(-math.infinity()) == -math.infinity()
+    assert math.sinh(1000.0) == math.infinity() and math.sinh(-1000.0) == -math.infinity()
+    assert math.is_nan(math.sinh(math.nan()))
+    assert math.cosh(0.0) == 1.0 and math.cosh(-0.0) == 1.0
+    assert math.cosh(math.infinity()) == math.infinity() and math.cosh(-math.infinity()) == math.infinity()
+    assert math.cosh(1000.0) == math.infinity() and math.is_nan(math.cosh(math.nan()))
+    assert math.tanh(0.0) == 0.0 and math.bits(math.tanh(-0.0)) == math.bits(-0.0)
+    assert math.tanh(math.infinity()) == 1.0 and math.tanh(-math.infinity()) == -1.0
+    assert math.tanh(100.0) == 1.0 and math.tanh(-100.0) == -1.0 and math.is_nan(math.tanh(math.nan()))
+    assert math.cbrt(27.0) == 3.0 and math.cbrt(-8.0) == -2.0 and math.cbrt(1.0) == 1.0
+    assert math.bits(math.cbrt(0.0)) == math.bits(0.0) and math.bits(math.cbrt(-0.0)) == math.bits(-0.0)
+    assert math.cbrt(math.infinity()) == math.infinity() and math.cbrt(-math.infinity()) == -math.infinity()
+    assert math.is_nan(math.cbrt(math.nan()))
+    return True
+
+
+# sin, cos and tan: signed zeros, subnormals, the nonfinite arguments, and reduction of the largest finite one without a trap.
+public func test_sin_cos_tan_follow_zigs_documented_cases() -> bool:
+    assert math.bits(math.sin(-0.0)) == math.bits(-0.0) and math.bits(math.tan(-0.0)) == math.bits(-0.0)
+    assert math.cos(-0.0) == 1.0 and math.cos(5.0e-324) == 1.0 and math.tan(5.0e-324) == 5.0e-324
+    assert math.sin(5.0e-324) == 5.0e-324 and math.sin(-5.0e-324) == -5.0e-324
+    assert math.is_nan(math.sin(math.infinity())) and math.is_nan(math.cos(-math.infinity())) and math.is_nan(math.tan(math.infinity()))
+    assert math.is_nan(math.sin(math.nan())) and math.is_nan(math.cos(math.nan())) and math.is_nan(math.tan(math.nan()))
+    assert math.sin(math.pi() / 2.0) == 1.0 and math.cos(math.pi()) == -1.0
+    # Arguments past 2^20 * pi/2 take the Payne-Hanek reduction; none traps and the results stay in range.
+    const huge = 1.7976931348623157e308
+    assert math.fabs(math.sin(huge)) <= 1.0 and math.fabs(math.cos(huge)) <= 1.0 and math.is_finite(math.tan(huge))
+    assert math.fabs(math.sin(-huge)) <= 1.0 and math.sin(-huge) == -math.sin(huge)
+    assert math.cos(-huge) == math.cos(huge) and math.tan(-huge) == -math.tan(huge)
+    return True

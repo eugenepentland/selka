@@ -1,0 +1,90 @@
+# parallel.threads and parallel.cpus: the pool's size and the machine's CPU count. A test child runs one pool thread
+# (the step and frame budgets force it), so the exact counts under --threads 1, --threads 3 and the default are checked
+# through `selka run` in test/integration.zig; these tests state what holds in every run.
+import parallel
+
+func pool_in_task(item: int) -> int:
+    if item < 0:
+        return 0
+    return parallel.threads()
+
+
+func cpus_in_task(item: int) -> int:
+    if item < 0:
+        return 0
+    return parallel.cpus()
+
+
+# One piece of a list, `size` items from `start`.
+func piece(values: int[], start: int, size: int) -> int[]:
+    mut out: int[] = []
+    for index in range(start, start + size):
+        append(mut out, values[index])
+    return out
+
+
+# The list cut into at most `pieces` runs of nearly equal length, in order.
+func split(values: int[], pieces: int) -> int[][]:
+    mut out: int[][] = []
+    const count = len(values)
+    const base = count // pieces
+    const extra = count % pieces
+    mut start = 0
+    for index in range(pieces):
+        mut size = base
+        if index < extra:
+            size = base + 1
+        if size > 0:
+            append(mut out, piece(values, start, size))
+        start = start + size
+    return out
+
+
+# The pool has at least one thread and at most the runtime's 256.
+public func test_threads_is_between_one_and_the_limit() -> bool:
+    const count = parallel.threads()
+    return count >= 1 and count <= 256
+
+
+# The machine offers the process at least one CPU.
+public func test_cpus_is_at_least_one() -> bool:
+    return parallel.cpus() >= 1
+
+
+# The count is fixed once the pool starts: a task's answer is the calling thread's, whichever thread runs it.
+public func test_a_task_sees_the_pool_the_caller_sees() -> bool:
+    const outside = parallel.threads()
+    const inside = parallel.map([0, 1, 2, 3, 4, 5, 6, 7], pool_in_task)
+    for count in inside:
+        if count != outside:
+            return False
+    return True
+
+
+# The CPU count is the same in a task as outside it.
+public func test_a_task_sees_the_cpus_the_caller_sees() -> bool:
+    const outside = parallel.cpus()
+    const inside = parallel.map([0, 1, 2, 3], cpus_in_task)
+    for count in inside:
+        if count != outside:
+            return False
+    return True
+
+
+# The call after the pool has started answers what it answered before: nothing changes the size.
+public func test_the_count_does_not_change_after_tasks_ran() -> bool:
+    const before = parallel.threads()
+    const ran = parallel.map([1, 2, 3, 4], pool_in_task)
+    return len(ran) == 4 and parallel.threads() == before
+
+
+# A list cut into that many pieces keeps every item, in order, in at most that many pieces.
+public func test_a_list_splits_into_the_pool_size() -> bool:
+    mut values: int[] = []
+    for index in range(10):
+        append(mut values, index)
+    const pieces = split(values, parallel.threads())
+    mut total = 0
+    for run in pieces:
+        total = total + len(run)
+    return len(pieces) <= parallel.threads() and total == 10 and pieces[0][0] == 0

@@ -1,0 +1,191 @@
+func change(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    target[1] = 13
+    return source[0][1]
+
+
+# spec: COW-MUT-ARGUMENT-1
+# spec-case: MUTATION-OVERLAP-1
+# spec-case: MUTATION-ENFORCE-1
+public func test_indexed_mut_argument_updates_its_place_and_preserves_readonly_snapshot() -> bool:
+    mut original = {0: {1: 7}}
+    const snapshot = copy(original)
+    mut before = change(mut original[0], snapshot)
+    return before == 7 and original[0][1] == 13
+
+
+func change_reverse(source: dict[int, dict[int, int]], mut target: dict[int, int]) -> int:
+    target[1] = 13
+    return source[0][1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_snapshot_evaluated_before_mut_argument_stays_independent() -> bool:
+    mut original = {0: {1: 7}}
+    const snapshot = copy(original)
+    mut before = change_reverse(snapshot, mut original[0])
+    return before == 7 and original[0][1] == 13
+
+
+func append_row(mut target: int[], source: int[][]) -> int:
+    append(mut target, 13)
+    return len(source[0])
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_list_element_mut_argument_publishes_growth_into_its_parent() -> bool:
+    mut rows = [[7]]
+    const snapshot = copy(rows)
+    mut before = append_row(mut rows[0], snapshot)
+    return before == 1 and rows == [[7, 13]]
+
+
+record Table:
+    mapping: dict[int, int]
+
+
+func change_field(mut target: dict[int, int], source: Table) -> int:
+    target[1] = 13
+    return source.mapping[1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_field_mut_argument_keeps_the_record_snapshot_separate() -> bool:
+    mut table = Table(mapping={1: 7})
+    const snapshot = copy(table)
+    mut before = change_field(mut table.mapping, snapshot)
+    return before == 7 and table.mapping[1] == 13
+
+
+func select(mut counter: int[]) -> int:
+    counter[0] = counter[0] + 1
+    return 0
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_mut_argument_key_is_evaluated_once() -> bool:
+    mut original = {0: {1: 7}}
+    mut count = [0]
+    const snapshot = copy(original)
+    mut before = change(mut original[select(mut count)], snapshot)
+    return count == [1] and before == 7 and original[0][1] == 13
+
+
+func replace_and_copy(mut root: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+    root[0] = {1: 21}
+    return copy(root)
+
+
+func capture_change(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    target[1] = 13
+    return target[1] * 100 + source[0][1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_later_callback_replacement_does_not_retarget_the_selected_argument() -> bool:
+    mut original = {0: {1: 7}}
+    mut selected = copy(original[0])
+    const replacement = replace_and_copy(mut original)
+    mut observed = capture_change(mut selected, replacement)
+    return observed == 1321 and original[0][1] == 21
+
+
+func write_twice(mut first: dict[int, int], mut second: dict[int, int]) -> int:
+    first[1] = 13
+    second[1] = 17
+    return first[1]
+
+
+# Passing one place as two `mut` arguments is E_SINGLE_OWNER_OVERLAP (M5).
+# This test makes the repair explicitly: copy one into a local, pass `mut`
+# that local and store it back.
+# spec-case: MUT-EXCLUSIVE-3
+public func test_a_place_copied_for_a_second_mut_argument_is_stored_back() -> bool:
+    mut original = {0: {1: 7}}
+    mut saved = copy(original[0])
+    mut seen = write_twice(mut original[0], mut saved)
+    original[0] = copy(saved)
+    return seen == 13 and saved[1] == 17 and original[0][1] == 17
+
+
+func change_pair(mut first: dict[int, int], mut second: dict[int, int], source: dict[int, dict[int, int]]) -> int:
+    first[1] = 13
+    second[1] = 17
+    return source[0][1] + source[2][1]
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_multiple_mut_places_release_in_evaluation_order() -> bool:
+    mut original = {0: {1: 7}, 2: {1: 8}}
+    const snapshot = copy(original)
+    mut first = copy(original[0])
+    mut second = copy(original[2])
+    mut seen = change_pair(mut first, mut second, snapshot)
+    original[0] = own first
+    original[2] = own second
+    return seen == 15 and original[0][1] == 13 and original[2][1] == 17
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_reordered_named_mut_arguments_preserve_evaluation_order() -> bool:
+    mut original = {0: {1: 7}, 2: {1: 8}}
+    const snapshot = copy(original)
+    mut second = copy(original[2])
+    mut first = copy(original[0])
+    mut seen = change_pair(second=mut second, first=mut first, source=snapshot)
+    original[2] = own second
+    original[0] = own first
+    return seen == 15 and original[0][1] == 13 and original[2][1] == 17
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_indirect_mut_argument_preserves_place_and_snapshot() -> bool:
+    mut original = {0: {1: 7}}
+    mut action = change
+    const snapshot = copy(original)
+    mut before = action(mut original[0], snapshot)
+    return before == 7 and original[0][1] == 13
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_indirect_whole_mut_arguments_write_their_own_places() -> bool:
+    mut original = {1: 7}
+    mut other = copy(original)
+    mut action = write_twice
+    mut seen = action(mut original, mut other)
+    return seen == 13 and original[1] == 13 and other[1] == 17
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_indirect_later_callback_keeps_the_selected_place() -> bool:
+    mut original = {0: {1: 7}}
+    mut action = capture_change
+    mut selected = copy(original[0])
+    const replacement = replace_and_copy(mut original)
+    mut seen = action(mut selected, replacement)
+    return seen == 1321 and original[0][1] == 21
+
+
+func deep_change(mut target: int[], source: dict[int, dict[int, int[]][]]) -> int:
+    append(mut target, 13)
+    return len(source[0][0][1])
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_alternating_mut_path_keeps_all_ancestors_independent() -> bool:
+    mut original = {0: [{1: [7]}]}
+    const snapshot = copy(original)
+    mut before = deep_change(mut original[0][0][1], snapshot)
+    return before == 1 and original[0][0][1] == [7, 13]
+
+
+func array_change(mut target: int[], source: FixedArray[int[], 1]) -> int:
+    append(mut target, 13)
+    return len(source[0])
+
+
+# spec-case: COW-MUT-ARGUMENT-1
+public func test_fixed_array_mut_argument_updates_the_inline_slot() -> bool:
+    mut original: FixedArray[int[], 1] = FixedArray[int[], 1]([[7]])
+    const snapshot = copy(original)
+    mut before = array_change(mut original[0], snapshot)
+    return before == 1 and original[0] == [7, 13]

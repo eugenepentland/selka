@@ -1,0 +1,16 @@
+# `head` returns a view of its text, and `apply` takes a function whose result must
+# be owned, so `head` cannot be passed as it is: the migration writes a copying wrapper.
+func head(text: str) -> str from text:
+    return text[0:4]
+
+func head_copy(text: str) -> str:
+    return copy(head(text))
+
+
+func apply(callback: func(str) -> str, text: str) -> int:
+    return len(callback(text))
+
+
+func main(out: Stream) -> int:
+    print(out, apply(head_copy, "abcdefgh"))
+    return 0

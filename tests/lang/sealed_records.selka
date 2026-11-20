@@ -1,0 +1,117 @@
+import sealed_records_support as s
+import sort
+
+# `@sealed` records seen from another module (W11, `docs/records-and-unions.md#sealed-records`): their fields are read,
+# their values move, are copied, compared, sorted and used as keys, and only their own module's functions make or change
+# one. The refusals are Zig tests in `src/sealed_rules_test.zig`.
+record Page:
+    title: s.Markup
+    body: s.Markup[]
+
+
+func render(page: Page) -> str:
+    mut out = copy(page.title.html)
+    for part in page.body:
+        out += part.html
+    return out
+
+
+func first[T: copy](values: T[]) -> T:
+    return copy(values[0])
+
+
+func value_of(c: s.Count) -> int:
+    return c.value
+
+
+public func test_markup_is_held_passed_joined_and_read() -> bool:
+    const title = s.escape("<b>Hi</b>")
+    mut body: s.Markup[] = []
+    append(mut body, s.join(s.escape("a&b"), s.escape(" <c>")))
+    const page = Page(title=own title, body=own body)
+    assert render(page) == "&lt;b&gt;Hi&lt;/b&gt;a&amp;b &lt;c&gt;"
+    return True
+
+
+public func test_reading_a_markup_gives_plain_text() -> bool:
+    const m = s.escape("<x>")
+    mut raw = copy(m.html)
+    raw += "<y>"
+    assert raw == "&lt;x&gt;<y>"
+    assert m.html == "&lt;x&gt;"
+    return True
+
+
+public func test_a_checked_count_moves_copies_and_compares() -> bool:
+    match s.count(3, "c"):
+        case Ok(c):
+            const twin = copy(c)
+            const moved = own c
+            assert moved == twin
+            assert s.bumped(moved).value == 4
+        case Err(_):
+            return False
+    match s.count(-1, "bad"):
+        case Ok(_):
+            return False
+        case Err(e):
+            assert e == "negative"
+    return True
+
+
+public func test_exchange_of_a_whole_value_and_the_module_default() -> bool:
+    mut h = s.Holder(n=1)
+    assert h.count.label == "held"
+    const old = exchange(mut h.count, s.bumped(h.count))
+    assert old.value == 0
+    assert h.count.value == 1
+    return True
+
+
+public func test_sorted_and_keyed_by_another_module() -> bool:
+    mut counts: s.Count[] = []
+    for v in [3, 1, 2]:
+        match s.count(v, "n"):
+            case Ok(c):
+                append(mut counts, own c)
+            case Err(_):
+                return False
+    const sorted = sort.sort_by_key(counts, value_of)
+    assert sorted[0].value == 1
+    assert sorted[2].value == 3
+    mut seen: dict[s.Key, int] = {}
+    seen[s.key(1)] = 10
+    seen[s.key(2)] = 20
+    assert seen[s.key(2)] == 20
+    assert first(sorted).value == 1
+    return True
+
+
+public func test_a_sealed_linear_protocol() -> bool:
+    mut w = s.begin("a.txt")
+    s.write(mut w, "x")
+    s.write(mut w, "y")
+    assert w.target == "a.txt"
+    assert s.commit(own w) == 2
+    const dropped = s.begin("b.txt")
+    assert s.abandon(own dropped) == 5
+    return True
+
+
+public func test_a_sealed_generic_record() -> bool:
+    const t = s.tagged(7, "seven")
+    assert t.tag == 7
+    assert t.value == "seven"
+    const u = s.tagged(8, 8)
+    assert u.value == 8
+    return True
+
+
+public func test_own_of_a_field_of_a_plain_sealed_record() -> bool:
+    match s.count(5, "five"):
+        case Ok(c):
+            const label = own c.label
+            assert label == "five"
+        case Err(_):
+            return False
+    return True

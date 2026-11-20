@@ -1,0 +1,17 @@
+# Calls through an address on a device (MCU-NOC3): C hands over the address of a function as a `u32`, a Thumb address
+# with its low bit set, as a boot ROM's table holds its routines, and an `@address` extern func calls it under AAPCS
+# with four scalars, two of which go on the stack. weigh(4, 3, 2, 1) is 4321; the low bit adds 1000 when it is set, so
+# `main` answers (4321 + 1000) - 5100 = 221.
+# bare-status: 221
+# bare-link: extern_address.c
+extern func weigh_address(host: Host) -> u32
+
+
+@address
+extern func weigh_at(host: Host, target: u32, a: i32, b: i64, c: u8, d: i32) -> i32
+
+
+func main(host: Host) -> int:
+    const address = weigh_address(host)
+    const weighed = weigh_at(host, address, i32(4), 3, u8(2), i32(1))
+    return int(weighed) + 1000 * int(bit_and(address, 1)) - 5100

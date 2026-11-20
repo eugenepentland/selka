@@ -1,0 +1,8 @@
+# A test that runs for a long while (RUN-SIGNALS-1), bounded by the step ceiling and `--timeout-ms` of the command that runs it.
+public func test_burn() -> bool:
+    mut total = 0
+    mut turn = 0
+    while turn < 3000000000:
+        total = total + turn
+        turn = turn + 1
+    return total > 0

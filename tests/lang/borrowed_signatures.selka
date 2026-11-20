@@ -1,0 +1,474 @@
+# O3 borrowed results read their ownership contract from the written signature.
+import dicts
+import json
+
+func text_part(text: str) -> str from text:
+    return text[1:4]
+
+
+func bytes_part(data: bytes) -> bytes from data:
+    return data[1:4]
+
+
+func rows_part(rows: str[][]) -> str[][] from rows:
+    return rows[1:3]
+
+
+public func test_declared_text_bytes_and_list_slices_retain_their_sources() -> bool:
+    const text = text_part("abcde-" + str(7))
+    const octets = bytes_part(b"abcde" + b"!")
+    const rows = rows_part([["zero"], ["one-" + str(1)], ["two-" + str(2)], ["three"]])
+    return text == "bcd" and octets == b"bcd" and len(rows) == 2 and rows[0][0] == "one-1" and rows[1][0] == "two-2"
+
+
+func maybe_part(text: str, available: bool) -> str? from text:
+    if available:
+        return Some(text[1:4])
+    return None
+
+
+public func test_a_declared_slice_can_be_wrapped_in_some_or_return_none() -> bool:
+    const absent = maybe_part("abcde-" + str(7), False)
+    if absent is not None:
+        return False
+    const present = maybe_part("abcde-" + str(8), True)
+    match present:
+        case Some(value):
+            return value == "bcd"
+        case None:
+            return False
+
+
+func checked_part(data: bytes, failed: bool) -> bytes from data fails str:
+    if failed:
+        fail "failure-" + str(len(data))
+    return data[1:4]
+
+
+func checked_part_matches(failed: bool) -> bool:
+    const result = checked_part(b"abcde", failed)
+    match result:
+        case Ok(value):
+            return not failed and value == b"bcd"
+        case Err(message):
+            return failed and message == "failure-5"
+
+
+public func test_declared_slice_success_and_owned_failure_destroy_their_storage() -> bool:
+    for index in range(32):
+        assert checked_part_matches(index % 2 == 0)
+    return True
+
+
+func replace_text(mut text: str) -> str from text:
+    text = "fresh-" + str(42)
+    return text[0:5]
+
+
+func replace_bytes(mut data: bytes) -> bytes from data:
+    data = b"abcde" + b"!"
+    return data[1:4]
+
+
+func replace_rows(mut rows: str[][]) -> str[][] from rows:
+    rows = [["fresh-" + str(1)], ["kept-" + str(2)]]
+    return rows[0:1]
+
+
+public func test_mut_slice_results_retain_the_final_written_owner() -> bool:
+    mut text = "old-" + str(1)
+    mut octets = b"old" + b"!"
+    mut rows = [["old-" + str(2)]]
+    const text_view = replace_text(mut text)
+    const bytes_view = replace_bytes(mut octets)
+    const rows_view = replace_rows(mut rows)
+    assert text_view == "fresh" and text == "fresh-42"
+    assert bytes_view == b"bcd" and octets == b"abcde!"
+    assert len(rows_view) == 1 and rows_view[0][0] == "fresh-1" and rows[1][0] == "kept-2"
+    text = "after"
+    octets = b"after"
+    rows = [["after"]]
+    return text == "after" and octets == b"after" and rows[0][0] == "after"
+
+
+public func test_copy_of_a_borrowed_result_owns_the_underlying_value() -> bool:
+    mut text = "abcde-" + str(1)
+    mut octets = b"abcde" + b"!"
+    mut rows = [["zero"], ["one-" + str(1)], ["two-" + str(2)]]
+    const text_copy = copy(text_part(text))
+    const bytes_copy = copy(bytes_part(octets))
+    const rows_copy = copy(rows_part(rows))
+    text = "changed"
+    octets = b"changed"
+    rows = [["changed"]]
+    return text_copy == "bcd" and bytes_copy == b"bcd" and rows_copy[0][0] == "one-1" and rows_copy[1][0] == "two-2"
+
+
+func choose_many(p0: str[], p1: str[], p2: str[], p3: str[], p4: str[], p5: str[], p6: str[], p7: str[], p8: str[], p9: str[], p10: str[], p11: str[], p12: str[], p13: str[], p14: str[], p15: str[], p16: str[], p17: str[], p18: str[], p19: str[], p20: str[], p21: str[], p22: str[], p23: str[], p24: str[], p25: str[], p26: str[], p27: str[], p28: str[], p29: str[], p30: str[], p31: str[], p32: str[], p33: str[], p34: str[], p35: str[], p36: str[], p37: str[], p38: str[], p39: str[], p40: str[], p41: str[], p42: str[], p43: str[], p44: str[], p45: str[], p46: str[], p47: str[], p48: str[], p49: str[], p50: str[], p51: str[], p52: str[], p53: str[], p54: str[], p55: str[], p56: str[], p57: str[], p58: str[], p59: str[], p60: str[], p61: str[], p62: str[], p63: str[], p64: str[], p65: str[], p66: str[], p67: str[], p68: str[], p69: str[], selected: int) -> str[] from p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49, p50, p51, p52, p53, p54, p55, p56, p57, p58, p59, p60, p61, p62, p63, p64, p65, p66, p67, p68, p69:
+    if selected == 0:
+        return p0
+    if selected == 1:
+        return p1
+    if selected == 2:
+        return p2
+    if selected == 3:
+        return p3
+    if selected == 4:
+        return p4
+    if selected == 5:
+        return p5
+    if selected == 6:
+        return p6
+    if selected == 7:
+        return p7
+    if selected == 8:
+        return p8
+    if selected == 9:
+        return p9
+    if selected == 10:
+        return p10
+    if selected == 11:
+        return p11
+    if selected == 12:
+        return p12
+    if selected == 13:
+        return p13
+    if selected == 14:
+        return p14
+    if selected == 15:
+        return p15
+    if selected == 16:
+        return p16
+    if selected == 17:
+        return p17
+    if selected == 18:
+        return p18
+    if selected == 19:
+        return p19
+    if selected == 20:
+        return p20
+    if selected == 21:
+        return p21
+    if selected == 22:
+        return p22
+    if selected == 23:
+        return p23
+    if selected == 24:
+        return p24
+    if selected == 25:
+        return p25
+    if selected == 26:
+        return p26
+    if selected == 27:
+        return p27
+    if selected == 28:
+        return p28
+    if selected == 29:
+        return p29
+    if selected == 30:
+        return p30
+    if selected == 31:
+        return p31
+    if selected == 32:
+        return p32
+    if selected == 33:
+        return p33
+    if selected == 34:
+        return p34
+    if selected == 35:
+        return p35
+    if selected == 36:
+        return p36
+    if selected == 37:
+        return p37
+    if selected == 38:
+        return p38
+    if selected == 39:
+        return p39
+    if selected == 40:
+        return p40
+    if selected == 41:
+        return p41
+    if selected == 42:
+        return p42
+    if selected == 43:
+        return p43
+    if selected == 44:
+        return p44
+    if selected == 45:
+        return p45
+    if selected == 46:
+        return p46
+    if selected == 47:
+        return p47
+    if selected == 48:
+        return p48
+    if selected == 49:
+        return p49
+    if selected == 50:
+        return p50
+    if selected == 51:
+        return p51
+    if selected == 52:
+        return p52
+    if selected == 53:
+        return p53
+    if selected == 54:
+        return p54
+    if selected == 55:
+        return p55
+    if selected == 56:
+        return p56
+    if selected == 57:
+        return p57
+    if selected == 58:
+        return p58
+    if selected == 59:
+        return p59
+    if selected == 60:
+        return p60
+    if selected == 61:
+        return p61
+    if selected == 62:
+        return p62
+    if selected == 63:
+        return p63
+    if selected == 64:
+        return p64
+    if selected == 65:
+        return p65
+    if selected == 66:
+        return p66
+    if selected == 67:
+        return p67
+    if selected == 68:
+        return p68
+    return p69
+
+
+public func test_a_borrowed_result_retains_more_than_sixty_four_possible_owners() -> bool:
+    const selected = choose_many(["value-" + str(0)], ["value-" + str(1)], ["value-" + str(2)], ["value-" + str(3)], ["value-" + str(4)], ["value-" + str(5)], ["value-" + str(6)], ["value-" + str(7)], ["value-" + str(8)], ["value-" + str(9)], ["value-" + str(10)], ["value-" + str(11)], ["value-" + str(12)], ["value-" + str(13)], ["value-" + str(14)], ["value-" + str(15)], ["value-" + str(16)], ["value-" + str(17)], ["value-" + str(18)], ["value-" + str(19)], ["value-" + str(20)], ["value-" + str(21)], ["value-" + str(22)], ["value-" + str(23)], ["value-" + str(24)], ["value-" + str(25)], ["value-" + str(26)], ["value-" + str(27)], ["value-" + str(28)], ["value-" + str(29)], ["value-" + str(30)], ["value-" + str(31)], ["value-" + str(32)], ["value-" + str(33)], ["value-" + str(34)], ["value-" + str(35)], ["value-" + str(36)], ["value-" + str(37)], ["value-" + str(38)], ["value-" + str(39)], ["value-" + str(40)], ["value-" + str(41)], ["value-" + str(42)], ["value-" + str(43)], ["value-" + str(44)], ["value-" + str(45)], ["value-" + str(46)], ["value-" + str(47)], ["value-" + str(48)], ["value-" + str(49)], ["value-" + str(50)], ["value-" + str(51)], ["value-" + str(52)], ["value-" + str(53)], ["value-" + str(54)], ["value-" + str(55)], ["value-" + str(56)], ["value-" + str(57)], ["value-" + str(58)], ["value-" + str(59)], ["value-" + str(60)], ["value-" + str(61)], ["value-" + str(62)], ["value-" + str(63)], ["value-" + str(64)], ["value-" + str(65)], ["value-" + str(66)], ["value-" + str(67)], ["value-" + str(68)], ["value-" + str(69)], 65)
+    return selected[0] == "value-65"
+
+
+func identity[T](value: T) -> T from value:
+    return value
+
+
+public func test_generic_borrow_declarations_ignore_scalar_instances() -> bool:
+    const scalar = identity(42)
+    const managed = identity(["managed-" + str(1)])
+    return scalar == 42 and managed[0] == "managed-1"
+
+
+func json_name_matches() -> bool:
+    const document = json.object({"name": json.text("named-" + str(7))})
+    const member = json.get(document, "name")
+    match member:
+        case Some(value):
+            const name = json.as_str(value)
+            match name:
+                case Some(text):
+                    return text == "named-7"
+                case None:
+                    return False
+        case None:
+            return False
+
+
+public func test_standard_library_accessors_declare_each_possible_owner() -> bool:
+    assert json_name_matches()
+    mut mapping = {"present": ["mapped-" + str(1)]}
+    const fallback = ["fallback-" + str(2)]
+    const absent = dicts.get(mapping, "missing", fallback)
+    const present = dicts.get(mapping, "present", fallback)
+    assert absent[0] == "fallback-2" and present[0] == "mapped-1"
+    const inserted = dicts.setdefault(mut mapping, "added", ["new-" + str(3)])
+    return inserted[0] == "new-3" and len(mapping) == 2
+
+
+func replace_rows_wide(p0: int, p1: int, p2: int, p3: int, p4: int, p5: int, p6: int, p7: int, p8: int, p9: int, p10: int, p11: int, p12: int, p13: int, p14: int, p15: int, p16: int, p17: int, p18: int, p19: int, p20: int, p21: int, p22: int, p23: int, p24: int, p25: int, p26: int, p27: int, p28: int, p29: int, p30: int, p31: int, p32: int, p33: int, p34: int, p35: int, p36: int, p37: int, p38: int, p39: int, p40: int, p41: int, p42: int, p43: int, p44: int, p45: int, p46: int, p47: int, p48: int, p49: int, p50: int, p51: int, p52: int, p53: int, p54: int, p55: int, p56: int, p57: int, p58: int, p59: int, p60: int, p61: int, p62: int, p63: int, p64: int, p65: int, p66: int, p67: int, p68: int, mut rows: str[][]) -> str[][] from rows:
+    const total = p0 + p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10 + p11 + p12 + p13 + p14 + p15 + p16 + p17 + p18 + p19 + p20 + p21 + p22 + p23 + p24 + p25 + p26 + p27 + p28 + p29 + p30 + p31 + p32 + p33 + p34 + p35 + p36 + p37 + p38 + p39 + p40 + p41 + p42 + p43 + p44 + p45 + p46 + p47 + p48 + p49 + p50 + p51 + p52 + p53 + p54 + p55 + p56 + p57 + p58 + p59 + p60 + p61 + p62 + p63 + p64 + p65 + p66 + p67 + p68
+    rows = [["fresh-" + str(total)], ["kept-" + str(len(rows))]]
+    return rows[0:1]
+
+
+public func test_mut_borrow_source_at_parameter_seventy_keeps_the_final_owner() -> bool:
+    mut rows = [["old-" + str(1)], ["old-" + str(2)], ["old-" + str(3)]]
+    const view = replace_rows_wide(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, mut rows)
+    assert len(view) == 1 and view[0][0] == "fresh-2346"
+    assert len(rows) == 2 and rows[0][0] == "fresh-2346" and rows[1][0] == "kept-3"
+    rows = [["after-" + str(4)]]
+    return rows[0][0] == "after-4"
+
+
+func maybe_bytes(data: bytes, available: bool) -> bytes? from data:
+    if available:
+        return Some(data[1:4])
+    return None
+
+
+func maybe_rows(rows: str[][], available: bool) -> str[][]? from rows:
+    if available:
+        return Some(rows[1:3])
+    return None
+
+
+func checked_text(text: str, failed: bool) -> str from text fails str:
+    if failed:
+        fail "text-failure-" + str(len(text))
+    return text[1:4]
+
+
+func checked_rows(rows: str[][], failed: bool) -> str[][] from rows fails str:
+    if failed:
+        fail "rows-failure-" + str(len(rows))
+    return rows[1:3]
+
+
+func read_optional_text(value: str?, present: bool) -> bool:
+    match value:
+        case Some(text):
+            return present and len(text) == 3 and text == "bcd"
+        case None:
+            return not present
+
+
+func read_optional_bytes(value: bytes?, present: bool) -> bool:
+    match value:
+        case Some(data):
+            return present and len(data) == 3 and data == b"bcd"
+        case None:
+            return not present
+
+
+func read_optional_rows(value: str[][]?, present: bool) -> bool:
+    match value:
+        case Some(rows):
+            return present and len(rows) == 2 and rows[0][0] == "one-1" and rows[1][0] == "two-2"
+        case None:
+            return not present
+
+
+func read_result_text(value: Result[str, str], failed: bool) -> bool:
+    match value:
+        case Ok(text):
+            return not failed and len(text) == 3 and text == "bcd"
+        case Err(message):
+            return failed and len(message) == 14 and message == "text-failure-7"
+
+
+func read_result_bytes(value: Result[bytes, str], failed: bool) -> bool:
+    match value:
+        case Ok(data):
+            return not failed and len(data) == 3 and data == b"bcd"
+        case Err(message):
+            return failed and len(message) == 9 and message == "failure-6"
+
+
+func read_result_rows(value: Result[str[][], str], failed: bool) -> bool:
+    match value:
+        case Ok(rows):
+            return not failed and len(rows) == 2 and rows[0][0] == "one-1" and rows[1][0] == "two-2"
+        case Err(message):
+            return failed and len(message) == 14 and message == "rows-failure-3"
+
+
+public func test_read_only_wrapper_arguments_accept_borrowed_slices_and_owned_values() -> bool:
+    mut text = "abcde-" + str(1)
+    mut octets = b"abcde" + b"!"
+    mut rows = [["zero"], ["one-" + str(1)], ["two-" + str(2)]]
+    const optional_text = maybe_part(text, True)
+    const optional_bytes = maybe_bytes(octets, True)
+    const optional_rows = maybe_rows(rows, True)
+    const copied_optional_text = copy(optional_text)
+    const copied_optional_bytes = copy(optional_bytes)
+    const copied_optional_rows = copy(optional_rows)
+    const copied_result_text = copy(checked_text(text, False))
+    const copied_result_bytes = copy(checked_part(octets, False))
+    const copied_result_rows = copy(checked_rows(rows, False))
+    assert read_optional_text(optional_text, True) and read_optional_bytes(optional_bytes, True) and read_optional_rows(optional_rows, True)
+    assert read_result_text(checked_text(text, False), False) and read_result_bytes(checked_part(octets, False), False) and read_result_rows(checked_rows(rows, False), False)
+    assert read_optional_text(maybe_part(text, False), False)
+    assert read_optional_bytes(maybe_bytes(octets, False), False)
+    assert read_optional_rows(maybe_rows(rows, False), False)
+    for _ in range(16):
+        assert read_result_text(checked_text(text, True), True)
+        assert read_result_bytes(checked_part(octets, True), True)
+        assert read_result_rows(checked_rows(rows, True), True)
+    text = "changed"
+    octets = b"changed"
+    rows = [["changed"]]
+    assert read_optional_text(copied_optional_text, True) and read_optional_bytes(copied_optional_bytes, True) and read_optional_rows(copied_optional_rows, True)
+    assert read_result_text(copied_result_text, False)
+    assert read_result_bytes(copied_result_bytes, False)
+    assert read_result_rows(copied_result_rows, False)
+    const owned_failure: Result[str, str] = Err("text-failure-" + str(7))
+    return read_result_text(owned_failure, True) and text == "changed" and octets == b"changed" and rows[0][0] == "changed"
+
+
+record BorrowedRecord:
+    name: str
+    rows: str[][]
+
+
+func whole_record(value: BorrowedRecord) -> BorrowedRecord from value:
+    return value
+
+
+func whole_dictionary(mapping: dict[str, str[]]) -> dict[str, str[]] from mapping:
+    return mapping
+
+
+func read_record(value: BorrowedRecord) -> bool:
+    return value.name == "record-1" and len(value.rows) == 1 and value.rows[0][0] == "row-2"
+
+
+func read_dictionary(mapping: dict[str, str[]]) -> bool:
+    return len(mapping) == 2 and mapping["other"][0] == "other-4"
+
+
+public func test_whole_managed_record_and_dictionary_borrows_read_and_copy_their_storage() -> bool:
+    mut value = BorrowedRecord(name="record-" + str(1), rows=[["row-" + str(2)]])
+    mut mapping = {"present": ["mapped-" + str(3)], "other": ["other-" + str(4)]}
+    const borrowed_record = whole_record(value)
+    const borrowed_mapping = whole_dictionary(mapping)
+    const copied_record = copy(borrowed_record)
+    const copied_mapping = copy(borrowed_mapping)
+    assert borrowed_record.name == "record-1" and borrowed_record.rows[0][0] == "row-2"
+    assert read_record(borrowed_record)
+    assert len(borrowed_mapping) == 2 and borrowed_mapping["present"][0] == "mapped-3"
+    const selected = dicts.get(borrowed_mapping, "present", ["fallback-" + str(5)])
+    assert selected[0] == "mapped-3" and read_dictionary(borrowed_mapping)
+    value = BorrowedRecord(name="changed", rows=[["changed"]])
+    mapping = {"changed": ["changed"]}
+    assert read_record(copied_record) and read_dictionary(copied_mapping)
+    assert copied_mapping["present"][0] == "mapped-3"
+    return value.name == "changed" and len(mapping) == 1 and mapping["changed"][0] == "changed"
+
+
+func through_mut_list(mut values: str[]) -> str[] from values:
+    return values
+
+
+func wrapped_mut_list(mut values: str[], mut unrelated: str[]) -> str[]? from values:
+    _ = unrelated
+    return Some(values)
+
+
+public func test_small_mutable_identity_results_keep_their_owners_after_inlining() -> bool:
+    mut values = ["mutable-" + str(1)]
+    const borrowed = through_mut_list(mut values)
+    mut nested_values = ["wrapped-" + str(2)]
+    mut unrelated = ["other-" + str(3)]
+    const nested = wrapped_mut_list(mut nested_values, mut unrelated)
+    append(mut unrelated, "second-" + str(4))
+    const allocated = ["allocated-" + str(5)]
+    assert len(borrowed) == 1 and borrowed[0] == "mutable-1"
+    match nested:
+        case Some(part):
+            assert len(part) == 1 and part[0] == "wrapped-2"
+        case None:
+            return False
+    assert allocated[0] == "allocated-5"
+    return len(unrelated) == 2 and unrelated[0] == "other-3" and unrelated[1] == "second-4"

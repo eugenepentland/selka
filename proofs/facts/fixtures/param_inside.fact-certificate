@@ -1,0 +1,17 @@
+fact-certificate-v1
+function g linkage internal addr 0 params i64 ret i64
+param 0 0 9
+returns -
+block b- reach preds -
+inst %0 param i64 none a - b - x - imm 0 aux 0 range 0 9
+block b0 reach preds -
+term ret %0
+end
+function f linkage other addr 0 params - ret i64
+returns -
+block b- reach preds -
+inst %0 iconst i64 none a - b - x - imm 7 aux 0 range -
+block b0 reach preds -
+inst %1 call i64 none a #0 b - x %0 imm 0 aux 0 range -
+term ret %1
+end

@@ -1,0 +1,10 @@
+public record Cents:
+    value: int
+
+
+public func make(value: u64) -> Cents:
+    return Cents(value=int(value))
+
+
+public func add(left: Cents, right: Cents) -> Cents:
+    return Cents(value=left.value + right.value)

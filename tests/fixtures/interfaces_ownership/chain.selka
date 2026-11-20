@@ -1,0 +1,8 @@
+# Across two modules: `relay`'s `from xs` is `base.pick`'s, so the append while `last` is live is refused.
+import lib
+
+func main() -> int:
+    mut xs = ["a"]
+    const last = lib.relay(xs)
+    append(mut xs, "b")
+    return len(last)

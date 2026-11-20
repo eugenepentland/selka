@@ -1,0 +1,143 @@
+# Two payload bindings of one `match mut` arm passed `mut` to one call (M5, X2; lane FR75, 18 November 2026). Each names a
+# different field of the payload inside the matched place, so they are disjoint exactly as `mut t.keys, mut t.vals` of a
+# record are, and each shape below gives what its record form gives. Before FR75 `check` refused them all with
+# E_SINGLE_OWNER_OVERLAP and offered a copy per call. A place inside a list element stays refused (ELEM-FIELDS), as do one
+# binding twice, a binding beside the matched place, a binding beside a field path under it, and a read of a binding beside
+# a `mut` sibling, and bindings of a `match mut` on an enclosing arm's binding (`src/core/single_owner_test.zig`, "FR75").
+# A read argument that makes a value of its own (F-24) may read a binding passed `mut`: Core makes it before it takes the
+# payload out of its case.
+enum Pairs:
+    pairs(keys: str[], vals: int[])
+    nothing
+
+
+record PairsRecord:
+    keys: str[]
+    vals: int[]
+
+
+record Holder:
+    tag: int
+    p: Pairs
+
+
+record HolderRecord:
+    tag: int
+    p: PairsRecord
+
+
+record Bag:
+    keys: str[]
+    vals: int[]
+
+
+enum Slot:
+    full(value: Bag)
+    empty
+
+
+record SlotRecord:
+    value: Bag
+
+
+func put(mut keys: str[], mut vals: int[], k: str, v: int):
+    append(mut keys, copy(k))
+    append(mut vals, v)
+
+
+func add_one(mut t: Pairs):
+    match mut t:
+        case pairs(keys, vals):
+            put(mut keys, mut vals, "a", 1)
+        case nothing:
+            pass
+
+
+func add_one_record(mut t: PairsRecord):
+    put(mut t.keys, mut t.vals, "a", 1)
+
+
+public func test_parameter_scrutinee() -> bool:
+    mut t = Pairs.pairs(keys=[], vals=[])
+    add_one(mut t)
+    add_one(mut t)
+    mut r = PairsRecord(keys=[], vals=[])
+    add_one_record(mut r)
+    add_one_record(mut r)
+    return f"{t}" == "Pairs.pairs(keys=['a', 'a'], vals=[1, 1])" and f"{r}" == "PairsRecord(keys=['a', 'a'], vals=[1, 1])"
+
+
+public func test_local_scrutinee() -> bool:
+    mut t = Pairs.pairs(keys=[], vals=[])
+    match mut t:
+        case pairs(keys, vals):
+            put(mut keys, mut vals, "a", 1)
+            put(mut keys, mut vals, "b", 2)
+        case nothing:
+            pass
+    mut r = PairsRecord(keys=[], vals=[])
+    put(mut r.keys, mut r.vals, "a", 1)
+    put(mut r.keys, mut r.vals, "b", 2)
+    return f"{t}" == "Pairs.pairs(keys=['a', 'b'], vals=[1, 2])" and f"{r}" == "PairsRecord(keys=['a', 'b'], vals=[1, 2])"
+
+
+public func test_field_scrutinee() -> bool:
+    mut h = Holder(tag=1, p=Pairs.pairs(keys=[], vals=[]))
+    match mut h.p:
+        case pairs(keys, vals):
+            put(mut keys, mut vals, "a", 1)
+        case nothing:
+            pass
+    mut r = HolderRecord(tag=1, p=PairsRecord(keys=[], vals=[]))
+    put(mut r.p.keys, mut r.p.vals, "a", 1)
+    return f"{h}" == "Holder(tag=1, p=Pairs.pairs(keys=['a'], vals=[1]))" and f"{r}" == "HolderRecord(tag=1, p=PairsRecord(keys=['a'], vals=[1]))"
+
+
+public func test_record_payload_fields() -> bool:
+    mut s = Slot.full(value=Bag(keys=[], vals=[]))
+    match mut s:
+        case full(value=p):
+            put(mut p.keys, mut p.vals, "a", 1)
+        case empty:
+            pass
+    mut r = SlotRecord(value=Bag(keys=[], vals=[]))
+    put(mut r.value.keys, mut r.value.vals, "a", 1)
+    return f"{s}" == "Slot.full(value=Bag(keys=['a'], vals=[1]))" and f"{r}" == "SlotRecord(value=Bag(keys=['a'], vals=[1]))"
+
+
+record Work:
+    lines: str[]
+    targets: str[]
+
+
+enum Job:
+    busy(work: Work)
+    idle
+
+
+func emit(mut work: Work, statement: str):
+    append(mut work.lines, copy(statement))
+
+
+public func test_values_made_from_bindings_passed_mut() -> bool:
+    mut t = Pairs.pairs(keys=["z"], vals=[7])
+    match mut t:
+        case pairs(keys, vals):
+            put(mut keys, mut vals, str(len(vals)), len(keys))
+            put(mut keys, mut vals, keys[0] + "!", vals[0])
+        case nothing:
+            pass
+    mut r = PairsRecord(keys=["z"], vals=[7])
+    put(mut r.keys, mut r.vals, str(len(r.vals)), len(r.keys))
+    put(mut r.keys, mut r.vals, r.keys[0] + "!", r.vals[0])
+    mut job = Job.busy(work=Work(lines=[], targets=["t"]))
+    match mut job:
+        case busy(work=held):
+            emit(mut held, copy(held.targets[0]) + "?")
+        case idle:
+            pass
+    mut w = Work(lines=[], targets=["t"])
+    emit(mut w, copy(w.targets[0]) + "?")
+    return (
+        f"{t}" == "Pairs.pairs(keys=['z', '1', 'z!'], vals=[7, 1, 7])" and f"{r}" == "PairsRecord(keys=['z', '1', 'z!'], vals=[7, 1, 7])" and f"{job}" == "Job.busy(work=Work(lines=['t?'], targets=['t']))" and f"{w}" == "Work(lines=['t?'], targets=['t'])"
+    )

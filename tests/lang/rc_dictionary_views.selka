@@ -1,0 +1,27 @@
+# spec-case: D2-VIEW-STORAGE-1
+import dicts
+
+public func test_explicit_snapshot_preserves_prior_values() -> bool:
+    mut mapping = {1: 7}
+    mut saved = list(dicts.values(mapping))
+    mapping[1] = 9
+    mapping[2] = 11
+    return saved == [7] and list(dicts.values(mapping)) == [9, 11]
+
+
+record Saved:
+    values: int[][]
+    items: DictItem[int, int[]][]
+
+
+func collect(mapping: dict[int, int[]]) -> Saved:
+    return Saved(values=list(dicts.values(mapping)), items=list(dicts.items(mapping)))
+
+
+# spec-case: D2-VIEW-STORAGE-1
+public func test_returned_nested_snapshots_keep_managed_values() -> bool:
+    mut mapping = {1: [7, 8]}
+    mut saved = collect(mapping)
+    append(mut mapping[1], 9)
+    append(mut saved.values[0], 11)
+    return saved.values == [[7, 8, 11]] and saved.items[0].value == [7, 8] and mapping[1] == [7, 8, 9]

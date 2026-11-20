@@ -1,0 +1,242 @@
+import math
+import strings
+
+# Positive floats as "bits text": the IEEE bit pattern of the float, then Python's `repr` of it (the system's Python 3.14,
+# written by a script with a fixed seed). These are the ones a person would try: 0.1, thirds, the edges of the plain range,
+# the subnormals, the largest finite float, powers of two near the integer range.
+func vectors_chosen() -> str[]:
+    return [
+        "4591870180066957722 0.1",
+        "4596373779694328218 0.2",
+        "4599075939470750516 0.30000000000000004",
+        "4599676419421066581 0.3333333333333333",
+        "4604180019048437077 0.6666666666666666",
+        "4607182418800017408 1.0",
+        "4612811918334230528 2.5",
+        "4636737291354636288 100.0",
+        "4638387860618067575 123.456",
+        "4831355200913801216 1000000000000000.0",
+        "4846369599423283199 9999999999999998.0",
+        "4846369599423283200 1e+16",
+        "4848869599423283200 1.5e+16",
+        "4862596447618666293 1.2345678901234568e+17",
+        "4936209963552724370 1e+22",
+        "4950912855330343670 1e+23",
+        "4545900317374521216 8.5e-05",
+        "4547007122018943789 0.0001",
+        "4547007122018943788 9.999999999999999e-05",
+        "4548686525128629352 0.00012345",
+        "1 5e-324",
+        "2 1e-323",
+        "4503599627370495 2.225073858507201e-308",
+        "4503599627370496 2.2250738585072014e-308",
+        "9218868437227405311 1.7976931348623157e+308",
+        "88 4.35e-322",
+        "2024 1e-320",
+        "4845873199050653696 9007199254740992.0",
+        "4890909195324358656 9.223372036854776e+18",
+        "4895412794951729152 1.8446744073709552e+19",
+        "4890909195324358656 9.223372036854776e+18",
+        "4458836034664420235 1.2345678901234568e-10",
+        "1 5e-324",
+        "4614256656552045848 3.141592653589793",
+        "4613303445314885481 2.718281828459045",
+        "4962933279127225623 6.02214076e+23",
+        "4110526470433157393 6.62607015e-34",
+        "4733809291562057728 299792458.0",
+        "9218868437227405310 1.7976931348623155e+308",
+        "4602678819172646912 0.5",
+        "4679240012837945344 65536.0",
+    ]
+
+
+# Three random bit patterns at each of the binary exponents -1074 up to about 2^-40 (the first part of the random vectors).
+func vectors_random_low() -> str[]:
+    return [
+        "1768429852997683 8.73720437446241e-309",
+        "1687517034231650 8.33744193385765e-309",
+        "2021843076584339 9.989232054222943e-309",
+        "103606701944188317 9.38218502437105e-302",
+        "104727542097265300 1.1704858937627134e-301",
+        "104331595066363278 1.0884353143662986e-301",
+        "2356057106561051122 3.512472371575477e-151",
+        "2358590211245502660 5.230758687715093e-151",
+        "2357984530190167401 4.8199057625613444e-151",
+        "3258061415028077995 7.044351391280564e-91",
+        "3256122413146192996 4.930766202732326e-91",
+        "3257178425291629181 6.081859273024325e-91",
+        "4158113954262191286 1.0150827106272776e-30",
+        "4160733996373960268 1.4740153340883058e-30",
+        "4157417872664849662 8.931554514523297e-31",
+        "4428375635114029108 1.1795403757143454e-12",
+        "4430983757704490609 1.7062465383098859e-12",
+        "4428974751308049480 1.3005309275600998e-12",
+        "4520205845457193299 1.6091548293682204e-06",
+        "4519153656394878360 1.38634512873788e-06",
+        "4520758844761088993 1.726256986920307e-06",
+        "4565886813692318411 0.0017876305456258508",
+        "4566514634717435911 0.0019237675294987448",
+        "4563478317443489605 0.001265371172545175",
+        "4586929542628738233 0.046967440998522965",
+        "4588214030003599830 0.0558803626135959",
+        "4585419983686237837 0.036492771654818325",
+        "4592123130007652494 0.1035103856029613",
+        "4590509102344524094 0.08111125217812273",
+        "4591779636954161927 0.09874346189316095",
+        "4610199773145797091 1.669987253627476",
+        "4608234154497588727 1.2335322374527757",
+        "4609063615255724210 1.417709523793786",
+        "4629843254228482217 33.014919999507875",
+        "4632882413081641381 54.609442458840284",
+    ]
+
+
+# Three random bit patterns at each of the binary exponents 2^-20 up to 2^1023 (the second part of the random vectors).
+func vectors_random_high() -> str[]:
+    return [
+        "4629990860750201645 34.063727417093425",
+        "4653116034596289376 1228.0950499956598",
+        "4655018991910842252 1660.7774488171299",
+        "4655840846583011981 1847.6455663085537",
+        "4673680680303787412 28927.266059157977",
+        "4671177012731010030 19818.976489391112",
+        "4670428260186502084 17095.03060071521",
+        "4677435275119213416 52404.8048537884",
+        "4675021239596626919 34840.384712315914",
+        "4677105435760349379 50004.90765920423",
+        "4682051008833241179 106441.3754308237",
+        "4680944425471755603 90338.46816136436",
+        "4679706426091805685 72323.20613156243",
+        "4687562637549809547 242220.25856911796",
+        "4685688040136270337 187662.29327084127",
+        "4684108340407089375 141686.9801802104",
+        "4700295816389868807 1756708.2936437742",
+        "4699634141161395805 1602650.024308584",
+        "4701471180872591111 2030369.1626839058",
+        "4788263195000466484 1328220393798.7627",
+        "4787835449552262315 1223790352733.2917",
+        "4789670681752475589 1671845089113.4856",
+        "5060914624235429407 2.2168525352124654e+30",
+        "5060221786610661860 2.021836080916754e+30",
+        "5057737647520998707 1.3226130885077877e+30",
+        "5961230631482321017 3.3796472734019355e+90",
+        "5960094825498533342 2.865907633437013e+90",
+        "5962756453950996988 4.0697963806411157e+90",
+        "9114004209333770762 1.8381343840883385e+301",
+        "9111560220242571530 1.256653887648577e+301",
+        "9113223495095981440 1.6523847405232079e+301",
+        "9215645477269981056 1.1544417949579525e+308",
+        "9218389060216377026 1.7020171386548636e+308",
+        "9216088639039530440 1.2428898072890921e+308",
+    ]
+
+
+func text_of(value: float) -> str:
+    return strings.format_shortest(value)
+
+
+func reads_back(text: str, value: float) -> bool:
+    const parsed = parse_float(text)
+    const back = parsed else:
+        return False
+    return math.bits(back) == math.bits(value)
+
+
+# The float a vector names, from its bit pattern: it is below 2^63, so `parse_int` holds it.
+func vector_value(entry: str) -> float:
+    const parts = strings.split(entry, " ")
+    const pattern = parse_int(parts[0]) else:
+        return 0.0
+    return math.from_bits(u64(pattern))
+
+
+func vector_text(entry: str) -> str:
+    mut parts = strings.split(entry, " ")
+    return take(mut parts[1])
+
+
+func vectors_print_like_python(entries: str[]) -> bool:
+    for entry in entries:
+        const value = vector_value(entry)
+        const expected = vector_text(entry)
+        if text_of(value) != expected or text_of(0.0 - value) != "-" + expected:
+            return False
+    return True
+
+
+func vectors_read_back(entries: str[]) -> bool:
+    for entry in entries:
+        const value = vector_value(entry)
+        if not reads_back(text_of(value), value) or not reads_back(text_of(0.0 - value), 0.0 - value):
+            return False
+    return True
+
+
+# The text `1e<exponent>` has in the exponent form: a sign and at least two digits.
+func exponent_form(exponent: int) -> str:
+    mut sign = "+"
+    if exponent < 0:
+        sign = "-"
+    return "1e" + sign + strings.zfill(str(abs(exponent)), 2)
+
+
+func powers_of_ten_read_back() -> bool:
+    for exponent in range(-320, 309):
+        const value = parse_float(f"1e{exponent}") else:
+            return False
+        const text = text_of(value)
+        if not reads_back(text, value):
+            return False
+        if -4 <= exponent < 16 and text != str(value):
+            return False
+        if (exponent < -4 or exponent >= 16) and text != exponent_form(exponent):
+            return False
+    return True
+
+
+func nan_reads_back() -> bool:
+    const parsed = parse_float(text_of(math.nan())) else:
+        return False
+    return math.is_nan(parsed)
+
+
+# spec: FLOAT-TEXT-1
+public func test_format_shortest_is_pythons_repr_on_the_vectors() -> bool:
+    return vectors_print_like_python(vectors_chosen()) and vectors_print_like_python(vectors_random_low()) and vectors_print_like_python(vectors_random_high())
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_format_shortest_reads_back_as_the_same_float() -> bool:
+    return vectors_read_back(vectors_chosen()) and vectors_read_back(vectors_random_low()) and vectors_read_back(vectors_random_high())
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_every_power_of_ten_from_1e_minus_320_to_1e308_reads_back() -> bool:
+    return powers_of_ten_read_back()
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_format_shortest_switches_to_an_exponent_at_1e_minus_4_and_1e16() -> bool:
+    return text_of(0.0001) == "0.0001" and text_of(9.999999999999999e-05) == "9.999999999999999e-05" and text_of(1e-5) == "1e-05" and text_of(0.000012345) == "1.2345e-05" and text_of(9999999999999998.0) == "9999999999999998.0" and text_of(1e16) == "1e+16" and text_of(1.5e16) == "1.5e+16" and text_of(123456789012345678.0) == "1.2345678901234568e+17" and text_of(0.1) == "0.1" and text_of(100000.0) == "100000.0" and text_of(0.0 - 2.5) == "-2.5"
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_format_shortest_of_the_extremes() -> bool:
+    return text_of(5e-324) == "5e-324" and text_of(0.0 - 5e-324) == "-5e-324" and text_of(2.225073858507201e-308) == "2.225073858507201e-308" and text_of(2.2250738585072014e-308) == "2.2250738585072014e-308" and text_of(1.7976931348623157e308) == "1.7976931348623157e+308" and text_of(0.0 - 1.7976931348623157e308) == "-1.7976931348623157e+308"
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_format_shortest_of_zero_infinities_and_not_a_number() -> bool:
+    const negative_zero = math.from_bits(9223372036854775808u64)
+    return text_of(0.0) == "0.0" and text_of(negative_zero) == "-0.0" and text_of(math.infinity()) == "inf" and text_of(0.0 - math.infinity()) == "-inf" and text_of(math.nan()) == "nan"
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_specials_read_back_and_negative_zero_keeps_its_sign() -> bool:
+    const negative_zero = math.from_bits(9223372036854775808u64)
+    return reads_back(text_of(negative_zero), negative_zero) and reads_back(text_of(math.infinity()), math.infinity()) and reads_back(text_of(0.0 - math.infinity()), 0.0 - math.infinity()) and nan_reads_back()
+
+
+# spec-case: FLOAT-TEXT-1
+public func test_str_keeps_the_plain_digits() -> bool:
+    return strings.char_count(str(1e300)) == 303 and strings.char_count(str(5e-324)) == 326 and str(1e16) == "10000000000000000.0" and f"{1e-5}" == "0.00001"

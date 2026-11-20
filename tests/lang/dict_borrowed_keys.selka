@@ -1,0 +1,301 @@
+import dicts
+import sets
+import testing
+
+# Copy on insert: `d[key] = value` reads a key written as a place (a name, a field or an element) and copies it into the
+# table only when it is new, and `sets.include(mut values, value)` does the same for a set. An existing key keeps the copy
+# it has, so only its value is replaced, and no program that wrote `d[copy(key)] = value` or `d[own key] = value` changes.
+record Pair:
+    name: str
+    count: int
+
+
+record Tag:
+    raw: bytes
+    label: str
+
+
+enum Shape:
+    dot
+    named(text: str)
+    both(pair: Pair)
+
+
+func first_names(names: str[]) -> dict[str, int]:
+    mut d: dict[str, int] = {}
+    for n in names:
+        d[n] = len(d)
+    return d
+
+
+public func test_store_copies_a_new_borrowed_key() -> bool:
+    const d = first_names(["a", "b", "c"])
+    return d["a"] == 0 and d["b"] == 1 and d["c"] == 2 and len(d) == 3
+
+
+public func test_store_keeps_the_stored_key_on_a_hit() -> bool:
+    mut d: dict[str, int] = {}
+    const names: str[] = ["x", "y", "x", "z", "y", "x"]
+    for n in names:
+        d[n] = dicts.get(d, n, 0) + 1
+    return len(d) == 3 and d["x"] == 3 and d["y"] == 2 and d["z"] == 1
+
+
+public func test_source_changed_after_the_store_leaves_the_stored_key() -> bool:
+    mut key: str = "ab"
+    mut d: dict[str, int] = {}
+    d[key] = 1
+    key = key + "c"
+    d[key] = 2
+    return len(d) == 2 and d["ab"] == 1 and d["abc"] == 2
+
+
+public func test_record_key() -> bool:
+    mut p = Pair(name="a", count=1)
+    mut d: dict[Pair, int] = {}
+    d[p] = 10
+    p.name = "b"
+    d[p] = 20
+    d[Pair(name="a", count=1)] = 11
+    return len(d) == 2 and d[Pair(name="a", count=1)] == 11 and d[Pair(name="b", count=1)] == 20
+
+
+public func test_bytes_and_nested_record_key() -> bool:
+    mut t = Tag(raw=b"\x01\x02", label="l")
+    mut d: dict[Tag, int] = {}
+    d[t] = 1
+    t.label = "m"
+    d[t] = 2
+    d[t] = 3
+    return len(d) == 2 and d[Tag(raw=b"\x01\x02", label="l")] == 1 and d[Tag(raw=b"\x01\x02", label="m")] == 3
+
+
+public func test_union_key() -> bool:
+    const a: Shape = Shape.named(text="n")
+    const b: Shape = Shape.both(pair=Pair(name="p", count=2))
+    const c: Shape = Shape.dot
+    mut d: dict[Shape, int] = {}
+    d[a] = 1
+    d[b] = 2
+    d[c] = 3
+    d[a] = 4
+    return len(d) == 3 and d[Shape.named(text="n")] == 4 and d[Shape.both(pair=Pair(name="p", count=2))] == 2 and d[Shape.dot] == 3
+
+
+public func test_option_and_array_keys() -> bool:
+    const o: str? = Some("o")
+    mut d: dict[str?, int] = {}
+    d[o] = 1
+    d[o] = 2
+    const arr: FixedArray[str, 2] = FixedArray[str, 2](["a", "b"])
+    mut e: dict[FixedArray[str, 2], int] = {}
+    e[arr] = 7
+    e[arr] = 8
+    return len(d) == 1 and d[o] == 2 and len(e) == 1 and e[FixedArray[str, 2](["a", "b"])] == 8
+
+
+public func test_key_borrowed_from_the_dictionary_itself_on_a_miss() -> bool:
+    mut d: dict[str, str] = {"a": "b"}
+    d[d["a"]] = "z"
+    return len(d) == 2 and d["a"] == "b" and d["b"] == "z"
+
+
+public func test_key_borrowed_from_the_dictionary_itself_on_a_hit() -> bool:
+    mut d: dict[str, str] = {"a": "a"}
+    d[d["a"]] = "z"
+    return len(d) == 1 and d["a"] == "z"
+
+
+public func test_many_inserts_grow_the_table() -> bool:
+    mut d: dict[str, int] = {}
+    mut keys: str[] = []
+    for i in range(300):
+        append(mut keys, str(i))
+    for round in range(3):
+        for key in keys:
+            d[key] = round
+    return len(d) == 300 and d["0"] == 2 and d["299"] == 2
+
+
+public func test_field_and_element_keys() -> bool:
+    const pairs: Pair[] = [Pair(name="u", count=1), Pair(name="v", count=2), Pair(name="u", count=3)]
+    mut d: dict[str, int] = {}
+    for i in range(len(pairs)):
+        d[pairs[i].name] = pairs[i].count
+    mut e: dict[str, int] = {}
+    for pair in pairs:
+        e[pair.name] = pair.count
+    return len(d) == 2 and d["u"] == 3 and d["v"] == 2 and e["u"] == 3
+
+
+public func test_older_spellings_keep_working() -> bool:
+    const k: str = "k" + "1"
+    mut d: dict[str, int] = {}
+    # lint: allow needless-copy reason="the test shows the older spelling keeps working"
+    d[copy(k)] = 1
+    d["lit"] = 2
+    d[k + "x"] = 3
+    const m: str = "m" + "1"
+    d[own m] = 4
+    return len(d) == 4 and d["k1"] == 1 and d["k1x"] == 3 and d["m1"] == 4 and len(k) == 2
+
+
+public func test_a_hit_keeps_the_first_position_and_replaces_the_value() -> bool:
+    mut d: dict[str, int] = {}
+    const names: str[] = ["b", "a", "c", "a", "b"]
+    for index in range(len(names)):
+        d[names[index]] = index
+    mut order: str[] = []
+    for key in dicts.keys(d):
+        append(mut order, copy(key))
+    return order == ["b", "a", "c"] and d["b"] == 4 and d["a"] == 3 and d["c"] == 2
+
+
+public func test_include_adds_a_borrowed_value_once() -> bool:
+    mut seen: set[str] = set()
+    const names: str[] = ["x", "y", "x", "z", "y"]
+    for name in names:
+        sets.include(mut seen, name)
+    return len(seen) == 3 and "x" in seen and "y" in seen and "z" in seen and len(names) == 5
+
+
+public func test_include_keeps_the_caller_value_independent_of_the_set() -> bool:
+    mut key: str = "ab"
+    mut seen: set[str] = set()
+    sets.include(mut seen, key)
+    key = key + "c"
+    sets.include(mut seen, key)
+    return len(seen) == 2 and "ab" in seen and "abc" in seen
+
+
+public func test_include_over_records_and_integers() -> bool:
+    mut pairs: set[Pair] = set()
+    mut p = Pair(name="a", count=1)
+    sets.include(mut pairs, p)
+    p.count = 2
+    sets.include(mut pairs, p)
+    sets.include(mut pairs, Pair(name="a", count=1))
+    mut numbers: set[int] = set()
+    sets.include(mut numbers, 3)
+    sets.include(mut numbers, 3)
+    return len(pairs) == 2 and len(numbers) == 1
+
+
+public func test_older_set_spellings_keep_working() -> bool:
+    mut seen: set[str] = set()
+    const a: str = "a" + "1"
+    # lint: allow needless-copy reason="the test shows the older spelling keeps working"
+    sets.add(mut seen, copy(a))
+    const b: str = "b" + "1"
+    sets.add(mut seen, own b)
+    sets.add(mut seen, "c")
+    return len(seen) == 3 and len(a) == 2
+
+
+# A nested store: the inner key is borrowed while the outer entry is rebuilt in place.
+public func test_nested_store_with_borrowed_keys() -> bool:
+    mut groups: dict[str, dict[str, int]] = {}
+    const outer: str[] = ["g", "h", "g"]
+    const inner: str[] = ["x", "y", "x"]
+    for index in range(len(outer)):
+        const group = outer[index]
+        if group not in groups:
+            # lint: allow needless-copy reason="the test shows the older spelling keeps working"
+            groups[copy(group)] = {}
+        groups[group][inner[index]] = index
+    return len(groups) == 2 and groups["g"]["x"] == 2 and groups["h"]["y"] == 1
+
+
+record Holder:
+    names: dict[str, int]
+    current: str
+
+
+func record_current(mut holder: Holder) -> Unit:
+    holder.names[holder.current] = len(holder.names)
+
+
+public func test_a_field_key_stored_through_a_mut_parameter() -> bool:
+    mut holder = Holder(names={}, current="c")
+    record_current(mut holder)
+    holder.current = "d"
+    record_current(mut holder)
+    record_current(mut holder)
+    return len(holder.names) == 2 and holder.names["c"] == 0 and holder.names["d"] == 2
+
+
+# A `const` bound to an element borrows it: a lookup and a store both read the key in its storage layout.
+public func test_a_const_borrowed_record_key_probes_and_stores() -> bool:
+    const pairs: Pair[] = [Pair(name="a", count=1), Pair(name="b", count=2), Pair(name="a", count=1)]
+    mut d: dict[Pair, int] = {}
+    for i in range(len(pairs)):
+        const p = pairs[i]
+        if p in d:
+            d[p] = d[p] + 1
+        else:
+            d[p] = 1
+    return len(d) == 2 and d[Pair(name="a", count=1)] == 2 and d[Pair(name="b", count=2)] == 1
+
+
+func store_hits(n: int) -> int:
+    mut d: dict[Pair, int] = {}
+    const key = Pair(name="a" + "b", count=1)
+    d[key] = 0
+    for i in range(n):
+        d[key] = i
+    return d[key]
+
+
+func include_hits(n: int) -> int:
+    mut seen: set[Pair] = set()
+    const key = Pair(name="a" + "b", count=1)
+    sets.include(mut seen, key)
+    for i in range(n):
+        sets.include(mut seen, key)
+    return len(seen)
+
+
+# A key the table already holds is neither copied nor dropped: a hit allocates nothing.
+public func test_a_hit_allocates_nothing() -> bool:
+    const stores = testing.allocations(store_hits, 200) - testing.allocations(store_hits, 100)
+    const includes = testing.allocations(include_hits, 200) - testing.allocations(include_hits, 100)
+    return store_hits(5) == 4 and include_hits(5) == 1 and stores == 0 and includes == 0
+
+
+public func test_bytes_key() -> bool:
+    mut key: bytes = b"ab"
+    mut d: dict[bytes, int] = {}
+    d[key] = 1
+    key = key + b"c"
+    d[key] = 2
+    d[key] = 3
+    mut seen: set[bytes] = set()
+    sets.include(mut seen, key)
+    sets.include(mut seen, key)
+    return len(d) == 2 and d[b"ab"] == 1 and d[b"abc"] == 3 and len(seen) == 1
+
+
+# `dicts.setdefault` already declares its key as a plain parameter: it now reads the key, and copies it only when it is new.
+public func test_setdefault_reads_a_borrowed_key() -> bool:
+    mut d: dict[str, int] = {}
+    mut key: str = "ab"
+    const first = dicts.setdefault(mut d, key, 5)
+    key = key + "c"
+    const second = dicts.setdefault(mut d, key, 6)
+    const third = dicts.setdefault(mut d, key, 7)
+    const fourth = dicts.setdefault(mut d, "ab", 8)
+    return first == 5 and second == 6 and third == 6 and fourth == 5 and len(d) == 2 and d["ab"] == 5 and d["abc"] == 6
+
+
+func setdefault_hits(n: int) -> int:
+    mut d: dict[Pair, int] = {}
+    const key = Pair(name="a" + "b", count=1)
+    mut total = dicts.setdefault(mut d, key, 1)
+    for i in range(n):
+        total += dicts.setdefault(mut d, key, i)
+    return total
+
+
+public func test_a_setdefault_hit_allocates_nothing() -> bool:
+    const hits = testing.allocations(setdefault_hits, 200) - testing.allocations(setdefault_hits, 100)
+    return setdefault_hits(4) == 5 and hits == 0

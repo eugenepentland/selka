@@ -1,0 +1,1067 @@
+{
+  "captured_utc": "2026-10-09T12:56:53.672321+00:00",
+  "machine": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "cpu": 2,
+  "repeats": 7,
+  "host_mode_declared": "Debug",
+  "compiler_sha256": "722aca55f4a23b4adb4de8324821375d154733d11fb65924ada0af6f3835d35d",
+  "base_commit": "dc036891867cd28d20798b1992a84cdc3436dc82",
+  "source_diff_sha256": "3f740c9a4d3afc4bc735f4b3c08ca88e359b20691ea9f03532a290925e368745",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "runtime_scope": "prebuilt guest process wall time, including startup, excluding compilation; output checked on every run; untimed leak check",
+  "build_scope": "caller-supplied compiler; fresh local program and isolated guest-object caches per trial; prewarmed runtime objects and toolchain caches; invoice leaf edit 100 -> 101",
+  "kind": "exploratory-debug-runtime-prototype",
+  "processor": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "new_source_sha256": {
+    "src/core/build_mode.zig": "7f6e780718e06d4e8be4911e637e6c778c0df43ba73427b981d43123a906aeec",
+    "scripts/benchmark_debug_runtime.py": "f6bf705db2e4d5e372da1f5f9f26f8d4e2c0999216486eaaccd1c71731fbe495"
+  },
+  "reproduce": "python3 scripts/benchmark_debug_runtime.py --compiler zig-out/bin/mylang --host-mode Debug --cpu 2 --repeats 7 --output NEW_DIRECTORY",
+  "runtime": {
+    "intloop": {
+      "source_sha256": "5c87ad1b5dd29e5f974a371f0e40ec8c033e13bb04334e206e1aa822728d331c",
+      "expected_stdout": "28665\n",
+      "modes": {
+        "debug": {
+          "samples_s": [
+            0.19509851397015154,
+            0.19491108413785696,
+            0.19503628090023994,
+            0.1958259860984981,
+            0.19453238300047815,
+            0.19446668797172606,
+            0.19437594804912806
+          ],
+          "median_s": 0.19491108413785696,
+          "ratio_to_release": 1.859953152655341
+        },
+        "optimized_debug": {
+          "samples_s": [
+            0.10811170609667897,
+            0.10443912097252905,
+            0.10846304707229137,
+            0.10492892004549503,
+            0.1047604470513761,
+            0.10566282202489674,
+            0.10476931813172996
+          ],
+          "median_s": 0.10492892004549503,
+          "ratio_to_release": 1.001291827535594
+        },
+        "release": {
+          "samples_s": [
+            0.10479354485869408,
+            0.10804001311771572,
+            0.1047061129938811,
+            0.10522724105976522,
+            0.10459786700084805,
+            0.10449101706035435,
+            0.10493011306971312
+          ],
+          "median_s": 0.10479354485869408,
+          "ratio_to_release": 1.0
+        }
+      }
+    },
+    "calls": {
+      "source_sha256": "678b2fab83fd1b862c7b2575aa5396192dddb60128721d7f6b75a1ffcb184e05",
+      "expected_stdout": "4095\n",
+      "modes": {
+        "debug": {
+          "samples_s": [
+            0.19495711708441377,
+            0.19739716593176126,
+            0.1987527939490974,
+            0.19726632605306804,
+            0.19610008085146546,
+            0.19678518711589277,
+            0.1995173110626638
+          ],
+          "median_s": 0.19726632605306804,
+          "ratio_to_release": 1.8536121828728018
+        },
+        "optimized_debug": {
+          "samples_s": [
+            0.1061430040281266,
+            0.10591004509478807,
+            0.10627373191528022,
+            0.1065445828717202,
+            0.11170391808263958,
+            0.10587599710561335,
+            0.10620608204044402
+          ],
+          "median_s": 0.10620608204044402,
+          "ratio_to_release": 0.9979649923241094
+        },
+        "release": {
+          "samples_s": [
+            0.10630003595724702,
+            0.10630843811668456,
+            0.1065157928969711,
+            0.10717963986098766,
+            0.10689129587262869,
+            0.10642265295609832,
+            0.10638404707424343
+          ],
+          "median_s": 0.10642265295609832,
+          "ratio_to_release": 1.0
+        }
+      }
+    },
+    "bytes_scan": {
+      "source_sha256": "69c6963084fd70982320ba6d293a69693003f2086bab2916db6b74c89e2020c6",
+      "expected_stdout": "8388728\n",
+      "modes": {
+        "debug": {
+          "samples_s": [
+            0.2753043039701879,
+            0.27863795892335474,
+            0.2796359781641513,
+            0.28171796491369605,
+            0.28449207497760653,
+            0.2852145261131227,
+            0.28302015201188624
+          ],
+          "median_s": 0.28171796491369605,
+          "ratio_to_release": 14.337958117032072
+        },
+        "optimized_debug": {
+          "samples_s": [
+            0.01987386611290276,
+            0.018531329929828644,
+            0.019726800033822656,
+            0.02051876112818718,
+            0.019998051924631,
+            0.019607255002483726,
+            0.01920899096876383
+          ],
+          "median_s": 0.019726800033822656,
+          "ratio_to_release": 1.003990046409232
+        },
+        "release": {
+          "samples_s": [
+            0.019648401997983456,
+            0.019419722026214004,
+            0.01899647293612361,
+            0.019739659037441015,
+            0.018840251956135035,
+            0.019832449033856392,
+            0.01999707007780671
+          ],
+          "median_s": 0.019648401997983456,
+          "ratio_to_release": 1.0
+        }
+      }
+    },
+    "list_append_sum": {
+      "source_sha256": "c375c624810dca5d5a783c0b48af0af8500c1287badc4c3d0c3aadbe2447e73e",
+      "expected_stdout": "127999992000000\n",
+      "modes": {
+        "debug": {
+          "samples_s": [
+            0.08574425498954952,
+            0.08594578690826893,
+            0.08427939983084798,
+            0.08512096991762519,
+            0.08554767700843513,
+            0.0869079320691526,
+            0.08617989090271294
+          ],
+          "median_s": 0.08574425498954952,
+          "ratio_to_release": 1.8358537252553553
+        },
+        "optimized_debug": {
+          "samples_s": [
+            0.047027074033394456,
+            0.04709242098033428,
+            0.04664434492588043,
+            0.0467355540022254,
+            0.04725123709067702,
+            0.04696537903510034,
+            0.047347671119496226
+          ],
+          "median_s": 0.047027074033394456,
+          "ratio_to_release": 1.0068876225303847
+        },
+        "release": {
+          "samples_s": [
+            0.04562223609536886,
+            0.046056517167016864,
+            0.046814841916784644,
+            0.0468846180010587,
+            0.04659319901838899,
+            0.04791698791086674,
+            0.04670538497157395
+          ],
+          "median_s": 0.04670538497157395,
+          "ratio_to_release": 1.0
+        }
+      }
+    },
+    "dict_count": {
+      "source_sha256": "222c81d8b05404aa9b0b4c1954f436c04b124020e9f7c6cf8801f7b19aafa76d",
+      "expected_stdout": "779967\n",
+      "modes": {
+        "debug": {
+          "samples_s": [
+            0.018130220007151365,
+            0.018752028001472354,
+            0.018591805826872587,
+            0.01960897701792419,
+            0.01906664902344346,
+            0.018866906873881817,
+            0.019417325034737587
+          ],
+          "median_s": 0.018866906873881817,
+          "ratio_to_release": 1.9125983297821374
+        },
+        "optimized_debug": {
+          "samples_s": [
+            0.009538755053654313,
+            0.0094599649310112,
+            0.00965655199252069,
+            0.010534897912293673,
+            0.010568968951702118,
+            0.010330033954232931,
+            0.010230848100036383
+          ],
+          "median_s": 0.010230848100036383,
+          "ratio_to_release": 1.0371335968945914
+        },
+        "release": {
+          "samples_s": [
+            0.009796284837648273,
+            0.009055125992745161,
+            0.011221916880458593,
+            0.009864542167633772,
+            0.009883094113320112,
+            0.009339057840406895,
+            0.00995285902172327
+          ],
+          "median_s": 0.009864542167633772,
+          "ratio_to_release": 1.0
+        }
+      }
+    },
+    "matmul": {
+      "source_sha256": "b3b037e201278c421b3461712c07d166c8d408b50efca18936137cf8a6b83371",
+      "expected_stdout": "62489758\n31249063032\n",
+      "modes": {
+        "debug": {
+          "samples_s": [
+            0.6759173851460218,
+            0.6845865971408784,
+            0.6847765319980681,
+            0.686600104207173,
+            0.6855144340079278,
+            0.6784533041063696,
+            0.67967085307464
+          ],
+          "median_s": 0.6845865971408784,
+          "ratio_to_release": 29.773408607594764
+        },
+        "optimized_debug": {
+          "samples_s": [
+            0.023262178990989923,
+            0.022600217955186963,
+            0.02216141507960856,
+            0.031058772932738066,
+            0.022830859990790486,
+            0.02244705706834793,
+            0.02254154602997005
+          ],
+          "median_s": 0.022600217955186963,
+          "ratio_to_release": 0.9829078258480872
+        },
+        "release": {
+          "samples_s": [
+            0.022597297094762325,
+            0.022761479020118713,
+            0.02311759116128087,
+            0.024739183951169252,
+            0.022656476823613048,
+            0.0230758769903332,
+            0.022993222111836076
+          ],
+          "median_s": 0.022993222111836076,
+          "ratio_to_release": 1.0
+        }
+      }
+    }
+  },
+  "rebuild": {
+    "debug": {
+      "cold": {
+        "median_s": 0.1829633810557425,
+        "samples_s": [
+          0.1829633810557425,
+          0.20490404102019966,
+          0.17673709895461798,
+          0.2057474348694086,
+          0.17662480799481273,
+          0.1768964659422636,
+          0.2080412581562996
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          }
+        ]
+      },
+      "replay": {
+        "median_s": 0.011674633016809821,
+        "samples_s": [
+          0.00740084215067327,
+          0.01131703588180244,
+          0.010838343994691968,
+          0.012480824952945113,
+          0.011706596007570624,
+          0.012143917847424746,
+          0.011674633016809821
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          }
+        ]
+      },
+      "edit": {
+        "median_s": 0.09243051102384925,
+        "samples_s": [
+          0.10695907892659307,
+          0.0841574480291456,
+          0.09243051102384925,
+          0.11116438987664878,
+          0.086268519051373,
+          0.1193157178349793,
+          0.0906709129922092
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          }
+        ]
+      }
+    },
+    "optimized_debug": {
+      "cold": {
+        "median_s": 0.2039424730464816,
+        "samples_s": [
+          0.20549120102077723,
+          0.21556298318319023,
+          0.19196632993407547,
+          0.19711891515180469,
+          0.20995611394755542,
+          0.19936091382987797,
+          0.2039424730464816
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 0,
+            "compiled": 10,
+            "verified": 0,
+            "processes": 11
+          }
+        ]
+      },
+      "replay": {
+        "median_s": 0.01150970603339374,
+        "samples_s": [
+          0.008302793838083744,
+          0.01150970603339374,
+          0.011534970020875335,
+          0.006622187094762921,
+          0.007675006054341793,
+          0.012197104981169105,
+          0.012207230785861611
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          }
+        ]
+      },
+      "edit": {
+        "median_s": 0.09389387909322977,
+        "samples_s": [
+          0.09389387909322977,
+          0.10560585418716073,
+          0.09245025389827788,
+          0.11667215498164296,
+          0.09672125917859375,
+          0.0897243139334023,
+          0.0881060971878469
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 10,
+            "reused": 9,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          }
+        ]
+      }
+    },
+    "release": {
+      "cold": {
+        "median_s": 0.10732694296166301,
+        "samples_s": [
+          0.09841704298742115,
+          0.08860487397760153,
+          0.11263762414455414,
+          0.11818103492259979,
+          0.10924786003306508,
+          0.09237715206108987,
+          0.10732694296166301
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          }
+        ]
+      },
+      "replay": {
+        "median_s": 0.011553254909813404,
+        "samples_s": [
+          0.01178876799531281,
+          0.011553254909813404,
+          0.006580938119441271,
+          0.011571076000109315,
+          0.010149718029424548,
+          0.012056506937369704,
+          0.006900835782289505
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "replayed",
+            "units": 0,
+            "reused": 0,
+            "compiled": 0,
+            "verified": 0,
+            "processes": 0
+          }
+        ]
+      },
+      "edit": {
+        "median_s": 0.0942273112013936,
+        "samples_s": [
+          0.0942273112013936,
+          0.09555490501224995,
+          0.0886051100678742,
+          0.11083705886267126,
+          0.08514743903651834,
+          0.09776614396832883,
+          0.08313766797073185
+        ],
+        "cache_reports": [
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          },
+          {
+            "version": "cache-report-v1",
+            "program": "linked",
+            "units": 1,
+            "reused": 0,
+            "compiled": 1,
+            "verified": 0,
+            "processes": 2
+          }
+        ]
+      }
+    }
+  },
+  "qualification": [
+    {
+      "mode": "optimized",
+      "suite": "lang",
+      "exit": 0,
+      "seconds": 46.987898705061525,
+      "passed": 1534,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    {
+      "mode": "optimized",
+      "suite": "value_semantics",
+      "exit": 0,
+      "seconds": 5.631247621029615,
+      "passed": 140,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    {
+      "mode": "optimized",
+      "suite": "ported",
+      "exit": 0,
+      "seconds": 5.423608443001285,
+      "passed": 98,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    {
+      "mode": "verified",
+      "suite": "lang",
+      "exit": 0,
+      "seconds": 45.63389273406938,
+      "passed": 1534,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    {
+      "mode": "verified",
+      "suite": "value_semantics",
+      "exit": 0,
+      "seconds": 5.4619883629493415,
+      "passed": 140,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    {
+      "mode": "verified",
+      "suite": "ported",
+      "exit": 0,
+      "seconds": 14.565698437858373,
+      "passed": 98,
+      "failed": 0,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 0
+    }
+  ],
+  "limitations": [
+    "Six unchanged parity workloads and one small nine-module invoice project; not a universal performance bound.",
+    "Single-machine process-wall medians include startup; CPU frequencies and other system activity were not controlled.",
+    "Cold invoice builds isolate guest objects, but reuse prewarmed runtime and Zig toolchain caches.",
+    "Debugger variable inspection and statement stepping have not been qualified."
+  ]
+}

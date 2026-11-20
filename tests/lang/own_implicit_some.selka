@@ -1,0 +1,44 @@
+# An implicit Some around an own argument moves the named value it wraps,
+# exactly as the explicit Some(own value) does.
+record Box:
+    data: bytes
+
+
+func size(value: bytes?) -> int:
+    if value is None:
+        return 0
+    mut text = copy(value)
+    return len(text)
+
+
+func deep(value: bytes??) -> int:
+    if value is None:
+        return 0
+    return 1
+
+
+public func test_own_implicit_some_moves_a_const_binding() -> bool:
+    const label = b"brand"
+    return size(own label) == 5
+
+
+public func test_own_implicit_some_moves_a_mut_binding() -> bool:
+    mut label = b"brand"
+    return size(own label) == 5
+
+
+public func test_own_implicit_some_matches_the_explicit_spelling() -> bool:
+    mut label = b"brand"
+    const explicit = size(Some(own label))
+    mut again = b"brand"
+    return explicit == 5 and size(own again) == 5
+
+
+public func test_own_implicit_some_nests_for_optional_optional() -> bool:
+    mut label = b"brand"
+    return deep(own label) == 1
+
+
+public func test_own_implicit_some_moves_a_field() -> bool:
+    mut box = Box(data=b"brand")
+    return size(own box.data) == 5

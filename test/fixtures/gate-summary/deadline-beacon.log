@@ -1,0 +1,24 @@
+build-slot: gate slot 1, FIFO ticket 3139 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 42e5838afdb0)
+guardian: diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1: 0/1298 source file(s) in scope for the 50 per-file check(s); 36 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 37 finding(s), none in scope — report-only (--verbose for detail)
+guardian: repeated-string-literal: 272 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 86 checks — 0 blocking, 1 report-only — diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1, 0 file(s) in scope
+----------------------------------------------------------------------
+Ran 46 tests in 3.138s
+
+OK (skipped=2)
+
+Build Summary: ended by --fail-fast at the first failing step; its failures follow
+error: 'src/root_test.zig::nominal_layouts_test.test.nominal layout expansion bounds distinct array identities' timed out
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 2 --root-id src/root_test.zig -- sh -c build_env=$1
+shift
+if [ -z "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then
+  if [ -n "${XDG_CACHE_HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$XDG_CACHE_HOME/zig"
+  elif [ -n "${HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$HOME/.cache/zig"; fi
+fi
+if [ -n "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then export ZIG_GLOBAL_CACHE_DIR; fi
+ZIG_LOCAL_CACHE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/selka-zig-local.XXXXXX") || exit 2
+export ZIG_LOCAL_CACHE_DIR
+(trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf "$ZIG_LOCAL_CACHE_DIR") </dev/null >/dev/null 2>&1 &
+exec "$build_env" project -- env "$@" with-tools /home/u/tree/.zig-cache/o/792252ad5f7c07e00a2056ee5c705cd4/build-env SELKA_ZIG=/home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig SELKA_UNIT_SHARDS=12 SELKA_TEST_COMPILER=/home/u/tree/.zig-cache/o/a4ad73d9b38407ae74bf4ca5333b6e22/selka SELKA_JOBS=1 SELKA_UNIT_JOBS=1 SELKA_COMPONENT_DIR=/home/u/tree/zig-out/libexec/selka/components ./.zig-cache/o/e3e30a9f2258d6f0760f1dea171e7cf7/test --test-shard=1/12 --test-shard-plan ./tests/shard-plans/unit.json --cache-dir=./.zig-cache --seed=0x0 --listen=-

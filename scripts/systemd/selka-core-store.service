@@ -1,0 +1,10 @@
+[Unit]
+Description=Selka native object store migration and leased retention
+
+[Service]
+Type=oneshot
+WorkingDirectory=@WORKTREE@
+ExecStart=@COMMAND@
+Nice=15
+IOSchedulingClass=idle
+TimeoutStartSec=infinity

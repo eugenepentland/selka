@@ -1,0 +1,94 @@
+# `@freestanding` functions (MCU-NOC2) computing over records, enums, options and fixed arrays, called from ordinary
+# tests: each gives the value the same plain function gives. A freestanding function reads and writes registers against
+# the simulated bank under `selka test`, as a device library is tested on Linux (MCU-NOC2C). `mix` is the
+# `@freestanding(ram)` function of `test/bare/freestanding_ram.selka` (MCU-NOC2B): on Linux the placement changes nothing.
+import registers
+
+enum Mode:
+    Off
+    On
+
+
+record Pair:
+    left: int
+    right: int
+
+
+@freestanding
+func checksum(words: FixedArray[u32, 4]) -> u32:
+    mut total: u32 = 0
+    for i in range(4):
+        total = bit_xor(total, words[i]) + 1
+    return total
+
+
+func checksum_plain(words: FixedArray[u32, 4]) -> u32:
+    mut total: u32 = 0
+    for i in range(4):
+        total = bit_xor(total, words[i]) + 1
+    return total
+
+
+@freestanding
+func choose(mode: Mode, pair: Pair) -> int:
+    assert pair.left >= 0
+    match mode:
+        case Off:
+            return pair.left
+        case On:
+            return pair.right
+
+
+@freestanding
+func swapped(pair: Pair) -> Pair:
+    return Pair(left=pair.right, right=pair.left)
+
+
+@freestanding
+func or_zero(value: int?) -> int:
+    const present = value else:
+        return 0
+    return present * 2
+
+
+@freestanding
+func combined(pair: Pair, extra: int?) -> int:
+    return choose(Mode.Off, pair) + choose(Mode.On, pair) + or_zero(extra)
+
+
+public func test_fixed_array_checksum_matches_plain() -> bool:
+    const words = FixedArray[u32, 4]([7, 9, 300, 4096])
+    return checksum(words) == checksum_plain(words)
+
+
+public func test_enum_and_record() -> bool:
+    const pair = Pair(left=3, right=11)
+    return choose(Mode.Off, pair) == 3 and choose(Mode.On, pair) == 11 and swapped(pair).left == 11
+
+
+public func test_options_and_nested_calls() -> bool:
+    const pair = Pair(left=1, right=2)
+    return or_zero(None) == 0 and or_zero(Some(5)) == 10 and combined(pair, Some(4)) == 11
+
+
+@freestanding(ram)
+func mix(words: FixedArray[u32, 4]) -> u32:
+    mut total: u32 = 0
+    for i in range(4):
+        total = total + words[i]
+    return bit_and(bit_xor(total, 0x80), 0x3F)
+
+
+public func test_ram_function_gives_the_device_result_on_linux() -> bool:
+    return mix(FixedArray[u32, 4]([0x11, 0x22, 0x33, 0x44])) == 42
+
+
+@freestanding
+func set_and_read(reg: Registers, value: u32) -> u32:
+    registers.write32(reg, 0x40000000, value)
+    return registers.read32(reg, 0x40000000) + 1
+
+
+public func test_registers_against_the_simulated_bank() -> bool:
+    const reg = registers.simulated()
+    return set_and_read(reg, 41) == 42

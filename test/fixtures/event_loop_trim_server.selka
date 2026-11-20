@@ -1,0 +1,50 @@
+# A test server for what an idle poller wait gives back (RUNTIME-HEAP-RETURN-1). It stores 6,000 values of 2 KB (12 MB),
+# deletes them all, says `emptied` on stderr, and waits in its poller WAIT_MS milliseconds, at most ROUNDS times, ending at the
+# first event (a client connecting). The test reads the process's resident memory between `emptied` and that client.
+import byte_builder
+import dicts
+import network
+
+const WAIT_MS: int = 20000
+
+
+const ROUNDS: int = 1
+
+
+# Store 6,000 values and delete every one; the number left is 0.
+func fill_and_empty() -> int:
+    mut store: dict[int, bytes] = {}
+    mut key = 0
+    while key < 6000:
+        store[key] = byte_builder.repeat(b"x", 2048)
+        key += 1
+    key = 0
+    while key < 6000:
+        _ = dicts.pop(mut store, key)
+        key += 1
+    return len(store)
+
+
+func serve(own poller: network.Poller, err: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    live = network.port(own live, network.LISTENER, mut outcome)
+    print(err, "port " + str(outcome.value))
+    const left = fill_and_empty()
+    print(err, "emptied " + str(left))
+    mut round = 0
+    while round < ROUNDS and ready.count == 0:
+        live = network.wait(own live, WAIT_MS, mut ready)
+        round += 1
+    return 0
+
+
+func main(net: Network, err: Stream) -> int:
+    with net.host("127.0.0.1:0") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return serve(own poller, err)
+            case err(code):
+                print(err, "listen failed", code, network.describe(code))
+                return 1

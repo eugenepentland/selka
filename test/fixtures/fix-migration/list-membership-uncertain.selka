@@ -1,0 +1,25 @@
+# F-25: `in` over a list where both operands are calls, or one passes a place `mut`: swapping them could change what
+# runs first or what the other reads, so `selka fix` offers no edit and the refusal stays.
+func kinds() -> str[]:
+    return ["a", "b"]
+
+
+func pick() -> str:
+    return "a"
+
+
+func grow(mut seen: str[]) -> str:
+    append(mut seen, "x")
+    return "x"
+
+
+func both_calls() -> bool:
+    return pick() in kinds()
+
+
+func marked(mut seen: str[]) -> bool:
+    return grow(mut seen) in seen
+
+
+func main() -> int:
+    return 0

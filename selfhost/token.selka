@@ -1,0 +1,402 @@
+module token
+
+# Stage-0 lexical token categories. Member spellings are exactly the
+# `@tagName` strings the Zig oracle emits, so the differential harness can
+# compare kinds without a rename table.
+
+public enum TokenKind:
+    eof,
+    ident,
+    integer,
+    bytes,
+    format,
+    at,
+    kw_def,
+    kw_none,
+    kw_pass,
+    kw_assert,
+    kw_elif,
+    kw_case,
+    kw_arena,
+    kw_with,
+    kw_as,
+    kw_enum,
+    kw_union,
+    kw_match,
+    kw_domain,
+    kw_private,
+    kw_wrap,
+    kw_todo,
+    kw_codec_encode,
+    kw_codec_decode,
+    kw_unwrap,
+    kw_class,
+    kw_conversion,
+    kw_replace,
+    kw_len,
+    kw_return,
+    kw_true,
+    kw_false,
+    kw_i64,
+    kw_i8,
+    kw_i16,
+    kw_i32,
+    kw_u8,
+    kw_u16,
+    kw_u32,
+    kw_u64,
+    kw_filesystem_cap,
+    kw_network_cap,
+    kw_acquire_resource,
+    kw_complete_resource,
+    kw_environment_cap,
+    kw_environment_get,
+    kw_restrict_resource,
+    kw_read_resource,
+    kw_write_resource,
+    kw_clock_cap,
+    kw_random_cap,
+    kw_clock_now,
+    kw_random_u64,
+    kw_bit_and,
+    kw_bit_or,
+    kw_bit_xor,
+    kw_shift_left,
+    kw_shift_right,
+    kw_wrapping_add,
+    kw_wrapping_sub,
+    kw_wrapping_mul,
+    kw_saturating_add,
+    kw_saturating_sub,
+    kw_saturating_mul,
+    kw_f64_add,
+    kw_f64_sub,
+    kw_f64_mul,
+    kw_f64_div,
+    kw_f64_eq,
+    kw_f64_lt,
+    kw_f64_le,
+    kw_f64_sqrt,
+    kw_f64_floor,
+    kw_f64_ceil,
+    kw_f64_trunc,
+    kw_f64_abs,
+    kw_f64_neg,
+    kw_f64_from_u64,
+    kw_f64_to_u64,
+    kw_bool,
+    kw_if,
+    kw_else,
+    kw_while,
+    kw_break,
+    kw_continue,
+    kw_const,
+    kw_for,
+    kw_in,
+    kw_is,
+    kw_type,
+    lparen,
+    rparen,
+    lbracket,
+    rbracket,
+    lbrace,
+    rbrace,
+    indent,
+    dedent,
+    arrow,
+    fat_arrow,
+    semicolon,
+    colon,
+    comma,
+    dot,
+    plus,
+    minus,
+    star,
+    slash,
+    slash_slash,
+    percent,
+    ampersand,
+    and_and,
+    or_or,
+    plus_equal,
+    minus_equal,
+    star_equal,
+    slash_equal,
+    slash_slash_equal,
+    percent_equal,
+    equal,
+    eq_eq,
+    bang,
+    bang_eq,
+    question,
+    lt,
+    le,
+    gt,
+    ge
+
+
+public record Token:
+    kind: TokenKind
+    start: int
+    end: int
+
+
+# The verbatim stage-0 tag spelling used by the `<kind> <start> <end>` protocol.
+public def kind_name(kind: TokenKind) -> str:
+    if kind == TokenKind.ident:
+        return "ident"
+    if kind == TokenKind.dot:
+        return "dot"
+    if kind == TokenKind.lparen:
+        return "lparen"
+    if kind == TokenKind.rparen:
+        return "rparen"
+    if kind == TokenKind.comma:
+        return "comma"
+    if kind == TokenKind.equal:
+        return "equal"
+    if kind == TokenKind.indent:
+        return "indent"
+    if kind == TokenKind.dedent:
+        return "dedent"
+    if kind == TokenKind.integer:
+        return "integer"
+    if kind == TokenKind.bytes:
+        return "bytes"
+    if kind == TokenKind.lbracket:
+        return "lbracket"
+    if kind == TokenKind.rbracket:
+        return "rbracket"
+    if kind == TokenKind.kw_if:
+        return "kw_if"
+    if kind == TokenKind.kw_return:
+        return "kw_return"
+    if kind == TokenKind.plus:
+        return "plus"
+    if kind == TokenKind.eq_eq:
+        return "eq_eq"
+    if kind == TokenKind.colon:
+        return "colon"
+    if kind == TokenKind.minus:
+        return "minus"
+    if kind == TokenKind.kw_def:
+        return "kw_def"
+    if kind == TokenKind.arrow:
+        return "arrow"
+    if kind == TokenKind.plus_equal:
+        return "plus_equal"
+    if kind == TokenKind.or_or:
+        return "or_or"
+    if kind == TokenKind.kw_true:
+        return "kw_true"
+    if kind == TokenKind.kw_false:
+        return "kw_false"
+    if kind == TokenKind.lt:
+        return "lt"
+    if kind == TokenKind.bang:
+        return "bang"
+    if kind == TokenKind.bang_eq:
+        return "bang_eq"
+    if kind == TokenKind.and_and:
+        return "and_and"
+    if kind == TokenKind.kw_bool:
+        return "kw_bool"
+    if kind == TokenKind.kw_while:
+        return "kw_while"
+    if kind == TokenKind.kw_for:
+        return "kw_for"
+    if kind == TokenKind.kw_in:
+        return "kw_in"
+    if kind == TokenKind.kw_is:
+        return "kw_is"
+    if kind == TokenKind.kw_len:
+        return "kw_len"
+    if kind == TokenKind.kw_elif:
+        return "kw_elif"
+    if kind == TokenKind.kw_break:
+        return "kw_break"
+    if kind == TokenKind.kw_else:
+        return "kw_else"
+    if kind == TokenKind.kw_continue:
+        return "kw_continue"
+    if kind == TokenKind.ge:
+        return "ge"
+    if kind == TokenKind.kw_const:
+        return "kw_const"
+    if kind == TokenKind.kw_none:
+        return "kw_none"
+    if kind == TokenKind.minus_equal:
+        return "minus_equal"
+    if kind == TokenKind.gt:
+        return "gt"
+    if kind == TokenKind.kw_case:
+        return "kw_case"
+    if kind == TokenKind.eof:
+        return "eof"
+    if kind == TokenKind.kw_match:
+        return "kw_match"
+    if kind == TokenKind.slash_slash:
+        return "slash_slash"
+    if kind == TokenKind.percent:
+        return "percent"
+    if kind == TokenKind.question:
+        return "question"
+    if kind == TokenKind.le:
+        return "le"
+    if kind == TokenKind.format:
+        return "format"
+    if kind == TokenKind.at:
+        return "at"
+    if kind == TokenKind.kw_pass:
+        return "kw_pass"
+    if kind == TokenKind.kw_assert:
+        return "kw_assert"
+    if kind == TokenKind.kw_arena:
+        return "kw_arena"
+    if kind == TokenKind.kw_with:
+        return "kw_with"
+    if kind == TokenKind.kw_as:
+        return "kw_as"
+    if kind == TokenKind.kw_enum:
+        return "kw_enum"
+    if kind == TokenKind.kw_union:
+        return "kw_union"
+    if kind == TokenKind.kw_domain:
+        return "kw_domain"
+    if kind == TokenKind.kw_private:
+        return "kw_private"
+    if kind == TokenKind.kw_wrap:
+        return "kw_wrap"
+    if kind == TokenKind.kw_todo:
+        return "kw_todo"
+    if kind == TokenKind.kw_codec_encode:
+        return "kw_codec_encode"
+    if kind == TokenKind.kw_codec_decode:
+        return "kw_codec_decode"
+    if kind == TokenKind.kw_unwrap:
+        return "kw_unwrap"
+    if kind == TokenKind.kw_class:
+        return "kw_class"
+    if kind == TokenKind.kw_conversion:
+        return "kw_conversion"
+    if kind == TokenKind.kw_replace:
+        return "kw_replace"
+    if kind == TokenKind.kw_i64:
+        return "kw_i64"
+    if kind == TokenKind.kw_i8:
+        return "kw_i8"
+    if kind == TokenKind.kw_i16:
+        return "kw_i16"
+    if kind == TokenKind.kw_i32:
+        return "kw_i32"
+    if kind == TokenKind.kw_u8:
+        return "kw_u8"
+    if kind == TokenKind.kw_u16:
+        return "kw_u16"
+    if kind == TokenKind.kw_u32:
+        return "kw_u32"
+    if kind == TokenKind.kw_u64:
+        return "kw_u64"
+    if kind == TokenKind.kw_filesystem_cap:
+        return "kw_filesystem_cap"
+    if kind == TokenKind.kw_network_cap:
+        return "kw_network_cap"
+    if kind == TokenKind.kw_acquire_resource:
+        return "kw_acquire_resource"
+    if kind == TokenKind.kw_complete_resource:
+        return "kw_complete_resource"
+    if kind == TokenKind.kw_environment_cap:
+        return "kw_environment_cap"
+    if kind == TokenKind.kw_environment_get:
+        return "kw_environment_get"
+    if kind == TokenKind.kw_restrict_resource:
+        return "kw_restrict_resource"
+    if kind == TokenKind.kw_read_resource:
+        return "kw_read_resource"
+    if kind == TokenKind.kw_write_resource:
+        return "kw_write_resource"
+    if kind == TokenKind.kw_clock_cap:
+        return "kw_clock_cap"
+    if kind == TokenKind.kw_random_cap:
+        return "kw_random_cap"
+    if kind == TokenKind.kw_clock_now:
+        return "kw_clock_now"
+    if kind == TokenKind.kw_random_u64:
+        return "kw_random_u64"
+    if kind == TokenKind.kw_bit_and:
+        return "kw_bit_and"
+    if kind == TokenKind.kw_bit_or:
+        return "kw_bit_or"
+    if kind == TokenKind.kw_bit_xor:
+        return "kw_bit_xor"
+    if kind == TokenKind.kw_shift_left:
+        return "kw_shift_left"
+    if kind == TokenKind.kw_shift_right:
+        return "kw_shift_right"
+    if kind == TokenKind.kw_wrapping_add:
+        return "kw_wrapping_add"
+    if kind == TokenKind.kw_wrapping_sub:
+        return "kw_wrapping_sub"
+    if kind == TokenKind.kw_wrapping_mul:
+        return "kw_wrapping_mul"
+    if kind == TokenKind.kw_saturating_add:
+        return "kw_saturating_add"
+    if kind == TokenKind.kw_saturating_sub:
+        return "kw_saturating_sub"
+    if kind == TokenKind.kw_saturating_mul:
+        return "kw_saturating_mul"
+    if kind == TokenKind.kw_f64_add:
+        return "kw_f64_add"
+    if kind == TokenKind.kw_f64_sub:
+        return "kw_f64_sub"
+    if kind == TokenKind.kw_f64_mul:
+        return "kw_f64_mul"
+    if kind == TokenKind.kw_f64_div:
+        return "kw_f64_div"
+    if kind == TokenKind.kw_f64_eq:
+        return "kw_f64_eq"
+    if kind == TokenKind.kw_f64_lt:
+        return "kw_f64_lt"
+    if kind == TokenKind.kw_f64_le:
+        return "kw_f64_le"
+    if kind == TokenKind.kw_f64_sqrt:
+        return "kw_f64_sqrt"
+    if kind == TokenKind.kw_f64_floor:
+        return "kw_f64_floor"
+    if kind == TokenKind.kw_f64_ceil:
+        return "kw_f64_ceil"
+    if kind == TokenKind.kw_f64_trunc:
+        return "kw_f64_trunc"
+    if kind == TokenKind.kw_f64_abs:
+        return "kw_f64_abs"
+    if kind == TokenKind.kw_f64_neg:
+        return "kw_f64_neg"
+    if kind == TokenKind.kw_f64_from_u64:
+        return "kw_f64_from_u64"
+    if kind == TokenKind.kw_f64_to_u64:
+        return "kw_f64_to_u64"
+    if kind == TokenKind.kw_type:
+        return "kw_type"
+    if kind == TokenKind.lbrace:
+        return "lbrace"
+    if kind == TokenKind.rbrace:
+        return "rbrace"
+    if kind == TokenKind.fat_arrow:
+        return "fat_arrow"
+    if kind == TokenKind.semicolon:
+        return "semicolon"
+    if kind == TokenKind.star:
+        return "star"
+    if kind == TokenKind.slash:
+        return "slash"
+    if kind == TokenKind.ampersand:
+        return "ampersand"
+    if kind == TokenKind.star_equal:
+        return "star_equal"
+    if kind == TokenKind.slash_equal:
+        return "slash_equal"
+    if kind == TokenKind.slash_slash_equal:
+        return "slash_slash_equal"
+    if kind == TokenKind.percent_equal:
+        return "percent_equal"
+    return "unknown"

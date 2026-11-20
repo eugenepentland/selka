@@ -1,0 +1,735 @@
+import buffers
+import bytes
+import dicts
+import strings
+
+# An RFC 8259 value. Objects keep the key order in which they were parsed.
+public enum Json:
+    null
+    boolean(value: bool)
+    integer(value: int)
+    number(value: float)
+    text(value: str)
+    array(value: Json[])
+    object(value: dict[str, Json])
+
+
+# One rejected document, carrying the human-readable reason it was refused.
+public enum Error:
+    Malformed(value: str)
+
+
+# The human-readable reason carried by a rejected document; match on the case.
+public func message(error: Error) -> str from error:
+    match error:
+        case Malformed(value=detail):
+            return detail
+
+
+# One byte offset inside the UTF-8 form of a document, updated through mut Scanner.
+record Scanner:
+    data: bytes
+    position: int
+
+
+# Deepest container nesting that loads accepts.
+public func max_depth() -> int:
+    return 64
+
+
+# The JSON null value.
+public func null_value() -> Json:
+    return Json.null
+
+
+# A JSON true or false value.
+public func boolean(value: bool) -> Json:
+    return Json.boolean(value=value)
+
+
+# A JSON number that is exactly a 64-bit signed integer.
+public func integer(value: int) -> Json:
+    return Json.integer(value=value)
+
+
+# A JSON number carried as binary64.
+public func number(value: float) -> Json:
+    return Json.number(value=value)
+
+
+# A JSON string.
+public func text(value: str) -> Json:
+    return Json.text(value=copy(value))
+
+
+# A JSON array of values.
+public func array(items: Json[]) -> Json:
+    return Json.array(value=copy(items))
+
+
+# A JSON object; iteration and rendering follow insertion order.
+public func object(fields: dict[str, Json]) -> Json:
+    return Json.object(value=copy(fields))
+
+
+# The RFC 8259 name of a value's kind.
+public func type_name(value: Json) -> str:
+    match value:
+        case null:
+            return "null"
+        case boolean(value=_):
+            return "boolean"
+        case integer(..) | number(..):
+            return "number"
+        case text(value=_):
+            return "string"
+        case array(value=_):
+            return "array"
+        case object(value=_):
+            return "object"
+
+
+# Whether a value is JSON null.
+public func is_null(value: Json) -> bool:
+    return value is null
+
+
+# The boolean carried by a value, if it is one.
+public func as_bool(value: Json) -> bool?:
+    match value:
+        case boolean(value=flag):
+            return Some(flag)
+        case null | integer(..) | number(..) | text(..) | array(..) | object(..):
+            return None
+
+
+# The exact integer carried by a value, if it has one.
+public func as_int(value: Json) -> int?:
+    match value:
+        case integer(value=count):
+            return Some(count)
+        case null | boolean(..) | number(..) | text(..) | array(..) | object(..):
+            return None
+
+
+# The number carried by a value, widening an exact integer to binary64.
+public func as_float(value: Json) -> float?:
+    match value:
+        case number(value=amount):
+            return Some(amount)
+        case integer(value=count):
+            return Some(float(count))
+        case null | boolean(..) | text(..) | array(..) | object(..):
+            return None
+
+
+# The string carried by a value, if it is one.
+public func as_str(value: Json) -> str? from value:
+    match value:
+        case text(value=body):
+            return Some(body)
+        case null | boolean(..) | integer(..) | number(..) | array(..) | object(..):
+            return None
+
+
+# The elements of an array value, if it is one.
+public func as_list(value: Json) -> Json[]? from value:
+    match value:
+        case array(value=items):
+            return Some(items)
+        case null | boolean(..) | integer(..) | number(..) | text(..) | object(..):
+            return None
+
+
+# The members of an object value, if it is one.
+public func as_dict(value: Json) -> dict[str, Json]? from value:
+    match value:
+        case object(value=fields):
+            return Some(fields)
+        case null | boolean(..) | integer(..) | number(..) | text(..) | array(..):
+            return None
+
+
+# The member of an object under a key, if both the object and the key exist.
+public func get(value: Json, key: str) -> Json? from value:
+    match value:
+        case object(value=fields):
+            if key not in fields:
+                return None
+            return Some(fields[key])
+        case null | boolean(..) | integer(..) | number(..) | text(..) | array(..):
+            return None
+
+
+# The element of an array at an index, if both the array and the index exist.
+public func at(value: Json, index: int) -> Json? from value:
+    match value:
+        case array(value=items):
+            if index < 0 or index >= len(items):
+                return None
+            return Some(items[index])
+        case null | boolean(..) | integer(..) | number(..) | text(..) | object(..):
+            return None
+
+
+# Whether the scanner has consumed every byte.
+func at_end(scanner: Scanner) -> bool:
+    return scanner.position >= len(scanner.data)
+
+
+# The byte under the cursor, or -1 at the end of the document.
+func peek(scanner: Scanner) -> int:
+    if scanner.position < 0 or at_end(scanner):
+        return 0 - 1
+    return scanner.data[scanner.position]
+
+
+# Move the cursor one byte forward.
+func advance(mut scanner: Scanner):
+    scanner.position = scanner.position + 1
+    return
+
+
+# Move the cursor past the four whitespace bytes RFC 8259 allows.
+func skip_whitespace(mut scanner: Scanner):
+    while not at_end(scanner):
+        mut byte = peek(scanner)
+        if byte != 32 and byte != 9 and byte != 10 and byte != 13:
+            return
+        advance(mut scanner)
+    return
+
+
+# A reason naming the byte offset the scanner stopped at.
+func parse_error(scanner: Scanner, reason: str) -> str:
+    match strings.format_int(scanner.position, 10):
+        case Ok(rendered):
+            return reason + " at byte " + rendered
+        case Err(_):
+            return copy(reason)
+
+
+# Whether a byte is an ASCII decimal digit.
+func is_digit_byte(byte: int) -> bool:
+    return 48 <= byte <= 57
+
+
+# The value of one hexadecimal digit byte, or -1 when it is not one.
+func hex_value(byte: int) -> int:
+    if is_digit_byte(byte):
+        return byte - 48
+    if 97 <= byte <= 102:
+        return byte - 87
+    if 65 <= byte <= 70:
+        return byte - 55
+    return 0 - 1
+
+
+# Append the UTF-8 encoding of one code point to a byte accumulator.
+func append_code_point(mut out: byte_buffer, code: int):
+    if code < 128:
+        _ = buffers.append_byte(mut out, code)
+        return
+    if code < 2048:
+        _ = buffers.append_byte(mut out, 192 + code // 64)
+        _ = buffers.append_byte(mut out, 128 + code % 64)
+        return
+    if code < 65536:
+        mut trailing = code // 64 % 64
+        _ = buffers.append_byte(mut out, 224 + code // 4096)
+        _ = buffers.append_byte(mut out, 128 + trailing)
+        _ = buffers.append_byte(mut out, 128 + code % 64)
+        return
+    mut second = code // 4096 % 64
+    mut third = code // 64 % 64
+    _ = buffers.append_byte(mut out, 240 + code // 262144)
+    _ = buffers.append_byte(mut out, 128 + second)
+    _ = buffers.append_byte(mut out, 128 + third)
+    _ = buffers.append_byte(mut out, 128 + code % 64)
+    return
+
+
+# Text for accumulated UTF-8 bytes, rejecting sequences the source made invalid.
+func decoded(values: byte_buffer) -> str fails str:
+    match strings.decode(values):
+        case Ok(rendered):
+            return rendered
+        case Err(_):
+            fail "JSON string is not valid UTF-8"
+
+
+# The four hexadecimal digits of a \u escape.
+func read_hex4(mut scanner: Scanner) -> int fails str:
+    mut value = 0
+    mut index = 0
+    while index < 4:
+        if at_end(scanner):
+            fail parse_error(scanner, "truncated JSON unicode escape")
+        mut digit = hex_value(peek(scanner))
+        if digit < 0:
+            fail parse_error(scanner, "invalid JSON unicode escape")
+        advance(mut scanner)
+        value = value * 16 + digit
+        index += 1
+    return value
+
+
+# One escaped code point, including a complete surrogate pair.
+func read_unicode_escape(mut scanner: Scanner, mut out: byte_buffer) -> bool fails str:
+    mut first = try read_hex4(mut scanner)
+    if 56320 <= first <= 57343:
+        fail parse_error(scanner, "JSON low surrogate has no high surrogate")
+    if first < 55296 or first > 56319:
+        append_code_point(mut out, first)
+        return True
+    if peek(scanner) != 92:
+        fail parse_error(scanner, "JSON high surrogate needs a low surrogate")
+    advance(mut scanner)
+    if peek(scanner) != 117:
+        fail parse_error(scanner, "JSON high surrogate needs a low surrogate")
+    advance(mut scanner)
+    mut second = try read_hex4(mut scanner)
+    if second < 56320 or second > 57343:
+        fail parse_error(scanner, "JSON high surrogate needs a low surrogate")
+    append_code_point(mut out, 65536 + (first - 55296) * 1024 + second - 56320)
+    return True
+
+
+# One backslash escape from an RFC 8259 string body.
+func read_escape(mut scanner: Scanner, mut out: byte_buffer) -> bool fails str:
+    if at_end(scanner):
+        fail parse_error(scanner, "unterminated JSON escape")
+    mut byte = peek(scanner)
+    advance(mut scanner)
+    if byte in b'"\\/':
+        _ = buffers.append_byte(mut out, byte)
+        return True
+    if byte == 98:
+        _ = buffers.append_byte(mut out, 8)
+        return True
+    if byte == 102:
+        _ = buffers.append_byte(mut out, 12)
+        return True
+    if byte == 110:
+        _ = buffers.append_byte(mut out, 10)
+        return True
+    if byte == 114:
+        _ = buffers.append_byte(mut out, 13)
+        return True
+    if byte == 116:
+        _ = buffers.append_byte(mut out, 9)
+        return True
+    if byte != 117:
+        fail parse_error(scanner, "unknown JSON string escape")
+    return try read_unicode_escape(mut scanner, mut out)
+
+
+# One ordinary string span, returned with independent validated text storage.
+func decoded_span(data: bytes, start: int, end: int) -> str fails str:
+    match strings.decode(data[start:end]):
+        case Ok(rendered):
+            return rendered
+        case Err(_):
+            fail "JSON string is not valid UTF-8"
+
+
+# Continue a string only after its first escape needs an accumulator.
+func read_string_tail(mut scanner: Scanner, mut out: byte_buffer) -> str fails str:
+    mut span = scanner.position
+    mut offset = span
+    while 0 <= offset < len(scanner.data):
+        mut byte = scanner.data[offset]
+        offset += 1
+        if byte == 34:
+            scanner.position = offset
+            _ = buffers.append_range(mut out, scanner.data, span, offset - 1)
+            return try decoded(out)
+        if byte < 32:
+            scanner.position = offset
+            fail parse_error(scanner, "unescaped control character in JSON string")
+        if byte == 92:
+            scanner.position = offset
+            _ = buffers.append_range(mut out, scanner.data, span, offset - 1)
+            _ = try read_escape(mut scanner, mut out)
+            offset = scanner.position
+            span = offset
+    scanner.position = offset
+    fail parse_error(scanner, "unterminated JSON string")
+
+
+# One string body, allocating an accumulator only when an escape requires it.
+func read_string(mut scanner: Scanner) -> str fails str:
+    advance(mut scanner)
+    mut start = scanner.position
+    mut offset = start
+    while 0 <= offset < len(scanner.data):
+        mut byte = scanner.data[offset]
+        offset += 1
+        if byte == 34:
+            scanner.position = offset
+            return try decoded_span(scanner.data, start, offset - 1)
+        if byte < 32:
+            scanner.position = offset
+            fail parse_error(scanner, "unescaped control character in JSON string")
+        if byte == 92:
+            scanner.position = offset
+            mut empty: int[] = []
+            mut out = byte_buffer(empty)
+            _ = buffers.append_range(mut out, scanner.data, start, offset - 1)
+            _ = try read_escape(mut scanner, mut out)
+            return try read_string_tail(mut scanner, mut out)
+    scanner.position = offset
+    fail parse_error(scanner, "unterminated JSON string")
+
+
+# Move the cursor past the digits of an integer or fraction part.
+func skip_digits(mut scanner: Scanner):
+    while not at_end(scanner) and is_digit_byte(peek(scanner)):
+        advance(mut scanner)
+    return
+
+
+# The exponent part of a number, if one starts under the cursor.
+func read_exponent(mut scanner: Scanner) -> bool fails str:
+    if at_end(scanner):
+        return False
+    if peek(scanner) != 101 and peek(scanner) != 69:
+        return False
+    advance(mut scanner)
+    if peek(scanner) == 43 or peek(scanner) == 45:
+        advance(mut scanner)
+    if at_end(scanner) or not is_digit_byte(peek(scanner)):
+        fail parse_error(scanner, "JSON exponent needs a digit")
+    skip_digits(mut scanner)
+    return True
+
+
+# The fraction part of a number, if one starts under the cursor.
+func read_fraction(mut scanner: Scanner) -> bool fails str:
+    if at_end(scanner) or peek(scanner) != 46:
+        return False
+    advance(mut scanner)
+    if at_end(scanner) or not is_digit_byte(peek(scanner)):
+        fail parse_error(scanner, "JSON fraction needs a digit")
+    skip_digits(mut scanner)
+    return True
+
+
+# Validate decimal grammar and accumulate an exact integer in the same pass.
+# Negative accumulation includes int64's asymmetric minimum without overflow.
+func read_integer_part(mut scanner: Scanner) -> int? fails str:
+    mut offset = scanner.position
+    mut negative = False
+    if offset < len(scanner.data) and scanner.data[offset] == 45:
+        negative = True
+        offset += 1
+    if offset >= len(scanner.data) or not is_digit_byte(scanner.data[offset]):
+        scanner.position = offset
+        fail parse_error(scanner, "JSON number needs a digit")
+    if scanner.data[offset] == 48:
+        offset += 1
+        scanner.position = offset
+        if offset < len(scanner.data) and is_digit_byte(scanner.data[offset]):
+            fail parse_error(scanner, "JSON number has a leading zero")
+        return Some(0)
+    mut value = 0
+    mut exact = True
+    const final_digit: int
+    if negative:
+        final_digit = 8
+    else:
+        final_digit = 7
+    while offset < len(scanner.data):
+        mut digit = scanner.data[offset] - 48
+        if digit < 0 or digit > 9:
+            break
+        if exact:
+            if value < 0 - 922337203685477580 or (value == 0 - 922337203685477580 and digit > final_digit):
+                exact = False
+            else:
+                value = value * 10 - digit
+        offset += 1
+    scanner.position = offset
+    if not exact:
+        return None
+    if negative:
+        return Some(value)
+    return Some(0 - value)
+
+
+# One number literal, exact when it has no fraction, exponent or overflow.
+func read_number(mut scanner: Scanner) -> Json fails str:
+    mut start = scanner.position
+    const integral = try read_integer_part(mut scanner)
+    mut floating = try read_fraction(mut scanner)
+    const exponent = try read_exponent(mut scanner)
+    if exponent:
+        floating = True
+    if not floating:
+        match integral:
+            case Some(value):
+                return integer(value=value)
+            case None:
+                _ = 0
+    match bytes.parse_float_range(scanner.data, start, scanner.position):
+        case Some(value):
+            return number(value=value)
+        case None:
+            fail parse_error(scanner, "JSON number is malformed")
+
+
+# Compare a borrowed byte range before the caller updates its scanner.
+func literal_matches(data: bytes, start: int, word: bytes) -> bool:
+    return data[start:start + len(word)] == word
+
+
+# One of the three bare literals, matched exactly.
+func read_literal(mut scanner: Scanner, word: bytes, value: Json) -> Json fails str:
+    mut start = scanner.position
+    if start + len(word) > len(scanner.data):
+        fail parse_error(scanner, "truncated JSON literal")
+    if not literal_matches(scanner.data, start, word):
+        fail parse_error(scanner, "unknown JSON literal")
+    scanner.position = start + len(word)
+    return copy(value)
+
+
+# One array body, with the opening bracket under the cursor.
+func read_array(mut scanner: Scanner, depth: int) -> Json fails str:
+    advance(mut scanner)
+    mut items: Json[] = []
+    skip_whitespace(mut scanner)
+    if peek(scanner) == 93:
+        advance(mut scanner)
+        return Json.array(value=own items)
+    while not at_end(scanner):
+        const item = try read_value(mut scanner, depth + 1)
+        append(mut items, own item)
+        skip_whitespace(mut scanner)
+        mut byte = peek(scanner)
+        if byte == 93:
+            advance(mut scanner)
+            return Json.array(value=own items)
+        if byte != 44:
+            fail parse_error(scanner, "expected ',' or ']' in JSON array")
+        advance(mut scanner)
+    fail parse_error(scanner, "unterminated JSON array")
+
+
+# One object member, added to the accumulated fields. A repeated key keeps its first place and takes
+# the last value, as Python's json.loads does.
+func read_member(mut scanner: Scanner, mut fields: dict[str, Json], depth: int) -> bool fails str:
+    skip_whitespace(mut scanner)
+    if peek(scanner) != 34:
+        fail parse_error(scanner, "JSON object keys must be strings")
+    mut key = try read_string(mut scanner)
+    skip_whitespace(mut scanner)
+    if peek(scanner) != 58:
+        fail parse_error(scanner, "expected ':' after a JSON object key")
+    advance(mut scanner)
+    const value = try read_value(mut scanner, depth + 1)
+    fields[own key] = own value
+    return True
+
+
+# One object body, with the opening brace under the cursor.
+func read_object(mut scanner: Scanner, depth: int) -> Json fails str:
+    advance(mut scanner)
+    mut fields: dict[str, Json] = {}
+    skip_whitespace(mut scanner)
+    if peek(scanner) == 125:
+        advance(mut scanner)
+        return Json.object(value=own fields)
+    while not at_end(scanner):
+        _ = try read_member(mut scanner, mut fields, depth)
+        skip_whitespace(mut scanner)
+        mut byte = peek(scanner)
+        if byte == 125:
+            advance(mut scanner)
+            return Json.object(value=own fields)
+        if byte != 44:
+            fail parse_error(scanner, "expected ',' or '}' in JSON object")
+        advance(mut scanner)
+    fail parse_error(scanner, "unterminated JSON object")
+
+
+# One value of any kind, bounded by the nesting limit.
+func read_value(mut scanner: Scanner, depth: int) -> Json fails str:
+    if depth > max_depth():
+        fail parse_error(scanner, "JSON nesting is deeper than the limit")
+    skip_whitespace(mut scanner)
+    mut byte = peek(scanner)
+    if byte == 123:
+        return try read_object(mut scanner, depth)
+    if byte == 91:
+        return try read_array(mut scanner, depth)
+    if byte == 34:
+        const value = try read_string(mut scanner)
+        return Json.text(value=own value)
+    if byte == 116:
+        return try read_literal(mut scanner, b"true", boolean(True))
+    if byte == 102:
+        return try read_literal(mut scanner, b"false", boolean(False))
+    if byte == 110:
+        return try read_literal(mut scanner, b"null", null_value())
+    if byte == 45 or is_digit_byte(byte):
+        return try read_number(mut scanner)
+    if byte < 0:
+        fail parse_error(scanner, "unexpected end of JSON input")
+    fail parse_error(scanner, "unexpected character in JSON input")
+
+
+# One complete RFC 8259 document, rejecting anything after the top-level value.
+public func loads(source: str) -> Json fails Error:
+    mut scanner = Scanner(data=strings.encode(source), position=0)
+    mut value = try read_value(mut scanner, 1)
+    skip_whitespace(mut scanner)
+    if not at_end(scanner):
+        fail Error.Malformed(value=parse_error(scanner, "trailing characters after a JSON value"))
+    return value
+
+
+# Write the shortest escape RFC 8259 allows for one ASCII control byte.
+func write_control(mut out: byte_buffer, code: int):
+    match code:
+        case 8:
+            _ = buffers.append_range(mut out, b"\\b", 0, 2)
+        case 9:
+            _ = buffers.append_range(mut out, b"\\t", 0, 2)
+        case 10:
+            _ = buffers.append_range(mut out, b"\\n", 0, 2)
+        case 12:
+            _ = buffers.append_range(mut out, b"\\f", 0, 2)
+        case 13:
+            _ = buffers.append_range(mut out, b"\\r", 0, 2)
+        case _:
+            mut table = b"0123456789abcdef"
+            _ = buffers.append_range(mut out, b"\\u00", 0, 4)
+            _ = buffers.append_byte(mut out, table[code // 16])
+            _ = buffers.append_byte(mut out, table[code % 16])
+    return
+
+
+# Copy ordinary UTF-8 spans together; only ASCII quotes, slashes and controls
+# need inspection as escapes, because no multibyte encoding contains those bytes.
+func write_quoted(mut out: byte_buffer, body: str):
+    mut data = strings.encode(body)
+    _ = buffers.append_byte(mut out, 34)
+    mut span = 0
+    mut offset = 0
+    while offset < len(data):
+        mut code = data[offset]
+        if code == 34 or code == 92 or code < 32:
+            _ = buffers.append_range(mut out, data, span, offset)
+            if code < 32:
+                write_control(mut out, code)
+            else:
+                _ = buffers.append_byte(mut out, 92)
+                _ = buffers.append_byte(mut out, code)
+            span = offset + 1
+        offset += 1
+    _ = buffers.append_range(mut out, data, span, len(data))
+    _ = buffers.append_byte(mut out, 34)
+    return
+
+
+# Preserve str(float)'s spelling; RFC 8259 has no nonfinite numbers.
+func write_number(mut out: byte_buffer, value: float):
+    if value != value or value > 1.7976931348623157e308 or value < 0.0 - 1.7976931348623157e308:
+        _ = buffers.append_range(mut out, b"null", 0, 4)
+    else:
+        buffers.append_float(mut out, value)
+    return
+
+
+# Append a compact rendering directly into the shared output buffer.
+func write_value(mut out: byte_buffer, value: Json):
+    match value:
+        case null:
+            _ = buffers.append_range(mut out, b"null", 0, 4)
+        case boolean(value=flag):
+            if flag:
+                _ = buffers.append_range(mut out, b"true", 0, 4)
+            else:
+                _ = buffers.append_range(mut out, b"false", 0, 5)
+        case integer(value=count):
+            buffers.append_int(mut out, count)
+        case number(value=amount):
+            write_number(mut out, amount)
+        case text(value=body):
+            write_quoted(mut out, body)
+        case array(value=items):
+            write_array(mut out, items)
+        case object(value=fields):
+            write_object(mut out, fields)
+    return
+
+
+# Append a rendered array, keeping element order.
+func write_array(mut out: byte_buffer, items: Json[]):
+    _ = buffers.append_byte(mut out, 91)
+    for index, item in enumerate(items):
+        if index > 0:
+            _ = buffers.append_byte(mut out, 44)
+        write_value(mut out, item)
+    _ = buffers.append_byte(mut out, 93)
+    return
+
+
+# Append a rendered object, keeping insertion order.
+func write_object(mut out: byte_buffer, fields: dict[str, Json]):
+    _ = buffers.append_byte(mut out, 123)
+    mut first = True
+    for key, item in dicts.items(fields):
+        if not first:
+            _ = buffers.append_byte(mut out, 44)
+        first = False
+        write_quoted(mut out, key)
+        _ = buffers.append_byte(mut out, 58)
+        write_value(mut out, item)
+    _ = buffers.append_byte(mut out, 125)
+    return
+
+
+# A value rendered as compact RFC 8259 text without added whitespace.
+public func dumps(value: Json) -> str:
+    mut empty: int[] = []
+    mut out = byte_buffer(empty)
+    write_value(mut out, value)
+    match strings.decode(out):
+        case Ok(rendered):
+            return rendered
+        case Err(_):
+            # Every fragment above is ASCII or the encoding of a valid str.
+            assert False
+            return ""
+
+
+# What a derived encode or decode refused: the kind of `CodecError`.
+public enum CodecErrorKind:
+    syntax
+    missing
+    unexpected
+    out_of_range
+    unknown_member
+    unknown_case
+    duplicate
+    unwritable
+    invariant
+
+
+# A derived encode or decode that failed: what went wrong, the field path (`items[3].stamp.at`, empty for the whole
+# value), the byte offset in the document, and the sentence `str(error)` prints.
+public record CodecError:
+    kind: CodecErrorKind
+    path: str
+    offset: int
+    message: str
+
+
+# The plain JSON form of any value whose type has one (`codec`): records as objects, options as null or the value.
+public builtin func encode[T: codec](value: T) -> str fails CodecError
+
+
+# A value of type `T` read from its plain JSON form; a missing member takes the field's default.
+public builtin func decode[T: codec](source: str) -> T fails CodecError

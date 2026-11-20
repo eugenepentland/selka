@@ -1,0 +1,9 @@
+func main(args: str[], out: Stream) -> int:
+    mut gather_result_61: int[] = []
+    for j in range(0, 3):
+        const gather_value_61: int = j * 2
+        append(mut gather_result_61, gather_value_61)
+    mut values = own gather_result_61
+    print(out, values[0])
+    print(out, values[len(args) + 5])
+    return 0

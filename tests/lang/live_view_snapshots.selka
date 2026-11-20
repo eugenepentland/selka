@@ -1,0 +1,34 @@
+# spec-case: D2-VIEW-STORAGE-1
+import dicts
+
+public func test_explicit_snapshot_preserves_prior_values() -> bool:
+    mut mapping = {1: 7}
+    mut saved = list(dicts.values(mapping))
+    mapping[1] = 9
+    mapping[2] = 11
+    return saved == [7] and list(dicts.values(mapping)) == [9, 11]
+
+
+record Saved:
+    values: int[]
+
+
+enum Choice:
+    values(value: int[])
+    empty
+
+
+# spec-case: D2-VIEW-STORAGE-1
+public func test_record_array_list_and_variant_store_independent_snapshots() -> bool:
+    mut mapping = {1: 7}
+    mut record = Saved(values=list(dicts.values(mapping)))
+    mut array: FixedArray[Saved, 1] = FixedArray[Saved, 1]([copy(record)])
+    mut rows = [copy(record)]
+    mut choice = Choice.values(value=list(dicts.values(mapping)))
+    mapping[1] = 13
+    append(mut rows[0].values, 11)
+    match choice:
+        case values(value=values):
+            return record.values == [7] and array[0].values == [7] and rows[0].values == [7, 11] and values == [7]
+        case empty:
+            return False

@@ -1,0 +1,266 @@
+# Records that hold borrows, stage 2 (lane RB2): collections of borrows. A local `mut` list whose every element store is a
+# borrow (a borrowed record, a place, a lent option, a text literal) is a borrowed collection: it owns its buffer and lends
+# its elements, so nothing is copied, and it holds what its elements borrow until its last use.
+# The refusals are in src/core/record_collections_test.zig.
+record Inner:
+    a: bytes
+    b: int
+
+
+record Spot:
+    net: bytes
+    x: int
+
+
+record Pair:
+    left: Inner
+    tag: bytes
+
+
+func spot_len(s: Spot) -> int:
+    return len(s.net) + s.x
+
+
+func total(spots: Spot[]) -> int:
+    mut n = 0
+    for s in spots:
+        n += spot_len(s)
+    return n
+
+
+func text_total(names: bytes[]) -> int:
+    mut n = 0
+    for name in names:
+        n += len(name)
+    return n
+
+
+# p08: a borrowed record appended to a local list.
+public func test_list_of_borrowed_records() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    mut spots: Spot[] = []
+    append(mut spots, Spot(net=owner.a, x=1))
+    return len(spots) == 1 and spot_len(spots[0]) == 4
+
+
+public func test_list_of_records_from_two_owners() -> bool:
+    const first = Inner(a=b"abc", b=1)
+    const second = Inner(a=b"de", b=2)
+    mut spots: Spot[] = []
+    append(mut spots, Spot(net=first.a, x=1))
+    append(mut spots, Spot(net=second.a, x=2))
+    return total(spots) == 8 and spots[1].x == 2
+
+
+public func test_list_of_borrowed_text_in_a_loop() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    mut names: bytes[] = []
+    for i in range(3):
+        append(mut names, owner.a)
+    append(mut names, b"lit")
+    return len(names) == 4 and text_total(names) == 12
+
+
+public func test_list_of_elements_of_a_parameter() -> bool:
+    return names_of_pairs([Pair(left=Inner(a=b"ab", b=1), tag=b"x"), Pair(left=Inner(a=b"cde", b=2), tag=b"yz")]) == 8
+
+
+func names_of_pairs(pairs: Pair[]) -> int:
+    mut names: bytes[] = []
+    for pair in pairs:
+        append(mut names, pair.left.a)
+        append(mut names, pair.tag)
+    return text_total(names)
+
+
+public func test_list_of_records_of_loop_elements() -> bool:
+    const pairs = [Pair(left=Inner(a=b"ab", b=1), tag=b"x"), Pair(left=Inner(a=b"cde", b=2), tag=b"yz")]
+    mut spots: Spot[] = []
+    for pair in pairs:
+        append(mut spots, Spot(net=pair.tag, x=pair.left.b))
+    return total(spots) == 6
+
+
+# The owner may change once the collection's last use is past.
+public func test_owner_written_after_last_use() -> bool:
+    mut owner = Inner(a=b"abc", b=1)
+    mut names: bytes[] = []
+    append(mut names, owner.a)
+    const n = len(names[0])
+    owner.a = b"xy"
+    return n + len(owner.a) == 5
+
+
+# A collection of borrows may hold elements of another collection of borrows.
+public func test_collection_of_elements_of_a_collection() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    mut names: bytes[] = []
+    append(mut names, owner.a)
+    mut kept: bytes[] = []
+    append(mut kept, names[0])
+    return text_total(kept) == 3
+
+
+# A frame block (a plain bytes parameter held bare, RB1) may be an element of a local collection.
+public func test_list_of_records_holding_a_parameter() -> bool:
+    return spots_of_net(b"VCC", 3) == 15
+
+
+func spots_of_net(net: bytes, count: int) -> int:
+    mut spots: Spot[] = []
+    for i in range(count):
+        append(mut spots, Spot(net=net, x=i + 1))
+    return total(spots)
+
+
+record Holder:
+    names: bytes[]
+    spots: Spot[]
+    tag: bytes
+
+
+func holder_size(h: Holder) -> int:
+    return text_total(h.names) + total(h.spots) + len(h.tag)
+
+
+# A list literal of borrows is a collection of borrows: a `const`, and an argument built for one call.
+public func test_list_literal_of_borrows() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    const names = [owner.a, b"de"]
+    return len(names) == 2 and text_total(names) == 5 and text_total([owner.a, owner.a]) == 6
+
+
+public func test_list_literal_of_borrowed_records_as_an_argument() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    return total([Spot(net=owner.a, x=1), Spot(net=owner.a, x=2)]) == 9
+
+
+# A record may lend a collection of borrows: a borrowed record whose fields are the collections.
+public func test_record_with_a_collection_field() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    mut names: bytes[] = []
+    append(mut names, owner.a)
+    mut spots: Spot[] = []
+    append(mut spots, Spot(net=owner.a, x=5))
+    const h = Holder(names=names, spots=spots, tag=owner.a)
+    return holder_size(h) == 14 and holder_size(Holder(names=names, spots=spots, tag=b"z")) == 12
+
+
+# A list returned under `from` stays a view of its sources, as before RB2: a new collection of borrows is not returned
+# (that refusal is pinned in src/core/record_collections_test.zig), and a local that joins borrowed list results is.
+record Bag:
+    items: Spot[]
+    tags: bytes[]
+
+
+func items_of(bag: Bag) -> Spot[] from bag:
+    return bag.items
+
+
+func tags_only(bag: Bag) -> bytes[] from bag:
+    return bag.tags
+
+
+func tail_tags(bag: Bag) -> bytes[] from bag:
+    return bag.tags[1:]
+
+
+func picked(bag: Bag, tail: bool) -> bytes[] from bag:
+    mut names = tags_only(bag)
+    if tail:
+        names = tail_tags(bag)
+    return names
+
+
+func last_of(bag: Bag, rounds: int) -> bytes[] from bag:
+    mut names = tags_only(bag)
+    for i in range(rounds):
+        names = tail_tags(bag)
+    return names
+
+
+func make_bag() -> Bag:
+    return Bag(items=[Spot(net=b"vcc", x=1), Spot(net=b"gnd", x=2)], tags=[b"tt", b"u"])
+
+
+public func test_a_list_returned_under_from_is_a_borrow_of_its_sources() -> bool:
+    const b = make_bag()
+    mut nets: bytes[] = []
+    for item in items_of(b):
+        append(mut nets, item.net)
+    return total(items_of(b)) == 9 and text_total(nets) == 6
+
+
+public func test_a_join_of_borrowed_list_results_is_returned() -> bool:
+    const b = make_bag()
+    return text_total(picked(b, True)) == 1 and text_total(picked(b, False)) == 3 and text_total(last_of(b, 2)) == 1
+
+
+# A dictionary whose every value store is a borrow is a dictionary of borrows: it owns its table and its keys (a key written
+# as a place is copied when the entry is new) and lends its values.
+func value_total(table: dict[bytes, bytes]) -> int:
+    mut t = 0
+    for key in table:
+        t += len(key) + len(table[key])
+    return t
+
+
+public func test_dictionary_of_borrowed_text() -> bool:
+    const first = Inner(a=b"xyz", b=1)
+    const second = Inner(a=b"pq", b=2)
+    mut table: dict[bytes, bytes] = {}
+    table[b"k"] = first.a
+    table[second.a] = second.a
+    table[b"k"] = second.a
+    return len(table) == 2 and len(table[b"k"]) == 2 and value_total(table) == 7 and b"pq" in table
+
+
+public func test_dictionary_of_borrowed_records() -> bool:
+    const owner = Inner(a=b"vcc", b=1)
+    mut spots: dict[bytes, Spot] = {}
+    spots[owner.a] = Spot(net=owner.a, x=5)
+    return spots[b"vcc"].x == 5 and len(spots[b"vcc"].net) == 3
+
+
+# An element write stores a borrow too, and an option of a place or `None` is an element of borrows.
+public func test_element_write_and_options_of_borrows() -> bool:
+    const first = Inner(a=b"abc", b=1)
+    const second = Inner(a=b"z", b=2)
+    mut names: bytes[] = []
+    append(mut names, first.a)
+    append(mut names, first.a)
+    names[1] = second.a
+    mut maybe: bytes?[] = []
+    append(mut maybe, Some(first.a))
+    append(mut maybe, None)
+    mut present = 0
+    for item in maybe:
+        match item:
+            case Some(text):
+                present += len(text)
+            case None:
+                present += 10
+    return text_total(names) == 4 and present == 13
+
+
+# An option of a borrowed record is an element of borrows too.
+public func test_options_of_borrowed_records_in_a_list_and_a_dictionary() -> bool:
+    const owner = Inner(a=b"xyz", b=1)
+    mut spots: Spot?[] = []
+    append(mut spots, Some(Spot(net=owner.a, x=4)))
+    append(mut spots, None)
+    mut by_name: dict[bytes, Spot?] = {}
+    by_name[b"k"] = Some(Spot(net=owner.a, x=2))
+    mut t = 0
+    for s in spots:
+        match s:
+            case Some(v):
+                t += len(v.net) + v.x
+            case None:
+                t += 100
+    match by_name[b"k"]:
+        case Some(v):
+            t += v.x * 1000
+        case None:
+            t += 0
+    return t == 2107

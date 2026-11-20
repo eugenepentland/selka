@@ -1,0 +1,35 @@
+enum AppErr:
+    Parse(value: str)
+    Io(value: str)
+
+
+enum Wrap[T]:
+    First(value: T)
+    Second(value: T)
+
+
+# Two cases carry a `str`, so the order of the cases must not choose one: `selka fix` names the first, as the compiler did.
+# A generic function fails with a concrete union, and a function fails with an instance of a generic union, whose cases are
+# built through its bare name.
+func generic_fail[T](x: T, s: str) -> int fails AppErr:
+    _ = x
+    fail s
+
+
+func instance_fail(s: str) -> int fails Wrap[str]:
+    fail s
+
+
+func main() -> int:
+    mut status = 0
+    match generic_fail(3, "bad"):
+        case Ok(_):
+            status += 1
+        case Err(_):
+            status += 7
+    match instance_fail("worse"):
+        case Ok(_):
+            status += 2
+        case Err(_):
+            status += 30
+    return status

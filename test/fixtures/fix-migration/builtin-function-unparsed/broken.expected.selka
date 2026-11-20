@@ -1,0 +1,5 @@
+import lib
+
+
+public func use_broken(n: int) -> int:
+    return lib.lib_len(n) + 1

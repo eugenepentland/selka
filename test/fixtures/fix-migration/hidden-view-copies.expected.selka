@@ -1,0 +1,111 @@
+# Views that copy without a `copy(...)` in the source (plan §4b, rule C). Each
+# shape is refused with the copy repair written around the view, and the
+# repaired program prints the same line.
+
+
+func make_text() -> str:
+    return "abcdefgh"
+
+
+func make_bytes() -> bytes:
+    return b"abcdefgh"
+
+
+# C2: a bytes slice returned from a function that is not a view return.
+func head_bytes(source: bytes) -> bytes from source:
+    return source[0:4]
+
+
+# C3: a view on one path and a literal on another.
+func line_at(text: str, n: int) -> str from text:
+    if n < 0:
+        return "none"
+    return text[0:n]
+
+
+# C3: a view wrapped in Some, on a function whose other path is None.
+func first_some(source: str) -> str? from source:
+    if len(source) < 4:
+        return None
+    return Some(source[0:4])
+
+
+# C3: a view returned as the success of a fallible function.
+func first_result(source: str) -> str from source fails str:
+    if len(source) < 4:
+        fail "short"
+    return source[0:4]
+
+
+# C3: a view binding of the parameter, returned on a mixed path.
+func view_binding_return(text: str, n: int) -> str from text:
+    if n < 0:
+        return "none"
+    const piece = text[0:n]
+    return piece
+
+
+# C1: an owned local takes a slice by assignment (it takes a fresh value too, so it owns; H4).
+func assigned(data: str) -> int:
+    mut cur = "start"
+    cur = copy(data[0:2])
+    if len(cur) > 9:
+        cur = copy(data)
+    return len(cur)
+
+
+# C1: an owned local takes a slice when it is declared (it takes a fresh value too, so it owns; H4).
+func initialized(data: str) -> int:
+    mut cur = copy(data[0:2])
+    if len(cur) > 9:
+        cur = copy(data)
+    return len(cur)
+
+
+# C1: a deferred const that is a slice on one path and owned on another.
+func deferred(data: str, flag: bool) -> int:
+    const h: str
+    if flag:
+        h = copy(data[0:2])
+    else:
+        h = "zz"
+    return len(h)
+
+
+# C1: a view binding stored into an owned local.
+func view_binding_store(data: str) -> int:
+    const piece = data[0:4]
+    mut cur = copy(piece)
+    return len(cur)
+
+
+record Label:
+    text: str
+
+
+# C8: a view-returning call stored in a record field, an owned list and an owned
+# local, and returned from a function that is not a view return.
+func first_text(source: str) -> str:
+    return copy(source[0:4])
+
+
+func lead(source: str) -> str:
+    return first_text(source)
+
+
+func stored_calls(source: str) -> int:
+    const label = Label(text=first_text(source))
+    mut names: str[] = []
+    append(mut names, first_text(source))
+    mut cur = first_text(source)
+    return len(label.text) + len(names) + len(cur)
+
+
+func main(out: Stream) -> int:
+    const text = make_text()
+    mut total = assigned(text) + initialized(text) + deferred(text, True) + view_binding_store(text)
+    total += len(line_at(text, 4)) + len(head_bytes(make_bytes())) + len(view_binding_return(text, 3))
+    total += len(first_some(text).unwrap_or(""))
+    total += stored_calls(text) + len(lead(text))
+    print(out, total)
+    return 0

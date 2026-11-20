@@ -1,0 +1,385 @@
+import strings
+import time
+
+# Calendar conversion in `time`: civil date and time from Unix nanoseconds and back (UTC), RFC 3339 and HTTP date
+# formatting and parsing. The table of instants was produced by Python's datetime (experiments/real-work-20261030/LT/
+# gen_time_cases.py): Unix nanoseconds, RFC 3339, HTTP date, ISO weekday (Monday 1), then the civil fields.
+func civil_text(civil: time.Civil) -> str:
+    return f"{civil.year} {civil.month} {civil.day} {civil.hour} {civil.minute} {civil.second} {civil.nanosecond}"
+
+
+func ns_of(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+# The instant truncated to its whole second, as an HTTP date carries it.
+func whole_second(nanoseconds: int) -> int:
+    return nanoseconds // 1000000000 * 1000000000
+
+
+func rfc_instant(text: str) -> int:
+    match time.parse_rfc3339(text):
+        case Ok(instant):
+            return instant.unix_nanoseconds
+        case Err(_):
+            return 0 - 7
+
+
+func rfc_fails(text: str) -> bool:
+    match time.parse_rfc3339(text):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+func http_instant(text: str) -> int:
+    match time.parse_http_date(text):
+        case Ok(instant):
+            return instant.unix_nanoseconds
+        case Err(_):
+            return 0 - 7
+
+
+func http_fails(text: str) -> bool:
+    match time.parse_http_date(text):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+func valid(year: int, month: int, day: int, hour: int, minute: int, second: int, nanosecond: int) -> bool:
+    const civil = time.Civil(year=year, month=month, day=day, hour=hour, minute=minute, second=second, nanosecond=nanosecond)
+    match time.from_civil(civil):
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+func table() -> str[]:
+    return [
+        "0",
+        "1970-01-01T00:00:00Z",
+        "Thu, 01 Jan 1970 00:00:00 GMT",
+        "4",
+        "1970 1 1 0 0 0 0",
+        "1",
+        "1970-01-01T00:00:00.000000001Z",
+        "Thu, 01 Jan 1970 00:00:00 GMT",
+        "4",
+        "1970 1 1 0 0 0 1",
+        "-1",
+        "1969-12-31T23:59:59.999999999Z",
+        "Wed, 31 Dec 1969 23:59:59 GMT",
+        "3",
+        "1969 12 31 23 59 59 999999999",
+        "999999999",
+        "1970-01-01T00:00:00.999999999Z",
+        "Thu, 01 Jan 1970 00:00:00 GMT",
+        "4",
+        "1970 1 1 0 0 0 999999999",
+        "-1000000000",
+        "1969-12-31T23:59:59Z",
+        "Wed, 31 Dec 1969 23:59:59 GMT",
+        "3",
+        "1969 12 31 23 59 59 0",
+        "784111777000000000",
+        "1994-11-06T08:49:37Z",
+        "Sun, 06 Nov 1994 08:49:37 GMT",
+        "7",
+        "1994 11 6 8 49 37 0",
+        "1000000000000000000",
+        "2001-09-09T01:46:40Z",
+        "Sun, 09 Sep 2001 01:46:40 GMT",
+        "7",
+        "2001 9 9 1 46 40 0",
+        "951782400000000000",
+        "2000-02-29T00:00:00Z",
+        "Tue, 29 Feb 2000 00:00:00 GMT",
+        "2",
+        "2000 2 29 0 0 0 0",
+        "951782399999999999",
+        "2000-02-28T23:59:59.999999999Z",
+        "Mon, 28 Feb 2000 23:59:59 GMT",
+        "1",
+        "2000 2 28 23 59 59 999999999",
+        "1709164800000000000",
+        "2024-02-29T00:00:00Z",
+        "Thu, 29 Feb 2024 00:00:00 GMT",
+        "4",
+        "2024 2 29 0 0 0 0",
+        "1709164800123456789",
+        "2024-02-29T00:00:00.123456789Z",
+        "Thu, 29 Feb 2024 00:00:00 GMT",
+        "4",
+        "2024 2 29 0 0 0 123456789",
+        "4107542400000000000",
+        "2100-03-01T00:00:00Z",
+        "Mon, 01 Mar 2100 00:00:00 GMT",
+        "1",
+        "2100 3 1 0 0 0 0",
+        "4107542399999999999",
+        "2100-02-28T23:59:59.999999999Z",
+        "Sun, 28 Feb 2100 23:59:59 GMT",
+        "7",
+        "2100 2 28 23 59 59 999999999",
+        "-2208988800000000000",
+        "1900-01-01T00:00:00Z",
+        "Mon, 01 Jan 1900 00:00:00 GMT",
+        "1",
+        "1900 1 1 0 0 0 0",
+        "-2208988800000000001",
+        "1899-12-31T23:59:59.999999999Z",
+        "Sun, 31 Dec 1899 23:59:59 GMT",
+        "7",
+        "1899 12 31 23 59 59 999999999",
+        "1700000000500000000",
+        "2023-11-14T22:13:20.5Z",
+        "Tue, 14 Nov 2023 22:13:20 GMT",
+        "2",
+        "2023 11 14 22 13 20 500000000",
+        "946684799000000000",
+        "1999-12-31T23:59:59Z",
+        "Fri, 31 Dec 1999 23:59:59 GMT",
+        "5",
+        "1999 12 31 23 59 59 0",
+        "946684800000000000",
+        "2000-01-01T00:00:00Z",
+        "Sat, 01 Jan 2000 00:00:00 GMT",
+        "6",
+        "2000 1 1 0 0 0 0",
+        "1234567890000000000",
+        "2009-02-13T23:31:30Z",
+        "Fri, 13 Feb 2009 23:31:30 GMT",
+        "5",
+        "2009 2 13 23 31 30 0",
+        "-86400000000000",
+        "1969-12-31T00:00:00Z",
+        "Wed, 31 Dec 1969 00:00:00 GMT",
+        "3",
+        "1969 12 31 0 0 0 0",
+        "-86401000000000",
+        "1969-12-30T23:59:59Z",
+        "Tue, 30 Dec 1969 23:59:59 GMT",
+        "2",
+        "1969 12 30 23 59 59 0",
+        "9223372036854775807",
+        "2262-04-11T23:47:16.854775807Z",
+        "Fri, 11 Apr 2262 23:47:16 GMT",
+        "5",
+        "2262 4 11 23 47 16 854775807",
+        "-9223372036854775808",
+        "1677-09-21T00:12:43.145224192Z",
+        "Tue, 21 Sep 1677 00:12:43 GMT",
+        "2",
+        "1677 9 21 0 12 43 145224192",
+        "951868800000000000",
+        "2000-03-01T00:00:00Z",
+        "Wed, 01 Mar 2000 00:00:00 GMT",
+        "3",
+        "2000 3 1 0 0 0 0",
+        "1078012800000000000",
+        "2004-02-29T00:00:00Z",
+        "Sun, 29 Feb 2004 00:00:00 GMT",
+        "7",
+        "2004 2 29 0 0 0 0",
+        "4102444800000000000",
+        "2100-01-01T00:00:00Z",
+        "Fri, 01 Jan 2100 00:00:00 GMT",
+        "5",
+        "2100 1 1 0 0 0 0",
+        "2000000000000000000",
+        "2033-05-18T03:33:20Z",
+        "Wed, 18 May 2033 03:33:20 GMT",
+        "3",
+        "2033 5 18 3 33 20 0",
+    ]
+
+
+public func test_the_table_converts_to_civil_and_back() -> bool:
+    const rows = table()
+    mut at = 0
+    while at < len(rows):
+        const nanoseconds = ns_of(rows[at])
+        const instant = time.Instant(unix_nanoseconds=nanoseconds)
+        const civil = time.to_civil(instant)
+        if civil_text(civil) != rows[at + 4]:
+            return False
+        if time.weekday(civil) != ns_of(rows[at + 3]):
+            return False
+        match time.from_civil(civil):
+            case Ok(back):
+                if back.unix_nanoseconds != nanoseconds:
+                    return False
+            case Err(_):
+                return False
+        at += 5
+    return True
+
+
+public func test_the_table_formats_rfc_3339_and_http_dates() -> bool:
+    const rows = table()
+    mut at = 0
+    while at < len(rows):
+        const instant = time.Instant(unix_nanoseconds=ns_of(rows[at]))
+        if time.format_rfc3339(instant) != rows[at + 1]:
+            return False
+        if time.format_http_date(instant) != rows[at + 2]:
+            return False
+        at += 5
+    return True
+
+
+public func test_the_table_parses_what_it_formats() -> bool:
+    const rows = table()
+    mut at = 0
+    while at < len(rows):
+        const nanoseconds = ns_of(rows[at])
+        if rfc_instant(rows[at + 1]) != nanoseconds:
+            return False
+        if nanoseconds > 0 - 9223372036000000000:
+            if http_instant(rows[at + 2]) != whole_second(nanoseconds):
+                return False
+        at += 5
+    return True
+
+
+public func test_rfc_3339_offsets_fractions_and_case() -> bool:
+    if rfc_instant("2001-09-09T03:46:40+02:00") != 1000000000000000000:
+        return False
+    if rfc_instant("2001-09-08T20:16:40-05:30") != 1000000000000000000:
+        return False
+    if rfc_instant("2001-09-09t01:46:40z") != 1000000000000000000:
+        return False
+    if rfc_instant("2001-09-09T01:46:40.5Z") != 1000000000500000000:
+        return False
+    if rfc_instant("2001-09-09T01:46:40.123456789Z") != 1000000000123456789:
+        return False
+    if rfc_instant("2001-09-09T01:46:40.000Z") != 1000000000000000000:
+        return False
+    return rfc_instant("1969-12-31T23:59:59.999999999Z") == 0 - 1
+
+
+public func test_rfc_3339_refuses_what_is_not_a_timestamp() -> bool:
+    mut bad: str[] = ["", "2001-09-09", "2001-09-09T01:46:40", "2001-09-09 01:46:40Z", "2001-09-09T01:46:40ZZ", "2001-09-09T01:46:40Z ", " 2001-09-09T01:46:40Z"]
+    append(mut bad, "2001-9-9T01:46:40Z")
+    append(mut bad, "2001-13-09T01:46:40Z")
+    append(mut bad, "2001-00-09T01:46:40Z")
+    append(mut bad, "2001-09-00T01:46:40Z")
+    append(mut bad, "2001-02-29T01:46:40Z")
+    append(mut bad, "2001-04-31T01:46:40Z")
+    append(mut bad, "2001-09-09T24:46:40Z")
+    append(mut bad, "2001-09-09T01:60:40Z")
+    append(mut bad, "2001-09-09T01:46:60Z")
+    append(mut bad, "2001-09-09T01:46:40+24:00")
+    append(mut bad, "2001-09-09T01:46:40+01:60")
+    append(mut bad, "2001-09-09T01:46:40+0100")
+    append(mut bad, "2001-09-09T01:46:40.Z")
+    append(mut bad, "2001-09-09T01:46:40.1234567890Z")
+    append(mut bad, "0000-01-01T00:00:00Z")
+    append(mut bad, "3000-01-01T00:00:00Z")
+    append(mut bad, "1000-01-01T00:00:00Z")
+    append(mut bad, "2001-09-09T01:46:4xZ")
+    for text in bad:
+        if not rfc_fails(text):
+            return False
+    return True
+
+
+public func test_the_http_date_formats_of_rfc_9110_are_parsed() -> bool:
+    if http_instant("Sun, 06 Nov 1994 08:49:37 GMT") != 784111777000000000:
+        return False
+    if http_instant("Sunday, 06-Nov-94 08:49:37 GMT") != 784111777000000000:
+        return False
+    if http_instant("Sun Nov  6 08:49:37 1994") != 784111777000000000:
+        return False
+    if http_instant("Sunday, 06-Nov-1994 08:49:37 GMT") != 784111777000000000:
+        return False
+    # Two-digit years: 70 to 99 are 19xx and 00 to 69 are 20xx.
+    if http_instant("Monday, 01-Jan-70 00:00:00 GMT") != 0:
+        return False
+    return http_instant("Friday, 02-Feb-24 12:00:00 GMT") == 1706875200000000000
+
+
+public func test_the_http_date_refuses_what_is_not_one() -> bool:
+    mut bad: str[] = ["", "Sun, 06 Nov 1994 08:49:37", "Sun, 06 Nov 1994 08:49:37 UTC", "Sun, 6 Nov 1994 08:49:37 GMT", "Sun, 06 nov 1994 08:49:37 GMT"]
+    append(mut bad, "Sun, 06 Foo 1994 08:49:37 GMT")
+    append(mut bad, "Xxx, 06 Nov 1994 08:49:37 GMT")
+    append(mut bad, "Sun, 32 Nov 1994 08:49:37 GMT")
+    append(mut bad, "Sun, 31 Apr 1994 08:49:37 GMT")
+    append(mut bad, "Sun, 06 Nov 1994 24:49:37 GMT")
+    append(mut bad, "Sun, 06 Nov 1994 08:60:37 GMT")
+    append(mut bad, "Sun, 06 Nov 1994 08:49:61 GMT")
+    append(mut bad, "Sun, 06 Nov 1994 08:49:37 GMT extra")
+    append(mut bad, "Sun Nov 6 08:49:37 1994")
+    append(mut bad, "Sun Nov  6 08:49:37 94")
+    append(mut bad, "Sun, 06 Nov 1000 08:49:37 GMT")
+    for text in bad:
+        if not http_fails(text):
+            return False
+    return True
+
+
+public func test_civil_fields_are_validated() -> bool:
+    if not valid(2024, 2, 29, 23, 59, 59, 999999999):
+        return False
+    if valid(2023, 2, 29, 0, 0, 0, 0) or valid(1900, 2, 29, 0, 0, 0, 0):
+        return False
+    if valid(2024, 0, 1, 0, 0, 0, 0) or valid(2024, 13, 1, 0, 0, 0, 0):
+        return False
+    if valid(2024, 4, 0, 0, 0, 0, 0) or valid(2024, 4, 31, 0, 0, 0, 0):
+        return False
+    if valid(2024, 4, 1, 24, 0, 0, 0) or valid(2024, 4, 1, 0, 60, 0, 0) or valid(2024, 4, 1, 0, 0, 60, 0):
+        return False
+    if valid(2024, 4, 1, 0, 0, 0, 1000000000) or valid(2024, 4, 1, 0, 0, 0, 0 - 1):
+        return False
+    # The nanosecond clock reaches only 1677-09-21T00:12:43.145224192Z to 2262-04-11T23:47:16.854775807Z.
+    if valid(1677, 9, 21, 0, 12, 43, 145224191) or not valid(1677, 9, 21, 0, 12, 43, 145224192):
+        return False
+    if valid(2262, 4, 11, 23, 47, 16, 854775808) or not valid(2262, 4, 11, 23, 47, 16, 854775807):
+        return False
+    return not valid(3000, 1, 1, 0, 0, 0, 0)
+
+
+public func test_leap_years_and_month_lengths() -> bool:
+    if time.is_leap_year(1900) or not time.is_leap_year(2000) or not time.is_leap_year(2024) or time.is_leap_year(2100) or time.is_leap_year(2023):
+        return False
+    if time.days_in_month(2024, 2) != 29 or time.days_in_month(2023, 2) != 28 or time.days_in_month(2023, 4) != 30 or time.days_in_month(2023, 12) != 31:
+        return False
+    return time.days_in_month(2023, 0) == 0 and time.days_in_month(2023, 13) == 0
+
+
+func next(state: int) -> int:
+    return (state * 1103515245 + 12345) % 2147483648
+
+
+public func test_conversions_round_trip_over_many_instants() -> bool:
+    mut state = 123456789
+    mut count = 0
+    while count < 400:
+        state = next(state)
+        const high = state
+        state = next(state)
+        const low = state
+        state = next(state)
+        const seconds = (high * 2147483648 + low) % 18446744072 - 9223372036
+        const nanoseconds = seconds * 1000000000 + state % 1000000000
+        const instant = time.Instant(unix_nanoseconds=nanoseconds)
+        match time.from_civil(time.to_civil(instant)):
+            case Ok(back):
+                if back.unix_nanoseconds != nanoseconds:
+                    return False
+            case Err(_):
+                return False
+        if rfc_instant(time.format_rfc3339(instant)) != nanoseconds:
+            return False
+        if http_instant(time.format_http_date(instant)) != whole_second(nanoseconds):
+            return False
+        count += 1
+    return True

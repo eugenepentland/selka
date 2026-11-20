@@ -1,0 +1,24 @@
+# F-PB-3 (port repro, lane PB): `check` accepted it and the build refused it (rule Z3). Both accept it now: the borrowed
+# result's derivation walk stops at a phi it met already instead of circling two loop phis (lane CB).
+record Inst:
+    ref_des: bytes
+
+
+record Block:
+    instances: Inst[]
+
+
+func hub_ref(sb: Block) -> bytes from sb:
+    mut hub = b""
+    for inst in sb.instances:
+        if len(inst.ref_des) == 0 or inst.ref_des[0] != 85:
+            continue
+        if len(hub) > 0:
+            return b""
+        hub = inst.ref_des
+    return hub
+
+
+public func test_hub_ref() -> bool:
+    const sb = Block(instances=[Inst(ref_des=b"R1"), Inst(ref_des=b"U1")])
+    return hub_ref(sb) == b"U1"

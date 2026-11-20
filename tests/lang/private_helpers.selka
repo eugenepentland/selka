@@ -1,0 +1,22 @@
+# A module whose private functions its test file `private_helpers_test.selka` calls directly (docs/tooling/guest-tests.md,
+# "Private declarations"). Lane FX10: in a directory run that test file is checked with the other roots through a generated
+# entry, and its tests must run, and pass or fail on their merits, on every run in one work directory.
+record Reading:
+    value: int
+    unit: str
+
+
+func reading(value: int, unit: str) -> Reading:
+    return Reading(value=value, unit=copy(unit))
+
+
+func scaled(value: int) -> Reading:
+    mut out = reading(value * 10, "dm")
+    out.unit = out.unit + "!"
+    return out
+
+
+public func describe(value: int) -> int:
+    if value < 0:
+        return scaled(-value).value
+    return scaled(value).value

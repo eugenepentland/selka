@@ -1,0 +1,42 @@
+# A program whose generic helpers were written for `int` callers (W3 step 2): each body is refused at its declaration
+# for a text, a record or a list, and `selka fix` writes the repair the refusal names.
+record Pair[A, B]:
+    left: A
+    right: B
+
+
+func first[T](xs: T[]) -> T from xs:
+    const head = xs[0]
+    return head
+
+
+func identity[T](value: T) -> T from value:
+    return value
+
+
+func forward[T](value: T) -> T from value:
+    return identity(value)
+
+
+func keep[T](x: T) -> T[]:
+    mut out: T[] = []
+    append(mut out, copy(x))
+    return out
+
+
+func pick[T](a: T, b: T, take_a: bool) -> T from a, b:
+    if take_a:
+        return a
+    return b
+
+
+func right_of[A, B](pair: Pair[A, B]) -> B from pair:
+    return pair.right
+
+
+func main(out: Stream) -> int:
+    const xs = [3, 4, 5]
+    const kept = keep(6)
+    const pair = Pair[int, int](left=1, right=2)
+    print(out, first(xs), forward(7), len(kept), pick(8, 9, False), right_of(pair))
+    return 0

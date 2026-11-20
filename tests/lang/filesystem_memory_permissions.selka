@@ -1,0 +1,242 @@
+# The in-memory Filesystem honours the permission bits it keeps (friction F-42). A test's `fs` acts as an ordinary user who owns
+# every entry, so the owner bits of an entry's mode decide: 4 to read a file or list a directory, 2 to write a file or to add,
+# remove or rename the entries of a directory, 1 to search a directory (every path through it needs that). The refusal is the
+# real provider's, word for word. The whole table of calls and bits is pinned against a real directory by
+# test/fs_permissions_cli_test.zig; these tests are the readable cases.
+import filesystem
+import strings
+
+const DENIED: str = "permission denied"
+
+
+const NOT_CREATED: str = "permission denied"
+
+
+# "ok" for a success, else the failure text.
+func note(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_bytes(result: Result[bytes, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_list(result: Result[str[], str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func open_for(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.open(path, "wb") as f:
+        _ = f.write(b"new")
+
+
+func lock(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.try_lock_file(path) as lease:
+        _ = lease
+
+
+func lock_directory(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.lock_directory(path) as lease:
+        _ = lease
+
+
+# The friction's own program: a directory made read-only and a file made read-only.
+public func test_a_read_only_directory_refuses_the_replacement_of_a_file_in_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("lib")
+    _ = fs.write_file("lib/binary", b"old")
+    _ = filesystem.chmod(fs, "lib", 0o555)
+    assert note(fs.replace_file_synced_mode("lib/binary", b"new", 0o755)) == "replace 'lib/binary': " + DENIED
+    assert fs.read_file("lib/binary") == Ok(b"old")
+    _ = filesystem.chmod(fs, "lib", 0o755)
+    return note(fs.replace_file_synced_mode("lib/binary", b"new", 0o755)) == "ok" and fs.read_file("lib/binary") == Ok(b"new")
+
+
+# A read-only file in a writable directory is replaced (the publication renames a new file over it), as on disk, and refuses
+# an in-place write, which is what its mode forbids.
+public func test_a_read_only_file_is_replaced_by_a_publication_but_refuses_an_in_place_write() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("binary", b"old")
+    _ = filesystem.chmod(fs, "binary", 0o444)
+    assert note(fs.write_file("binary", b"new")) == "write 'binary': " + DENIED
+    assert note(fs.write_text("binary", "new")) == "write 'binary': " + DENIED
+    assert note(open_for(fs, "binary")) == "open 'binary': " + DENIED
+    assert fs.read_file("binary") == Ok(b"old")
+    assert note(fs.replace_file_synced_mode("binary", b"new", 0o444)) == "ok"
+    return fs.read_file("binary") == Ok(b"new")
+
+
+public func test_a_directory_without_the_write_bit_refuses_every_entry_it_would_gain_or_lose() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_file("d/f", b"old")
+    _ = fs.write_file("d/g", b"old")
+    _ = fs.mkdir("d/sub")
+    _ = fs.mkdir("e")
+    _ = fs.write_file("e/x", b"x")
+    _ = filesystem.chmod(fs, "d", 0o555)
+    assert note(fs.mkdir("d/new")) == "mkdir 'd/new': " + DENIED
+    assert note(fs.write_file("d/new", b"x")) == "write 'd/new': " + NOT_CREATED
+    assert note(open_for(fs, "d/new")) == "open 'd/new': " + NOT_CREATED
+    assert note(fs.atomic_write_file("d/new", b"x")) == "atomic write 'd/new': " + DENIED
+    assert note(filesystem.symlink(fs, "f", "d/ln")) == "symlink 'd/ln': " + DENIED
+    assert note(fs.rename_path("d/f", "d/h")) == "rename 'd/f' to 'd/h': " + DENIED
+    assert note(fs.rename_path("e/x", "d/x")) == "rename 'e/x' to 'd/x': " + DENIED
+    assert note(fs.rename_path("d/g", "e/g")) == "rename 'd/g' to 'e/g': " + DENIED
+    assert note(fs.remove("d/g")) == "remove 'd/g': " + DENIED
+    assert note(fs.remove("d/sub")) == "remove 'd/sub': " + DENIED
+    assert note(lock(fs, "d/lock")) == "try lock file 'd/lock': " + DENIED
+    # What the bits do not forbid still works: reading, listing, an in-place write of a writable file, locking an existing one.
+    assert note_bytes(fs.read_file("d/f")) == "ok" and note_list(fs.listdir("d")) == "ok"
+    assert note(fs.write_file("d/f", b"changed")) == "ok" and note(lock(fs, "d/f")) == "ok"
+    return fs.exists("d/g") and fs.exists("d/sub") and not fs.exists("d/new")
+
+
+public func test_a_file_without_the_read_bit_refuses_reads_and_locks_and_one_without_the_write_bit_refuses_writes_and_locks() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("write_only", b"data")
+    _ = fs.write_file("read_only", b"data")
+    _ = fs.write_file("neither", b"data")
+    _ = filesystem.chmod(fs, "write_only", 0o200)
+    _ = filesystem.chmod(fs, "read_only", 0o400)
+    _ = filesystem.chmod(fs, "neither", 0o000)
+    assert note_bytes(fs.read_file("write_only")) == "read 'write_only': " + DENIED
+    assert note_text(fs.read_text("neither")) == "read 'neither': " + DENIED
+    assert note_bytes(fs.read_regular_file("write_only", 100)) == "regular read 'write_only': " + DENIED
+    assert note_bytes(filesystem.read_at(fs, "write_only", 0, 4)) == "read at 'write_only': " + DENIED
+    assert note(fs.write_file("read_only", b"x")) == "write 'read_only': " + DENIED
+    assert note(fs.write_file("write_only", b"x")) == "ok"
+    assert note(lock(fs, "write_only")) == "try lock file 'write_only': " + DENIED
+    assert note(lock(fs, "read_only")) == "try lock file 'read_only': " + DENIED
+    # Neither bit hides the file from stat, a rename or a removal: those need the directory's bits, not the file's.
+    assert filesystem.stat(fs, "neither") != Err(filesystem.StatError.Missing)
+    assert note(fs.rename_path("neither", "renamed")) == "ok"
+    return note(fs.remove("renamed")) == "ok"
+
+
+public func test_a_directory_without_the_search_bit_hides_everything_below_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("closed")
+    _ = fs.write_file("closed/f", b"data")
+    _ = filesystem.chmod(fs, "closed", 0o600)
+    assert note_bytes(fs.read_file("closed/f")) == "read 'closed/f': " + DENIED
+    assert note(fs.write_file("closed/f", b"x")) == "write 'closed/f': " + DENIED
+    assert note(fs.write_file("closed/new", b"x")) == "write 'closed/new': " + DENIED
+    assert note(fs.mkdir("closed/sub")) == "mkdir 'closed/sub': " + DENIED
+    assert note(fs.remove("closed/f")) == "remove 'closed/f': " + DENIED
+    assert not fs.exists("closed/f")
+    match filesystem.stat(fs, "closed/f"):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Missing:
+                    return False
+                case Failed(message=text):
+                    assert text == "stat 'closed/f': " + DENIED
+    # The directory itself is still there, and its own mode is not hidden by a walk that stops at it.
+    match filesystem.stat(fs, "closed"):
+        case Ok(found):
+            return found.mode == 0o600
+        case Err(_):
+            return False
+
+
+public func test_a_directory_without_the_read_bit_cannot_be_listed_but_can_be_written_into() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("drop")
+    _ = fs.write_file("drop/f", b"data")
+    _ = filesystem.chmod(fs, "drop", 0o300)
+    assert note_list(fs.listdir("drop")) == "listdir 'drop': " + DENIED
+    match filesystem.list_entries(fs, "drop"):
+        case Ok(_):
+            return False
+        case Err(message):
+            assert message == "directory listing 'drop': " + DENIED
+    assert note(lock_directory(fs, "drop")) == "directory lock 'drop': " + DENIED
+    assert note(fs.sync_directory("drop")) == "directory sync 'drop': " + DENIED
+    # The plain calls only search the directory and write to it, so they work; the durable ones open it for reading first.
+    assert note_bytes(fs.read_file("drop/f")) == "ok"
+    assert note(fs.write_file("drop/new", b"x")) == "ok" and note(fs.mkdir("drop/sub")) == "ok" and note(fs.remove("drop/sub")) == "ok"
+    assert note(fs.atomic_write_file("drop/new", b"x")) == "atomic write 'drop/new': " + DENIED
+    assert note_bytes(fs.read_regular_file("drop/f", 100)) == "regular read 'drop/f': " + DENIED
+    assert note(filesystem.chmod(fs, "drop/f", 0o600)) == "chmod 'drop/f': " + DENIED
+    return note(fs.rename_path("drop/f", "drop/g")) == "rename 'drop/f' to 'drop/g': " + DENIED
+
+
+# A directory that moves to another parent changes its `..`, so it needs its own write bit; inside one parent it does not.
+public func test_a_directory_moves_to_another_parent_only_with_its_own_write_bit() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("a")
+    _ = fs.mkdir("b")
+    _ = fs.mkdir("a/locked")
+    _ = filesystem.chmod(fs, "a/locked", 0o555)
+    assert note(fs.rename_path("a/locked", "a/same_parent")) == "ok"
+    assert note(fs.rename_path("a/same_parent", "b/elsewhere")) == "rename 'a/same_parent' to 'b/elsewhere': " + DENIED
+    _ = filesystem.chmod(fs, "a/same_parent", 0o755)
+    return note(fs.rename_path("a/same_parent", "b/elsewhere")) == "ok" and fs.exists("b/elsewhere")
+
+
+public func test_a_mode_is_what_chmod_or_a_publication_set_and_default_modes_refuse_nothing() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_file("dir/file", b"x")
+    assert note(fs.write_file("dir/file", b"y")) == "ok" and note(fs.mkdir("dir/sub")) == "ok" and note(fs.remove("dir/sub")) == "ok"
+    assert note(fs.atomic_write_file_mode("dir/file", b"z", 0o000)) == "ok"
+    assert note_bytes(fs.read_file("dir/file")) == "read 'dir/file': " + DENIED
+    assert note(filesystem.chmod(fs, "dir/file", 0o644)) == "ok"
+    return fs.read_file("dir/file") == Ok(b"z")
+
+
+# Two levels: the search bit of a directory above the parent is needed, its read bit and its write bit are not.
+public func test_only_the_search_bit_of_the_directories_above_the_parent_matters() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("outer")
+    _ = fs.mkdir("outer/inner")
+    _ = fs.write_file("outer/inner/f", b"data")
+    _ = filesystem.chmod(fs, "outer", 0o111)
+    assert note_bytes(fs.read_file("outer/inner/f")) == "ok"
+    assert note(fs.write_file("outer/inner/new", b"x")) == "ok"
+    assert note(fs.atomic_write_file("outer/inner/f", b"x")) == "ok"
+    assert note_bytes(fs.read_regular_file("outer/inner/f", 100)) == "ok"
+    _ = filesystem.chmod(fs, "outer", 0o600)
+    return note_bytes(fs.read_file("outer/inner/f")) == "read 'outer/inner/f': " + DENIED and note_bytes(fs.read_regular_file("outer/inner/f", 100)) == "regular read 'outer/inner/f': " + DENIED
+
+
+public func test_a_read_only_filesystem_still_refuses_writes_in_its_own_words() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("f", b"x")
+    const frozen = fs.read_only()
+    return strings.starts_with(note(frozen.write_file("f", b"y")), "write 'f': denied")
+
+
+public func test_a_narrowed_filesystem_checks_the_bits_of_the_directories_it_is_narrowed_under() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("root")
+    _ = fs.write_file("root/f", b"x")
+    const narrowed = fs.dir("root")
+    _ = filesystem.chmod(fs, "root", 0o555)
+    assert note(narrowed.write_file("new", b"x")) == "write 'new': " + NOT_CREATED
+    assert note(narrowed.write_file("f", b"y")) == "ok"
+    _ = filesystem.chmod(fs, "root", 0o000)
+    return note_bytes(narrowed.read_file("f")) == "read 'f': " + DENIED

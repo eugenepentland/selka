@@ -1,0 +1,29 @@
+func noop() -> unit:
+    pass
+
+
+func v_numeric_take(u: unit, x: int) -> int:
+    return x + 1
+
+
+func narrow(f: float) -> int:
+    return int(i8(f))
+
+
+func wide(f: float) -> int:
+    return int(f)
+
+
+func main(out: Stream) -> int:
+    print(out, v_numeric_take(noop(), 4))
+    mut xs = list(range(-2i16, 3i16))
+    mut total = 0
+    for x in xs:
+        total += int(x)
+    print(out, total, len(xs))
+    mut ys = list(range(250u8, 255u8))
+    print(out, len(ys), int(ys[4]))
+    print(out, narrow(-128.5), narrow(127.9), narrow(-0.5), narrow(-128.0))
+    print(out, wide(-9223372036854775808.0), wide(9223372036854774784.0), wide(-0.99))
+    print(out, narrow(-129.0))
+    return 0

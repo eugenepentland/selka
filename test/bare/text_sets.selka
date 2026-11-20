@@ -1,0 +1,12 @@
+# Sets of text: add, membership, size.
+import sets
+
+func main() -> int:
+    mut seen: set[str] = set()
+    for i in range(50):
+        sets.add(mut seen, f"w{i % 17}")
+    mut hits = 0
+    for k in range(25):
+        if f"w{k}" in seen:
+            hits += k
+    return (hits + len(seen)) % 256

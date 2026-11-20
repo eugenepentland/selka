@@ -1,0 +1,265 @@
+# A borrowed result of a function that also takes a `mut` argument. `from data` says the result lends `data`; the
+# `mut position` is written back through a separate part of the returned record, so the result does not lend it.
+# The match arms and `try` read the borrowed payload in place while the writeback stays the caller's own value.
+func plain(data: bytes, position: int) -> bytes from data fails str:
+    if position > len(data):
+        fail "short-" + str(len(data)) + "-" + str(position)
+    return data[position:]
+
+
+func withmut(data: bytes, mut position: int) -> bytes from data fails str:
+    if position > len(data):
+        fail "short-" + str(len(data)) + "-" + str(position)
+    const out = data[position:]
+    position = len(data)
+    return out
+
+
+func maybe(data: bytes, position: int) -> bytes? from data:
+    if position > len(data):
+        return None
+    return Some(data[position:])
+
+
+func once(data: bytes, start: int) -> int:
+    mut at = start
+    match withmut(data, mut at):
+        case Ok(part):
+            return len(part) * 100 + at
+        case Err(message):
+            return len(message)
+
+
+func twice(data: bytes, start: int) -> int:
+    mut at = start
+    match withmut(data, mut at):
+        case Ok(first):
+            at = start * 20
+            match withmut(data, mut at):
+                case Ok(second):
+                    return len(first) * 1000 + len(second) * 10 + at
+                case Err(message):
+                    return len(first) * 1000 + len(message)
+        case Err(message):
+            return -len(message)
+
+
+func rounds(data: bytes, start: int) -> int:
+    mut at = start
+    mut total = 0
+    for round in range(3):
+        match withmut(data, mut at):
+            case Ok(part):
+                total += len(part)
+                at = 0
+            case Err(message):
+                total += len(message)
+                at = 0
+    return total
+
+
+func from_owner(count: int) -> int:
+    mut octets: int[] = []
+    for i in range(count):
+        append(mut octets, 97 + i)
+    const data = bytes(octets)
+    mut at = 1
+    match withmut(data, mut at):
+        case Ok(part):
+            return len(part) * 10 + at
+        case Err(message):
+            return -len(message)
+
+
+func nested_from_owner(count: int) -> int:
+    mut octets: int[] = []
+    for i in range(count):
+        append(mut octets, 97 + i)
+    const data = bytes(octets)
+    mut at = 1
+    match withmut(data, mut at):
+        case Ok(first):
+            at = count * 3
+            match withmut(data, mut at):
+                case Ok(second):
+                    return len(first) + len(second)
+                case Err(message):
+                    return len(first) * 100 + len(message)
+        case Err(message):
+            return -len(message)
+
+
+func try_plain(data: bytes, start: int) -> int fails str:
+    const part = try plain(data, start)
+    return len(part)
+
+
+func try_mut(data: bytes, start: int) -> int fails str:
+    mut at = start
+    const part = try withmut(data, mut at)
+    return len(part) * 100 + at
+
+
+func try_two(data: bytes, start: int) -> int fails str:
+    mut at = start
+    const first = try withmut(data, mut at)
+    at = start * 20
+    const second = try withmut(data, mut at)
+    return len(first) * 1000 + len(second) * 10 + at
+
+
+func try_option(data: bytes, start: int) -> int?:
+    const rest = try maybe(data, start)
+    return Some(len(rest))
+
+
+func forward(data: bytes, start: int) -> bytes from data fails str:
+    return try plain(data, start)
+
+
+func forward_mut(data: bytes, mut position: int) -> bytes from data fails str:
+    return try withmut(data, mut position)
+
+
+func forward_option(data: bytes, start: int) -> bytes? from data:
+    const rest = try maybe(data, start)
+    return Some(rest)
+
+
+func forwarded(data: bytes, start: int) -> int:
+    mut at = start
+    match forward_mut(data, mut at):
+        case Ok(part):
+            return len(part) * 10 + at
+        case Err(message):
+            return -len(message)
+
+
+func forwarded_plain(data: bytes, start: int) -> int:
+    match forward(data, start):
+        case Ok(part):
+            return len(part)
+        case Err(message):
+            return -len(message)
+
+
+func forwarded_option(data: bytes, start: int) -> int:
+    match forward_option(data, start):
+        case Some(part):
+            return len(part)
+        case None:
+            return -1
+
+
+func report(result: Result[int, str]) -> int:
+    match result:
+        case Ok(value):
+            return value
+        case Err(message):
+            return -len(message)
+
+
+func report_option(result: int?) -> int:
+    match result:
+        case Some(value):
+            return value
+        case None:
+            return -1
+
+
+# The match reads the Ok payload in place and writes the position back (the case of the first repro).
+public func test_match_ok_arm_reads_the_payload_and_the_writeback() -> bool:
+    return once(b"abcdef", 2) == 406
+
+
+# The Err arm owns its fresh text; the borrowed payload of the dead Ok arm is never read.
+public func test_match_err_arm_reads_the_fresh_error_text() -> bool:
+    return once(b"abcdef", 9) == 9
+
+
+public func test_nested_matches_each_write_back_their_own_position() -> bool:
+    return twice(b"abcdef", 1) == 5010 and twice(b"abcdef", 9) == -9
+
+
+public func test_a_loop_of_matches_reuses_one_position() -> bool:
+    return rounds(b"xyz", 5) == 15 and rounds(b"xyz", 0) == 9
+
+
+public func test_a_local_owner_source_outlives_the_matched_payload() -> bool:
+    return from_owner(5) == 45 and from_owner(0) == -9
+
+
+public func test_nested_matches_over_a_local_owner() -> bool:
+    return nested_from_owner(3) == 209 and nested_from_owner(0) == -9
+
+
+public func test_many_matches_free_each_error_text_once() -> bool:
+    mut total = 0
+    for i in range(300):
+        total += once(b"abcdef", 2) + once(b"abcdef", 9) + from_owner(i % 7)
+    return total == 300 * (406 + 9) + from_owner_sum()
+
+
+func from_owner_sum() -> int:
+    mut total = 0
+    for i in range(300):
+        total += from_owner(i % 7)
+    return total
+
+
+# `try` hands the borrowed success to a `const` binding: it keeps the call's roots like a matched payload.
+public func test_try_binds_a_borrowed_success_with_const() -> bool:
+    return report(try_plain(b"abcdef", 2)) == 4 and report(try_plain(b"abcdef", 9)) == -9
+
+
+public func test_try_with_a_mut_argument_writes_the_position_back() -> bool:
+    return report(try_mut(b"abcdef", 2)) == 406 and report(try_mut(b"abcdef", 9)) == -9
+
+
+public func test_two_tries_in_one_function() -> bool:
+    return report(try_two(b"abcdef", 0)) == 6066 and report(try_two(b"abcdef", 1)) == -10
+
+
+public func test_try_on_a_borrowed_option() -> bool:
+    return report_option(try_option(b"abcdef", 4)) == 2 and report_option(try_option(b"abcdef", 40)) == -1
+
+
+# `return try` in a function that itself returns a borrow forwards the success and builds the failure in the
+# declared (borrowed) result type.
+public func test_return_try_forwards_a_borrowed_result() -> bool:
+    return forwarded_plain(b"abcdef", 3) == 3 and forwarded_plain(b"abcdef", 9) == -9
+
+
+public func test_return_try_forwards_a_result_with_a_mut_argument() -> bool:
+    return forwarded(b"abcdef", 2) == 46 and forwarded(b"abcdef", 20) == -10
+
+
+public func test_return_try_forwards_a_borrowed_option() -> bool:
+    return forwarded_option(b"abcdef", 4) == 2 and forwarded_option(b"abcdef", 40) == -1
+
+
+public func test_many_tries_free_each_error_text_once() -> bool:
+    mut total = 0
+    for i in range(300):
+        total += report(try_plain(b"abcdef", i % 9)) + report(try_mut(b"abcdef", i % 9)) + report(try_two(b"abcdef", i % 4))
+    return total == tries_sum()
+
+
+func tries_sum() -> int:
+    mut total = 0
+    for i in range(300):
+        const position = i % 9
+        if position <= 6:
+            total += 6 - position
+            total += (6 - position) * 100 + 6
+        else:
+            total += -(len("short-6-") + len(str(position)))
+            total += -(len("short-6-") + len(str(position)))
+        const start = i % 4
+        const first = 6 - start
+        const rest = start * 20
+        if rest > 6:
+            total += -(len("short-6-") + len(str(rest)))
+        else:
+            total += first * 1000 + (6 - rest) * 10 + 6
+    return total

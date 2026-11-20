@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "default_action": "deny",
+  "rules": [
+    {
+      "from": "main",
+      "to": "inputs",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "main",
+      "to": "pricing",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "pricing",
+      "to": "money",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "pricing",
+      "to": "quantity",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "pricing",
+      "to": "catalog",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "pricing",
+      "to": "delivery",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "pricing",
+      "to": "packaging",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "pricing",
+      "to": "handling",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "catalog",
+      "to": "money",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    }
+  ]
+}

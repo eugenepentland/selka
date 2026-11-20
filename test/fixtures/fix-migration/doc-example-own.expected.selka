@@ -1,0 +1,39 @@
+# Two docstring examples move a named value without own: a `>>>` line stores
+# `refs` in a record, and a `...` continuation line assigns a match payload. They
+# compile as code, so `selka test` refuses the examples with E_OWN_MARKER while
+# the module itself checks. `selka fix` repairs each in the docstring, keeping the prompts and the indentation.
+public record Holder:
+    refs: int[]
+    seen: int[] = []
+
+
+public func count(holder: Holder) -> int:
+    """Count the references a holder owns.
+
+    >>> mut refs: int[] = [1, 2]
+    >>> count(Holder(refs=own refs))
+    2
+    """
+    return len(holder.refs)
+
+
+public func greet(name: bytes) -> bytes fails str:
+    """Greet by name, failing on an empty one.
+
+    >>> mut greeting = b""
+    >>> match greet(b"ada"):
+    ...     case Ok(text):
+    ...         greeting = own text
+    ...     case Err(_):
+    ...         greeting = b"failed"
+    >>> greeting
+    b'hello ada'
+    """
+    if len(name) == 0:
+        fail "empty"
+    return b"hello " + name
+
+
+func main(out: Stream) -> int:
+    print(out, count(Holder(refs=[1])))
+    return 0

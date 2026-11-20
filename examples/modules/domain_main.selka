@@ -1,0 +1,4 @@
+import shared.units
+
+func main() -> int:
+    return units.make(12).value

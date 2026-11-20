@@ -1,0 +1,145 @@
+# `match mut <place>:` (C1). A payload binding is a name for its place in the element: a read projects it from the
+# container, a write stores into it, and a later use is a new projection. Each function below writes one shape of
+# payload (a scalar field, a list field, a nested field, the whole payload, an append), and the test checks the element
+# after the write. Refused shapes are pinned in src/match_mut_test.zig.
+record Inner:
+    x: int
+    tags: int[]
+
+
+record Inst:
+    count: int
+    fields: int[]
+    inner: Inner
+
+
+enum Obj:
+    free
+    instance(value: Inst)
+
+
+func fresh() -> Obj:
+    return Obj.instance(value=Inst(count=0, fields=[], inner=Inner(x=1, tags=[])))
+
+
+func set_count(mut objs: Obj[], i: int, v: int):
+    match mut objs[i]:
+        case instance(value=payload):
+            payload.count = v
+        case free:
+            return
+
+
+func set_fields(mut objs: Obj[], i: int):
+    match mut objs[i]:
+        case instance(value=payload):
+            payload.fields = [4, 5, 6]
+        case free:
+            return
+
+
+func set_nested(mut objs: Obj[], i: int, v: int):
+    match mut objs[i]:
+        case instance(value=payload):
+            payload.inner.x = v
+        case free:
+            return
+
+
+func reassign(mut objs: Obj[], i: int):
+    match mut objs[i]:
+        case instance(value=payload):
+            payload = Inst(count=3, fields=[1], inner=Inner(x=2, tags=[]))
+        case free:
+            return
+
+
+func grow(mut objs: Obj[], i: int, v: int):
+    match mut objs[i]:
+        case instance(value=payload):
+            append(mut payload.fields, v)
+        case free:
+            return
+
+
+func rewrite(mut objs: Obj[], i: int, v: int) -> int:
+    match mut objs[i]:
+        case instance(value=payload):
+            payload.count = v
+            payload.inner.x = payload.count + 1
+            append(mut payload.fields, payload.inner.x)
+            payload.count = payload.count * 2
+            return payload.count + len(payload.fields)
+        case free:
+            return 0
+
+
+public func test_scalar_field_write_reaches_the_element() -> bool:
+    mut objs = [fresh()]
+    set_count(mut objs, 0, 7)
+    match objs[0]:
+        case instance(value=p):
+            return p.count == 7 and p.inner.x == 1
+        case free:
+            return False
+
+
+public func test_list_field_reassignment_reaches_the_element() -> bool:
+    mut objs = [fresh()]
+    set_fields(mut objs, 0)
+    match objs[0]:
+        case instance(value=p):
+            return p.fields == [4, 5, 6]
+        case free:
+            return False
+
+
+public func test_nested_field_write_reaches_the_element() -> bool:
+    mut objs = [fresh()]
+    set_nested(mut objs, 0, 9)
+    match objs[0]:
+        case instance(value=p):
+            return p.inner.x == 9
+        case free:
+            return False
+
+
+public func test_whole_payload_reassignment_replaces_the_element_payload() -> bool:
+    mut objs = [fresh()]
+    reassign(mut objs, 0)
+    match objs[0]:
+        case instance(value=p):
+            return p.count == 3 and p.fields == [1] and p.inner.x == 2
+        case free:
+            return False
+
+
+public func test_append_through_a_binding_grows_the_element_list() -> bool:
+    mut objs = [fresh()]
+    grow(mut objs, 0, 7)
+    grow(mut objs, 0, 8)
+    match objs[0]:
+        case instance(value=p):
+            return p.fields == [7, 8]
+        case free:
+            return False
+
+
+public func test_write_read_and_write_again_in_one_arm() -> bool:
+    mut objs = [fresh()]
+    const r = rewrite(mut objs, 0, 5)
+    match objs[0]:
+        case instance(value=p):
+            return r == 11 and p.count == 10 and p.inner.x == 6 and p.fields == [6]
+        case free:
+            return False
+
+
+func main() -> int:
+    assert test_scalar_field_write_reaches_the_element()
+    assert test_list_field_reassignment_reaches_the_element()
+    assert test_nested_field_write_reaches_the_element()
+    assert test_whole_payload_reassignment_replaces_the_element_payload()
+    assert test_append_through_a_binding_grows_the_element_list()
+    assert test_write_read_and_write_again_in_one_arm()
+    return 0

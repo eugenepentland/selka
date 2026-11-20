@@ -1,0 +1,28 @@
+fact-certificate-v1
+function f linkage internal addr 0 params i64,i64 ret i64
+param 0 0 10
+param 1 0 10
+returns -
+block b- reach preds -
+inst %0 param i64 none a - b - x - imm 0 aux 0 range 0 10
+inst %7 param i64 none a - b - x - imm 1 aux 0 range 0 10
+inst %1 iconst i64 none a - b - x - imm 2 aux 0 range -
+inst %2 iconst i64 none a - b - x - imm 1 aux 0 range -
+block b0 reach preds -
+inst %8 cmp bool none a %7 b %1 x - imm 5 aux 0 range 0 1
+term branch %8 b1 b5
+block b1 reach preds b0
+term jump b2
+block b2 reach preds b1,b4
+phi %3 i64 edges b1:%7,b4:%5 range 2 10
+inst %4 cmp bool none a %3 b %0 x - imm 2 aux 0 range 0 1
+term branch %4 b3 b5
+block b3 reach preds b2
+term jump b4
+block b4 reach preds b3
+inst %5 add i64 exact a %3 b %2 x - imm 0 aux 0 range 3 11
+term jump b2
+block b5 reach preds b0,b2
+term ret %7
+loop header b2 body b3 latch b4 exit b5
+end

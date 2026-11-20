@@ -1,0 +1,33 @@
+# A generic declaration whose `from` sources cannot lend the result of one of its instances (lane HC, CB's defect 4 left the
+# generic case open): `name` arrives as a view, which lends only a bytes result, so `none_of[Inst]` has no source that can
+# keep its result alive. Every source is a plain `bytes` parameter, so no instance's result borrows it: `selka fix` removes
+# the clause. Two instances refuse it and share the one removal.
+record Inst:
+    ref_des: bytes
+
+
+func none_of[T](name: bytes, tag: T) -> T? from name:
+    if len(name) > 100:
+        return None
+    return None
+
+
+# A type parameter source lends where its instance is a record or a list: this clause stays.
+func first_of[T](xs: T[], name: bytes) -> T? from xs, name:
+    for x in xs:
+        if len(name) > 0:
+            return Some(x)
+    return None
+
+
+func main() -> int:
+    mut n = 0
+    if none_of(b"U1", Inst(ref_des=b"R1")) is None:
+        n += 1
+    if none_of(b"U1", [1, 2]) is None:
+        n += 1
+    if none_of(b"U1", b"x") is None:
+        n += 1
+    if first_of([Inst(ref_des=b"C1")], b"C1") is not None:
+        n += 1
+    return n

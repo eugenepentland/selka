@@ -1,0 +1,70 @@
+# `Simd[T, N]`: fixed lanes held in one vector value. Elementwise arithmetic and comparisons,
+# lane reads, and vectors inside records, lists and arrays. Lane values are exact binary64 or
+# binary32 numbers, so each expected lane is a decimal the arithmetic reproduces exactly.
+record Body:
+    pos: Simd[float, 4]
+    mass: f32
+
+
+func blend(a: Simd[float, 4], b: Simd[float, 4]) -> Simd[float, 4]:
+    return a + b * b
+
+
+public func test_literal_and_lane_reads_follow_the_written_order() -> bool:
+    const v = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    return v[0] == 1.0 and v[3] == 4.0 and v[2] == 3.0
+
+
+public func test_arithmetic_is_elementwise_and_negation_flips_each_lane() -> bool:
+    const a = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const b = Simd[float, 4]([0.5, 0.5, 0.5, 0.5])
+    const sum = a + b
+    const difference = a - b
+    const product = a * b
+    const quotient = a / b
+    const negated = -a
+    return sum[1] == 2.5 and difference[2] == 2.5 and product[3] == 2.0 and quotient[0] == 2.0 and negated[1] == -2.0
+
+
+public func test_vectors_pass_through_functions_and_return_by_value() -> bool:
+    const a = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const b = Simd[float, 4]([0.5, 0.5, 0.5, 0.5])
+    const c = blend(a, b)
+    return c[0] == 1.25 and c[3] == 4.25
+
+
+public func test_comparisons_give_a_mask_of_booleans() -> bool:
+    const a = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const b = Simd[float, 4]([0.5, 2.0, 3.5, 4.0])
+    const less: Simd[bool, 4] = a < b
+    const same: Simd[bool, 4] = a == b
+    const apart: Simd[bool, 4] = a != b
+    const above: Simd[bool, 4] = a >= b
+    return not less[0] and not less[1] and less[2] and same[1] and not same[2] and apart[0] and above[0] and not above[2]
+
+
+public func test_f32_lanes_round_per_operation() -> bool:
+    const v = Simd[f32, 2]([1.5f32, -2.5f32])
+    const w = Simd[f32, 2]([0.25f32, 0.5f32])
+    return (-v)[1] == 2.5f32 and (v + w)[0] == 1.75f32 and (v * w)[1] == -1.25f32
+
+
+public func test_lane_index_is_checked_and_reads_the_chosen_lane() -> bool:
+    const lanes = Simd[float, 4]([7.0, 8.0, 9.0, 10.0])
+    mut k = 3
+    return lanes[k] == 10.0 and lanes[0] == 7.0
+
+
+public func test_vectors_live_in_records_lists_and_arrays() -> bool:
+    mut bodies: Body[] = []
+    append(mut bodies, Body(pos=Simd[float, 4]([1.0, 2.0, 3.0, 4.0]), mass=2.5f32))
+    const moved = Body(pos=bodies[0].pos + Simd[float, 4]([0.5, 0.5, 0.5, 0.5]), mass=bodies[0].mass)
+    const pair = FixedArray[Simd[float, 2], 2]([Simd[float, 2]([1.0, 2.0]), Simd[float, 2]([3.0, 4.0])])
+    return moved.pos[2] == 3.5 and moved.mass == 2.5f32 and pair[1][0] == 3.0 and pair[0][1] == 2.0
+
+
+public func test_vector_equality_is_a_mask_of_lane_equalities() -> bool:
+    const a = Simd[float, 2]([1.0, 2.0])
+    const b = Simd[float, 2]([1.0, 2.0])
+    const mask: Simd[bool, 2] = a == b
+    return mask[0] and mask[1]

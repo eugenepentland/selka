@@ -1,0 +1,20 @@
+name = "verify_ir"
+version = "0.1.0"
+defaultTargets = ["VerifyIr", "irverify"]
+
+[leanOptions]
+autoImplicit = false
+
+# The fact-certificate model and its SSA hypothesis (`ModWf`), which the lemma of `Ssa.lean` discharges (and, through it,
+# `proofs/arith`).
+[[require]]
+name = "facts"
+path = "../facts"
+
+[[lean_lib]]
+name = "VerifyIr"
+
+# `lake exe irverify DIR_OR_FILE` reads core-ir-v1 texts and prints one verdict per function, as `selka verify-ir` does.
+[[lean_exe]]
+name = "irverify"
+root = "Main"

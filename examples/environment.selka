@@ -1,0 +1,13 @@
+# The injected provider defines which names it permits; this literal names K.
+import strings
+
+func lookup(env: Environment) -> str?:
+    return env.get("K")
+
+
+func main(env: Environment) -> int:
+    match lookup(env):
+        case Some(value):
+            return strings.char_count(value)
+        case None:
+            return -1

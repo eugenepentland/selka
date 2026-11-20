@@ -1,0 +1,7 @@
+func main() -> int:
+    mut total = 0
+    mut turn = 0
+    while turn < 6000000000:
+        total = (total + turn) % 1000003
+        turn = turn + 1
+    return total % 2

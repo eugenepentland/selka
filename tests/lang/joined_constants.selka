@@ -1,0 +1,101 @@
+# A `str` or `bytes` constant may join literals and other constants of its type with `+` (F-54): the constants of its
+# module in either order and imported ones. The join is folded into one literal when the program is checked, so every
+# use reads that literal, exactly as if it had been written out.
+import joined_constants_support as support
+import strings
+import testing
+
+const SELECTOR: str = "#" + NAME + "-" + SUFFIX
+
+
+const NAME: str = "split"
+
+
+const SUFFIX: str = NAME + "é"
+
+
+const SAME: str = NAME
+
+
+const SHAPE: str = "[" + support.ORDER + "]" + SPLIT
+
+
+const SPLIT: str = "#" + NAME
+
+
+const HEADER: bytes = support.PREFIX + b"\x00\xff" + VERSION
+
+
+const VERSION: bytes = b"\x01"
+
+
+const EMPTY: str = "" + ""
+
+
+record Panel:
+    title: str = SELECTOR
+    magic: bytes = HEADER
+
+
+func generic_length[T](value: T) -> int:
+    return len(SHAPE)
+
+
+func kind(text: str) -> int:
+    match text:
+        case "#split":
+            return 1
+        case _:
+            return 0
+
+
+func checked(limit: int) -> int fails str:
+    if len(SELECTOR) > limit:
+        fail "too long: " + SELECTOR
+    return len(SELECTOR)
+
+
+public func test_a_joined_constant_holds_its_parts_in_order() -> bool:
+    assert SELECTOR == "#split-splité"
+    assert SUFFIX == "splité"
+    assert SAME == "split"
+    assert EMPTY == ""
+    return strings.char_count(SELECTOR) == 13
+
+
+public func test_a_joined_constant_reads_imported_constants() -> bool:
+    assert SHAPE == "[parse,check,build]#split"
+    assert support.STAMP == "v1.2"
+    return len(strings.split(support.ORDER, ",")) == 3
+
+
+public func test_a_joined_bytes_constant_keeps_every_octet() -> bool:
+    assert len(HEADER) == 5
+    assert HEADER[2] == 0
+    assert HEADER[3] == 255
+    return HEADER[4] == 1
+
+
+public func test_a_joined_constant_is_a_field_default() -> bool:
+    const panel = Panel()
+    assert panel.title == "#split-splité"
+    return len(panel.magic) == 5
+
+
+public func test_a_joined_constant_reads_in_a_generic_body_a_match_and_a_method() -> bool:
+    assert generic_length(1) == len(SHAPE)
+    assert kind(SPLIT) == 1
+    return strings.upper(SPLIT) == "#SPLIT"
+
+
+public func test_a_joined_constant_reads_in_a_fallible_function() -> bool:
+    match checked(20):
+        case Ok(length):
+            assert length == 14
+        case Err(_):
+            return False
+    match checked(3):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "too long: #split-splité"

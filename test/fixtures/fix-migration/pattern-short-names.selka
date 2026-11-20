@@ -1,0 +1,45 @@
+enum Side:
+    left
+    right
+
+
+enum Shape:
+    circle(radius: int)
+    rect(width: int, height: int)
+
+
+record Pin:
+    side: Side
+    shape: Shape
+
+
+func label(side: Side) -> int:
+    match side:
+        case Side.left:
+            return 1
+        case Side.right:
+            return 2
+
+
+func area(shape: Shape) -> int:
+    match shape:
+        case Shape.circle(radius=r):
+            return r * r * 3
+        case Shape.rect(width=w, height=h):
+            return w * h
+
+
+func outer(found: Shape?) -> int:
+    match found:
+        case Some(Shape.circle(radius=r)):
+            return r
+        case Some(Shape.rect(width=w, height=h)):
+            return w + h
+        case None:
+            return 0
+
+
+func main(out: Stream) -> int:
+    const pin = Pin(side=Side.left, shape=Shape.circle(radius=2))
+    print(out, label(pin.side), area(pin.shape), outer(Some(Shape.rect(width=3, height=4))))
+    return 0

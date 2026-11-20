@@ -1,0 +1,4 @@
+# Historical trees: retired dialects, not the current language. Search them with
+# `rg -u` or an explicit path when the history is the subject (plan batch 0, §3.0.6).
+experiments/
+velocity/

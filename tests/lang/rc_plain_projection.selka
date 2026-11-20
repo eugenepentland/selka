@@ -1,0 +1,32 @@
+enum Marker:
+    first
+    second
+
+
+record Plain:
+    marker: Marker
+    number: int
+
+
+record Owner:
+    keep: int[]
+    plain: Plain
+
+
+func produce() -> Owner:
+    return Owner(keep=[1], plain=Plain(marker=Marker.second, number=42))
+
+
+public func test_plain_record_projection_survives_parent_cleanup() -> bool:
+    mut value = produce().plain
+    return value.number == 42 and value.marker == Marker.second
+
+
+public func test_plain_enum_projection_survives_parent_cleanup() -> bool:
+    return produce().plain.marker == Marker.second
+
+
+func main() -> int:
+    assert test_plain_record_projection_survives_parent_cleanup()
+    assert test_plain_enum_projection_survives_parent_cleanup()
+    return 0

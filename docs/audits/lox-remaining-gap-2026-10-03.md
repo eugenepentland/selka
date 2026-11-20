@@ -1,0 +1,124 @@
+# Remaining checked Lox performance gap
+
+The preceding AST/d14 checkpoint executes substantially more instructions than
+Rust. These historical ratios come from the completed 780-cell counter factorial, using
+matched per-case medians and then geometric means across 13 workloads. Both
+engines use the calibrated tree tier for counters. This is a derivative of
+existing measurements, not a new performance run.
+
+| AST/d14 checkpoint / Rust | LLVM VM | LLVM tree | QBE VM | QBE tree |
+| --- | ---: | ---: | ---: | ---: |
+| Instructions | 2.458× | 4.089× | 5.746× | 7.817× |
+| Cycles | 2.774× | 4.098× | 5.153× | 7.379× |
+| Branches | 2.815× | 4.065× | 5.387× | 6.887× |
+| Branch misses | 1.804× | 1.933× | 5.194× | 4.112× |
+
+The large cycle ratios therefore accompany large instruction counts. They
+support focusing on generated work and ownership/check lowering; these
+counters alone do not partition the cost among copies, checks and memory
+access. The selected tree wall gain remains 3.05% LLVM /2.48% QBE relative to
+the preceding source84. Full checked semantics remain a requirement.
+
+The completed byte-storage trial gives no convincing runtime improvement:
+LLVM VM wall time is 0.6211% higher and QBE VM 0.2345% lower, with median
+paired spreads of 1.402% /1.098%. Its diagnostic instruction screen is
+1.2402% higher on LLVM VM and 0.2574% lower on QBE VM. The byte source and
+its qualified AST composition remain isolated.
+
+Exact LLVM path inspection finds an extra dispatch register move and two
+extra instructions on an in-bounds nonnegative local-operand read. A static
+model for `string_equality` roughly accounts for its observed instruction
+increase; it is a model, not a dynamic opcode trace. A checked direct-u8
+dispatch rewrite leaves both backends' static code counts unchanged and is
+rejected. The separate generic byte-index compiler guard adds five successful
+path instructions; cheaper standalone guard shapes still add at least three
+relative to selected code. No new compiler variant was selected from them.
+
+[Counter derivative](lox-remaining-gap-counters-2026-10-03.json) retains the
+raw receipt/helper hashes and full paired comparisons.
+[AST checkpoint](lox-ast-carrier-checkpoint-2026-10-03.md) records selection,
+qualification and the sealed evidence.
+[Byte wall trial](../../experiments/lox-byte-source-screen-20261003/README.md),
+[dispatch diagnostics](../../experiments/lox-byte-dispatch-static-20261003/README.md)
+and [guard diagnostics](../../experiments/lox-byte-refusal-diag-20261003/README.md)
+retain their separate evidence and limits. `main` remains unchanged.
+
+Twelve subsequent sampled profiles of the selected LLVM/QBE/Rust guests
+locate work for the next experiments. VM dispatch dominates simple workloads;
+QBE `fib` also samples heavily in `numeric` and frame loading. Tree profiles
+show ownership helper, allocation and collector costs. The
+[profile receipts](../../experiments/lox-gap-profile-20261003/README.md)
+retain all raw data and same-build symbol mappings. These within-process
+percentages guide investigation; they do not partition the measured absolute
+gap or select a new optimization.
+
+The subsequent bounded native-variant ownership trial completed 468 paired
+wall cells and 468 counter cells, following 156 smoke/stat checks and a
+104-cell diagnostic screen. QBE tree wall time falls 8.1563% with 2.6607%
+fewer instructions, while LLVM tree wall time rises 1.6608% despite 0.9942%
+fewer instructions. VM aggregate timing remains roughly flat. It remains
+unselected: LLVM tree string equality regresses 8.88%. Static review finds
+extra native tag/region branches and larger evaluator code; the region
+argument is dynamic, so a literal-zero shortcut has no existing proof.
+
+A separate fresh-zeroed bool variant-store trial leaves aggregate instruction
+counts effectively unchanged. Its 24-cell focused follow-up shows 4.733%
+lower QBE VM equality wall time but no consistent string-equality gain. This
+partial diagnostic does not establish a broad win and does not select the
+candidate. The [variant compiler screens](../../experiments/lox-variant-compiler-screens-20261003/README.md)
+retain both candidates' exact qualification/build reviews, all 1,480 current
+observations, 223 stable guards per preparation, independent paired-arithmetic
+checks and immutable archive receipts. Earlier failed/superseded preparations
+are retained separately. Selected source/compiler and main remain unchanged.
+
+A subsequent numeric-tag trial widens nine fresh-zeroed tag writes without
+changing payload operations or control flow. All 156 smoke cells and 104
+counter cells passed, with unchanged aggregate instructions. Its one-round
+QBE cycle aggregate rises 1.4513% for VM and 0.1247% for tree; no QBE workload
+improves by more than 1%. The screen supplies no broad benefit, so this trial
+is also closed unselected without a wall matrix. The same compiler-screen
+package retains its 260 rows, independent proof/build qualification and sealed
+archive. These three variant trials now contain 1,740 validated observations.
+
+A subsequent QBE-only dispatch classifier preserves LLVM allocated code and
+all original comparison leaves, but trades added early-opcode work for shorter
+late-opcode paths. Its 156 smoke cells and 104 counter cells passed; QBE VM
+instructions fall 0.6961% while cycles rise 2.1280% in the one-round aggregate.
+The candidate remains unselected without a wall matrix. The
+[dispatch screen](../../experiments/lox-qbe-dispatch-screen-20261003/README.md)
+retains the 260 observations, separate full qualification and sealed archive.
+
+
+A subsequent private scratch-address canonicalization preserves LLVM code and
+passes full compiler/public/native qualification. QBE VM screen instructions
+fall 2.2347%, but the three-round 468-cell wall matrix yields no broad win:
+VM time rises 0.1246% and tree time rises 0.7434%. These small changes do not
+establish a significant regression; the candidate remains unselected. The
+[scratch-alias report](../../experiments/lox-qbe-scratch-alias-screen-20261003/README.md)
+retains 728 completed observations and an immutable evidence snapshot. Its
+legacy strict closeout found two missing guard paths for unmeasured fresh
+reproduction runtime archives; that limitation remains explicit, and a separate
+prospective protocol has now passed a fresh trial below. Measured qualified guest bytes were
+fully guarded. Static ablation isolates one pointer copy that prevented QBE
+promotion of 236 stores/237 reads and increased the VM frame by 768 bytes;
+removing it saves instructions without establishing a runtime improvement.
+
+The corrected native variant policy is now selected on the performance branch.
+It enables the bounded native path for known QBE producers while preserving
+LLVM and foreign/default producer behavior. Full three-round measurements
+reduce QBE tree time by 7.7089%, instructions by 2.6607% and cycles by 8.5299%.
+All 13 tree wall medians improve. QBE VM time rises 0.4868% and cycles 0.3779%,
+with unchanged instructions; this tradeoff remains explicit. The equal-weight
+26-case QBE geometric mean time falls 3.6982%. LLVM allocated code matches the
+preceding selection, with roughly 0.1% or smaller aggregate timing variation.
+
+The [selected backend-policy report](../../experiments/lox-native-policy-screen-20261003/README.md)
+retains the full 1,196 observations, exact 252-guard/six-runtime-role prospective
+closeout, separate qualification/reviews and a verified immutable archive.
+The fresh QBE tree wall ratios remain 6.833× Rust /6.649× Go, so substantial
+work remains. Its fresh instruction ratios are 5.746× Rust for VM and 7.609×
+for tree; LLVM remains 2.458×/4.089×. Host-only comparison finds VM bodies unchanged apart from linked
+relocations and a 19,984-byte address shift; it does not establish the slowdown's
+cause. The separate runtime audit confirms LLVM RC helper LTO is already active.
+Main is not merged by this selection; the historical negative trials and their
+frozen receipts remain unselected.

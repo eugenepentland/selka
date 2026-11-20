@@ -1,0 +1,230 @@
+# One loop serves and calls (lane FR7): its Poller listens on the first port below and dials it, so each dialled
+# connection's peer is one the same loop accepted. A test holds the second port with a full backlog, so a dial to it is
+# never answered, and leaves nothing on the third, so a dial to it is refused. The test replaces the three ports and
+# compares the transcript. Times are printed only as bounds, because the machine may be loaded.
+import byte_builder
+import network
+import strings
+import time
+
+# What the loop has seen: the ids it accepted, in order, and the flags reported for every other id, combined.
+record Book:
+    accepted: int[]
+    flags: dict[int, int]
+
+
+func main(net: Network, clock: Clock, out: Stream) -> int:
+    with net.host("127.0.0.1:18201") as scoped:
+        with net.host("127.0.0.1:18202") as silent:
+            with net.host("127.0.0.1:18203") as refused:
+                match network.open_poller(scoped):
+                    case ok(poller):
+                        return probe(own poller, scoped, silent, refused, clock, out)
+                    case err(code):
+                        print(out, "open failed", code)
+                        return 1
+
+
+# The flags reported for `id` so far.
+func flags_of(book: Book, id: int) -> int:
+    if id in book.flags:
+        return book.flags[id]
+    return 0
+
+
+# Whether `id` finished its connect, either way.
+func settled(book: Book, id: int) -> bool:
+    return network.has(flags_of(book, id), network.EVENT_CONNECTED) or network.has(flags_of(book, id), network.EVENT_ERROR)
+
+
+# How many of `ids` finished their connects.
+func settled_count(book: Book, ids: int[]) -> int:
+    mut count = 0
+    for id in ids:
+        if settled(book, id):
+            count += 1
+    return count
+
+
+# Wait, accept and record flags until `accepts` connections were accepted and every one of `ids` finished its connect,
+# for at most 200 waits of 100 ms.
+func settle(own poller: network.Poller, mut book: Book, accepts: int, ids: int[]) -> network.Poller:
+    mut live = own poller
+    mut ready = network.new_ready()
+    mut outcome = network.new_outcome()
+    mut rounds = 0
+    while rounds < 200 and (len(book.accepted) < accepts or settled_count(book, ids) < len(ids)):
+        rounds += 1
+        live = network.wait(own live, 100, mut ready)
+        for index in range(ready.count):
+            const id = ready.ids[index]
+            if id == network.LISTENER:
+                live = network.accept(own live, mut outcome)
+                while outcome.code == network.OUTCOME_OK:
+                    append(mut book.accepted, outcome.value)
+                    live = network.accept(own live, mut outcome)
+            else:
+                book.flags[id] = bit_or(flags_of(book, id), ready.flags[index])
+    return live
+
+
+# Receive from `id` until at least one byte or the end arrives, waiting at most 5 s; the bytes go to `raw`.
+func receive(own poller: network.Poller, id: int, mut raw: byte_builder.Builder) -> network.Poller:
+    mut live = own poller
+    mut ready = network.new_ready()
+    mut outcome = network.new_outcome()
+    mut rounds = 0
+    while rounds < 50:
+        rounds += 1
+        live = network.recv(own live, id, mut raw, mut outcome)
+        if outcome.code != network.OUTCOME_WOULD_BLOCK:
+            return live
+        live = network.wait(own live, 100, mut ready)
+    return live
+
+
+# The text of a builder's bytes.
+func text_of(raw: byte_builder.Builder) -> str:
+    match strings.decode(byte_builder.finish(raw)):
+        case Ok(text):
+            return text
+        case Err(_):
+            return "?"
+
+
+# Offer 64 KiB at a time from `id` to a peer that never reads, until the kernel takes no more; the bytes taken.
+func fill(own poller: network.Poller, id: int, mut taken: network.Outcome) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    const chunk = byte_builder.repeat(b"x", 65536)
+    taken.value = 0
+    mut rounds = 0
+    while rounds < 2000:
+        rounds += 1
+        live = network.send(own live, id, chunk, 0, mut outcome)
+        if outcome.code != network.OUTCOME_OK or outcome.value == 0:
+            return live
+        taken.value += outcome.value
+    return live
+
+
+# The milliseconds of the clock's monotonic reading.
+func now_ms(clock: Clock) -> int:
+    return time.monotonic(clock) // 1000000
+
+
+func probe(own poller: network.Poller, scoped: Network, silent: Network, refused: Network, clock: Clock, out: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut book = Book(accepted=[], flags={})
+    # The loop dials its own listener: one id for the dialled end, one for the end it accepts.
+    network.dial(mut live, scoped, mut outcome)
+    const first = outcome.value
+    print(out, "dial", outcome.code == network.OUTCOME_OK, first > 0)
+    live = settle(own live, mut book, 1, [first])
+    const peer = book.accepted[0]
+    print(out, "connected", network.has(flags_of(book, first), network.EVENT_CONNECTED), "accepted", len(book.accepted))
+    live = network.send(own live, first, b"ping", 0, mut outcome)
+    mut got = byte_builder.create()
+    live = receive(own live, peer, mut got)
+    live = network.send(own live, peer, b"pong", 0, mut outcome)
+    mut back = byte_builder.create()
+    live = receive(own live, first, mut back)
+    print(out, "served and called", text_of(got), text_of(back))
+    live = network.close_connection(own live, first, mut outcome)
+    live = network.close_connection(own live, peer, mut outcome)
+    # Nine dialled connections open at once, each named by its id.
+    mut nine: int[] = []
+    for _ in range(9):
+        network.dial(mut live, scoped, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            append(mut nine, outcome.value)
+    live = settle(own live, mut book, 10, nine)
+    mut open = 0
+    for id in nine:
+        if network.has(flags_of(book, id), network.EVENT_CONNECTED):
+            open += 1
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "nine", len(nine), "connected", open, "open", outcome.extra)
+    for id in nine:
+        live = network.close_connection(own live, id, mut outcome)
+    for index in range(1, len(book.accepted)):
+        live = network.close_connection(own live, book.accepted[index], mut outcome)
+    # A dial to a port nobody holds is refused, at once or by a later wait.
+    network.dial(mut live, refused, mut outcome)
+    mut refusal = outcome.value
+    if outcome.code == network.OUTCOME_OK:
+        const id = outcome.value
+        live = settle(own live, mut book, 0, [id])
+        mut scratch = byte_builder.create()
+        live = network.recv(own live, id, mut scratch, mut outcome)
+        refusal = outcome.value
+        live = network.close_connection(own live, id, mut outcome)
+    print(out, "refused", refusal)
+    # A dial that is never answered fails at its connect limit, without blocking the loop.
+    const started = now_ms(clock)
+    network.dial_within(mut live, silent, network.Timeouts(connect_ms=300), mut outcome)
+    const late = outcome.value
+    print(out, "dial within", outcome.code == network.OUTCOME_OK, now_ms(clock) - started < 250)
+    live = settle(own live, mut book, 0, [late])
+    const waited = now_ms(clock) - started
+    mut scratch = byte_builder.create()
+    live = network.recv(own live, late, mut scratch, mut outcome)
+    print(out, "timed out", network.has(flags_of(book, late), network.EVENT_ERROR), outcome.code == network.OUTCOME_FAILED, outcome.value, 280 <= waited < 20000)
+    live = network.close_connection(own live, late, mut outcome)
+    # A dialled connection goes idle like an accepted one; its peer is told never to.
+    network.dial(mut live, scoped, mut outcome)
+    const quiet = outcome.value
+    const before = len(book.accepted)
+    live = settle(own live, mut book, before + 1, [quiet])
+    const quiet_peer = book.accepted[before]
+    live = network.set_connection_idle_timeout(own live, quiet_peer, 0, mut outcome)
+    live = network.set_idle_timeout(own live, 200, mut outcome)
+    mut ready = network.new_ready()
+    live = network.wait(own live, 10000, mut ready)
+    print(out, "idle", ready.count, ready.ids[0] == quiet, ready.flags[0])
+    live = network.set_idle_timeout(own live, 0, mut outcome)
+    live = network.close_connection(own live, quiet, mut outcome)
+    live = network.close_connection(own live, quiet_peer, mut outcome)
+    # A small receive buffer: a writer's kernel takes fewer bytes for a reader that never reads than with the system's
+    # buffer (the writer's own send buffer still takes its share, so on loopback both counts are megabytes).
+    mut taken = network.new_outcome()
+    network.dial_within(mut live, scoped, network.Timeouts(receive_buffer_bytes=4096), mut outcome)
+    const small = outcome.value
+    const mark = len(book.accepted)
+    live = settle(own live, mut book, mark + 1, [small])
+    live = fill(own live, book.accepted[mark], mut taken)
+    const small_taken = taken.value
+    network.dial(mut live, scoped, mut outcome)
+    const plain = outcome.value
+    live = settle(own live, mut book, mark + 2, [plain])
+    live = fill(own live, book.accepted[mark + 1], mut taken)
+    const plain_taken = taken.value
+    print(out, "small buffer", 0 < small_taken < plain_taken)
+    live = network.close_connection(own live, small, mut outcome)
+    live = network.close_connection(own live, plain, mut outcome)
+    live = network.close_connection(own live, book.accepted[mark], mut outcome)
+    live = network.close_connection(own live, book.accepted[mark + 1], mut outcome)
+    # The same through a blocking connection of `connect_within`, which the loop accepts and writes to.
+    match network.connect_within(scoped, network.Timeouts(receive_buffer_bytes=4096)):
+        case ok(made):
+            const reader = own made
+            live = settle(own live, mut book, mark + 3, [])
+            live = fill(own live, book.accepted[mark + 2], mut taken)
+            print(out, "small buffer of connect_within", 0 < taken.value < plain_taken)
+            live = network.close_connection(own live, book.accepted[mark + 2], mut outcome)
+            _ = network.close(own reader)
+        case err(code):
+            print(out, "connect_within failed", code)
+    # The stand-ins refuse a dial.
+    mut denied = network.denied()
+    with denied.host("127.0.0.1:1") as nowhere:
+        network.dial(mut live, nowhere, mut outcome)
+        print(out, "denied", outcome.code == network.OUTCOME_DENIED, outcome.value == network.denied_here())
+    mut memory = network.memory()
+    with memory.host("memory:1") as named:
+        network.dial(mut live, named, mut outcome)
+        print(out, "memory", outcome.code == network.OUTCOME_DENIED, outcome.value)
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "open at end", outcome.extra)
+    return 0

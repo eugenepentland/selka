@@ -1,0 +1,1032 @@
+import argparse
+import byte_builder
+import lists
+import strings
+
+# Read a gate log and print the short summary an agent can afford: the Selka port of scripts/gate_summary.py, which
+# prints the same lines (tools/selka/gate_summary_test.selka pins it against the original's output, and
+# tests/test_selka_tools.py runs both tools on the same logs).
+#
+# This is a reader, never a second gate: it runs nothing, changes no verdict and publishes no evidence.
+#
+# Usage: gate_summary [--max-lines N] LOG        (LOG is a log file or a directory holding *.log files)
+#
+# Not ported: the original's `report` argument (the coordinator's JSON report, which only `verify_cache.py` passes).
+# Where the Selka port differs from the original on input the original never meets: `\b` treats every non-ASCII
+# character as not part of a word; `--max-lines` takes decimal integers only and an option may not be abbreviated.
+const MAX_GREEN_LINES: int = 30
+
+
+const MAX_RED_LINES: int = 60
+
+
+const MAX_RED_PER_FAILURE: int = 10
+
+
+const MAX_LOG_BYTES: int = 16777216
+
+
+const MAX_BLOCK_LINES: int = 400
+
+
+# ---- bytes ----------------------------------------------------------------------------------------------------
+func is_digit(byte: int) -> bool:
+    return byte >= 48 and byte <= 57
+
+
+func is_letter(byte: int) -> bool:
+    return (byte >= 65 and byte <= 90) or (byte >= 97 and byte <= 122)
+
+
+func is_alnum(byte: int) -> bool:
+    return is_digit(byte) or is_letter(byte)
+
+
+# `[A-Za-z0-9_.-]`, the characters of an action name.
+func is_id(byte: int) -> bool:
+    return is_alnum(byte) or byte == 95 or byte == 46 or byte == 45
+
+
+# A character of a word for `\b`.
+func is_word(byte: int) -> bool:
+    return is_alnum(byte) or byte == 95
+
+
+# `[A-Za-z0-9_.+/-]`, a character of a path that may hold a directory part.
+func is_path(byte: int) -> bool:
+    return is_alnum(byte) or byte == 95 or byte == 46 or byte == 43 or byte == 47 or byte == 45
+
+
+func is_lower_hex(byte: int) -> bool:
+    return is_digit(byte) or (byte >= 97 and byte <= 102)
+
+
+# Whether the octets at `at` spell `expected`.
+func matches(data: bytes, at: int, expected: str) -> bool:
+    if at < 0 or at + len(expected) > len(data):
+        return False
+    mut index = 0
+    while index < len(expected):
+        if data[at + index] != expected[index]:
+            return False
+        index += 1
+    return True
+
+
+# The first position at or after `from` where `needle` starts, or -1.
+func index_of(data: bytes, needle: str, from: int) -> int:
+    const first = needle[0]
+    const last = len(data) - len(needle)
+    mut at = from
+    while at <= last:
+        if data[at] == first and matches(data, at, needle):
+            return at
+        at += 1
+    return 0 - 1
+
+
+func run_digits(data: bytes, at: int) -> int:
+    mut end = at
+    while end < len(data) and is_digit(data[end]):
+        end += 1
+    return end
+
+
+func run_id(data: bytes, at: int) -> int:
+    mut end = at
+    while end < len(data) and is_id(data[end]):
+        end += 1
+    return end
+
+
+func run_path(data: bytes, at: int) -> int:
+    mut end = at
+    while end < len(data) and is_path(data[end]):
+        end += 1
+    return end
+
+
+# Whether `word` stands at `at` as a whole word.
+func word_at(data: bytes, at: int, word: str) -> bool:
+    if not matches(data, at, word):
+        return False
+    if at > 0 and is_word(data[at - 1]):
+        return False
+    const after = at + len(word)
+    return after >= len(data) or not is_word(data[after])
+
+
+# `text[start:end]` in octets, as an owned string.
+func slice(text: str, start: int, end: int) -> str:
+    return copy(text[start:end])
+
+
+# `text[:400]` in characters.
+func cut(text: str) -> str:
+    return copy(strings.char_slice(text, 0, 400))
+
+
+# ---- the patterns of the original -------------------------------------------------------------------------------
+# `--action-id ([A-Za-z0-9_.-]+)`, searched.
+func action_id(command: str) -> str?:
+    const data = strings.encode(command)
+    mut from = 0
+    while True:
+        const at = index_of(data, "--action-id ", from)
+        if at < 0:
+            return None
+        const start = at + 12
+        const end = run_id(data, start)
+        if end > start:
+            return Some(slice(command, start, end))
+        from = at + 1
+    return None
+
+
+# `verification action ([A-Za-z0-9_.-]+) member`, searched.
+func step_name(line: str) -> str?:
+    const data = strings.encode(line)
+    mut from = 0
+    while True:
+        const at = index_of(data, "verification action ", from)
+        if at < 0:
+            return None
+        const start = at + 20
+        const end = run_id(data, start)
+        if end > start and matches(data, end, " member"):
+            return Some(slice(line, start, end))
+        from = at + 1
+    return None
+
+
+# `error: '([^']+)' (?:failed|timed out|leaked|logged)`, searched.
+func test_failed_name(line: str) -> str?:
+    const data = strings.encode(line)
+    mut from = 0
+    while True:
+        const at = index_of(data, "error: '", from)
+        if at < 0:
+            return None
+        const start = at + 8
+        mut end = start
+        while end < len(data) and data[end] != 39:
+            end += 1
+        if end > start and matches(data, end, "' ") and (matches(data, end + 2, "failed") or matches(data, end + 2, "timed out") or matches(data, end + 2, "leaked") or matches(data, end + 2, "logged")):
+            return Some(slice(line, start, end))
+        from = at + 1
+    return None
+
+
+# `test deadline: .+ ran [0-9.]+ s \(limit [0-9.]+ s\); killed`, searched.
+func has_deadline(line: str) -> bool:
+    const data = strings.encode(line)
+    mut from = 0
+    while True:
+        const at = index_of(data, "test deadline: ", from)
+        if at < 0:
+            return False
+        mut start = at + 16
+        while start <= len(data):
+            if deadline_tail(data, start):
+                return True
+            start += 1
+        from = at + 1
+    return False
+
+
+# ` ran [0-9.]+ s (limit [0-9.]+ s); killed` at `at`.
+func deadline_tail(data: bytes, at: int) -> bool:
+    if not matches(data, at, " ran "):
+        return False
+    mut end = at + 5
+    mut count = 0
+    while end < len(data) and (is_digit(data[end]) or data[end] == 46):
+        end += 1
+        count += 1
+    if count == 0 or not matches(data, end, " s (limit "):
+        return False
+    end += 10
+    count = 0
+    while end < len(data) and (is_digit(data[end]) or data[end] == 46):
+        end += 1
+        count += 1
+    return count > 0 and matches(data, end, " s); killed")
+
+
+# `(?:\berror:|\bpanic:|\bFAILED\b|\bFAIL\b|\bassertion\b|\bexpected\b|Error\b)`, searched.
+func has_failure(line: str) -> bool:
+    const data = strings.encode(line)
+    mut at = 0
+    while at < len(data):
+        const byte = data[at]
+        if byte == 101:
+            if matches(data, at, "error:") and (at == 0 or not is_word(data[at - 1])):
+                return True
+            if word_at(data, at, "expected"):
+                return True
+        elif byte == 112:
+            if matches(data, at, "panic:") and (at == 0 or not is_word(data[at - 1])):
+                return True
+        elif byte == 70:
+            if word_at(data, at, "FAILED") or word_at(data, at, "FAIL"):
+                return True
+        elif byte == 97:
+            if word_at(data, at, "assertion"):
+                return True
+        elif byte == 69:
+            if matches(data, at, "Error") and (at + 5 >= len(data) or not is_word(data[at + 5])):
+                return True
+        at += 1
+    return False
+
+
+# `:[0-9]+:[0-9]+: 0x[0-9a-f]+ in `, searched.
+func has_zig_frame(line: str) -> bool:
+    const data = strings.encode(line)
+    mut at = 0
+    while at < len(data):
+        if data[at] == 58:
+            const first = run_digits(data, at + 1)
+            if first > at + 1 and byte_is(data, first, 58):
+                const second = run_digits(data, first + 1)
+                if second > first + 1 and matches(data, second, ": 0x"):
+                    mut hex = second + 4
+                    while hex < len(data) and is_lower_hex(data[hex]):
+                        hex += 1
+                    if hex > second + 4 and matches(data, hex, " in "):
+                        return True
+        at += 1
+    return False
+
+
+func byte_is(data: bytes, at: int, expected: int) -> bool:
+    return at >= 0 and at < len(data) and data[at] == expected
+
+
+# `/(?:zig-toolchains|lib/std|lib/compiler|lib/python[0-9.]*)/`, searched in a path.
+func is_toolchain_path(path: str) -> bool:
+    const data = strings.encode(path)
+    if index_of(data, "/zig-toolchains/", 0) >= 0 or index_of(data, "/lib/std/", 0) >= 0 or index_of(data, "/lib/compiler/", 0) >= 0:
+        return True
+    mut from = 0
+    while True:
+        const at = index_of(data, "/lib/python", from)
+        if at < 0:
+            return False
+        mut end = at + 11
+        while end < len(data) and (is_digit(data[end]) or data[end] == 46):
+            end += 1
+        if byte_is(data, end, 47):
+            return True
+        from = at + 1
+    return False
+
+
+# Whether the run `data[start:end]` is `(?:[A-Za-z0-9_.+/-]+/)?[A-Za-z0-9_.+-]+\.(?:zig|py|my|sh|zon)`.
+func is_source_path(data: bytes, start: int, end: int) -> bool:
+    mut stem = 0 - 1
+    for extension in [".zig", ".py", ".selka", ".sh", ".zon"]:
+        if end - start > len(extension) and matches(data, end - len(extension), extension):
+            stem = end - len(extension)
+    if stem < 0:
+        return False
+    mut slash = 0 - 1
+    mut at = start
+    while at < stem:
+        if data[at] == 47:
+            slash = at
+        at += 1
+    if slash < 0:
+        return stem > start
+    return slash >= start + 1 and slash + 1 < stem
+
+
+# Every `FILE_LINE` match in a line, as (path, number) pairs laid flat.
+func file_lines(line: str) -> str[]:
+    const data = strings.encode(line)
+    mut found: str[] = []
+    mut at = 0
+    while at < len(data):
+        if not is_path(data[at]):
+            at += 1
+            continue
+        const end = run_path(data, at)
+        const digits_end = run_digits(data, end + 1)
+        if byte_is(data, end, 58) and digits_end > end + 1:
+            mut start = at
+            while start < end and not is_source_path(data, start, end):
+                start += 1
+            if start < end:
+                append(mut found, slice(line, start, end))
+                append(mut found, slice(line, end + 1, digits_end))
+                at = digits_end
+                continue
+        at = end
+    return found
+
+
+# Every `File "([^"]+)", line ([0-9]+)` match in a line, as (path, number) pairs laid flat.
+func python_frames(line: str) -> str[]:
+    const data = strings.encode(line)
+    mut found: str[] = []
+    mut from = 0
+    while True:
+        const at = index_of(data, 'File "', from)
+        if at < 0:
+            return found
+        const start = at + 6
+        mut end = start
+        while end < len(data) and data[end] != 34:
+            end += 1
+        if end > start and matches(data, end, '", line '):
+            const digits_end = run_digits(data, end + 8)
+            if digits_end > end + 8:
+                append(mut found, slice(line, start, end))
+                append(mut found, slice(line, end + 8, digits_end))
+                from = digits_end
+                continue
+        from = at + 1
+    return found
+
+
+# ---- paths and locations ----------------------------------------------------------------------------------------
+# A worktree's absolute path shortened to its repository-relative form.
+public func repository_path(path: str) -> str:
+    if not strings.starts_with(path, "/"):
+        return copy(path)
+    const data = strings.encode(path)
+    for root in ["src/", "test/", "tests/", "scripts/", "selfhost/", "bench/", "benchmarks/", "examples/", "docs/", "experiments/", "velocity/"]:
+        const at = index_of(data, "/" + root, 0)
+        if at >= 0:
+            return slice(path, at + 1, len(data))
+    return copy(path)
+
+
+# The first `file:line` inside the repository, skipping toolchain frames. The original tries every FILE_LINE match of a
+# line before any PYTHON_FRAME match.
+public func location(lines: str[]) -> str?:
+    for line in lines:
+        const shapes = [file_lines(line), python_frames(line)]
+        for shape in shapes:
+            mut index = 0
+            while index + 1 < len(shape):
+                if not is_toolchain_path(shape[index]):
+                    return Some(repository_path(shape[index]) + ":" + shape[index + 1])
+                index += 2
+    return None
+
+
+# ---- text ------------------------------------------------------------------------------------------------------
+# Python's `str.isspace` for one scalar.
+func is_space_code(code: int) -> bool:
+    if code >= 9 and code <= 13:
+        return True
+    if code >= 28 and code <= 32:
+        return True
+    if code == 133 or code == 160 or code == 5760 or code == 8232 or code == 8233 or code == 8239 or code == 8287 or code == 12288:
+        return True
+    return code >= 8192 and code <= 8202
+
+
+# Python's `str.strip()`.
+public func py_strip(text: str) -> str:
+    const total = strings.char_count(text)
+    mut first = 0
+    mut last = total
+    mut position = 0
+    mut seen_start = False
+    for ch in strings.chars(text):
+        if not is_space_code(ord(ch)):
+            if not seen_start:
+                first = position
+                seen_start = True
+            last = position + 1
+        position += 1
+    if not seen_start:
+        return ""
+    return copy(strings.char_slice(text, first, last))
+
+
+# Python's `str.splitlines()`: the line boundaries of `\n`, `\r\n`, `\r`, `\v`, `\f`, `\x1c` to `\x1e`, `\x85`,
+# U+2028 and U+2029.
+public func splitlines(text: str) -> str[]:
+    const data = strings.encode(text)
+    mut lines: str[] = []
+    mut start = 0
+    mut at = 0
+    while at < len(data):
+        const byte = data[at]
+        mut width = 0
+        if byte == 13:
+            width = 1
+            if byte_is(data, at + 1, 10):
+                width = 2
+        elif byte == 10 or byte == 11 or byte == 12 or byte == 28 or byte == 29 or byte == 30:
+            width = 1
+        elif byte == 194 and byte_is(data, at + 1, 133):
+            width = 2
+        elif byte == 226 and byte_is(data, at + 1, 128) and (byte_is(data, at + 2, 168) or byte_is(data, at + 2, 169)):
+            width = 3
+        if width > 0:
+            append(mut lines, slice(text, start, at))
+            at += width
+            start = at
+        else:
+            at += 1
+    if start < len(data):
+        append(mut lines, slice(text, start, len(data)))
+    return lines
+
+
+# Python's `bytes.decode('utf-8', 'replace')`: each ill-formed subsequence becomes one U+FFFD.
+public func decode_lossy(data: bytes) -> str:
+    mut out = byte_builder.create()
+    mut at = 0
+    while at < len(data):
+        const lead = data[at]
+        if lead < 128:
+            _ = byte_builder.append_byte(mut out, lead)
+            at += 1
+            continue
+        mut need = 0
+        mut low = 128
+        mut high = 191
+        if lead >= 194 and lead <= 223:
+            need = 1
+        elif lead >= 224 and lead <= 239:
+            need = 2
+            if lead == 224:
+                low = 160
+            if lead == 237:
+                high = 159
+        elif lead >= 240 and lead <= 244:
+            need = 3
+            if lead == 240:
+                low = 144
+            if lead == 244:
+                high = 143
+        if need == 0:
+            _ = byte_builder.append_text(mut out, "�")
+            at += 1
+            continue
+        mut taken = 1
+        mut ok = True
+        while taken <= need and ok:
+            if at + taken >= len(data):
+                ok = False
+            else:
+                const next = data[at + taken]
+                if taken == 1 and (next < low or next > high):
+                    ok = False
+                elif taken > 1 and (next < 128 or next > 191):
+                    ok = False
+                else:
+                    taken += 1
+        if ok:
+            _ = byte_builder.append_range(mut out, data, at, at + need + 1)
+            at += need + 1
+        else:
+            _ = byte_builder.append_text(mut out, "�")
+            at += taken
+    match strings.decode(byte_builder.finish(out)):
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+# `str(Path(raw))`: empty components and `.` dropped, `..` kept, a leading `//` kept and three or more slashes one.
+public func path_text(raw: str) -> str:
+    mut rooted = ""
+    if strings.starts_with(raw, "//") and not strings.starts_with(raw, "///"):
+        rooted = "//"
+    elif strings.starts_with(raw, "/"):
+        rooted = "/"
+    mut kept: str[] = []
+    for part in strings.split(raw, "/"):
+        if len(part) > 0 and part != ".":
+            append(mut kept, copy(part))
+    if len(kept) == 0 and len(rooted) == 0:
+        return "."
+    return rooted + strings.join(kept, "/")
+
+
+# ---- blocks, verdicts and times -------------------------------------------------------------------------------
+# One failed step: its action, failing tests, deadline line, diagnostic lines and location.
+public record Block:
+    action: str
+    tests: str[]
+    deadline: str?
+    lines: str[]
+    place: str?
+    failed: bool
+
+
+func contains(items: str[], wanted: str) -> bool:
+    for item in items:
+        if item == wanted:
+            return True
+    return False
+
+
+# Describe one failed step from the lines printed before its command.
+func describe(lines: str[], command: str) -> Block:
+    mut action = action_id(command)
+    mut tests: str[] = []
+    mut deadline: str? = None
+    mut diagnostics: str[] = []
+    mut echo = 0
+    for line in lines:
+        const text = py_strip(line)
+        if has_zig_frame(text):
+            echo = 2
+            continue
+        if echo > 0:
+            echo -= 1
+            continue
+        match test_failed_name(text):
+            case Some(name):
+                if not contains(tests, name):
+                    append(mut tests, copy(name))
+                continue
+            case None:
+                pass
+        if has_deadline(text):
+            if deadline is None:
+                deadline = Some(copy(text))
+            continue
+        if strings.starts_with(text, "test:"):
+            continue
+        if has_failure(text) and not contains(diagnostics, text):
+            append(mut diagnostics, copy(text))
+    if action is None:
+        for line in lines:
+            match step_name(line):
+                case Some(name):
+                    action = Some(copy(name))
+                    break
+                case None:
+                    pass
+    mut named = "unknown"
+    match action:
+        case Some(name):
+            named = copy(name)
+        case None:
+            pass
+    const failed = len(tests) > 0 or deadline is not None or len(diagnostics) > 0
+    return Block(action=own named, tests=own tests, deadline=own deadline, lines=own diagnostics, place=location(lines), failed=failed)
+
+
+# One bounded diagnostic block per failed command in a build log.
+public func failure_details(text: str) -> Block[]:
+    mut blocks: Block[] = []
+    mut pending: str[] = []
+    for line in splitlines(text):
+        if strings.starts_with(line, "failed command:"):
+            const found = describe(pending, line)
+            if found.failed:
+                append(mut blocks, copy(found))
+            pending = []
+        elif strings.starts_with(line, "Build Summary:"):
+            pending = []
+        else:
+            append(mut pending, copy(line))
+            if len(pending) > MAX_BLOCK_LINES:
+                _ = lists.pop_at(mut pending, 0)
+    return blocks
+
+
+# `Build Summary: ([0-9]+)/([0-9]+) steps succeeded`: PASS when the two numbers are the same text.
+func summary_verdict(text: str) -> str?:
+    const data = strings.encode(text)
+    mut from = 0
+    while True:
+        const at = index_of(data, "Build Summary: ", from)
+        if at < 0:
+            return None
+        const first = run_digits(data, at + 15)
+        if first > at + 15 and byte_is(data, first, 47):
+            const second = run_digits(data, first + 1)
+            if second > first + 1 and matches(data, second, " steps succeeded"):
+                if slice(text, at + 15, first) == slice(text, first + 1, second):
+                    return Some("PASS")
+                return Some("FAIL")
+        from = at + 1
+    return None
+
+
+# `verification: (PASS|FAIL|PARTIAL)\b`, searched.
+func line_verdict(text: str) -> str?:
+    const data = strings.encode(text)
+    mut from = 0
+    while True:
+        const at = index_of(data, "verification: ", from)
+        if at < 0:
+            return None
+        for word in ["PASS", "FAIL", "PARTIAL"]:
+            const end = at + 14 + len(word)
+            if matches(data, at + 14, word) and (end >= len(data) or not is_word(data[end])):
+                return Some(copy(word))
+        from = at + 1
+    return None
+
+
+# The verdict a saved log states: its build summary, else its verification line, else UNKNOWN.
+public func inferred_verdict(text: str) -> str:
+    match summary_verdict(text):
+        case Some(verdict):
+            return verdict
+        case None:
+            pass
+    match line_verdict(text):
+        case Some(verdict):
+            return verdict
+        case None:
+            return "UNKNOWN"
+
+
+# Seconds per action from the `--summary all` step lines, slowest first (equal times keep the log's order).
+public record Timing:
+    action: str
+    seconds: float
+
+
+# One match of `verification action NAME member N success <number>(s|ms)`: where it ends (-1 for no match), the action and
+# the seconds it names.
+record StepTime:
+    end: int
+    action: str
+    seconds: float
+
+
+func no_step_time() -> StepTime:
+    return StepTime(end=0 - 1, action="", seconds=0.0)
+
+
+# The match starting at `at`, which is where `verification action ` begins.
+func step_time_at(text: str, data: bytes, at: int) -> StepTime:
+    const start = at + 20
+    const id_end = run_id(data, start)
+    if id_end == start or not matches(data, id_end, " member "):
+        return no_step_time()
+    const member_end = run_digits(data, id_end + 8)
+    if member_end == id_end + 8 or not matches(data, member_end, " success "):
+        return no_step_time()
+    const number_start = member_end + 9
+    mut number_end = run_digits(data, number_start)
+    if number_end == number_start:
+        return no_step_time()
+    if byte_is(data, number_end, 46):
+        const fraction_end = run_digits(data, number_end + 1)
+        if fraction_end > number_end + 1:
+            number_end = fraction_end
+    mut milliseconds = False
+    mut end = number_end
+    if matches(data, end, "ms"):
+        milliseconds = True
+        end += 2
+    elif matches(data, end, "s"):
+        end += 1
+    else:
+        return no_step_time()
+    match parse_float(slice(text, number_start, number_end)):
+        case Some(parsed):
+            mut value = parsed
+            if milliseconds:
+                value = value / 1000.0
+            return StepTime(end=end, action=slice(text, start, id_end), seconds=value)
+        case None:
+            return no_step_time()
+
+
+public func step_seconds(text: str) -> Timing[]:
+    const data = strings.encode(text)
+    mut totals: Timing[] = []
+    mut at = 0
+    while True:
+        const found = index_of(data, "verification action ", at)
+        if found < 0:
+            break
+        const step = step_time_at(text, data, found)
+        if step.end < 0:
+            at = found + 1
+            continue
+        mut place = 0 - 1
+        mut index = 0
+        while index < len(totals):
+            if totals[index].action == step.action:
+                place = index
+            index += 1
+        if place >= 0:
+            totals[place].seconds += step.seconds
+        else:
+            append(mut totals, Timing(action=copy(step.action), seconds=step.seconds))
+        at = step.end
+    mut order: int[] = []
+    mut position = 0
+    while position < len(totals):
+        mut slot = len(order)
+        append(mut order, position)
+        while slot > 0 and totals[order[slot - 1]].seconds < totals[position].seconds:
+            order[slot] = order[slot - 1]
+            slot -= 1
+        order[slot] = position
+        position += 1
+    mut sorted: Timing[] = []
+    for index in order:
+        append(mut sorted, copy(totals[index]))
+    return sorted
+
+
+# The bounded summary lines of a saved log. `directory` is what the summary prints as the log's location, or "".
+public func summarize(text: str, directory: str) -> str[]:
+    const verdict = inferred_verdict(text)
+    mut blocks: Block[] = []
+    if verdict != "PASS":
+        blocks = failure_details(text)
+    mut lines: str[] = []
+    mut first = f"verification: {verdict}"
+    if len(directory) > 0:
+        first = first + f"; log: {directory}"
+    append(mut lines, own first)
+    if len(blocks) == 0:
+        const slowest = step_seconds(text)
+        if len(slowest) > 0:
+            mut pieces: str[] = []
+            mut index = 0
+            while index < len(slowest) and index < 3:
+                append(mut pieces, f"{slowest[index].action} {slowest[index].seconds:.1f} s")
+                index += 1
+            append(mut lines, "slowest actions (recorded test seconds): " + strings.join(pieces, ", "))
+        if verdict == "FAIL":
+            append(mut lines, "no failing step was found in the log; read it in full")
+        if len(lines) > MAX_GREEN_LINES:
+            return copy(lines[0:MAX_GREEN_LINES])
+        return lines
+    # One entry per failing action, in the order the failures came.
+    mut actions: str[] = []
+    mut merged: Block[] = []
+    for found in blocks:
+        mut place = 0 - 1
+        mut index = 0
+        while index < len(actions):
+            if actions[index] == found.action:
+                place = index
+            index += 1
+        if place < 0:
+            append(mut actions, copy(found.action))
+            append(mut merged, Block(action=copy(found.action), tests=[], deadline=None, lines=[], place=None, failed=True))
+            place = len(merged) - 1
+        for name in found.tests:
+            if not contains(merged[place].tests, name):
+                append(mut merged[place].tests, copy(name))
+        for line in found.lines:
+            if not contains(merged[place].lines, line):
+                append(mut merged[place].lines, copy(line))
+        if merged[place].deadline is None:
+            merged[place].deadline = copy(found.deadline)
+        if merged[place].place is None:
+            merged[place].place = copy(found.place)
+    mut number = 1
+    for group in merged:
+        append(mut lines, f"failure {number}/{len(merged)}: {group.action}")
+        mut names: str[] = []
+        for name in group.tests:
+            append(mut names, f"{name} (failed)")
+        mut shown = 0
+        while shown < len(names) and shown < 3:
+            append(mut lines, "  test: " + cut(names[shown]))
+            shown += 1
+        if len(names) > 3:
+            append(mut lines, f"  ... and {len(names) - 3} more failing tests")
+        match group.deadline:
+            case Some(text_line):
+                append(mut lines, "  " + cut(text_line))
+            case None:
+                pass
+        mut kept = 0
+        while kept < len(group.lines) and kept < 3:
+            append(mut lines, "  " + cut(group.lines[kept]))
+            kept += 1
+        match group.place:
+            case Some(where):
+                append(mut lines, "  at " + where)
+            case None:
+                pass
+        if len(directory) > 0:
+            append(mut lines, f"  log: {directory}")
+        number += 1
+    const budget = MAX_RED_LINES + MAX_RED_PER_FAILURE * (len(merged) - 1)
+    if len(lines) > budget:
+        mut cut_lines = copy(lines[0:budget])
+        append(mut cut_lines, "verification: summary truncated; read the log for the rest")
+        return cut_lines
+    return lines
+
+
+# ---- the command line --------------------------------------------------------------------------------------------
+const USAGE: str = "usage: gate_summary.py [-h] [--max-lines MAX_LINES] log"
+
+
+const HELP: str = "usage: gate_summary.py [-h] [--max-lines MAX_LINES] log\n\nRead a gate log and print the short summary an agent can afford. This is a\nreader, never a second gate: it runs nothing, changes no verdict and publishes\nno evidence. `verify_cache.py` uses it to summarise the complete verification;\n`python3 scripts/gate_summary.py LOG` does the same for a log left by a plain\n`zig build test --summary all`.\n\npositional arguments:\n  log                   gate log file or the directory holding its *.log files\n\noptions:\n  -h, --help            show this help message and exit\n  --max-lines MAX_LINES\n                        cut the summary to N lines (default: the green and red\n                        budgets)"
+
+
+# Whether the path `directory/relative` has a component called `gate`, and whether its name is `stderr.log`: the
+# first two parts of the original's sort key.
+record LogFile:
+    path: str
+    in_gate: bool
+    is_stderr: bool
+
+
+func ordered_before(left: LogFile, right: LogFile) -> bool:
+    if left.in_gate != right.in_gate:
+        return left.in_gate
+    if left.is_stderr != right.is_stderr:
+        return left.is_stderr
+    return left.path < right.path
+
+
+func has_component(path: str, wanted: str) -> bool:
+    for part in strings.split(path, "/"):
+        if part == wanted:
+            return True
+    return False
+
+
+func last_component(path: str) -> str:
+    const parts = strings.split(path, "/")
+    return copy(parts[len(parts) - 1])
+
+
+# Every `*.log` file below `directory` (a name ending in `.log` that is not itself a directory), as the paths pathlib prints.
+func collect_logs(fs: Filesystem, directory: str, depth: int, mut found: LogFile[]):
+    if depth > 64:
+        return
+    match fs.listdir(directory):
+        case Ok(entries):
+            for name in entries:
+                const child = join_path(directory, name)
+                match fs.listdir(child):
+                    case Ok(_):
+                        collect_logs(fs, child, depth + 1, mut found)
+                    case Err(_):
+                        if strings.ends_with(name, ".log"):
+                            append(mut found, LogFile(path=copy(child), in_gate=has_component(child, "gate"), is_stderr=name == "stderr.log"))
+        case Err(_):
+            pass
+
+
+func join_path(directory: str, name: str) -> str:
+    if directory == ".":
+        return copy(name)
+    if strings.ends_with(directory, "/"):
+        return directory + name
+    return directory + "/" + name
+
+
+# The bounded logs of one gate run, joined: the gate's own logs first, standard error before standard output.
+public func read_logs(fs: Filesystem, directory: str) -> str:
+    mut found: LogFile[] = []
+    collect_logs(fs, directory, 0, mut found)
+    mut order: int[] = []
+    mut position = 0
+    while position < len(found):
+        mut slot = len(order)
+        append(mut order, position)
+        while slot > 0 and ordered_before(found[position], found[order[slot - 1]]):
+            order[slot] = order[slot - 1]
+            slot -= 1
+        order[slot] = position
+        position += 1
+    mut joined = byte_builder.create()
+    mut remaining = MAX_LOG_BYTES
+    mut count = 0
+    for index in order:
+        match fs.read_file(found[index].path):
+            case Ok(data):
+                mut taken = len(data)
+                if taken > remaining:
+                    taken = remaining
+                if count > 0:
+                    _ = byte_builder.append_byte(mut joined, 10)
+                _ = byte_builder.append_range(mut joined, data, 0, taken)
+                count += 1
+                remaining -= taken
+                if remaining <= 0:
+                    break
+            case Err(_):
+                pass
+    return decode_lossy(byte_builder.finish(joined))
+
+
+# `Path(raw).parent` for a path `path_text` already normalized: the part before the last slash, `.` for a bare name.
+func parent_text(path: str) -> str:
+    mut at = len(path) - 1
+    while at >= 0:
+        if slice(path, at, at + 1) == "/":
+            break
+        at -= 1
+    if at < 0:
+        return "."
+    if at == 0:
+        return "/"
+    if at == 1 and strings.starts_with(path, "//"):
+        return "//"
+    return slice(path, 0, at)
+
+
+# The pair of logs one gate step left in `directory`, standard error first, joined and bounded like `read_logs`: a green
+# gate prints its `Build Summary` to `stderr.log`, which the `stdout.log` a person points at does not hold.
+public func read_step_logs(fs: Filesystem, directory: str) -> str:
+    mut joined = byte_builder.create()
+    mut remaining = MAX_LOG_BYTES
+    mut count = 0
+    for name in ["stderr.log", "stdout.log"]:
+        match fs.read_file(join_path(directory, name)):
+            case Ok(data):
+                mut taken = len(data)
+                if taken > remaining:
+                    taken = remaining
+                if count > 0:
+                    _ = byte_builder.append_byte(mut joined, 10)
+                _ = byte_builder.append_range(mut joined, data, 0, taken)
+                count += 1
+                remaining -= taken
+                if remaining <= 0:
+                    break
+            case Err(_):
+                pass
+    return decode_lossy(byte_builder.finish(joined))
+
+
+func argument_error(err: Stream, message: str) -> int:
+    print(err, USAGE)
+    print(err, f"gate_summary.py: error: {message}")
+    return 2
+
+
+# Run the tool: `argv` is the arguments without the program name. Returns the exit status.
+public func run(argv: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    mut spec = argparse.new("gate_summary.py", "Read a gate log and print the short summary an agent can afford.")
+    argparse.add_option(mut spec, "max-lines", "", "MAX_LINES", "cut the summary to N lines")
+    argparse.add_positional(mut spec, "log", "gate log file or the directory holding its *.log files")
+    match argparse.parse(spec, argv):
+        case Err(error):
+            match error:
+                case MissingPositional(name=_):
+                    return argument_error(err, "the following arguments are required: log")
+                case MissingValue(name=name):
+                    return argument_error(err, f"argument {name}: expected one argument")
+                case UnknownOption(name=name):
+                    return argument_error(err, f"unrecognized arguments: {name}")
+                case UnexpectedPositional(value=text):
+                    return argument_error(err, f"unrecognized arguments: {text}")
+                case _:
+                    return argument_error(err, argparse.message(error))
+        case Ok(parsed):
+            if parsed.help:
+                print(out, HELP)
+                return 0
+            mut limit = 0
+            match argparse.get(parsed, "max-lines"):
+                case Some(text):
+                    match parse_int(text):
+                        case Some(number):
+                            limit = number
+                        case None:
+                            return argument_error(err, f"argument --max-lines: invalid int value: '{text}'")
+                case None:
+                    pass
+            const log = parsed.positionals[0]
+            if not fs.exists(log):
+                return argument_error(err, f"no such log: {path_text(log)}")
+            mut text = ""
+            mut directory = ""
+            match fs.listdir(log):
+                case Ok(_):
+                    directory = path_text(log)
+                    text = read_logs(fs, directory)
+                case Err(_):
+                    const normal = path_text(log)
+                    const name = last_component(normal)
+                    if name == "stdout.log" or name == "stderr.log":
+                        directory = parent_text(normal)
+                        text = read_step_logs(fs, directory)
+                    else:
+                        match fs.read_file(log):
+                            case Ok(data):
+                                text = decode_lossy(data)
+                            case Err(message):
+                                print(err, f"gate_summary.py: error: {message}")
+                                return 1
+            mut lines = summarize(text, directory)
+            if limit > 0 and limit < len(lines):
+                lines = copy(lines[0:limit])
+            for line in lines:
+                print(out, line)
+            return 0
+
+
+func main(argv: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    return run(argv, fs, out, err)

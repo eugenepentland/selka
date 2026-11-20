@@ -1,0 +1,126 @@
+# `exchange` and `take` on an element of a `match mut` binding (FR27 item 1, 15 November 2026). The payload binding of a
+# `match mut` arm names the place it matched, so a change of one of its elements writes through that place as
+# `items[0] = v` and `lists.exchange(mut items, 0, v)` do. The builtins stage the element in a compiler temporary, and the arm's
+# hold on the matched owner used to refuse the write through that temporary (`E_SINGLE_OWNER_OVERLAP`, X2). The 167 cells of
+# the exchange grid that did are in `test/fixtures/exchange-matrix`; the shapes below are the ones a program writes, with the
+# leak check and the facts verified. A change while a loop walks the binding stays refused (R7: `single_owner_test.zig`).
+import lists
+
+record Row:
+    text: str = ""
+    tags: str[] = []
+
+
+enum Box:
+    Words(items: str[])
+    Rows(rows: Row[])
+    Grid(cells: str[][])
+    Empty
+
+
+func swap_text(mut box: Box, own value: str) -> str:
+    match mut box:
+        case Words(items):
+            return exchange(mut items[0], own value)
+        case Rows(rows):
+            return ""
+        case Grid(cells):
+            return ""
+        case Empty:
+            return ""
+
+
+func take_text(mut box: Box) -> str:
+    match mut box:
+        case Words(items):
+            return take(mut items[1])
+        case Rows(rows):
+            return ""
+        case Grid(cells):
+            return ""
+        case Empty:
+            return ""
+
+
+func swap_row(mut box: Box) -> str:
+    match mut box:
+        case Rows(rows):
+            const old = exchange(mut rows[0], Row(text="new", tags=["n"]))
+            return old.text + "/" + rows[0].text + "/" + old.tags[0] + "/" + rows[0].tags[0]
+        case Words(items):
+            return ""
+        case Grid(cells):
+            return ""
+        case Empty:
+            return ""
+
+
+func take_row_field(mut box: Box) -> str:
+    match mut box:
+        case Rows(rows):
+            const old = take(mut rows[1].text)
+            return old + "|" + rows[1].text + "|" + str(len(rows[1].tags))
+        case Words(items):
+            return ""
+        case Grid(cells):
+            return ""
+        case Empty:
+            return ""
+
+
+func grow_element(mut box: Box) -> str:
+    match mut box:
+        case Grid(cells):
+            append(mut cells[0], "x")
+            const old = take(mut cells[1])
+            return str(cells[0]) + str(old) + str(cells[1])
+        case Words(items):
+            return ""
+        case Rows(rows):
+            return ""
+        case Empty:
+            return ""
+
+
+func both_ways(mut box: Box) -> str:
+    match mut box:
+        case Words(items):
+            const second = lists.exchange(mut items, 1, "q")
+            const first = exchange(mut items[0], "p")
+            items[2] = "r"
+            return first + second + items[0] + items[1] + items[2]
+        case Rows(rows):
+            return ""
+        case Grid(cells):
+            return ""
+        case Empty:
+            return ""
+
+
+public func test_a_text_element_of_a_binding_is_exchanged() -> bool:
+    mut box = Box.Words(items=["a", "b", "c"])
+    const old = swap_text(mut box, "z")
+    return old == "a" and both_ways(mut box) == "zbpqr"
+
+
+public func test_a_text_element_of_a_binding_is_taken_and_leaves_the_empty_text() -> bool:
+    mut box = Box.Words(items=["a", "b", "c"])
+    return take_text(mut box) == "b" and swap_text(mut box, "") == "a"
+
+
+public func test_a_record_element_of_a_binding_is_exchanged_and_a_field_of_one_is_taken() -> bool:
+    mut box = Box.Rows(rows=[Row(text="a", tags=["t"]), Row(text="b", tags=["u", "v"])])
+    return swap_row(mut box) == "a/new/t/n" and take_row_field(mut box) == "b||2"
+
+
+public func test_a_list_element_of_a_binding_grows_and_is_taken() -> bool:
+    mut box = Box.Grid(cells=[["a"], ["b", "c"]])
+    return grow_element(mut box) == "['a', 'x']['b', 'c'][]"
+
+
+func main() -> int:
+    assert test_a_text_element_of_a_binding_is_exchanged()
+    assert test_a_text_element_of_a_binding_is_taken_and_leaves_the_empty_text()
+    assert test_a_record_element_of_a_binding_is_exchanged_and_a_field_of_one_is_taken()
+    assert test_a_list_element_of_a_binding_grows_and_is_taken()
+    return 0

@@ -1,0 +1,32 @@
+module lox_strings_test
+# SPEC §11.2 tests 12-15 and 21.
+import heap
+import lox_strings
+import value
+
+
+public def test_fnv1a_empty() -> bool:
+    return lox_strings.fnv1a(b"") == 2166136261u32
+
+
+public def test_fnv1a_a() -> bool:
+    return lox_strings.fnv1a(b"a") == 3826002220u32
+
+
+public def test_fnv1a_foobar() -> bool:
+    return lox_strings.fnv1a(b"foobar") == 3214735720u32
+
+
+public def test_intern_same_bytes_same_ref() -> bool:
+    rt = heap.new_runtime(False, None)
+    first = lox_strings.copy_string(rt, b"abc")
+    second = lox_strings.copy_string(rt, b"abc")
+    return first == second and rt.allocations == 1
+
+
+public def test_table_find_string() -> bool:
+    rt = heap.new_runtime(False, None)
+    hello = lox_strings.copy_string(rt, b"hello")
+    found = lox_strings.find_string(rt, b"hello", lox_strings.fnv1a(b"hello"))
+    missing = lox_strings.find_string(rt, b"help", lox_strings.fnv1a(b"help"))
+    return found == hello and missing == value.NO_OBJ

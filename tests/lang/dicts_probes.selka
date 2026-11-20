@@ -1,0 +1,75 @@
+import dicts
+
+# The dictionary probes: one membership probe answers presence and value, and the
+# mapping keeps owning its storage across each write.
+# spec-case: STDLIB-DICTS-PROBES-1
+public func test_find_answers_presence_and_value_once() -> bool:
+    const scores: dict[str, int] = {"a": 1, "b": 2}
+    mut ok = dicts.find(scores, "b") == Some(2) and dicts.find(scores, "z") is None
+    const words: dict[int, str] = {1: "one"}
+    ok = ok and dicts.find(words, 1) == Some("one") and dicts.find(words, 2) is None
+    return ok
+
+
+# spec-case: STDLIB-DICTS-PROBES-1
+public func test_add_starts_from_zero_and_accumulates_in_place() -> bool:
+    mut counts: dict[str, int] = {"a": 1}
+    dicts.add(mut counts, "a", 5)
+    dicts.add(mut counts, "b", 2)
+    dicts.add(mut counts, "b", 3)
+    mut numbers: dict[int, int] = {}
+    dicts.add(mut numbers, 7, -1)
+    dicts.add(mut numbers, 7, 4)
+    return counts["a"] == 6 and counts["b"] == 5 and numbers[7] == 3 and len(numbers) == 1
+
+
+# spec-case: STDLIB-DICTS-PROBES-1
+public func test_append_to_starts_lists_and_keeps_each_group_separate() -> bool:
+    mut groups: dict[str, int[]] = {}
+    dicts.append_to(mut groups, "x", 1)
+    dicts.append_to(mut groups, "x", 2)
+    dicts.append_to(mut groups, "y", 3)
+    const names: dict[int, str[]] = {}
+    return len(groups) == 2 and groups["x"] == [1, 2] and groups["y"] == [3] and len(names) == 0
+
+
+# Repeated appends to one key grow the stored list in place: the per-call cost is
+# the new item, not the whole list. The old body copied the list every time, which
+# made this loop quadratic; the checksum case below is the growth regression.
+# spec-case: STDLIB-DICTS-PROBES-1
+public func test_append_to_grows_one_key_in_place() -> bool:
+    mut groups: dict[str, int[]] = {}
+    for index in range(4000):
+        dicts.append_to(mut groups, "one", index)
+    mut total = 0
+    for value in groups["one"]:
+        total = (total + value) % 1000003
+    return len(groups["one"]) == 4000 and total == 7998000 % 1000003 and len(groups) == 1
+
+
+# spec-case: STDLIB-DICTS-PROBES-1
+public func test_setdefault_answers_the_stored_value_or_stores_the_fallback() -> bool:
+    mut scores: dict[str, int] = {"a": 1}
+    mut ok = dicts.setdefault(mut scores, "a", 9) == 1
+    ok = ok and dicts.setdefault(mut scores, "b", 5) == 5
+    ok = ok and dicts.setdefault(mut scores, "b", 7) == 5
+    ok = ok and scores == {"a": 1, "b": 5}
+    mut words: dict[int, str] = {}
+    ok = ok and dicts.setdefault(mut words, 3, "three") == "three"
+    ok = ok and words[3] == "three"
+    return ok
+
+
+# spec-case: STDLIB-DICTS-PROBES-1
+public func test_update_replaces_held_keys_and_adds_the_rest() -> bool:
+    mut scores: dict[str, int] = {"a": 1}
+    dicts.update(mut scores, {"a": 2, "b": 3})
+    mut numbers: dict[int, int] = {1: 10}
+    dicts.update(mut numbers, {2: 20})
+    const empty: dict[str, int] = {}
+    dicts.update(mut scores, empty)
+    return scores == {"a": 2, "b": 3} and numbers == {1: 10, 2: 20}
+
+
+func main() -> int:
+    return 0

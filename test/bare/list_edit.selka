@@ -1,0 +1,14 @@
+# Insert, remove, pop and slices of an integer list.
+import lists
+
+func main() -> int:
+    mut xs: int[] = [5, 1, 4]
+    for i in range(20):
+        lists.insert(mut xs, 1, i)
+    lists.remove(mut xs, 4)
+    const last = lists.pop(mut xs)
+    const middle = xs[3:9]
+    mut total = last * 100
+    for v in middle:
+        total += v
+    return (total + len(xs) + xs[0] + xs[len(xs) - 1]) % 256

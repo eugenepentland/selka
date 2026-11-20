@@ -1,0 +1,26 @@
+# F-41: a function whose successful result is `Unit` ends with a bare `return`; `selka fix` deletes the value that
+# `return Unit()`, `return Unit` and `return unit` wrote.
+func step(ok: bool) -> Unit fails str:
+    if not ok:
+        fail "no"
+    return Unit()
+
+
+func note(out: Stream, text: str) -> Unit:
+    print(out, text)
+    return unit
+
+
+func quiet() -> Unit:
+    return Unit
+
+
+func main(out: Stream) -> int:
+    note(out, "start")
+    quiet()
+    match step(True):
+        case Ok(_):
+            print(out, "ok")
+        case Err(reason):
+            print(out, reason)
+    return 0

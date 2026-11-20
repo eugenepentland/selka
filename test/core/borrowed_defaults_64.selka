@@ -1,0 +1,9 @@
+import dicts
+
+func size(values: dict[int, int[]]) -> int:
+    return len(dicts.get(values, 0, dicts.get(values, 1, dicts.get(values, 2, dicts.get(values, 3, dicts.get(values, 4, dicts.get(values, 5, dicts.get(values, 6, dicts.get(values, 7, dicts.get(values, 8, dicts.get(values, 9, dicts.get(values, 10, dicts.get(values, 11, dicts.get(values, 12, dicts.get(values, 13, dicts.get(values, 14, dicts.get(values, 15, dicts.get(values, 16, dicts.get(values, 17, dicts.get(values, 18, dicts.get(values, 19, dicts.get(values, 20, dicts.get(values, 21, dicts.get(values, 22, dicts.get(values, 23, dicts.get(values, 24, dicts.get(values, 25, dicts.get(values, 26, dicts.get(values, 27, dicts.get(values, 28, dicts.get(values, 29, dicts.get(values, 30, dicts.get(values, 31, dicts.get(values, 32, dicts.get(values, 33, dicts.get(values, 34, dicts.get(values, 35, dicts.get(values, 36, dicts.get(values, 37, dicts.get(values, 38, dicts.get(values, 39, dicts.get(values, 40, dicts.get(values, 41, dicts.get(values, 42, dicts.get(values, 43, dicts.get(values, 44, dicts.get(values, 45, dicts.get(values, 46, dicts.get(values, 47, dicts.get(values, 48, dicts.get(values, 49, dicts.get(values, 50, dicts.get(values, 51, dicts.get(values, 52, dicts.get(values, 53, dicts.get(values, 54, dicts.get(values, 55, dicts.get(values, 56, dicts.get(values, 57, dicts.get(values, 58, dicts.get(values, 59, dicts.get(values, 60, dicts.get(values, 61, dicts.get(values, 62, dicts.get(values, 63, [42])))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+
+func main(out: Stream) -> int:
+    print(out, size({}), size({31: [1, 2, 3]}))
+    return 0

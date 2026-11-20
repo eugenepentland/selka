@@ -1,0 +1,16 @@
+record Sample:
+    values: FixedArray[int, 2]
+    tag: u8
+
+
+func make[T: integer](x: T) -> Sample:
+    return Sample(values=FixedArray[int, 2]([int(x), int(x) + 1]), tag=7u8)
+
+
+func total[T](context: T, sample: Sample) -> int:
+    _ = context
+    return sample.values[0] + sample.values[1] + int(len(sample.values))
+
+
+func main() -> int:
+    return total[bool](True, make[u8](7u8))

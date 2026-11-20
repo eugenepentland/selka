@@ -1,0 +1,129 @@
+# The Simd surface added for the EDA kernels: mask logic, splat inference, vector square root,
+# select on masks, lane-wise min and max, and f32 and float lane conversion.
+import math
+import simd
+
+public func test_and_combines_two_comparisons_lane_by_lane() -> bool:
+    const x = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const lo = Simd[float, 4]([0.0, 0.0, 0.0, 0.0])
+    const hi = Simd[float, 4]([2.5, 2.5, 2.5, 2.5])
+    const inside: Simd[bool, 4] = (x > lo) and (x < hi)
+    return inside[0] and inside[1] and not inside[2] and not inside[3]
+
+
+public func test_or_not_and_the_bit_operators_take_masks() -> bool:
+    const x = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const edge = Simd[float, 4]([2.5, 2.5, 2.5, 2.5])
+    const below: Simd[bool, 4] = x < edge
+    const above: Simd[bool, 4] = x > edge
+    const either: Simd[bool, 4] = below or above
+    const complement: Simd[bool, 4] = not below
+    const both: Simd[bool, 4] = below and above
+    const xored: Simd[bool, 4] = bit_xor(below, above)
+    const anded: Simd[bool, 4] = bit_and(below, complement)
+    const ored: Simd[bool, 4] = bit_or(both, complement)
+    return either[0] and either[3] and complement[2] and complement[3] and not complement[0] and not both[1] and xored[1] and not anded[0] and ored[3]
+
+
+public func test_a_splat_takes_the_lane_type_of_its_peer_in_a_subtraction() -> bool:
+    const x = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const y: Simd[float, 4] = x - simd.splat(1.0)
+    return y[0] == 0.0 and y[1] == 1.0 and y[3] == 3.0
+
+
+public func test_a_splat_on_the_left_and_in_a_comparison_take_the_peer_type() -> bool:
+    const x = Simd[float, 4]([1.0, 2.0, 3.0, 4.0])
+    const above: Simd[bool, 4] = simd.splat(2.5) < x
+    const shifted: Simd[float, 4] = simd.splat(10.0) - x
+    return not above[1] and above[2] and shifted[0] == 9.0 and shifted[3] == 6.0
+
+
+public func test_a_splat_takes_f32_and_integer_lanes_from_its_peer() -> bool:
+    const v = Simd[f32, 2]([1.0f32, 3.0f32])
+    const halved: Simd[f32, 2] = v * simd.splat(0.5)
+    const w = Simd[int, 4]([1, 2, 3, 4])
+    const plus: Simd[int, 4] = w + simd.splat(1)
+    return halved[0] == 0.5f32 and halved[1] == 1.5f32 and plus[3] == 5
+
+
+public func test_a_splat_is_the_mask_peer_of_a_logical_operator() -> bool:
+    const m = Simd[bool, 2]([True, False])
+    const both: Simd[bool, 2] = m and simd.splat(True)
+    return both[0] and not both[1]
+
+
+public func test_sqrt_takes_the_root_of_each_lane() -> bool:
+    const v = Simd[float, 4]([1.0, 4.0, 9.0, 16.0])
+    const r: Simd[float, 4] = simd.sqrt(v)
+    return r[0] == 1.0 and r[1] == 2.0 and r[2] == 3.0 and r[3] == 4.0
+
+
+public func test_sqrt_rounds_each_lane_as_the_scalar_sqrt_does() -> bool:
+    const v = Simd[float, 2]([2.0, 3.0])
+    const r: Simd[float, 2] = simd.sqrt(v)
+    return r[0] == sqrt(2.0) and r[1] == sqrt(3.0)
+
+
+public func test_sqrt_takes_f32_lanes_and_answers_nan_for_a_negative_lane() -> bool:
+    const w = Simd[f32, 2]([4.0f32, 2.25f32])
+    const s: Simd[f32, 2] = simd.sqrt(w)
+    const bad = simd.sqrt(Simd[float, 2]([-1.0, 1.0]))
+    return s[0] == 2.0f32 and s[1] == 1.5f32 and bad[0] != bad[0] and bad[1] == 1.0
+
+
+public func test_select_picks_mask_lanes_from_two_masks() -> bool:
+    const a = Simd[bool, 4]([True, False, True, False])
+    const b = Simd[bool, 4]([False, False, False, True])
+    const c = Simd[bool, 4]([True, True, True, True])
+    const mixed: Simd[bool, 4] = simd.select(a, b, c)
+    return not mixed[0] and mixed[1] and not mixed[2] and mixed[3]
+
+
+public func test_min_and_max_of_two_simd_values_work_lane_by_lane() -> bool:
+    const a = Simd[float, 4]([1.0, 5.0, 3.0, 7.0])
+    const b = Simd[float, 4]([2.0, 4.0, 6.0, 1.0])
+    const low: Simd[float, 4] = min(a, b)
+    const high: Simd[float, 4] = max(a, b)
+    return low[0] == 1.0 and low[1] == 4.0 and low[2] == 3.0 and low[3] == 1.0 and high[0] == 2.0 and high[1] == 5.0 and high[2] == 6.0 and high[3] == 7.0
+
+
+public func test_min_and_max_keep_the_first_lane_on_a_tie_and_on_nan() -> bool:
+    const zeros = Simd[float, 2]([0.0, 0.0])
+    const negative = Simd[float, 2]([-0.0, -0.0])
+    const low: Simd[float, 2] = min(negative, zeros)
+    const high: Simd[float, 2] = max(zeros, negative)
+    const n = sqrt(-1.0)
+    const nan_low: Simd[float, 2] = min(Simd[float, 2]([n, 1.0]), Simd[float, 2]([2.0, n]))
+    return math.bits(low[0]) == math.bits(-0.0) and math.bits(high[0]) == math.bits(0.0) and nan_low[0] != nan_low[0] and nan_low[1] == 1.0
+
+
+public func test_min_and_max_of_integer_lanes_compare_signed() -> bool:
+    const a = Simd[int, 4]([1, -5, 3, 7])
+    const b = Simd[int, 4]([2, 4, -6, 7])
+    const low: Simd[int, 4] = min(a, b)
+    const high: Simd[int, 4] = max(a, b)
+    return low[0] == 1 and low[1] == -5 and low[2] == -6 and low[3] == 7 and high[1] == 4 and high[2] == 3
+
+
+public func test_float_widens_each_f32_lane_exactly() -> bool:
+    const v = Simd[f32, 4]([1.0f32, 2.5f32, -0.5f32, 4.0f32])
+    const w: Simd[float, 4] = float(v)
+    return w[0] == 1.0 and w[1] == 2.5 and w[2] == -0.5 and w[3] == 4.0 and w[1] == float(2.5f32)
+
+
+public func test_float_widens_a_subnormal_lane_as_the_scalar_conversion_does() -> bool:
+    const v = Simd[f32, 2]([1.0e-45f32, 3.4e38f32])
+    const w: Simd[float, 2] = float(v)
+    return w[0] > 0.0 and w[0] == float(1.0e-45f32) and w[1] == float(3.4e38f32)
+
+
+public func test_f32_rounds_each_float_lane_as_the_scalar_conversion_does() -> bool:
+    const x = Simd[float, 4]([0.1, 1.0e39, 1.0e-45, 0.0])
+    const n: Simd[f32, 4] = f32(x)
+    return n[0] == f32(0.1) and n[1] == f32(1.0e39) and n[1] > 3.4e38f32 and n[2] == f32(1.0e-45) and n[2] > 0.0f32 and n[3] == 0.0f32
+
+
+public func test_f32_keeps_a_not_a_number_lane() -> bool:
+    const nan = sqrt(-1.0)
+    const n: Simd[f32, 2] = f32(Simd[float, 2]([nan, 1.0]))
+    return n[0] != n[0] and n[1] == 1.0f32

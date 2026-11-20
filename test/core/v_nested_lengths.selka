@@ -1,0 +1,54 @@
+import lists
+
+func changed(w: int) -> bool:
+    mut manual_left: int[] = []
+    for j in range(w):
+        append(mut manual_left, j)
+    mut manual_right: int[] = []
+    for j in range(w):
+        append(mut manual_right, j)
+    mut grid = [own manual_left, own manual_right]
+    mut saved = copy(grid)
+    mut inner = copy(grid[0])
+    append(mut inner, 10)
+    _ = lists.pop(mut grid[1])
+    append(mut grid[0], 20)
+    grid[1] = [30]
+    return len(saved[0]) == w and len(saved[1]) == w and len(inner) == w + 1 and len(grid[0]) == w + 1 and grid[0][w] == 20 and grid[1][0] == 30
+
+
+# spec-case: NEW-CORE-NESTED-LENGTH-S4-1
+public func test_uniform_child_lengths_follow_each_list_value() -> bool:
+    return changed(1) and changed(3) and changed(8) and growing(1) and growing(3) and captured(3) and after_fill(0) and after_fill(1) and after_fill(64) and after_fill(4096) and after_fill(4097)
+
+
+func growing(size: int) -> bool:
+    mut items: int[] = []
+    mut children: int[][] = []
+    for index in range(size):
+        append(mut children, copy(items))
+        append(mut items, index)
+    return len(children[0]) == 0 and len(children[size - 1]) == size - 1
+
+
+func captured(size: int) -> bool:
+    mut items: int[] = []
+    mut saved: int[] = []
+    for index in range(size):
+        saved = copy(items)
+        append(mut items, index)
+    mut children = [own saved]
+    return len(children[0]) == size - 1
+
+
+# spec-case: NEW-CORE-FILL-S4-1
+func after_fill(size: int) -> bool:
+    mut values: int[] = []
+    for j in range(0, size):
+        append(mut values, j)
+    append(mut values, 7)
+    return len(values) == size + 1 and values[size] == 7
+
+
+func main() -> int:
+    return 0

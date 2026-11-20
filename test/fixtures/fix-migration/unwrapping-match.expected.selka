@@ -1,0 +1,247 @@
+# FR20 (F-69): two-arm `match` statements that only unwrap an Option or a Result, as programs wrote them before
+# `W_MATCH_ELSE` and `W_MATCH_IS`. `selka fix` rewrites each certain one to its flat form; the ones whose rewrite is
+# not certain are left as they are. Both this file and its expected file print the same line.
+enum Shape:
+    circle(radius: int)
+    square(side: int)
+
+
+record Box:
+    slot: int?
+    items: int[]
+
+
+func half(n: int) -> int?:
+    if n % 2 != 0:
+        return None
+    return Some(n // 2)
+
+
+func parse(n: int) -> int fails str:
+    if n < 0:
+        fail "negative"
+    return n * 10
+
+
+func shape(n: int) -> Shape?:
+    if n == 0:
+        return None
+    return Some(Shape.circle(radius=n))
+
+
+func names(n: int) -> str[]?:
+    if n == 0:
+        return None
+    return Some(["a", "b"])
+
+
+# D-FR20-1: a call, the `None` arm leaves; the success arm's statements follow the declaration.
+func leaves(n: int) -> int:
+    const h = half(n) else:
+        return 0
+    const more = h + 1
+    return more
+
+
+# D-FR20-1: a Result whose `Err` arm binds the error, written failure arm first.
+func reason(n: int) -> int:
+    const value = parse(n) else Err(e):
+        return len(e)
+    return value
+
+
+# D-FR20-1: `Err(_)`, with comments and a blank line inside the arms and after the headers.
+func dropped(n: int) -> int:
+    mut total = 0
+    const value = parse(n) else Err(_): # parse the count
+        # a negative count counts nothing
+        return -1
+    # the count parsed
+    # keep it
+    total = value
+    total += 1
+    return total
+
+
+# D-FR20-1: a parameter, a field and an element as the subject (each borrows, as the declaration does).
+func places(slot: int?, box: Box, slots: int?[]) -> int:
+    mut total = 0
+    const a = slot else:
+        return -1
+    total += a
+    const b = box.slot else:
+        return -2
+    total += b
+    const c = slots[0] else:
+        return -3
+    total += c
+    return total
+
+
+# D-FR20-1: `match own x` becomes `const h = own x else:`.
+func owned(n: int) -> int:
+    const list = names(n)
+    match own list:
+        case Some(items):
+            return len(items)
+        case None:
+            return 0
+
+
+# D-FR20-1: `Some(_)` binds nothing, so the declaration is `_ = ... else:`; `continue` and `break` leave.
+func count(limit: int) -> int:
+    mut found = 0
+    for n in range(limit):
+        _ = half(n) else:
+            continue
+        found += 1
+        if found > 3:
+            break
+    return found
+
+
+# D-FR20-1: a failure arm that leaves through an `if` with an `else`.
+func either(n: int, strict: bool) -> int:
+    const h = half(n) else:
+        if strict:
+            return -1
+        else:
+            return 0
+    return h
+
+
+# D-FR20-2: the `None` arm does nothing (`pass`, or `_ = 0`).
+func adds(n: int) -> int:
+    mut total = n
+    if half(n) is Some(h):
+        total = total + h
+    if half(n + 2) is Some:
+        total += 100
+    return total
+
+
+# D-FR20-2: the success arm does nothing, so the `if` tests the failure case; a comment in the deleted arm moves above.
+func complain(n: int) -> int:
+    mut total = 0
+    # nothing to say about a count that parsed
+    if parse(n) is Err(e):
+        total = len(e)
+    if half(n) is None:
+        total += 1000
+    return total
+
+
+# D-FR20-2: the success arm leaves and the `None` arm does something, so its statements follow the `if`.
+func first(n: int) -> int:
+    mut total = 0
+    if half(n) is Some(h):
+        return h
+    const odd = n * 3
+    total = odd
+    return total + 1
+
+
+# D-FR20-5: not the last statement of a function that returns an Option: `W_MATCH_ELSE`, then `W_ELSE_IS_TRY` the round
+# after, writes `try`.
+func twice(n: int) -> int?:
+    mut total = 0
+    const h = try half(n)
+    total = h * 2
+    return Some(total + 1)
+
+
+# D-FR20-5: the last statement of a function that returns an Option: `W_OPTION_TRY` keeps it.
+func again(n: int) -> int?:
+    const h = try half(n)
+    return Some(h + 1)
+
+
+# F-57: in a function that returns an Option and can also fail, the block keeps `return None`; no `try`.
+func optional(n: int) -> int? fails str:
+    if n < -100:
+        fail "far too small"
+    const h = half(n) else:
+        return None
+    return Some(h)
+
+
+# D-FR20-3: five unwrapping matches nested in each other come out flat over five rounds.
+func deep(n: int) -> int:
+    const a = half(n) else:
+        return -1
+    const b = half(a) else:
+        return -2
+    const c = half(b) else:
+        return -3
+    const d = half(c) else:
+        return -4
+    const e = half(d) else:
+        return -5
+    return e
+
+
+# Left: the statements after the match declare the name the success arm binds, so the declaration would collide.
+func collides(n: int) -> int:
+    mut total = 0
+    match half(n):
+        case Some(h):
+            total = h
+        case None:
+            return 0
+    for h in range(2):
+        total += h
+    return total
+
+
+# Left: the failure arm leaves only sometimes, and the success arm does more than nothing.
+func sometimes(n: int, strict: bool) -> int:
+    mut total = 0
+    match half(n):
+        case Some(h):
+            total = h
+        case None:
+            if strict:
+                return -1
+    return total
+
+
+# Left: a nested pattern, and three arms.
+func nested(n: int) -> int:
+    match shape(n):
+        case Some(circle(radius=r)):
+            return r
+        case Some(square(side=w)):
+            return w
+        case None:
+            return 0
+
+
+# Left: `match mut` writes through its binding; there is no flat form.
+func bump(mut slot: int?) -> int:
+    match mut slot:
+        case Some(v):
+            v += 1
+        case None:
+            return 0
+    return slot.unwrap_or(0)
+
+
+# Left: a generic body is checked per instance.
+func present[T: copy](value: T?) -> bool:
+    match value:
+        case Some(_):
+            return True
+        case None:
+            return False
+
+
+func main(out: Stream) -> int:
+    const box = Box(slot=Some(2), items=[])
+    const slots: int?[] = [Some(3)]
+    mut slot: int? = Some(4)
+    const wrapped: int? = Some(6)
+    print(out, leaves(6), leaves(3), reason(-1), reason(4), dropped(2), dropped(-2), places(Some(1), box, slots))
+    print(out, owned(1), owned(0), count(9), either(3, True), either(4, False), adds(4), adds(3), complain(-2), complain(3))
+    print(out, first(4), first(3), twice(4), twice(3), again(4), optional(4), optional(3), deep(64), deep(32))
+    print(out, collides(4), sometimes(3, False), nested(2), bump(mut slot), present(wrapped))
+    return 0

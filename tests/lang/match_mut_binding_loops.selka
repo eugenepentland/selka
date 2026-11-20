@@ -1,0 +1,119 @@
+# A loop over a payload binding of a `match mut` arm (FR25 item 1, 15 November 2026). The binding is a name for its place,
+# and `for e in value:` binds `e` to a part of it (a dictionary's key, a list's text element). Reading `e` is reading the
+# binding, which the arm may always do: the arm's hold on the matched owner used to refuse the read of `e` (X2), where the
+# same loop over a plain `mut` local was accepted. A change of the binding while `e` is still used is refused instead
+# (`single_owner_test.zig`); a change after the loop is accepted. A change inside the loop is refused whether or not `e` is read
+# afterwards, as for a plain `mut` local (R7, FR26: a list would grow under its own loop and a dictionary would trap), so the
+# changes below all come after their loops. The 8 dictionary cells of the matrix are in `test/fixtures/match-mut-matrix/dict_cells.selka`.
+import sets
+
+enum Slot:
+    Dict(value: dict[str, int])
+    Words(items: str[])
+    Empty
+
+
+func tally(mut slot: Slot) -> int:
+    mut total = 0
+    match mut slot:
+        case Dict(value):
+            for key in value:
+                total = total + len(key) + value[key]
+        case Words(items):
+            return -1
+        case Empty:
+            return -2
+    return total
+
+
+func joined(mut slot: Slot) -> str:
+    mut text = ""
+    match mut slot:
+        case Words(items):
+            for word in items:
+                text = text + word + ","
+            append(mut items, "end")
+            for word in items:
+                text = text + word + ";"
+        case Dict(value):
+            return "dict"
+        case Empty:
+            return "empty"
+    return text
+
+
+func nested(mut slot: Slot) -> int:
+    mut pairs = 0
+    match mut slot:
+        case Words(items):
+            for first in items:
+                for second in items:
+                    if first != second:
+                        pairs = pairs + 1
+        case Dict(value):
+            return -1
+        case Empty:
+            return -2
+    return pairs
+
+
+public func test_a_dictionary_binding_is_looped_over_and_its_keys_are_read() -> bool:
+    mut dictionary: dict[str, int] = {}
+    dictionary["ab"] = 5
+    dictionary["c"] = 7
+    mut slot = Slot.Dict(value=own dictionary)
+    return tally(mut slot) == 15
+
+
+public func test_a_list_of_text_binding_is_looped_over_then_grown_then_looped_over_again() -> bool:
+    mut slot = Slot.Words(items=["x", "y"])
+    return joined(mut slot) == "x,y,x;y;end;"
+
+
+public func test_two_loops_over_one_binding_nest() -> bool:
+    mut slot = Slot.Words(items=["a", "b", "c"])
+    return nested(mut slot) == 6
+
+
+enum Pool:
+    Tags(tags: set[str])
+    Table(rows: dict[str, int])
+    Empty
+
+
+func change_after_the_loop(mut pool: Pool) -> int:
+    mut seen = 0
+    match mut pool:
+        case Tags(tags):
+            for tag in tags:
+                seen = seen + len(tag)
+            sets.include(mut tags, "added")
+            for tag in tags:
+                seen = seen + 100
+        case Table(rows):
+            for key in rows:
+                seen = seen + rows[key]
+            rows["added"] = 7
+            for key in rows:
+                seen = seen + 100
+        case Empty:
+            return -1
+    return seen
+
+
+public func test_a_set_and_a_dictionary_binding_are_changed_after_their_loops() -> bool:
+    mut tags: set[str] = set()
+    sets.include(mut tags, "ab")
+    mut pool = Pool.Tags(tags=own tags)
+    mut rows: dict[str, int] = {}
+    rows["x"] = 5
+    mut table = Pool.Table(rows=own rows)
+    return change_after_the_loop(mut pool) == 2 + 200 and change_after_the_loop(mut table) == 5 + 200
+
+
+func main() -> int:
+    assert test_a_dictionary_binding_is_looped_over_and_its_keys_are_read()
+    assert test_a_list_of_text_binding_is_looped_over_then_grown_then_looped_over_again()
+    assert test_two_loops_over_one_binding_nest()
+    assert test_a_set_and_a_dictionary_binding_are_changed_after_their_loops()
+    return 0

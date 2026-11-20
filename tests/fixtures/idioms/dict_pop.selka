@@ -1,0 +1,9 @@
+import dicts
+
+func main() -> int:
+    mut d = {"a": 1, "b": 2}
+    mut removed = dicts.pop(mut d, "a")
+    mut missing = dicts.pop_default(mut d, "z", 7)
+    if len(d) != 1:
+        return 1
+    return removed + missing

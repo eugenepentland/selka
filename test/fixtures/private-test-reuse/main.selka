@@ -1,0 +1,5 @@
+import lib
+
+func main(out: Stream) -> int:
+    print(out, lib.serve("/"))
+    return 0

@@ -1,0 +1,133 @@
+# Stage 4's `own` parameter: a parameter that takes its value. At a call the
+# marker is required exactly where a named binding of a value that owns storage
+# is given away, and refused on a fresh value or a scalar; inside the callee the
+# value may be stored, returned or moved, and no copy is inserted.
+import testing
+
+record State:
+    keys: int[]
+
+
+func own_parameters_take(own keys: int[]) -> int:
+    return len(keys)
+
+
+func order_by_key(own keys: int[]) -> State:
+    return State(keys=own keys)
+
+
+func first_of(own keys: int[]) -> int:
+    return keys[0]
+
+
+func keep[T](own value: T, mut out: T[]):
+    append(mut out, own value)
+
+
+func counted(own count: int) -> int:
+    return count + 1
+
+
+public func test_a_named_argument_is_taken_and_stored_without_a_copy() -> bool:
+    mut samples = [3, 1, 2]
+    const ordered = order_by_key(own samples)
+    return ordered.keys[0] == 3 and len(ordered.keys) == 3
+
+
+public func test_a_fresh_value_carries_no_marker() -> bool:
+    const ordered = order_by_key([9, 8])
+    return ordered.keys[1] == 8
+
+
+public func test_an_own_parameter_is_destroyed_when_the_callee_drops_it() -> bool:
+    mut samples = [4, 5]
+    return own_parameters_take(own samples) == 2
+
+
+public func test_own_works_with_a_generic_parameter() -> bool:
+    mut rows: int[][] = []
+    mut inner = [6, 7]
+    keep[int[]](own inner, mut rows)
+    return len(rows) == 1 and rows[0][1] == 7
+
+
+public func test_a_function_type_spells_the_mode() -> bool:
+    const apply: func(own int[]) -> int = first_of
+    mut samples = [1, 2, 3]
+    return apply(own samples) == 1
+
+
+public func test_append_takes_the_marker_and_a_fresh_value_needs_none() -> bool:
+    mut rows: int[][] = []
+    mut inner = [8]
+    append(mut rows, own inner)
+    append(mut rows, [9])
+    mut counts: int[] = []
+    append(mut counts, 1)
+    return len(rows) == 2 and rows[1][0] == 9 and counts[0] == 1
+
+
+public func test_a_scalar_own_parameter_carries_no_marker() -> bool:
+    mut count = 4
+    return counted(count) == 5
+
+
+func append_key(own keys: str[]) -> str[]:
+    append(mut keys, "k")
+    return keys
+
+
+func rebind(own keys: str[]) -> str[]:
+    keys = ["fresh"]
+    return keys
+
+
+# The seed is one managed block a loop makes; the callee adds nothing to it.
+func builds(n: int) -> int:
+    mut total = 0
+    for _ in range(n):
+        mut seed: str[] = []
+        append(mut seed, "a")
+        total = total + len(append_key(own seed))
+    return total
+
+
+# The same loop with a copy at the call: the control that the count sees copies.
+func builds_copy(n: int) -> int:
+    mut total = 0
+    for _ in range(n):
+        mut seed: str[] = []
+        append(mut seed, "a")
+        total = total + len(append_copy(seed))
+    return total
+
+
+func append_copy(keys: str[]) -> str[]:
+    mut out = copy(keys)
+    append(mut out, "k")
+    return out
+
+
+public func test_a_callee_writes_the_parameter_it_owns() -> bool:
+    mut seed: str[] = ["a"]
+    const built = append_key(own seed)
+    return len(built) == 2 and built[1] == "k"
+
+
+public func test_an_owned_parameter_can_be_rebound_and_returned() -> bool:
+    mut seed: str[] = ["a", "b"]
+    const fresh = rebind(own seed)
+    return len(fresh) == 1 and fresh[0] == "fresh"
+
+
+public func test_an_owned_builder_loop_of_a_thousand_makes_no_copies() -> bool:
+    return builds(1000) == 2000 and testing.allocations(builds, 1000) == 1000 and testing.allocations(builds_copy, 1000) > 1000
+
+
+public func test_append_takes_a_named_binding_with_own_and_a_copy_keeps_its_source() -> bool:
+    mut rows: str[] = []
+    const piece = "ab" + "cd"
+    append(mut rows, own piece)
+    const kept = "xy" + "z"
+    append(mut rows, copy(kept))
+    return len(rows) == 2 and rows[0] == "abcd" and kept == "xyz"

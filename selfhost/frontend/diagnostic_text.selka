@@ -1,0 +1,73 @@
+# A lexical diagnostic as the Zig compiler prints it on standard error (src/diagnostic.zig `render`):
+#
+#     PATH:LINE:COLUMN: error[CODE]: MESSAGE
+#       the source line
+#       ^ under the offending byte
+#
+# Columns count bytes. The line drops trailing carriage returns, and the caret's padding keeps a tab where
+# the line has one, so the caret lines up on a terminal.
+import byte_builder
+import lexer
+
+# The diagnostic for `failure`, found in `src` (read from `path`).
+public func render(path: str, src: bytes, failure: lexer.LexFailure) -> bytes:
+    const size = len(src)
+    const at = min(failure.start, size)
+    mut line = 1
+    mut line_start = 0
+    mut index = 0
+    while index < at:
+        if src[index] == 10:
+            line += 1
+            line_start = index + 1
+        index += 1
+    mut line_end = at
+    while line_end < size and src[line_end] != 10:
+        line_end += 1
+    mut text_end = line_end
+    while text_end > line_start and src[text_end - 1] == 13:
+        text_end -= 1
+    mut out = byte_builder.create()
+    byte_builder.append_text(mut out, path)
+    byte_builder.append_text(mut out, ":")
+    byte_builder.append_int(mut out, line)
+    byte_builder.append_text(mut out, ":")
+    byte_builder.append_int(mut out, at - line_start + 1)
+    byte_builder.append_text(mut out, ": error[")
+    byte_builder.append_text(mut out, failure.code)
+    byte_builder.append_text(mut out, "]: ")
+    byte_builder.append_text(mut out, failure.message)
+    byte_builder.append_text(mut out, "\n  ")
+    _ = byte_builder.append_range(mut out, src, line_start, text_end)
+    byte_builder.append_text(mut out, "\n  ")
+    for column in range(at - line_start):
+        if line_start + column < text_end and src[line_start + column] == 9:
+            _ = byte_builder.append_byte(mut out, 9)
+        else:
+            _ = byte_builder.append_byte(mut out, 32)
+    byte_builder.append_text(mut out, "^\n")
+    if failure.note_start != -1:
+        append_note(mut out, path, src, failure)
+    return byte_builder.finish(out)
+
+
+# The note line under the caret, as the Zig renderer prints a related location: `  note: PATH:LINE:COLUMN: MESSAGE`.
+func append_note(mut out: byte_builder.Builder, path: str, src: bytes, failure: lexer.LexFailure):
+    const at = min(failure.note_start, len(src))
+    mut line = 1
+    mut line_start = 0
+    mut index = 0
+    while index < at:
+        if src[index] == 10:
+            line += 1
+            line_start = index + 1
+        index += 1
+    byte_builder.append_text(mut out, "  note: ")
+    byte_builder.append_text(mut out, path)
+    byte_builder.append_text(mut out, ":")
+    byte_builder.append_int(mut out, line)
+    byte_builder.append_text(mut out, ":")
+    byte_builder.append_int(mut out, at - line_start + 1)
+    byte_builder.append_text(mut out, ": ")
+    byte_builder.append_text(mut out, failure.note_message)
+    byte_builder.append_text(mut out, "\n")

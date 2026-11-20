@@ -1,0 +1,6 @@
+public func bytes() -> FixedArray[u8, 9]:
+    return FixedArray[u8, 9]([1u8, 2u8, 4u8, 7u8, 0u8, 0u8, 1u8, 44u8, 59u8])
+
+
+public func size() -> u64:
+    return 9u64

@@ -1,0 +1,17 @@
+# A guest that waits (RUN-SIGNALS-1): it prints its own process number on standard error, then sleeps in 50 ms turns for
+# at most 20 s, so a test that fails to end it cannot leave it running for long.
+import filesystem
+import time
+
+func main(fs: Filesystem, clock: Clock, err: Stream) -> int:
+    match filesystem.realpath(fs, "/proc/self"):
+        case Ok(path):
+            print(err, "guest " + path)
+        case Err(message):
+            print(err, "no process number: " + message)
+            return 1
+    mut turns = 0
+    while turns < 400:
+        time.sleep(clock, 50000000)
+        turns = turns + 1
+    return 0

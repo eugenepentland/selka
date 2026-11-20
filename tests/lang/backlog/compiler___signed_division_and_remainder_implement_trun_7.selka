@@ -1,0 +1,6 @@
+public func test_signed_division_and_remainder_implement_trun_7() -> bool:
+    return remtrunc(-9223372036854775808, -1) == 0
+
+
+func main() -> int:
+    return 0

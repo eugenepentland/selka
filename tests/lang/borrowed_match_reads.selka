@@ -1,0 +1,67 @@
+# A match on a borrowed call result reads its payload in place: the arms read or pass the payload plainly, and a
+# temporary owner lives for the statement that reads it. Storing, returning or changing the owner stays refused.
+import json
+
+func parse(text: str) -> json.Json:
+    match json.loads(text):
+        case Ok(document):
+            return document
+        case Err(_):
+            return json.null_value()
+
+
+func filename_of(document: json.Json) -> bool:
+    match json.get(document, "meta"):
+        case Some(meta):
+            match json.get(meta, "filename"):
+                case Some(filename):
+                    return json.as_str(filename) == Some("demo.kicad_pro")
+                case None:
+                    return False
+        case None:
+            return False
+
+
+func passed(value: json.Json) -> bool:
+    return json.as_str(value) == Some("text")
+
+
+func payload_argument(document: json.Json) -> bool:
+    match json.get(document, "meta"):
+        case Some(meta):
+            return passed(meta)
+        case None:
+            return False
+
+
+func payload_copy(document: json.Json) -> json.Json:
+    match json.get(document, "meta"):
+        case Some(meta):
+            return copy(meta)
+        case None:
+            return json.null_value()
+
+
+# A temporary owner lives for the statement that reads its borrowed result (the assert of the port test).
+public func test_a_temporary_owner_read_in_one_statement() -> bool:
+    return json.get(parse('{"meta": 1}'), "meta") is not None
+
+
+public func test_a_nested_match_reads_both_payloads() -> bool:
+    mut document = parse('{"meta": {"filename": "demo.kicad_pro"}}')
+    return filename_of(document)
+
+
+public func test_a_payload_is_passed_plainly() -> bool:
+    mut document = parse('{"meta": "text"}')
+    return payload_argument(document)
+
+
+public func test_an_arm_returns_a_copy_of_the_payload() -> bool:
+    mut document = parse('{"meta": "text"}')
+    return json.as_str(payload_copy(document)) == Some("text")
+
+
+public func test_a_missing_payload_takes_the_absent_arm() -> bool:
+    mut document = parse('{"other": 1}')
+    return json.get(document, "meta") is None

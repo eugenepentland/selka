@@ -1,0 +1,132 @@
+# The processor's own instructions that firmware needs and no expression names: wait for an event or an interrupt, send
+# an event, a memory barrier, a breakpoint, and interrupts held off for a stretch of code. Each takes the `Registers`
+# capability first, as the authority over the machine. On a device (`--target thumbv6m-none`) each is the instruction
+# itself, inline, with no call: `wfe`, `wfi`, `sev`, `dsb sy` and `isb sy`, `bkpt #0`, and `mrs` of PRIMASK with
+# `cpsid i` to hold interrupts off and `msr` of PRIMASK to restore them.
+#
+# On a simulated bank (`registers.simulated()`, the only `Registers` on Linux) each call does nothing to the machine and
+# returns at once, a wait too, and is recorded in the bank's event log, oldest first, beside its log of register writes:
+# `event_count`, `event_operation` and `event_writes_before` read one entry, `events` and `count_of` the whole log,
+# `interrupts_are_off` says whether interrupts are off now and `write_with_interrupts_off` whether a logged register write
+# happened while they were. Those readers exist only for a simulated bank, and a device build that calls one is refused
+# (`E_TARGET_SIMULATED_REGISTERS`). The log holds 16,384 events and a full one traps with `R_REGISTER_BANK`; recording
+# allocates nothing, so every call is legal in a `@noalloc` function.
+#
+# The state before `interrupts_off`: a linear value, so a path that never gives it back to `interrupts_restore` does not
+# compile (`E_LINEAR_UNCONSUMED`), and giving it back twice is a use after consumption. `primask` is the PRIMASK register
+# as it was, 1 when interrupts were off already (a nested hold) and 0 when they were on. Only this module makes one.
+@sealed
+@linear
+public record InterruptState:
+    primask: u32
+
+
+# One recorded operation of a simulated bank: its name (`"wait_for_event"`, `"wait_for_interrupt"`, `"send_event"`,
+# `"barrier"`, `"breakpoint"`, `"interrupts_off"` or `"interrupts_restore"`) and how many register writes the bank had
+# logged before it, so a write whose index is at least `writes_before` came after it.
+public record CpuEvent:
+    operation: str
+    writes_before: int
+
+
+# Wait for an event (`wfe`): another core's `send_event`, an interrupt, or an event already pending, which a wait clears
+# and returns at once.
+public builtin func wait_for_event(reg: Registers)
+
+
+# Wait for an interrupt (`wfi`): it returns when one is pending, even while interrupts are held off.
+public builtin func wait_for_interrupt(reg: Registers)
+
+
+# Send an event to every core (`sev`): a core waiting in `wait_for_event` wakes, and one that is not finds it pending.
+public builtin func send_event(reg: Registers)
+
+
+# Finish every memory access before going on, and fetch what follows afresh (`dsb sy` then `isb sy`): what must follow a
+# write that changes how memory or interrupts behave (a vector table, a memory map, an interrupt's enable).
+public builtin func barrier(reg: Registers)
+
+
+# Stop at a breakpoint (`bkpt #0`): a debugger attached takes over; with none the device faults.
+public builtin func breakpoint(reg: Registers)
+
+
+builtin func __interrupts_disable(reg: Registers) -> u32
+
+
+builtin func __interrupts_set(reg: Registers, primask: u32)
+
+
+# Hold interrupts off from now until `interrupts_restore` takes the state this answers. Holds nest: the inner restore
+# leaves them off, because its state says they were off.
+public func interrupts_off(reg: Registers) -> InterruptState:
+    return InterruptState(primask=__interrupts_disable(reg))
+
+
+# Put interrupts back as they were before the `interrupts_off` that answered `state`, and end it.
+public func interrupts_restore(reg: Registers, own state: InterruptState):
+    __interrupts_set(reg, own state.primask)
+
+
+# How many operations a simulated bank has recorded.
+public builtin func event_count(reg: Registers) -> int
+
+
+builtin func __event_kind(reg: Registers, index: int) -> int
+
+
+# How many register writes the bank had logged before recorded operation `index`, 0 being the oldest; an index outside the
+# log traps as a list index does.
+public builtin func event_writes_before(reg: Registers, index: int) -> int
+
+
+builtin func __interrupts_now(reg: Registers) -> int
+
+
+builtin func __write_interrupts_off(reg: Registers, index: int) -> int
+
+
+# The name of recorded operation `index`.
+public func event_operation(reg: Registers, index: int) -> str:
+    const kind = __event_kind(reg, index)
+    if kind == 0:
+        return "wait_for_event"
+    if kind == 1:
+        return "wait_for_interrupt"
+    if kind == 2:
+        return "send_event"
+    if kind == 3:
+        return "barrier"
+    if kind == 4:
+        return "breakpoint"
+    if kind == 5:
+        return "interrupts_off"
+    return "interrupts_restore"
+
+
+# Every recorded operation, oldest first.
+public func events(reg: Registers) -> CpuEvent[]:
+    mut out: CpuEvent[] = []
+    for index in range(event_count(reg)):
+        append(mut out, CpuEvent(operation=event_operation(reg, index), writes_before=event_writes_before(reg, index)))
+    return out
+
+
+# How many times the operation named `operation` ran on the bank.
+public func count_of(reg: Registers, operation: str) -> int:
+    mut total = 0
+    for index in range(event_count(reg)):
+        if event_operation(reg, index) == operation:
+            total += 1
+    return total
+
+
+# Whether interrupts are held off on the bank now.
+public func interrupts_are_off(reg: Registers) -> bool:
+    return __interrupts_now(reg) != 0
+
+
+# Whether logged register write `index` happened while interrupts were held off; an index outside the write log traps as
+# a list index does.
+public func write_with_interrupts_off(reg: Registers, index: int) -> bool:
+    return __write_interrupts_off(reg, index) != 0

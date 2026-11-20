@@ -1,0 +1,50 @@
+import lists
+import strings
+
+record Doc:
+    title: str
+    rows: int[][]
+
+
+func count_chars(d: Doc) -> int:
+    return strings.char_count(d.title) + len(d.rows)
+
+
+func fill(mut xs: int[]) -> int:
+    lists.clear(mut xs)
+    append(mut xs, 5)
+    return len(xs)
+
+
+func pair(a: int, b: int) -> int:
+    return a * 10 + b
+
+
+func push(mut xs: int[]) -> int:
+    append(mut xs, 9)
+    return len(xs)
+
+
+func lst(a: int[], b: int) -> int:
+    return len(a) * 100 + b
+
+
+func main(out: Stream) -> int:
+    mut d = Doc(title="héllo", rows=[[1], [2, 3]])
+    print(out, count_chars(d))
+    mut xs = [1, 2, 3]
+    mut ys = copy(xs)
+    append(mut ys, 4)
+    print(out, len(xs), len(ys))
+    mut zs = [7, 8]
+    mut snapshot = copy(zs)
+    print(out, fill(mut zs), len(snapshot), len(zs))
+    mut rows = [[1], [2]]
+    lists.clear(mut rows)
+    append(mut rows, [3])
+    print(out, len(rows), len(rows[0]))
+    print(out, pair(b=3, a=4))
+    mut ws = [1]
+    const pushed = push(mut ws)
+    print(out, lst(b=pushed, a=ws))
+    return 0

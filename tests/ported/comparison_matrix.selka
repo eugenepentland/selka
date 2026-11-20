@@ -1,0 +1,138 @@
+# The 23 observable cases formerly in compiler_test.booleanResult.
+# Keep each outcome separately named; short-circuit traps remain in Zig.
+public func test_less() -> bool:
+    if 1 < 2:
+        return True
+    return False
+
+
+public func test_less_equal_operands() -> bool:
+    if 2 < 2:
+        return False
+    return True
+
+
+public func test_less_or_equal() -> bool:
+    if 2 <= 2:
+        return True
+    return False
+
+
+public func test_greater() -> bool:
+    if 3 > 2:
+        return True
+    return False
+
+
+public func test_greater_or_equal() -> bool:
+    if 2 >= 2:
+        return True
+    return False
+
+
+public func test_greater_or_equal_false() -> bool:
+    if 2 >= 3:
+        return False
+    return True
+
+
+public func test_equal() -> bool:
+    if 2 == 2:
+        return True
+    return False
+
+
+public func test_not_equal() -> bool:
+    if 2 != 2:
+        return False
+    return True
+
+
+public func test_boolean_equal() -> bool:
+    if True == False:
+        return False
+    return True
+
+
+public func test_boolean_not_equal() -> bool:
+    if True != False:
+        return True
+    return False
+
+
+public func test_not_false() -> bool:
+    if not False:
+        return True
+    return False
+
+
+public func test_not_true() -> bool:
+    if not True:
+        return False
+    return True
+
+
+public func test_and_precedes_or_false() -> bool:
+    if False or True and False:
+        return False
+    return True
+
+
+public func test_and_precedes_or_true() -> bool:
+    if True or False and False:
+        return True
+    return False
+
+
+public func test_arithmetic_comparison_precedence() -> bool:
+    if 1 + 2 * 3 == 7 and 4 >= 3:
+        return True
+    return False
+
+
+public func test_false_and_false() -> bool:
+    if False and False:
+        return False
+    return True
+
+
+public func test_false_or_false() -> bool:
+    if False or False:
+        return False
+    return True
+
+
+public func test_false_and_true() -> bool:
+    if False and True:
+        return False
+    return True
+
+
+public func test_false_or_true() -> bool:
+    if False or True:
+        return True
+    return False
+
+
+public func test_true_and_false() -> bool:
+    if True and False:
+        return False
+    return True
+
+
+public func test_true_or_false() -> bool:
+    if True or False:
+        return True
+    return False
+
+
+public func test_true_and_true() -> bool:
+    if True and True:
+        return True
+    return False
+
+
+public func test_true_or_true() -> bool:
+    if True or True:
+        return True
+    return False

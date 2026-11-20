@@ -1,0 +1,16 @@
+test-cli
++- verification action cli member 0
+   +- compile test debug native 1 errors
+test/integration.zig:6391:4: error: duplicate struct member name 'gitIn'
+fn gitIn(allocator: std.mem.Allocator, root: []const u8, args: []const []const u8) !void {
+   ^~~~~
+test/integration.zig:7260:4: note: duplicate name here
+fn gitIn(directory: []const u8, args: []const []const u8) !void {
+   ^~~~~
+test/integration.zig:1:1: note: struct declared here
+//! Spawn the selected-mode compiler binary; fixtures assert the public CLI contract.
+^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+error: 1 compilation errors
+failed command: /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test -ferror-tracing -ODebug --dep test_options --d...
+
+Build Summary: 16/19 steps succeeded (1 failed)

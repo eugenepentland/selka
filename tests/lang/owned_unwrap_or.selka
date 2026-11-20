@@ -1,0 +1,240 @@
+# `unwrap_or` on an option nobody else holds (F-71): `R.unwrap_or(d)`, where R is the option a call returns (a function
+# whose result is not declared `from` a parameter) and `d` is a value of its own (a literal, a new value, `own name`),
+# gives a value the program owns in every position that takes a value. The payload moves out of the option on `Some`,
+# the default on `None`, and the other is dropped. Each test runs both paths under the leak check.
+import owned_unwrap_or_support as support
+import sort
+
+record Name:
+    text: str
+
+
+record Pair:
+    left: str
+    right: str
+
+
+record Bag:
+    items: str[]
+
+
+enum Slot:
+    full(names: Name[])
+    empty
+
+
+func maybe(present: bool) -> str?:
+    if present:
+        return Some("x" + "y")
+    return None
+
+
+func listed(present: bool) -> str[]?:
+    if present:
+        return Some(["a", "b"])
+    return None
+
+
+func named(present: bool) -> Name?:
+    if present:
+        return Some(Name(text="r" + "s"))
+    return None
+
+
+func nested(depth: int) -> str??:
+    if depth == 0:
+        return None
+    if depth == 1:
+        return Some(None)
+    return Some(Some("i" + "j"))
+
+
+func number(present: bool) -> float?:
+    if present:
+        return Some(1.5)
+    return None
+
+
+record Point:
+    x: int
+    y: int
+
+
+func point(present: bool) -> Point?:
+    if present:
+        return Some(Point(x=1, y=2))
+    return None
+
+
+func made() -> str:
+    return "m" + "n"
+
+
+func keep(own text: str) -> Name:
+    return Name(text=own text)
+
+
+func again[T](own value: T?) -> T?:
+    return value
+
+
+func option_of[T](own value: T, present: bool) -> T?:
+    if present:
+        return Some(own value)
+    return None
+
+
+func pick[T](own value: T, own fallback: T, present: bool) -> T:
+    const chosen = option_of(own value, present).unwrap_or(own fallback)
+    return chosen
+
+
+func given(present: bool) -> str:
+    return maybe(present).unwrap_or("none")
+
+
+func wrapped(present: bool) -> str?:
+    return Some(maybe(present).unwrap_or("none"))
+
+
+func checked(present: bool) -> Name fails str:
+    if not present:
+        fail maybe(present).unwrap_or("failed")
+    const text = maybe(present).unwrap_or("")
+    return Name(text=own text)
+
+
+public func test_the_value_of_a_call_s_option_is_bound_and_given() -> bool:
+    const text = maybe(True).unwrap_or("")
+    const absent = maybe(False).unwrap_or("d")
+    const first = Name(text=own text)
+    const second = Name(text=own absent)
+    return first.text == "xy" and second.text == "d"
+
+
+public func test_it_is_returned_failed_and_wrapped() -> bool:
+    assert given(True) == "xy" and given(False) == "none"
+    assert wrapped(True) == Some("xy") and wrapped(False) == Some("none")
+    match checked(False):
+        case Ok(_):
+            return False
+        case Err(message):
+            assert message == "failed"
+    match checked(True):
+        case Ok(name):
+            return name.text == "xy"
+        case Err(_):
+            return False
+
+
+public func test_it_is_stored_and_given_to_an_own_parameter() -> bool:
+    mut name = Name(text="0")
+    name.text = maybe(True).unwrap_or("")
+    mut texts: str[] = []
+    append(mut texts, maybe(False).unwrap_or("d"))
+    append(mut texts, maybe(True).unwrap_or("d"))
+    texts[0] = maybe(True).unwrap_or("e")
+    mut index: dict[str, str] = {}
+    index["k"] = maybe(False).unwrap_or("f")
+    const literal = [maybe(True).unwrap_or(""), maybe(False).unwrap_or("g")]
+    const wrapped_value: str? = Some(maybe(False).unwrap_or("h"))
+    const pair = Pair(left=maybe(True).unwrap_or(""), right=maybe(False).unwrap_or("r"))
+    assert name.text == "xy" and texts == ["xy", "xy"] and index["k"] == "f"
+    assert literal == ["xy", "g"] and wrapped_value == Some("h")
+    assert pair.left == "xy" and pair.right == "r"
+    return keep(maybe(True).unwrap_or("")).text == "xy" and keep(maybe(False).unwrap_or("k")).text == "k"
+
+
+public func test_defaults_that_are_values_of_their_own() -> bool:
+    const called = maybe(False).unwrap_or(made())
+    const joined = maybe(False).unwrap_or("j" + "k")
+    const formatted = maybe(False).unwrap_or(f"z{len(joined)}")
+    const owner = "o" + "w"
+    const given_owner = maybe(False).unwrap_or(own owner)
+    const inner = maybe(False).unwrap_or(maybe(True).unwrap_or("z"))
+    const unused = maybe(True).unwrap_or(made())
+    const names = [Name(text=own called), Name(text=own joined), Name(text=own formatted), Name(text=own given_owner)]
+    return names[0].text == "mn" and names[2].text == "z2" and names[3].text == "ow" and Name(text=own inner).text == "xy" and len(unused) == 2
+
+
+public func test_records_lists_and_options_of_options() -> bool:
+    const present = named(True).unwrap_or(Name(text="d"))
+    const absent = named(False).unwrap_or(Name(text="e"))
+    const items = listed(True).unwrap_or([])
+    const no_items = listed(False).unwrap_or(["z"])
+    const bag = Bag(items=own items)
+    const other = Bag(items=own no_items)
+    mut found: str[] = []
+    for depth in range(3):
+        const layer = nested(depth).unwrap_or(None)
+        match own layer:
+            case Some(text):
+                append(mut found, own text)
+            case None:
+                append(mut found, "none")
+    assert present.text == "rs" and absent.text == "e"
+    return len(bag.items) == 2 and len(other.items) == 1 and found == ["none", "none", "ij"]
+
+
+public func test_a_generic_another_module_and_a_library_call() -> bool:
+    const generic = again(maybe(True)).unwrap_or("")
+    const far = support.label(True).unwrap_or("")
+    const near = support.label(False).unwrap_or("near")
+    const least = sort.min_str(["q", "p" + "r"]).unwrap_or("")
+    const nothing = sort.min_str([]).unwrap_or("e")
+    assert pick("a" + "b", "c" + "d", True) == "ab" and pick("a" + "b", "c" + "d", False) == "cd"
+    const names = [Name(text=own generic), Name(text=own far), Name(text=own near), Name(text=own least), Name(text=own nothing)]
+    return names[0].text == "xy" and names[1].text == "faraway" and names[2].text == "near" and names[3].text == "pr" and names[4].text == "e"
+
+
+public func test_in_a_loop_an_inner_block_and_a_match_mut_arm() -> bool:
+    mut names: Name[] = []
+    for i in range(4):
+        const text = maybe(i % 2 == 0).unwrap_or(f"n{i}")
+        if len(text) > 0:
+            append(mut names, Name(text=own text))
+    mut slot = Slot.full(names=[])
+    match mut slot:
+        case full(names=held):
+            append(mut held, Name(text=maybe(False).unwrap_or("m")))
+            const text = maybe(True).unwrap_or("")
+            append(mut held, Name(text=own text))
+        case empty:
+            pass
+    match slot:
+        case full(names=held):
+            assert held[0].text == "m" and held[1].text == "xy"
+        case empty:
+            return False
+    return len(names) == 4 and names[1].text == "n1" and names[2].text == "xy"
+
+
+public func test_a_deferred_const_and_the_prelude_spelling() -> bool:
+    const text: str
+    if len(made()) == 2:
+        text = maybe(True).unwrap_or("")
+    else:
+        text = "other"
+    const spelled = maybe(False).unwrap_or("p")
+    return Name(text=own text).text == "xy" and Name(text=own spelled).text == "p"
+
+
+public func test_a_read_and_a_mut_binding_keep_their_borrow() -> bool:
+    const width = len(maybe(True).unwrap_or(""))
+    mut chosen = maybe(False).unwrap_or("")
+    const fallback = Name(text="qq")
+    if width == 2:
+        chosen = fallback.text
+    const read = maybe(True).unwrap_or("")
+    const alias = read
+    return width == 2 and chosen == "qq" and len(alias) + len(read) == 4
+
+
+public func test_a_payload_with_no_managed_storage_is_copied_as_before() -> bool:
+    const volts = number(True).unwrap_or(0.0)
+    const none = number(False).unwrap_or(0.0)
+    const at = point(True).unwrap_or(Point(x=0, y=0))
+    const origin = point(False).unwrap_or(Point(x=0, y=0))
+    mut moved = number(False).unwrap_or(2.5)
+    moved = moved + volts
+    return volts == 1.5 and none == 0.0 and at.y == 2 and origin.x == 0 and moved == 4.0

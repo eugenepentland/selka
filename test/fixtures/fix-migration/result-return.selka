@@ -1,0 +1,16 @@
+func read(text: str) -> Result[int, str]:
+    if text == "":
+        return Err("empty")
+    return Ok(len(text))
+
+
+func pass_on(result: Result[int, str]) -> Result[int, str]:
+    return result
+
+
+func test_ok() -> Result[bool, str]:
+    return Ok(True)
+
+
+func main() -> int:
+    return 0

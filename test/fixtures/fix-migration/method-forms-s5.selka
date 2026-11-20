@@ -1,0 +1,22 @@
+# W13 slice 5: spellings whose rewrite slice 2 left without an edit, now certain, and receivers whose rewrite did not
+# check: an escaped separator, typed integer literals, a buffer reached through an element, a slice or a call.
+import buffers
+import math
+
+func buf(data: bytes) -> byte_buffer:
+    mut out = buffers.empty()
+    buffers.append(mut out, data)
+    return out
+
+
+func main(out: Stream) -> int:
+    const lines = ["a", "b"]
+    print(out, "\n".join(lines), "\t|".join(lines))
+    const small: u8 = 7u8
+    const big: u64 = 9u64
+    print(out, math.min[u8](small, 3), math.max(big, 5u64), math.min[u64](5u64, 4u64))
+    const held = [buf(b"a,b c,a")]
+    print(out, held[0].find(b",", 2), held[0].strip(b"a"), held[0].count(b"a", 0, 7))
+    const whole = buf(b"x,y")
+    print(out, whole[0:3].rfind(b",", 0), buf(b"p,q").find(b","), buf(b"p,q").index(b"q"))
+    return 0

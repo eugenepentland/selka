@@ -1,0 +1,8 @@
+# A parser in another module whose result's fields membership_temporaries.selka tests with `in` (F-56).
+public record Parsed:
+    problem: str
+    flags: set[str]
+
+
+public func parse(text: str) -> Parsed:
+    return Parsed(problem="bad: " + text, flags=set())

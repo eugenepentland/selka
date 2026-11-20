@@ -1,0 +1,20 @@
+test-cli
++- verification action cli member 0 0 pass, 931 skip, 1 fail (932 total)
+test: test wall 0.46s; slowest over 50ms:
+test:   0.46s  integration.test.a directory test run ends with one line for the warnings it withheld, each counted once, the same at every width of the run
+test: FAIL — 1 failed of 1
+test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'integration.test.a directory test run ends with one line for the warnings it withheld, each counted once, the same at every width of the run' failed:
+       expected 1, found 3
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x1331bc9 in expectEqualInner__anon_47913 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x165ba0e in expectEqual (integration.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/u/ai/canopy/mylang-checkbuild/test/integration.zig:8220:9: 0x165bb3c in test.a directory test run ends with one line for the warnings it withheld, each counted once, the same at every width of the run (integration.zig)
+               try testing.expectEqual(@as(usize, 1), std.mem.count(u8, ran.stderr, "warnings: "));
+               ^
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 0 --root-id test/integ...
+
+Build Summary: 17/19 steps succeeded (1 failed); 0/932 tests passed (931 skipped, 1 failed)

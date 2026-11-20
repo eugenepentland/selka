@@ -1,0 +1,164 @@
+import strings
+
+func is_ord(text: str, expected: int) -> bool:
+    match strings.ord(text):
+        case Ok(value):
+            return value == expected
+        case Err(_):
+            return False
+
+
+func is_chr_err(result: Result[str, strings.Error]) -> bool:
+    match result:
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+func round_trips(code: int) -> bool:
+    match strings.chr(code):
+        case Ok(text):
+            if strings.char_count(text) != 1:
+                return False
+            return is_ord(text, code)
+        case Err(_):
+            return False
+
+
+# spec: STDLIB-TEXT-SCALAR-1
+public func test_ord_reads_unicode_scalar_values() -> bool:
+    if not is_ord("A", 65):
+        return False
+    if not is_ord("é", 233):
+        return False
+    if not is_ord("€", 8364):
+        return False
+    if not is_ord("😀", 128512):
+        return False
+    match strings.ord(""):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+# spec-case: STDLIB-TEXT-SCALAR-1
+public func test_chr_builds_one_character_and_round_trips() -> bool:
+    mut codes: int[] = [0, 65, 233, 8364, 128512, 1114111]
+    for code in codes:
+        if not round_trips(code):
+            return False
+    return True
+
+
+# spec-case: STDLIB-TEXT-SCALAR-1
+public func test_chr_rejects_surrogates_and_out_of_range_code_points() -> bool:
+    if not is_chr_err(strings.chr(55296)):
+        return False
+    if not is_chr_err(strings.chr(1114112)):
+        return False
+    return is_chr_err(strings.chr(0 - 1))
+
+
+func repeated(text: str, times: int) -> str:
+    return strings.repeat(text, times)
+
+
+func negative_count_is_empty() -> bool:
+    return strings.repeat("a", 0 - 1) == "" and strings.repeat("é", 0 - 3) == ""
+
+
+# The copies one at a time, the reference the doubling must match.
+func appended(text: str, times: int) -> str:
+    mut out = ""
+    for _ in range(times):
+        out = out + text
+    return out
+
+
+# spec: STANDARD-STRINGS-2
+public func test_repeat_builds_long_texts_in_linear_time() -> bool:
+    # 300,000 copies: appending one copy at a time copied the growing answer
+    # every time, about 135 GB for this count.
+    mut long = repeated("abc", 300000)
+    mut ok = strings.char_count(long) == 900000 and strings.char_slice(long, None, 6) == "abcabc" and strings.char_slice(long, max(strings.char_count(long) - 4, 0), None) == "cabc"
+    ok = ok and strings.count(long, "abc") == 300000
+    mut wide = repeated("é€", 100001)
+    return ok and strings.char_count(wide) == 200002 and strings.char_slice(wide, max(strings.char_count(wide) - 3, 0), None) == "€é€" and strings.count(wide, "é€") == 100001
+
+
+# spec-case: STANDARD-STRINGS-2
+public func test_repeat_answers_every_count_exactly() -> bool:
+    mut ok = repeated("", 1000000000) == "" and repeated("xy", 0) == "" and negative_count_is_empty()
+    for times in range(0, 40):
+        ok = ok and repeated("ab", times) == appended("ab", times)
+        ok = ok and repeated("ü", times) == appended("ü", times)
+    return ok and repeated("0", 4) + "7" == "00007"
+
+
+# `strings.words` matches Python's `split()` with no separator: whitespace runs
+# collapse, and leading and trailing whitespace adds no empty word.
+# spec-case: STANDARD-STRINGS-WORDS-1
+public func test_words_drop_whitespace_runs_and_empty_pieces() -> bool:
+    const none: str[] = []
+    mut ok = strings.words("") == none and len(strings.words("   ")) == 0
+    ok = ok and strings.words(" alpha\tbeta") == ["alpha", "beta"]
+    ok = ok and strings.words("alpha\n\n beta ") == ["alpha", "beta"]
+    ok = ok and strings.words("one") == ["one"]
+    ok = ok and strings.words("\u00e9 \u20ac") == ["\u00e9", "\u20ac"]
+    ok = ok and strings.words("a\rb\rc") == ["a", "b", "c"]
+    return ok
+
+
+# spec-case: STANDARD-STRINGS-CODECS-1
+public func test_encode_decode_and_find_any_round_trip() -> bool:
+    const text = "h\u00e9llo"
+    mut ok = strings.encode(text) == b"h\xc3\xa9llo"
+    ok = ok and strings.decode(strings.encode(text)) == Ok(copy(text))
+    ok = ok and strings.decode(b"\xff") == Err("invalid UTF-8 in byte string")
+    ok = ok and strings.find_any(text, ["llo", "h\u00e9"]) == Some(0)
+    ok = ok and strings.find_any(text, ["llo", "zz"]) == Some(3)
+    ok = ok and strings.find_any(text, ["zz"]) is None
+    ok = ok and strings.find_any(text, []) is None
+    # One module, one position convention: `find` answers a byte offset in an
+    # option, and the scalar position is `char_find`'s answer.
+    ok = ok and strings.find(text, "llo") == Some(3)
+    ok = ok and strings.char_find(text, "llo") == 2
+    return ok
+
+
+# spec-case: STANDARD-STRINGS-CODECS-1
+public func test_split_replace_and_rfind_keep_the_method_conventions() -> bool:
+    mut ok = strings.split("a,b,c", ",") == ["a", "b", "c"]
+    ok = ok and strings.split(",", ",") == ["", ""]
+    ok = ok and strings.split("abc", "b") == ["a", "c"]
+    ok = ok and strings.replace("banana", "na", "NA") == "baNANA"
+    ok = ok and strings.find("banana", "na") == Some(2)
+    ok = ok and strings.rfind("banana", "na") == Some(4)
+    ok = ok and strings.rfind("abc", "z") is None
+    ok = ok and strings.find("banana", "z") is None
+    # `rfind` answers byte offsets like `find`; the scalar reading is `char_rfind`.
+    ok = ok and strings.rfind("h\u00e9llo", "llo") == Some(3)
+    ok = ok and strings.char_rfind("h\u00e9llo", "llo") == 2
+    # The trapping readings are the module's `text_index` and `text_rindex`, whose
+    # kind names the text operation (a bare `index` would be shadowed by the loop
+    # counter every module writes).
+    ok = ok and strings.text_index("banana", "na") == 2
+    ok = ok and strings.text_rindex("banana", "na") == 4
+    ok = ok and strings.text_index("h\u00e9llo", "llo") == 3
+    return ok
+
+
+public func test_join_puts_the_separator_between_parts_only() -> bool:
+    mut ok = strings.join(["a", "b", "c"], ", ") == "a, b, c"
+    ok = ok and strings.join(["only"], "-") == "only"
+    mut none: str[] = []
+    ok = ok and strings.join(none, "-") == ""
+    ok = ok and strings.join(["", ""], "|") == "|"
+    ok = ok and strings.join(["h\u00e9", "llo"], "") == "h\u00e9llo"
+    return ok
+
+
+func main() -> int:
+    return 0

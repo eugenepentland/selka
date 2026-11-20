@@ -1,0 +1,117 @@
+# A token after the closing quotes of a multi-line text continues the line they close on (FR24 item 4, found by F19): an
+# operator and an operand, a comparison that opens a suite, and a comment. Before, the layout pass read the token as the first
+# of a line of its own and refused the next line. `selka fmt` breaks a call or a list apart at such a text, so the bracketed
+# shapes (a comma and a further argument on the same line and on the next, a closing bracket) are pinned on raw bytes in
+# src/triple_format_test.zig.
+func join2(a: str, b: str) -> str:
+    return a + "|" + b
+
+
+func pick(a: str, b: str, c: int) -> int:
+    return len(a) * 100 + len(b) * 10 + c
+
+
+func plain_then_name(x: str) -> str:
+    return """a
+b""" + x
+
+
+func two_texts(x: str) -> str:
+    const t = """a
+b""" + x + """c
+d""" + "e"
+    return t
+
+
+func format_then_name(x: str) -> str:
+    return f"""a {x}
+b""" + x
+
+
+func comma_and_argument_on_the_same_line(x: str) -> str:
+    return join2(
+        """a
+b""",
+        x,
+    )
+
+
+func comma_and_argument_on_the_next_line(x: str) -> str:
+    return join2(
+        """a
+b""",
+        x,
+    )
+
+
+func closing_bracket_after_the_quotes(x: str) -> int:
+    return pick(
+        """a
+b""",
+        x,
+        3,
+    )
+
+
+func comparison_after_the_quotes(x: str) -> str:
+    if """a
+b""" == x:
+        return "same"
+    return "diff"
+
+
+func comment_after_the_quotes() -> str:
+    return """a
+b""" # a comment after the closing quotes
+
+
+func bracketed_format(x: str) -> str:
+    return (
+        f"""p
+{x}""" + "!"
+    )
+
+
+func in_a_list(x: str) -> int:
+    const items = [
+        """a
+b""",
+        x,
+    ]
+    return len(items)
+
+
+func at_the_block_indent(x: str) -> str:
+    if x == "":
+        return """a
+    b""" + x
+    return copy(x)
+
+
+public func test_an_operator_and_an_operand_follow_the_closing_quotes() -> bool:
+    assert plain_then_name("x") == "a\nbx"
+    assert two_texts("y") == "a\nbyc\nde"
+    assert format_then_name("z") == "a z\nbz"
+    return True
+
+
+public func test_the_formatted_forms_of_a_call_a_bracket_and_a_list_hold_the_same_text() -> bool:
+    assert comma_and_argument_on_the_same_line("w") == "a\nb|w"
+    assert comma_and_argument_on_the_next_line("v") == "a\nb|v"
+    assert closing_bracket_after_the_quotes("u") == 313
+    return True
+
+
+public func test_a_comparison_a_comment_a_parenthesis_and_a_list_follow_the_closing_quotes() -> bool:
+    assert comparison_after_the_quotes("a\nb") == "same"
+    assert comparison_after_the_quotes("a") == "diff"
+    assert comment_after_the_quotes() == "a\nb"
+    assert bracketed_format("q") == "p\nq!"
+    assert in_a_list("n") == 2
+    return True
+
+
+public func test_a_closing_line_at_the_block_indent_reads_as_it_did() -> bool:
+    assert at_the_block_indent("") == "a\n    b"
+    assert at_the_block_indent("k") == "k"
+    return True

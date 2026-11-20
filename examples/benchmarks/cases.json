@@ -1,0 +1,12 @@
+{
+  "main::bench_sum": {
+    "sizes": {
+      "small": {"arguments": {"limit": "1000"}, "expected": "499500"},
+      "large": {"arguments": {"limit": "20000"}, "expected": "199990000"}
+    }
+  },
+  "main::bench_list_sum": {
+    "arguments": {"size": "2000"},
+    "expected": "1999000"
+  }
+}

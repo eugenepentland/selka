@@ -1,0 +1,16 @@
+# A `from` clause with a source that lends (`xs`) beside one that holds no storage of the result (`ys`, a list of integers
+# under an `Inst?` result, lane HC). `check` accepted it and Core declared `ys` as a source the IR verifier refuses; lowering
+# now drops `ys`, as it drops a text or bytes view that cannot lend (lane SK), and the function builds.
+record Inst:
+    ref_des: bytes
+
+
+func lend(xs: Inst[], ys: int[]) -> Inst? from xs, ys:
+    for x in xs:
+        if len(ys) > 0:
+            return Some(x)
+    return None
+
+
+public func test_lend() -> bool:
+    return lend([Inst(ref_des=b"R1")], [1]) is not None

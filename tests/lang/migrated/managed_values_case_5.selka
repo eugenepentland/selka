@@ -1,0 +1,11 @@
+import lists
+
+public func program() -> i64:
+    mut a: i64[] = []
+    mut b: i64[] = []
+    append(mut a, 42)
+    append(mut b, 42)
+    if a == b:
+        if lists.contains(a, 42):
+            return 42
+    return 0

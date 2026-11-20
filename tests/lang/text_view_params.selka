@@ -1,0 +1,96 @@
+# A plain `str` parameter takes a view (C9): a slice passed to it makes no copy, whether it is an
+# inline argument, a const binding of a parameter passed on, a parameter forwarded through a hop, a
+# function value or a generic instantiated at `str`. The text is a literal, so every slice is a view of
+# static text, and each shape allocates nothing per run.
+import strings
+import testing
+
+const DATA: str = "abcdefghijkl"
+
+
+func text_view_params_take(text: str) -> int:
+    return strings.char_count(text)
+
+
+func forward(text: str) -> int:
+    return text_view_params_take(text)
+
+
+func apply(f: func(str) -> int, text: str) -> int:
+    return f(text)
+
+
+# `strings.char_count` reads text; no bound says "a text", so the helper takes `str` (a generic body would be refused at its
+# declaration for `int`, a record and a list, W3 step 2).
+func generic_take(value: str) -> int:
+    return strings.char_count(value)
+
+
+# An inline slice argument.
+func inline_slice(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        total += text_view_params_take(DATA[i % 4:i % 4 + 2])
+    return total
+
+
+# A const slice binding of a parameter, passed on.
+func const_binding(text: str, n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        const piece = text[i % 4:i % 4 + 2]
+        total += text_view_params_take(piece)
+    return total
+
+
+func call_const_binding(n: int) -> int:
+    return const_binding(DATA, n)
+
+
+# A slice forwarded through a parameter that passes it to a `str` parameter.
+func forwarded(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        total += forward(DATA[i % 4:i % 4 + 2])
+    return total
+
+
+# A slice passed through a function value whose parameter is `str`.
+func function_value(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        total += apply(text_view_params_take, DATA[i % 4:i % 4 + 2])
+    return total
+
+
+# A slice passed to a generic instantiated at `str`.
+func generic_at_str(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        total += generic_take(DATA[i % 4:i % 4 + 2])
+    return total
+
+
+# spec: NEW-CORE-C9-VIEWS-1
+public func test_an_inline_slice_argument_makes_no_copy() -> bool:
+    return testing.allocations(inline_slice, 100) == 0
+
+
+# spec: NEW-CORE-C9-VIEWS-1
+public func test_a_const_slice_binding_passed_on_makes_no_copy() -> bool:
+    return testing.allocations(call_const_binding, 100) == 0
+
+
+# spec: NEW-CORE-C9-VIEWS-1
+public func test_a_slice_forwarded_through_a_parameter_makes_no_copy() -> bool:
+    return testing.allocations(forwarded, 100) == 0
+
+
+# spec: NEW-CORE-C9-VIEWS-1
+public func test_a_slice_passed_through_a_function_value_makes_no_copy() -> bool:
+    return testing.allocations(function_value, 100) == 0
+
+
+# spec: NEW-CORE-C9-VIEWS-1
+public func test_a_slice_passed_to_a_generic_at_str_makes_no_copy() -> bool:
+    return testing.allocations(generic_at_str, 100) == 0

@@ -1,0 +1,224 @@
+enum Node:
+    text(value: str)
+    code(value: str)
+    number(value: int)
+    pair(left: int, right: int)
+    items(values: int[])
+    leaf
+    blank
+
+
+enum Kind:
+    word
+    digit
+    space
+    mark
+
+
+# `value is case` answers a bool and binds nothing: a bare name stands for the case with any payload.
+func is_text(node: Node) -> bool:
+    return node is text
+
+
+func is_wordy(node: Node) -> bool:
+    return node is text | code
+
+
+func is_inert(node: Node) -> bool:
+    return node is leaf | blank
+
+
+public func test_a_bare_case_name_tests_a_payload_case() -> bool:
+    return is_text(Node.text(value="a")) and not is_text(Node.code(value="a")) and not is_text(Node.leaf)
+
+
+public func test_alternatives_test_any_of_the_cases() -> bool:
+    return is_wordy(Node.code(value="a")) and is_wordy(Node.text(value="a")) and not is_wordy(Node.number(value=1)) and is_inert(Node.blank) and not is_inert(Node.pair(left=1, right=2))
+
+
+# A payload spelled `_` (named, for a case with fields), or `..`, ignores its fields.
+func is_pair(node: Node) -> bool:
+    return node is pair(..)
+
+
+func is_number(node: Node) -> bool:
+    return node is number(value=_)
+
+
+public func test_discards_and_the_rest_marker_test_without_binding() -> bool:
+    return is_pair(Node.pair(left=1, right=2)) and not is_pair(Node.leaf) and is_number(Node.number(value=3)) and not is_number(Node.leaf)
+
+
+# Enums without payloads.
+func is_closer(kind: Kind) -> bool:
+    return kind is space | mark
+
+
+public func test_enum_tests() -> bool:
+    return is_closer(Kind.mark) and not is_closer(Kind.word)
+
+
+public func test_tests_compose_with_the_boolean_operators() -> bool:
+    const node = Node.text(value="x")
+    const other = Node.leaf
+    const both = node is text and other is leaf
+    const either = node is leaf or other is leaf
+    const neither = not (node is text) or not (other is blank)
+    return both and either and neither
+
+
+# Option and Result values are tested by their cases; `is None` keeps its meaning.
+func present(x: int?) -> bool:
+    return x is Some
+
+
+func present_spelled(x: int?) -> bool:
+    return x is Some(_)
+
+
+func absent(x: int?) -> bool:
+    return x is None
+
+
+func parsed(text: str) -> bool:
+    return bytes.fromhex(text) is Ok
+
+
+public func test_option_and_result_cases() -> bool:
+    return present(3) and not present(None) and present_spelled(4) and not present_spelled(None) and absent(None) and not absent(3) and parsed("0a") and not parsed("zz")
+
+
+# The scrutinee is evaluated once, whatever the pattern lists.
+func make(mut count: int) -> Node:
+    count += 1
+    if count % 2 == 0:
+        return Node.leaf
+    return Node.code(value="c")
+
+
+public func test_the_operand_is_evaluated_once() -> bool:
+    mut count = 0
+    const first = make(mut count) is text | code | pair
+    const second = make(mut count) is blank | text
+    return count == 2 and first and not second
+
+
+# The binding form: the whole condition of an if, elif or while, with read-only names scoped to the body.
+func weigh(node: Node) -> int:
+    if node is text(value) | code(value):
+        return len(value)
+    elif node is pair(left, right):
+        return left * 10 + right
+    elif node is items(values):
+        return len(values) + 100
+    else:
+        return -1
+
+
+public func test_a_binding_test_is_an_if_over_a_match() -> bool:
+    return weigh(Node.text(value="abc")) == 3 and weigh(Node.code(value="de")) == 2 and weigh(Node.pair(left=1, right=2)) == 12 and weigh(Node.items(values=[1, 2, 3])) == 103 and weigh(Node.leaf) == -1
+
+
+func width(node: Node) -> int:
+    mut result = 0
+    if node is number(value):
+        result = value
+    return result
+
+
+public func test_a_binding_test_needs_no_else() -> bool:
+    return width(Node.number(value=7)) == 7 and width(Node.blank) == 0
+
+
+func first_of(node: Node) -> int:
+    if node is pair(left, ..):
+        return left
+    return 0
+
+
+public func test_the_rest_marker_binds_the_leading_fields() -> bool:
+    return first_of(Node.pair(left=4, right=5)) == 4 and first_of(Node.leaf) == 0
+
+
+# A call result is tested and bound in place; the fields it owns are borrowed by the names.
+func produce() -> Node:
+    return Node.items(values=[5, 6, 7])
+
+
+func produced_length() -> int:
+    if produce() is items(values):
+        return len(values)
+    return 0
+
+
+public func test_a_call_result_can_be_tested_and_bound() -> bool:
+    return produced_length() == 3
+
+
+# `while` re-tests the value each time round; `continue` and the other cases leave as in any loop. The names borrow the value
+# for the whole arm, as a match does, so the loop advances an index and never reassigns the value it tests.
+func odd_run(nodes: Node[]) -> int:
+    mut total = 0
+    mut index = 0
+    while nodes[index] is number(value):
+        index += 1
+        if value % 2 == 0:
+            continue
+        total += value
+    return total * 100 + index
+
+
+public func test_a_binding_loop_runs_until_another_case() -> bool:
+    const nodes = [Node.number(value=3), Node.number(value=4), Node.number(value=5), Node.leaf]
+    return odd_run(nodes) == 803
+
+
+func find_pair(nodes: Node[]) -> int:
+    mut found = -1
+    for index in range(0, len(nodes)):
+        if nodes[index] is pair(left, right):
+            found = left + right
+            break
+    return found
+
+
+public func test_a_binding_test_inside_a_loop_body() -> bool:
+    const nodes = [Node.leaf, Node.text(value="a"), Node.pair(left=3, right=4), Node.pair(left=9, right=9)]
+    return find_pair(nodes) == 7
+
+
+# A test over every case leaves no other case; the else branch is then unreachable and is not checked.
+func covers_all(kind: Kind) -> int:
+    if kind is word | digit | space | mark:
+        return 1
+    else:
+        return 2
+
+
+public func test_a_test_that_lists_every_case_always_holds() -> bool:
+    return covers_all(Kind.word) == 1 and covers_all(Kind.mark) == 1
+
+
+# Generic functions test their own parameters.
+enum Shape[T]:
+    dot
+    value(item: T)
+    pair(first: T, second: T)
+
+
+func has_item[T](shape: Shape[T]) -> bool:
+    return shape is value | pair
+
+
+func first_or[T](shape: Shape[T], fallback: T) -> T from shape, fallback:
+    if shape is value(item):
+        return item
+    if shape is pair(first, ..):
+        return first
+    return fallback
+
+
+public func test_generic_tests_and_bindings() -> bool:
+    const some: Shape[int] = Shape.value(item=3)
+    const none: Shape[int] = Shape.dot
+    return has_item(some) and not has_item(none) and first_or(some, 9) == 3 and first_or(none, 9) == 9

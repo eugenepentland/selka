@@ -1,0 +1,101 @@
+import dicts
+import testing
+
+record Node:
+    value: int
+    next: Node?
+
+
+func node_total(value: Node?) -> int:
+    match value:
+        case Some(node):
+            mut total = node.value
+            match node.next:
+                case Some(child):
+                    total += child.value
+                case None:
+                    pass
+            return total
+        case None:
+            return 0
+
+
+func nested_size(value: str??) -> int:
+    match value:
+        case Some(inner):
+            match inner:
+                case Some(text):
+                    return len(text)
+                case None:
+                    return 7
+        case None:
+            return 11
+
+
+func nested_is(value: str??, expected: str) -> bool:
+    match value:
+        case Some(inner):
+            match inner:
+                case Some(text):
+                    return text == expected
+                case None:
+                    return expected == "inner-none"
+        case None:
+            return expected == "outer-none"
+
+
+func read_node(mapping: dict[str, Node?], key: str, fallback: Node?) -> int:
+    return node_total(dicts.get(mapping, key, fallback))
+
+
+func read_text(mapping: dict[str, str??], key: str, fallback: str??) -> int:
+    return nested_size(dicts.get(mapping, key, fallback))
+
+
+func clone_node(mapping: dict[str, Node?], key: str, fallback: Node?) -> Node?:
+    return copy(dicts.get(mapping, key, fallback))
+
+
+func clone_text(mapping: dict[str, str??], key: str, fallback: str??) -> str??:
+    return copy(dicts.get(mapping, key, fallback))
+
+
+func read_work(rounds: int) -> int:
+    mut nodes: dict[str, Node?] = {"hit": Some(Node(value=7, next=Some(Node(value=3, next=None))))}
+    mut fallback_node: Node? = Some(Node(value=11, next=Some(Node(value=5, next=None))))
+    mut words: dict[str, str??] = {"hit": Some(Some("stored-" + str(7)))}
+    mut fallback_text: str?? = Some(Some("fallback-" + str(11)))
+    mut total = 0
+    for i in range(rounds):
+        total += read_node(nodes, "hit", fallback_node) + read_node(nodes, "missing", fallback_node)
+        total += read_text(words, "hit", fallback_text) + read_text(words, "missing", fallback_text)
+    return total
+
+
+public func test_wrapped_dictionary_reads_hit_and_miss_without_copies() -> bool:
+    return read_work(2) == 90 and testing.allocations(read_work, 200) - testing.allocations(read_work, 100) == 0
+
+
+public func test_copied_recursive_defaults_survive_both_source_replacements() -> bool:
+    mut mapping: dict[str, Node?] = {"hit": Some(Node(value=7, next=Some(Node(value=3, next=None)))), "empty": None}
+    mut fallback: Node? = Some(Node(value=11, next=Some(Node(value=5, next=None))))
+    const hit = clone_node(mapping, "hit", fallback)
+    const miss = clone_node(mapping, "missing", fallback)
+    const empty_hit = clone_node(mapping, "empty", fallback)
+    const empty_miss = clone_node(mapping, "missing", None)
+    mapping = {}
+    fallback = None
+    return node_total(hit) == 10 and node_total(miss) == 16 and empty_hit is None and empty_miss is None
+
+
+public func test_copied_nested_text_defaults_preserve_tags_after_source_replacements() -> bool:
+    mut mapping: dict[str, str??] = {"hit": Some(Some("stored-" + str(7))), "inner": Some(None), "outer": None}
+    mut fallback: str?? = Some(Some("fallback-" + str(11)))
+    const hit = clone_text(mapping, "hit", fallback)
+    const miss = clone_text(mapping, "missing", fallback)
+    const inner = clone_text(mapping, "inner", fallback)
+    const outer = clone_text(mapping, "outer", fallback)
+    const empty_miss = clone_text(mapping, "missing", Some(None))
+    mapping = {}
+    fallback = None
+    return nested_is(hit, "stored-7") and nested_is(miss, "fallback-11") and nested_is(inner, "inner-none") and nested_is(outer, "outer-none") and nested_is(empty_miss, "inner-none")

@@ -1,0 +1,9 @@
+public func program() -> int:
+    mut score = 0
+    if f"{{literal}}" == "{literal}":
+        score = score + 1
+    if f"" == "":
+        score = score + 2
+    if f"no holes" == "no holes":
+        score = score + 4
+    return score

@@ -1,0 +1,10 @@
+# Accepted: `fresh_name` returns a fresh value (no `from`), so the caller may write `xs` while it holds the result,
+# whatever `fresh_name`'s body does.
+import lib
+
+func main() -> int:
+    mut xs = ["a"]
+    const name = lib.fresh_name(xs)
+    append(mut xs, "b")
+    lib.grow(mut xs, name)
+    return len(xs) + lib.count_of(xs)

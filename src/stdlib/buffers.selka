@@ -1,0 +1,47 @@
+# The byte-buffer module: the writes that grow a `byte_buffer` in place. Reading a
+# buffer's octets is the prelude's `bytes(value)`; every function here takes the
+# buffer first and carries the call-site `mut` marker, like `append(mut xs, x)`.
+# A write that can refuse answers `bool` and is discarded with `_ =` as a statement;
+# a write that always writes answers nothing.
+#
+# An empty buffer.
+public func empty() -> byte_buffer:
+    const nothing: int[] = []
+    return byte_buffer(nothing)
+
+
+# Append one octet, `value` in 0..255. Answers False and appends nothing otherwise.
+public builtin func append_byte(mut data: byte_buffer, value: int) -> bool
+
+
+# Append the octets a byte string holds.
+public builtin func append(mut data: byte_buffer, piece: bytes)
+
+
+# Append the decimal text of an integer (`1` in one octet).
+public builtin func append_int(mut data: byte_buffer, value: int)
+
+
+# Append the decimal text of a float (`1.5` in three octets).
+public builtin func append_float(mut data: byte_buffer, value: float)
+
+
+# Append the UTF-8 octets of a text.
+public builtin func append_utf8(mut data: byte_buffer, text: str)
+
+
+# Append the octets of `piece[start:end]`. A negative `start` or `end` traps
+# `R_LIST_BOUNDS`. Otherwise answers False and appends nothing when `end` is below
+# `start` or past `len(piece)`; an empty range answers True and appends nothing.
+public builtin func append_range(mut data: byte_buffer, piece: bytes, start: int, end: int) -> bool
+
+
+# Make room for `extra` more octets without writing any. Answers False for a
+# negative or overflowing request.
+public builtin func reserve(mut data: byte_buffer, extra: int) -> bool
+
+
+# Empty the buffer and keep its storage: the length becomes 0 and the capacity stays what it was, so
+# the next appends write into room that is already there and a loop that fills, writes and clears
+# one buffer allocates once. `empty()` is a new buffer with no room.
+public builtin func clear(mut data: byte_buffer)

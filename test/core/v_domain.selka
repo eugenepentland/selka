@@ -1,0 +1,34 @@
+@invariant(self.value <= 1000u32, "a distance fits the representable range")
+record Millimeters:
+    value: u32
+
+
+func millimeters(value: u32) -> Millimeters:
+    if value > 1000u32:
+        return Millimeters(value=1000u32)
+    return Millimeters(value=value)
+
+
+func add(a: Millimeters, b: Millimeters) -> Millimeters:
+    return millimeters(a.value + b.value)
+
+
+record Flag:
+    value: bool
+
+
+func flag(value: bool) -> Flag:
+    return Flag(value=value)
+
+
+record Measurement:
+    distance: Millimeters
+    name: Flag
+
+
+func main(out: Stream) -> int:
+    mut sample = Measurement(distance=add(millimeters(700u32), millimeters(500u32)), name=flag(True))
+    print(out, sample.distance.value, sample.name.value, sample.distance == millimeters(1000u32))
+    mut rows = [millimeters(3u32), millimeters(4u32)]
+    print(out, rows[1].value, len(rows), rows[0] != rows[1])
+    return 0

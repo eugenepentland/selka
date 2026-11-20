@@ -1,0 +1,220 @@
+# The standard module for build programs (`buildkit`) and the file and path helpers it uses (`filesystem.walk`,
+# `filesystem.copy_file`, `filesystem.mkdir_all`, `path.relative`, `process.run_within`), on a scripted Process, an
+# in-memory Filesystem and a recording Stream, so no program starts.
+import buildkit
+import environment
+import filesystem
+import path
+import process
+import streams
+import strings
+
+func said(code: int, text: str) -> process.Output:
+    return process.exited(code, strings.encode(text), b"")
+
+
+func numbered(count: int) -> str:
+    mut lines: str[] = []
+    for number in range(1, count + 1):
+        append(mut lines, f"line {number}")
+    return strings.join(lines, "\n") + "\n"
+
+
+func tools() -> buildkit.Tools:
+    return buildkit.Tools(compiler="/opt/selka", zig="/opt/zig", root="/work/project")
+
+
+# A command that exits with 1 fails with its line, its status and the last twelve lines of what it wrote.
+public func test_a_failed_command_reports_its_tail(fs: Filesystem) -> bool:
+    const proc = process.scripted([process.Rule(program="/opt/selka", reply=process.Reply.Exit(output=said(1, numbered(20))))])
+    const out = streams.memory()
+    const command = buildkit.Command(argv=buildkit.tests_argv(tools(), "rp2040", []), directory="/work/project/packages", root="/work/project")
+    match buildkit.run(proc, fs, out, command):
+        case Ok(_):
+            return False
+        case Err(message):
+            const shown = "cd packages && /opt/selka test rp2040"
+            const head = strings.starts_with(message, f"FAILED: {shown}\n  exit status 1\n  stdout, last lines:\n    | line 9\n")
+            const ends = strings.ends_with(message, "    | line 20")
+            return head and ends and not ("line 8\n" in message) and streams.text(out) == f"$ {shown}\n"
+
+
+# With a root, a command's folder is shown from the root and its paths below the root from that folder.
+public func test_a_command_is_shown_as_it_is_typed() -> bool:
+    const at_root = buildkit.Command(argv=["selka", "fmt", "/r/a.selka"], root="/r")
+    const elsewhere = buildkit.Command(argv=["selka", "test", "/r/out/x", "/elsewhere/y"], directory="/r/examples", root="/r")
+    const plain = buildkit.Command(argv=["ls", "-l"], directory="/tmp")
+    const first = buildkit.shown(at_root) == "selka fmt a.selka"
+    const second = buildkit.shown(elsewhere) == "cd examples && selka test ../out/x /elsewhere/y"
+    return first and second and buildkit.shown(plain) == "cd /tmp && ls -l"
+
+
+# A program that is missing cannot start; one a signal ended counts 128 plus the signal, as a shell says.
+public func test_a_missing_program_and_a_signal(fs: Filesystem) -> bool:
+    const killed = process.Output(exited=False, code=9, stdout=b"", stderr=b"", truncated=False)
+    const proc = process.scripted(
+        [process.Rule(program="gone", reply=process.Reply.Missing), process.Rule(program="hung", reply=process.Reply.Exit(output=own killed))],
+    )
+    const out = streams.memory()
+    const missing = buildkit.execute(proc, fs, out, buildkit.Command(argv=["gone"])) else Err(message):
+        const ended = buildkit.execute(proc, fs, out, buildkit.Command(argv=["hung"])) else Err(_):
+            return False
+        return strings.starts_with(message, "cannot run gone: no program 'gone' was found") and ended.code == 137
+    return False
+
+
+# A command that exits with 0 answers what it wrote; `execute` answers a failure's status without failing.
+public func test_a_command_that_passes_answers_its_output(fs: Filesystem) -> bool:
+    const proc = process.scripted(
+        [
+            process.Rule(program="ok", reply=process.Reply.Exit(output=said(0, "26 passed\n"))),
+            process.Rule(program="no", reply=process.Reply.Exit(output=said(3, ""))),
+        ],
+    )
+    const out = streams.memory()
+    const passed = buildkit.run(proc, fs, out, buildkit.Command(argv=["ok"])) else Err(_):
+        return False
+    const failed = buildkit.execute(proc, fs, out, buildkit.Command(argv=["no", "x"])) else Err(_):
+        return False
+    return buildkit.last_line(passed.stdout) == "26 passed" and failed.code == 3 and streams.text(out) == "$ ok\n$ no x\n"
+
+
+# Under a time limit the command runs through `process.run_within`; a limit needs a log; a time-out reads as one.
+public func test_a_time_limit(fs: Filesystem) -> bool:
+    const proc = process.scripted([process.Rule(program="board", reply=process.Reply.Exit(output=said(0, "exit status 125\n")))])
+    const out = streams.memory()
+    const limited = buildkit.Command(argv=["board", "run", "clocks.bin"], limit_millis=1500, log="board.log")
+    const ran = buildkit.run(proc, fs, out, limited) else Err(_):
+        return False
+    const unlogged = buildkit.Command(argv=["board"], limit_millis=1500)
+    const refused = buildkit.run(proc, fs, out, unlogged) is Err(_)
+    const stopped = buildkit.Ran(code=143, stdout="loading\n", stderr="", timed_out=True)
+    const text = buildkit.failure_text(limited, stopped)
+    const negative = process.run_within(proc, process.command(["board"]), -1, "board.log", 0) is Err(_)
+    const reads = text == "FAILED: board run clocks.bin\n  stopped after its time limit of 1.5 s\n  stdout, last lines:\n    | loading"
+    return ran.stdout == "exit status 125\n" and not ran.timed_out and refused and reads and negative
+
+
+# `walk` finds the files with a suffix below a folder, leaves out the folders it is told to skip, and sorts its answer.
+public func test_walk_with_a_suffix_and_folders_to_skip(fs: Filesystem) -> bool:
+    _ = filesystem.mkdir_all(fs, "proj/src/deep") else Err(_):
+        return False
+    _ = filesystem.mkdir_all(fs, "proj/.git") else Err(_):
+        return False
+    _ = filesystem.mkdir_all(fs, "proj/out/cache") else Err(_):
+        return False
+    for name in ["proj/main.selka", "proj/src/deep/b.selka", "proj/src/a.selka", "proj/src/notes.md", "proj/.git/x.selka", "proj/out/cache/c.selka"]:
+        _ = fs.write_file(name, b"") else Err(_):
+            return False
+    const found = filesystem.walk(fs, "proj", ".selka", [".*", "out"]) else Err(_):
+        return False
+    const every = filesystem.walk(fs, "proj/src", "", []) else Err(_):
+        return False
+    return found == ["main.selka", "src/a.selka", "src/deep/b.selka"] and every == ["a.selka", "deep/b.selka", "notes.md"]
+
+
+# `mkdir_all` makes the folders on the way and leaves the ones there; `copy_file` copies the octets.
+public func test_copy_and_nested_folders(fs: Filesystem) -> bool:
+    _ = filesystem.mkdir_all(fs, "out/plat/deep") else Err(_):
+        return False
+    _ = filesystem.mkdir_all(fs, "out/plat") else Err(_):
+        return False
+    _ = fs.write_file("platform.c", b"int x;\n") else Err(_):
+        return False
+    _ = filesystem.copy_file(fs, "platform.c", "out/plat/platform.c") else Err(_):
+        return False
+    const copied = fs.read_file("out/plat/platform.c") else Err(_):
+        return False
+    const through_a_file = filesystem.mkdir_all(fs, "platform.c/below") is Err(_)
+    const missing = filesystem.copy_file(fs, "nothing.c", "out/nothing.c") is Err(_)
+    return copied == b"int x;\n" and fs.exists("out/plat/deep") and through_a_file and missing
+
+
+# `path.relative` walks down, up and across, and leaves a mixed pair whole.
+public func test_a_path_relative_to_a_base() -> bool:
+    const down = path.relative("/a/b", "/a/b/c/d.selka") == "c/d.selka"
+    const across = path.relative("/a/b/", "/a/x") == "../x"
+    const same = path.relative("/a/b", "/a/./b") == "."
+    const relative_pair = path.relative("src", "src/../tests/t.selka") == "../tests/t.selka"
+    const mixed = path.relative("src", "/abs/x") == "/abs/x"
+    return down and across and same and relative_pair and mixed
+
+
+record StepContext:
+    proc: Process
+    failing: str
+
+
+func one_step(context: StepContext, name: str) -> Unit fails str:
+    _ = process.run(context.proc, process.command(["step", copy(name)])) else Err(error):
+        fail process.message(error)
+    if name == context.failing:
+        fail f"FAILED: step {name}"
+
+
+# The runner takes its steps in order, stops at the first failure, marks the rest skipped and prints a line a step.
+public func test_the_step_runner_order_stop_and_summary(proc: Process, clock: Clock) -> bool:
+    process.expect(proc, process.Rule(program="step", reply=process.Reply.Exit(output=said(0, ""))))
+    const outcomes = buildkit.run_steps(StepContext(proc=proc, failing="images"), ["check", "images", "verify"], one_step, clock)
+    mut ran: str[] = []
+    for call in process.calls(proc):
+        append(mut ran, copy(call.argv[1]))
+    const out = streams.memory()
+    const passed = buildkit.summary(out, outcomes)
+    const lines = strings.lines(streams.text(out))
+    const states = outcomes[0].state == buildkit.State.Done and outcomes[1].state == buildkit.State.Failed and outcomes[2].state == buildkit.State.Skipped
+    const printed = strings.starts_with(lines[0], "ok      check           ") and strings.ends_with(lines[0], " s") and strings.starts_with(lines[1], "FAILED  images          ")
+    return ran == ["check", "images"] and states and printed and lines[2] == "skipped verify" and lines[3] == "FAILED: step images" and not passed
+
+
+# Every step done: the summary answers True and prints no failure.
+public func test_the_step_runner_when_every_step_is_done(proc: Process, clock: Clock) -> bool:
+    process.expect(proc, process.Rule(program="step", reply=process.Reply.Exit(output=said(0, ""))))
+    const outcomes = buildkit.run_steps(StepContext(proc=proc, failing=""), ["check", "images"], one_step, clock)
+    const out = streams.memory()
+    return buildkit.summary(out, outcomes) and len(strings.lines(streams.text(out))) == 2
+
+
+# Each of the compiler's commands has its argument list built in one place.
+public func test_the_compiler_command_argument_lists() -> bool:
+    const where = tools()
+    const check = buildkit.check_argv(where, "rp2040.selka", ["--warnings"]) == ["/opt/selka", "check", "rp2040.selka", "--warnings"]
+    const test = buildkit.tests_argv(where, "build", ["--import-root", "."]) == ["/opt/selka", "test", "build", "--import-root", "."]
+    const fmt = buildkit.fmt_check_argv(where, "build.selka") == ["/opt/selka", "fmt", "build.selka", "--check"]
+    const build = buildkit.build_argv(where, "main.selka", "out/main", ["--release"]) == ["/opt/selka", "build", "main.selka", "-o", "out/main", "--release"]
+    const lock = buildkit.packages_lock_argv(where, "packages.json", "out/lock.json") == [
+        "/opt/selka",
+        "packages",
+        "lock",
+        "packages.json",
+        "--output",
+        "out/lock.json",
+    ]
+    const packaged = buildkit.packages_build_argv(where, "blink.selka", "out/lock.json", "test", ["--cache-dir", "c"]) == [
+        "/opt/selka",
+        "packages",
+        "build",
+        "blink.selka",
+        "--lock",
+        "out/lock.json",
+        "--command",
+        "test",
+        "--",
+        "--cache-dir",
+        "c",
+    ]
+    return check and test and fmt and build and lock and packaged
+
+
+# `locate` reads what `selka do` set, and says how to start the program when it is missing.
+public func test_locate_reads_what_selka_do_set() -> bool:
+    const set = environment.fixed({"SELKA": "/opt/selka", "SELKA_ZIG": "/opt/zig", "SELKA_PROJECT_ROOT": "/work/project"})
+    const found = buildkit.locate(set) else Err(_):
+        return False
+    const partial = environment.fixed({"SELKA": "/opt/selka"})
+    match buildkit.locate(partial):
+        case Ok(_):
+            return False
+        case Err(message):
+            const says = strings.starts_with(message, "SELKA_ZIG is not set") and "`selka do STEP`" in message
+            return found.compiler == "/opt/selka" and found.zig == "/opt/zig" and found.root == "/work/project" and says

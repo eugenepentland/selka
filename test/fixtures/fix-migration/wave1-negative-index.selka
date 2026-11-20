@@ -1,0 +1,25 @@
+func generic_tail[T: copy](marker: T, text: str) -> int:
+    _ = marker
+    return strings.char_rfind(text, "", 0, -1)
+
+
+func main() -> int:
+    mut xs = [10, 20, 30]
+    const last = xs[-1]
+    xs[-2] = 22
+    const tail = xs[-2:-1]
+    mut text = "aé中😀b"
+    const letter = text[-1]
+    const piece = text[-3:]
+    mut data = b"abcd"
+    const octet = data[-1]
+    const suffix = data[-2:]
+    const view = data.borrow(-2, -1)
+    _ = strings.char_find(text, "b", -2, -1)
+    _ = data.parse_int_range(-2, 99)
+    _ = data.scalar_count_range(0, -1)
+    mut fixed: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    fixed[-1] = 4
+    const changed = replace(fixed, -2, 5)
+    mut mapping: dict[int, int] = {-1: 42}
+    return last + len(tail) + letter + len(piece) + octet + len(suffix) + len(view) + changed[1] + mapping[-1]

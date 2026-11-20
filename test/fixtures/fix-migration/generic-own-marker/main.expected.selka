@@ -1,0 +1,51 @@
+# FR88: a generic body refused at its declaration carries the repair its inner refusal has, when every refused kind of type
+# argument asks for the same edit: `own` written, `own` removed, `copy(...)` around a stored borrow.
+record Node[K]:
+    key: K
+    next: Node[K]?
+
+record Pair[K, V]:
+    key: K
+    value: V
+
+func hand_on[K](own n: Node[K]) -> Node[K]:
+    return n
+
+func hand_pair[K, V](own p: Pair[K, V]) -> Pair[K, V]:
+    return p
+
+func make[K: copy](key: K) -> Node[K]:
+    const fresh = Node[K](key=copy(key), next=None)
+    return hand_on[K](own fresh)
+
+func chain[K: copy](key: K) -> Node[K]:
+    const fresh = Node[K](key=copy(key), next=None)
+    const other = Node[K](key=copy(key), next=None)
+    const a = hand_on[K](own fresh)
+    const b = hand_on[K](own other)
+    return Node[K](key=copy(a.key), next=own b)
+
+func hold_key[K](own key: K) -> Node[K]:
+    const fresh = Node[K](key=own key, next=None)
+    return hand_on[K](own fresh)
+
+func pair[K: copy, V: copy](k: K, v: V) -> Pair[K, V]:
+    const fresh = Pair[K, V](key=copy(k), value=copy(v))
+    return hand_pair[K, V](own fresh)
+
+func enclose[K: copy](n: Node[K]) -> Node[K]:
+    return Node[K](key=copy(n.key), next=copy(n))
+
+func again[K: copy](key: K) -> Node[K]:
+    const fresh = Node[K](key=copy(key), next=None)
+    return hand_on[K](copy(fresh))
+
+func main(out: Stream) -> int:
+    const n = make[int](3)
+    const c = chain[str]("c")
+    const t = hold_key[int](4)
+    const p = pair[int, str](5, "p")
+    const e = enclose[int](Node[int](key=6, next=None))
+    const g = again[int](7)
+    print(out, f"{n.key} {c.key} {t.key} {p.key} {p.value} {e.key} {g.key}")
+    return 0

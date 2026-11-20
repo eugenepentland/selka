@@ -1,0 +1,7 @@
+# Lake build output; never committed.
+.lake/
+build/
+# Build outputs never go in git: a stray compile once committed a 118 MB a.out here.
+a.out
+*.o
+*.out

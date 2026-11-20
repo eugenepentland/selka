@@ -1,0 +1,15 @@
+# Nested integer lists: a 12 x 12 product.
+func main() -> int:
+    mut a: int[][] = []
+    for i in range(12):
+        mut row: int[] = []
+        for j in range(12):
+            append(mut row, (i + 1) * (j + 2) % 17)
+        append(mut a, own row)
+    mut trace = 0
+    for i in range(12):
+        mut s = 0
+        for k in range(12):
+            s += a[i][k] * a[k][i]
+        trace += s
+    return trace % 256

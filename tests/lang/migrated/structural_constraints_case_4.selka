@@ -1,0 +1,13 @@
+type Reader = func(int) -> int
+
+
+func unused[T: copy](p: T, named domain_op_T_make: func(T, func(FixedArray[T, 2]) -> T[]) -> func(T) -> T) -> int:
+    return 0
+
+
+func concrete[T: copy](p: T, named domain_op_T_read: func(T, Reader) -> int) -> int:
+    return 0
+
+
+public func program() -> int:
+    return 0

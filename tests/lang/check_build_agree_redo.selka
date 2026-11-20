@@ -1,0 +1,270 @@
+# Shapes `check` accepted and `build` refused with E_CORE_UNSUPPORTED (rule Z3) until lane O3 (item 2): the G3 redo's
+# F-RA-14, F-RA-710, F-RA-807 and the non-fallible half of F-RA-115, with the siblings the sweep found. Each now builds
+# and runs, so `check` and `build` agree. The refused neighbours (F-RA-202, and F-RA-115 with a managed error) are
+# tested in test/check_build_agree_redo_cli_test.zig.
+import dicts
+import sets
+
+# F-RA-710: two `mut` arguments that are disjoint fields of one `mut` record, at different depths.
+record Leaf:
+    x: str[]
+    y: str[]
+
+
+record Branch:
+    c: Leaf
+    z: str[]
+
+
+record Trunk:
+    b: Branch
+    w: str[]
+    v: Branch
+
+
+record Ctx:
+    notes: str[]
+    a: Trunk
+
+
+func push_both(mut p: str[], mut q: str[]):
+    append(mut p, "p")
+    append(mut q, "q")
+
+
+func fresh_ctx() -> Ctx:
+    return Ctx(notes=[], a=Trunk(b=Branch(c=Leaf(x=[], y=[]), z=[]), w=[], v=Branch(c=Leaf(x=[], y=[]), z=[])))
+
+
+func top_then_nested(mut ctx: Ctx):
+    push_both(mut ctx.notes, mut ctx.a.w)
+
+
+func top_then_deep(mut ctx: Ctx):
+    push_both(mut ctx.notes, mut ctx.a.b.c.x)
+
+
+func siblings_three_deep(mut ctx: Ctx):
+    push_both(mut ctx.a.b.c.x, mut ctx.a.b.c.y)
+
+
+func deep_then_shallower(mut ctx: Ctx):
+    push_both(mut ctx.a.b.c.x, mut ctx.a.b.z)
+
+
+func shallower_then_deep(mut ctx: Ctx):
+    push_both(mut ctx.a.b.z, mut ctx.a.b.c.x)
+
+
+func two_subrecords(mut ctx: Ctx):
+    push_both(mut ctx.a.b.c.x, mut ctx.a.v.c.x)
+
+
+public func test_mut_arguments_a_top_field_then_a_nested_one() -> bool:
+    mut ctx = fresh_ctx()
+    top_then_nested(mut ctx)
+    top_then_deep(mut ctx)
+    return ctx.notes == ["p", "p"] and ctx.a.w == ["q"] and ctx.a.b.c.x == ["q"]
+
+
+public func test_mut_arguments_two_fields_of_a_three_deep_record() -> bool:
+    mut ctx = fresh_ctx()
+    siblings_three_deep(mut ctx)
+    return ctx.a.b.c.x == ["p"] and ctx.a.b.c.y == ["q"] and len(ctx.notes) == 0
+
+
+public func test_mut_arguments_at_two_depths_of_one_subrecord_either_order() -> bool:
+    mut ctx = fresh_ctx()
+    deep_then_shallower(mut ctx)
+    shallower_then_deep(mut ctx)
+    return ctx.a.b.c.x == ["p", "q"] and ctx.a.b.z == ["q", "p"]
+
+
+public func test_mut_arguments_in_two_subrecords() -> bool:
+    mut ctx = fresh_ctx()
+    two_subrecords(mut ctx)
+    return ctx.a.b.c.x == ["p"] and ctx.a.v.c.x == ["q"]
+
+
+# F-RA-14: a call that borrows the record and one of its nested fields, then a write to a sibling of that field.
+record Table:
+    declared: int[] = []
+    published: int[] = []
+
+
+record Block:
+    name: bytes
+    table: Table = Table()
+    items: int[] = []
+    rows: Table[] = []
+
+
+func derive(block: Block, declared: int[]) -> int[]:
+    mut out: int[] = []
+    for v in declared:
+        append(mut out, v + len(block.name))
+    return out
+
+
+func publish(mut block: Block) -> int:
+    const derived = derive(block, block.table.declared)
+    block.table.published = copy(derived)
+    return len(derived)
+
+
+func publish_row(mut block: Block) -> int:
+    const derived = derive(block, block.rows[0].declared)
+    block.rows[0].published = copy(derived)
+    return len(derived)
+
+
+func publish_append(mut block: Block) -> int:
+    const derived = derive(block, block.table.declared)
+    append(mut block.table.published, len(derived))
+    return len(block.table.published)
+
+
+public func test_a_call_borrowing_the_record_and_a_field_then_a_sibling_write() -> bool:
+    mut block = Block(name=b"x", table=Table(declared=[1, 2]))
+    const count = publish(mut block)
+    return count == 2 and block.table.published == [2, 3] and block.table.declared == [1, 2]
+
+
+public func test_a_call_borrowing_an_element_field_then_a_sibling_write() -> bool:
+    mut block = Block(name=b"ab", rows=[Table(declared=[5])])
+    const count = publish_row(mut block)
+    return count == 1 and block.rows[0].published == [7]
+
+
+public func test_a_call_borrowing_a_field_then_an_append_to_its_sibling() -> bool:
+    mut block = Block(name=b"x", table=Table(declared=[1, 2, 3]))
+    return publish_append(mut block) == 1 and block.table.published == [3]
+
+
+# F-RA-807: a conditional removal from a set or dictionary field of a `mut` record.
+record Seen:
+    names: set[bytes]
+    table: dict[bytes, int]
+
+
+record State:
+    names: set[bytes]
+    table: dict[bytes, int]
+    inner: Seen
+    rows: Seen[]
+
+
+func forget(mut st: State, name: bytes):
+    sets.discard(mut st.names, name)
+    sets.discard(mut st.inner.names, name)
+    sets.discard(mut st.rows[0].names, name)
+
+
+func take_entry(mut st: State, key: bytes) -> int:
+    return dicts.pop_default(mut st.table, key, 7) + dicts.pop_default(mut st.inner.table, key, 70)
+
+
+func filled() -> State:
+    mut st = State(names=set(), table={}, inner=Seen(names=set(), table={}), rows=[Seen(names=set(), table={})])
+    sets.include(mut st.names, b"x")
+    sets.include(mut st.inner.names, b"x")
+    sets.include(mut st.rows[0].names, b"x")
+    st.table[b"x"] = 1
+    st.inner.table[b"x"] = 2
+    return st
+
+
+public func test_discard_from_set_fields_removes_a_present_name_and_keeps_the_rest() -> bool:
+    mut st = filled()
+    forget(mut st, b"y")
+    const kept = len(st.names) == 1 and len(st.inner.names) == 1 and len(st.rows[0].names) == 1
+    forget(mut st, b"x")
+    return kept and len(st.names) == 0 and len(st.inner.names) == 0 and len(st.rows[0].names) == 0
+
+
+public func test_pop_default_from_dictionary_fields_found_and_missing() -> bool:
+    mut st = filled()
+    const found = take_entry(mut st, b"x")
+    const missing = take_entry(mut st, b"x")
+    return found == 3 and missing == 77 and len(st.table) == 0 and len(st.inner.table) == 0
+
+
+# F-RA-115: a borrowed result of a `mut` parameter that the function also writes.
+record Entry:
+    name: bytes
+
+
+record Cursor:
+    entries: Entry[]
+    index: int = 0
+
+
+func next_entry(mut self: Cursor) -> Entry? from self:
+    if self.index >= len(self.entries):
+        return None
+    self.index += 1
+    return Some(self.entries[self.index - 1])
+
+
+func advance(mut self: Cursor) -> Entry from self:
+    self.index += 1
+    return self.entries[self.index - 1]
+
+
+func at(self: Cursor) -> Entry from self fails str:
+    if self.index >= len(self.entries):
+        fail "end"
+    return self.entries[self.index]
+
+
+func at_or_none(self: Cursor) -> Entry? from self fails int:
+    if self.index > len(self.entries):
+        fail 1
+    if self.index == len(self.entries):
+        return None
+    return Some(self.entries[self.index])
+
+
+public func test_a_borrowed_option_of_a_written_mut_parameter() -> bool:
+    mut cursor = Cursor(entries=[Entry(name=b"a"), Entry(name=b"bc")])
+    mut total = 0
+    if next_entry(mut cursor) is Some(entry):
+        total += len(entry.name)
+    if next_entry(mut cursor) is Some(entry):
+        total += len(entry.name) * 10
+    const exhausted = next_entry(mut cursor) is None
+    return total == 21 and exhausted and cursor.index == 2
+
+
+public func test_a_borrowed_record_of_a_written_mut_parameter() -> bool:
+    mut cursor = Cursor(entries=[Entry(name=b"abc")])
+    const entry = advance(mut cursor)
+    return len(entry.name) == 3 and cursor.index == 1
+
+
+public func test_a_fallible_borrowed_result_matched_on_both_arms() -> bool:
+    const cursor = Cursor(entries=[Entry(name=b"ab")])
+    mut seen = 0
+    match at(cursor):
+        case Ok(entry):
+            seen += len(entry.name)
+        case Err(_):
+            seen += 100
+    const past = Cursor(entries=[], index=0)
+    match at(past):
+        case Ok(entry):
+            seen += len(entry.name)
+        case Err(message):
+            seen += len(message) * 10
+    return seen == 32
+
+
+public func test_a_fallible_borrowed_option_with_a_scalar_error() -> bool:
+    const cursor = Cursor(entries=[Entry(name=b"xyz")])
+    match at_or_none(cursor):
+        case Ok(found):
+            if found is Some(entry):
+                return len(entry.name) == 3
+            return False
+        case Err(_):
+            return False

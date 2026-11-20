@@ -1,0 +1,37 @@
+import sets
+
+func main() -> int:
+    mut values: set[int] = set()
+    sets.add(mut values, 3)
+    sets.add(mut values, 3)
+    sets.add(mut values, 4)
+    if values != set([3, 4]) or len(values) != 2:
+        return 1
+    sets.discard(mut values, 3)
+    sets.discard(mut values, 99)
+    if values != set([4]):
+        return 2
+    const other = set([4, 9])
+    if sets.union(values, other) != set([4, 9]):
+        return 3
+    if sets.intersection(values, other) != set([4]):
+        return 4
+    if sets.difference(other, values) != set([9]):
+        return 5
+    if sets.symmetric_difference(values, other) != set([9]):
+        return 6
+    if not sets.subset(values, other):
+        return 7
+    if not sets.superset(other, values):
+        return 8
+    if not sets.disjoint(values, set([7])):
+        return 9
+    if sets.disjoint(values, other):
+        return 10
+    mut words: set[str] = set()
+    sets.add(mut words, "b")
+    sets.add(mut words, "a")
+    # lint: allow copy-in-loop reason="sets.union returns a new set built from a copy of its left operand, and the comparison reads that result"
+    if sets.union(words, set(["c"])) != set(["a", "b", "c"]):
+        return 11
+    return 42

@@ -1,0 +1,13 @@
+# Shared preparation for the numeric and nested-value matrix.
+# Each imported test still runs in its own forced trial.
+import b_buffer_values as fixture_1
+import b_packet_decode as fixture_2
+import n_float_text as fixture_0
+import n_scalar_parse_abi as fixture_3
+import v_buffer_format as fixture_4
+import v_dynamic_repeat as fixture_5
+import v_nested_lengths as fixture_7
+import v_nested_places as fixture_6
+
+func main() -> int:
+    return 0

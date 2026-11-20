@@ -1,0 +1,90 @@
+import dicts
+import sets
+
+
+# A named local that the caller owns is given away: its repair writes `own`.
+func owned_local(mut rows: str[]):
+    const piece = "ab" + "cd"
+    append(mut rows, own piece)
+
+
+# An `own` parameter is owned by the callee, so giving it on is `own` too.
+func owned_param(own piece: str, mut rows: str[]):
+    append(mut rows, own piece)
+
+
+# A plain parameter only borrows, so its repair is a copy, written at the call.
+func borrowed_param(piece: str, mut rows: str[]):
+    append(mut rows, copy(piece))
+
+
+# A loop variable and a match payload borrow, and take a copy the same way.
+func borrowed_loop(words: str[], mut rows: str[]):
+    for word in words:
+        append(mut rows, copy(word))
+
+
+func borrowed_payload(maybe: str?, mut rows: str[]):
+    match maybe:
+        case Some(v):
+            append(mut rows, copy(v))
+        case None:
+            return
+
+
+# A `const` element is a read-only borrow (borrowed results R1), so the append takes a copy of it.
+func element_binding(words: str[], mut rows: str[]):
+    const first = copy(words[0])
+    append(mut rows, own first)
+
+
+# A slice binding is a view: its copy is written at the binding.
+func view_binding(data: str, mut rows: str[]):
+    const piece = copy(data[0:2])
+    append(mut rows, own piece)
+
+
+# A fresh value, a scalar and a copy carry no marker.
+func fresh(mut rows: str[], mut counts: int[]):
+    append(mut rows, "x" + "y")
+    append(mut counts, 3)
+    append(mut rows, copy(rows[0]))
+
+
+# A marker on a borrowed name is refused, and its repair writes `copy(...)`
+# in the marker's place.
+func marked(s: str, mut rows: str[]):
+    append(mut rows, copy(s))
+
+
+# `sets.add` takes its element `own`, and a borrowed name given to it takes its
+# copy. `dicts.add` and `dicts.append_to` borrow their key, so their lines stand.
+func store(mut seen: set[str], mut tally: dict[str, int], mut groups: dict[str, str[]], word: str):
+    const kept = "ab" + "cd"
+    const again = "ef" + "gh"
+    sets.add(mut seen, own kept)
+    dicts.add(mut tally, again, 1)
+    dicts.add(mut tally, word, 1)
+    dicts.append_to(mut groups, word, "x")
+
+
+func main(out: Stream) -> int:
+    mut rows: str[] = []
+    mut counts: int[] = []
+    mut seen: set[str] = set()
+    mut tally: dict[str, int] = {}
+    mut groups: dict[str, str[]] = {}
+    owned_local(mut rows)
+    owned_param("p", mut rows)
+    borrowed_param("q", mut rows)
+    borrowed_loop(["r"], mut rows)
+    borrowed_payload(Some("s"), mut rows)
+    element_binding(["t"], mut rows)
+    view_binding("uvwx", mut rows)
+    fresh(mut rows, mut counts)
+    marked("m", mut rows)
+    store(mut seen, mut tally, mut groups, "n")
+    print(out, len(rows) + len(seen) + len(counts))
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

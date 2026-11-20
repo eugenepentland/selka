@@ -1,0 +1,72 @@
+module shapes
+
+# Pre-redesign shapes from the EDA and Lox ports, in a module that the entry
+# imports: its parser repairs travel together on one diagnostic, where nested
+# legacy expressions and variant payloads once produced overlapping edits.
+public union Tag:
+    items: list[Item],
+    atom: bytes,
+    count: int
+
+
+public record Item:
+    tag: Tag
+    weight: int
+
+
+public union Region:
+    board,
+    polygon: list[[2]float]
+
+
+public record Part:
+    name: bytes
+    pins: list[int]
+
+
+public record PartSpec:
+    title: bytes
+    pads: list[int]
+
+
+public def leaf(weight: int) -> Item:
+    return Item(tag=Tag.count(weight), weight=weight)
+
+
+public def weight_of(item: Item) -> int:
+    match item.tag:
+        case Tag.items(children):
+            return len(children)
+        case Tag.atom(name):
+            return len(name)
+        case Tag.count(n):
+            return n
+
+
+public def corners(region: Region) -> int:
+    match region:
+        case Region.board:
+            return 4
+        case Region.polygon(points):
+            return len(points)
+
+
+public def specs(parts: list[Part]) -> list[PartSpec]:
+    return [PartSpec(title=part.name, pads=[p + 1 for p in part.pins]) for part in parts]
+
+
+public def pick(c: bool, d: bool) -> int:
+    return 1 if c else (2 if d else 3)
+
+
+public def magnitudes(xs: list[int]) -> list[int]:
+    return [x if x > 0 else -x for x in xs]
+
+
+public def describe(desc: Option[bytes], vias: bool) -> bytes:
+    return b"(descr " + (b"" if desc is None else desc) + b" " + (b"not_allowed" if vias else b"allowed") + b")"
+
+
+public def emit_shape(shape: bytes) -> bytes:
+    emitted = b"rect" if shape == b"custom" else shape
+    return emitted

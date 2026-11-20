@@ -1,0 +1,47 @@
+import byte_builder
+import network
+
+# F-29 without tasks: one event loop is the fake service and its client. The poller listens on 127.0.0.1:18211, dials
+# the same endpoint, answers the request it accepts, and stops when the client side has read the whole answer.
+func serve_and_ask(own poller: network.Poller, service: Network) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    network.dial(mut live, service, mut outcome)
+    if outcome.code != network.OUTCOME_OK:
+        return 0 - outcome.code
+    const asked = outcome.value
+    mut got = 0
+    mut rounds = 0
+    while rounds < 200:
+        rounds += 1
+        live = network.wait(own live, 100, mut ready)
+        for index in range(ready.count):
+            const id = ready.ids[index]
+            if id == network.LISTENER:
+                live = network.accept(own live, mut outcome)
+            elif id == asked and network.has(ready.flags[index], network.EVENT_CONNECTED):
+                live = network.send(own live, asked, b"GET /verify HTTP/1.1\r\n\r\n", 0, mut outcome)
+            elif network.has(ready.flags[index], network.EVENT_READABLE):
+                mut raw = byte_builder.create()
+                live = network.recv(own live, id, mut raw, mut outcome)
+                if id == asked:
+                    if outcome.code == network.OUTCOME_OK:
+                        got += len(byte_builder.finish(raw))
+                    else:
+                        return got
+                elif outcome.code == network.OUTCOME_OK:
+                    live = network.send(own live, id, b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\nalice", 0, mut outcome)
+                    live = network.close_connection(own live, id, mut outcome)
+    return -98
+
+
+func main(net: Network, out: Stream) -> int:
+    with net.host("127.0.0.1:18211") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                const got = serve_and_ask(own poller, scoped)
+                print(out, "client read", got)
+                return 0
+            case err(code):
+                return code

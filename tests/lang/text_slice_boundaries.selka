@@ -1,0 +1,92 @@
+# A byte slice of text is valid text however the text is held (FX8, friction F-26). A plain `str` parameter, a payload
+# matched from one, a returned borrow and a slice of a slice are views, and their slices are checked like an owned
+# text's: an endpoint on a scalar boundary slices, and one inside a scalar traps `R_TEXT_BOUNDARY` (pinned in
+# src/core/s1_views_test.zig, which a guest test cannot do because a trap ends it). `strings.starts_with_at` asks for a
+# prefix at an octet offset without slicing, so a scanner can ask at every octet.
+import strings
+
+const SAMPLE: str = "aé中\U0001F600b"
+
+
+func tail_of(text: str, at: int) -> str from text:
+    return text[at:]
+
+
+func head_of(text: str, at: int) -> str from text:
+    return text[:at]
+
+
+func middle_of(text: str, start: int, end: int) -> str from text:
+    return text[start:end]
+
+
+func payload_tail(value: str?, at: int) -> int:
+    match value:
+        case Some(text):
+            return len(text[at:])
+        case None:
+            return -1
+
+
+func first(texts: str[]) -> str from texts:
+    return texts[0]
+
+
+func borrowed_tail(texts: str[], at: int) -> str:
+    const text = first(texts)
+    return copy(text[at:])
+
+
+func nested_tail(text: str, at: int) -> str from text:
+    return text[1:][at:]
+
+
+func comments(text: str) -> int:
+    mut count = 0
+    mut at = 0
+    while at < len(text):
+        if strings.starts_with_at(text, "<!--", at):
+            count += 1
+        at += 1
+    return count
+
+
+public func test_a_parameter_slices_on_every_scalar_boundary() -> bool:
+    # The scalars of SAMPLE start at octets 0, 1, 3, 6 and 10; it is 11 octets long.
+    return tail_of(SAMPLE, 1) == "é中\U0001F600b" and tail_of(SAMPLE, 3) == "中\U0001F600b" and tail_of(SAMPLE, 10) == "b" and len(tail_of(SAMPLE, 11)) == 0 and head_of(SAMPLE, 6) == "aé中" and middle_of(SAMPLE, 6, 10) == "\U0001F600"
+
+
+public func test_an_end_past_the_length_clamps_and_an_empty_slice_needs_no_boundary() -> bool:
+    return head_of(SAMPLE, 40) == SAMPLE and len(middle_of(SAMPLE, 6, 6)) == 0 and len(middle_of(SAMPLE, 8, 7)) == 0
+
+
+public func test_a_payload_a_returned_borrow_and_a_slice_of_a_slice_slice_on_boundaries() -> bool:
+    return payload_tail(Some(SAMPLE), 6) == 5 and payload_tail(None, 0) == -1 and borrowed_tail([SAMPLE], 3) == "中\U0001F600b" and nested_tail(SAMPLE, 5) == "\U0001F600b"
+
+
+public func test_starts_with_at_answers_false_inside_a_scalar_where_a_slice_would_trap() -> bool:
+    return comments("a — b <!-- c --> <!-- d -->") == 2 and comments("\U0001F600<!--") == 1 and not strings.starts_with_at(SAMPLE, "", 2) and strings.starts_with_at(SAMPLE, "中", 3)
+
+
+public func test_starts_with_at_the_end_matches_only_the_empty_prefix() -> bool:
+    return strings.starts_with_at("ab", "", 2) and not strings.starts_with_at("ab", "b", 2) and not strings.starts_with_at("ab", "", 3) and strings.starts_with_at("ab", "b", 1) and strings.starts_with_at("", "", 0)
+
+
+func short(text: str, width: int) -> str:
+    if len(text) > width:
+        return copy(strings.cut_octets(text, width - 1)) + "…"
+    return copy(text)
+
+
+public func test_cut_octets_ends_a_cut_at_the_end_of_a_character_of_one_to_four_octets() -> bool:
+    # SAMPLE's scalars start at octets 0, 1, 3, 6 and 10: a limit inside one backs off to where it starts.
+    return strings.cut_octets(SAMPLE, 1) == "a" and strings.cut_octets(SAMPLE, 2) == "a" and strings.cut_octets(SAMPLE, 3) == "aé" and strings.cut_octets(SAMPLE, 4) == "aé" and strings.cut_octets(SAMPLE, 5) == "aé" and strings.cut_octets(SAMPLE, 6) == "aé中" and strings.cut_octets(SAMPLE, 9) == "aé中" and strings.cut_octets(SAMPLE, 10) == "aé中\U0001F600"
+
+
+public func test_cut_octets_gives_the_whole_text_at_or_past_the_length_and_the_empty_text_below_the_first_character() -> bool:
+    return strings.cut_octets(SAMPLE, 11) == SAMPLE and strings.cut_octets(SAMPLE, 400) == SAMPLE and len(strings.cut_octets(SAMPLE, 0)) == 0 and len(strings.cut_octets(SAMPLE, 0 - 3)) == 0 and len(strings.cut_octets("中x", 2)) == 0 and len(strings.cut_octets("\U0001F600", 3)) == 0 and strings.cut_octets("\U0001F600", 4) == "\U0001F600" and len(strings.cut_octets("", 5)) == 0
+
+
+public func test_cut_octets_cuts_a_width_where_a_slice_of_it_would_trap() -> bool:
+    # `text[0:7]` ends inside the é at octets 6 and 7, which is the friction entry F-74's cut.
+    return short("abcdefghij", 8) == "abcdefg…" and short("abcdeféhij", 8) == "abcdef…" and short("short", 8) == "short"

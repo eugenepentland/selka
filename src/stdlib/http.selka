@@ -1,0 +1,1124 @@
+# A pure HTTP/1.x message codec: parse requests and responses from bytes and
+# render them back. It performs no I/O; the caller owns the socket and framing.
+#
+# This module deliberately models one complete message. `parse_request` ignores
+# bytes after the message; `parse_request_prefix` and `parse_response_prefix`
+# also say how many octets the message took, so a server loop that keeps a
+# connection open slices its buffer there.
+#
+# The parsers read the header section as octets. A section that is plain ASCII
+# (the case for nearly every message) is validated and split in one scan over
+# its octets and decoded to `str` once; a section with any other octet takes the
+# slower route that decodes each line, so its errors are reported in the same
+# order as before.
+import byte_builder
+import bytes
+import strings
+
+# One header field of an HTTP/1.x message: its name and its value.
+public record Header:
+    name: str
+    value: str
+
+
+# One parsed HTTP/1.x request.
+public record Request:
+    method: str
+    target: str
+    version: str
+    headers: Header[]
+    body: bytes
+
+
+# One parsed HTTP/1.x response.
+public record Response:
+    version: str
+    status: int
+    reason: str
+    headers: Header[]
+    body: bytes
+
+
+# Why a message was refused or could not be completed. `HeaderTooLarge` is a header section or a field count past
+# the limits, `BodyTooLarge` a body or chunk past them, and `UnsupportedVersion` a version spelled `HTTP/` digit `.`
+# digit other than 1.0 and 1.1; `Unsupported` is any other feature the codec does not implement (a chunked request
+# body, stacked encodings, a version token that is not spelled like a version), and `Malformed` is everything else that
+# is wrong with the bytes.
+public enum Error:
+    Incomplete
+    Malformed(value: str)
+    Unsupported(value: str)
+    HeaderTooLarge(value: str)
+    BodyTooLarge(value: str)
+    UnsupportedVersion(value: str)
+
+
+# The human-readable reason carried by a rejected message.
+public func message(error: Error) -> str:
+    match error:
+        case Incomplete:
+            return "incomplete message"
+        case Malformed(value=detail):
+            return copy(detail)
+        case Unsupported(value=detail):
+            return copy(detail)
+        case HeaderTooLarge(value=detail):
+            return copy(detail)
+        case BodyTooLarge(value=detail):
+            return copy(detail)
+        case UnsupportedVersion(value=detail):
+            return copy(detail)
+
+
+# The error for an HTTP version other than 1.0 and 1.1: `UnsupportedVersion` when the text is spelled like a version
+# (`HTTP/` digit `.` digit), `Unsupported` when it is not (a garbled token is not a version a server can name in a 505).
+func refused_version(version: str) -> Error:
+    if strings.char_count(version) == 8 and strings.starts_with(version, "HTTP/") and strings.is_digit(strings.char_at(version, 5)) and strings.char_at(version, 6) == "." and strings.is_digit(strings.char_at(version, 7)):
+        return Error.UnsupportedVersion(value="only HTTP/1.0 and HTTP/1.1 are supported")
+    return Error.Unsupported(value="only HTTP/1.0 and HTTP/1.1 are supported")
+
+
+# The status a server answers a refused request with: 400 for a malformed one (and for one the peer left incomplete),
+# 431 for a header section or field count past the limits, 413 for a body past them, 501 for an unimplemented feature and
+# 505 for an HTTP version other than 1.0 and 1.1.
+public func status(error: Error) -> int:
+    match error:
+        case Incomplete:
+            return 400
+        case Malformed(value=_):
+            return 400
+        case Unsupported(value=_):
+            return 501
+        case HeaderTooLarge(value=_):
+            return 431
+        case BodyTooLarge(value=_):
+            return 413
+        case UnsupportedVersion(value=_):
+            return 505
+
+
+# Largest accepted header section, in bytes.
+const MAX_HEADER_BYTES: int = 65536
+
+
+# Largest accepted number of header fields.
+const MAX_HEADERS: int = 100
+
+
+# Largest accepted body, in bytes.
+const MAX_BODY_BYTES: int = 1048576
+
+
+# The limits `parse_request_within` holds a request to: the header section's bytes (to the blank line that ends it),
+# its number of fields, and the body's bytes. The defaults are the limits `parse_request` uses, so
+# `parse_request_within(data, Limits())` is `parse_request(data)`. A section or field count past its limit is refused
+# with `HeaderTooLarge` and a body past its limit with `BodyTooLarge`, never `Malformed`.
+public record Limits:
+    header_bytes: int = 65536
+    header_fields: int = 100
+    body_bytes: int = 1048576
+
+
+# One parsed request and how many octets of the buffer it took: the header section, its blank line and the body. The octets
+# after `length` are the start of the next message.
+public record ParsedRequest:
+    request: Request
+    length: int
+
+
+# One parsed response and how many octets of the buffer it took: the header section, its blank line and the body (the
+# whole buffer for a body that the close of the connection ended). The octets after `length` are the start of the next
+# message.
+public record ParsedResponse:
+    response: Response
+    length: int
+
+
+# What a field list says about Content-Length: whether a field names it, and its
+# value (0 when none does).
+record Declared:
+    present: bool
+    value: int
+
+
+# The body of a chunked message and where the message ends: the octet after its last trailer line.
+record Gathered:
+    body: bytes
+    end: int
+
+
+# The terminator that ends a header section.
+func header_end() -> bytes:
+    return b"\r\n\r\n"
+
+
+# The end of one header line.
+func line_end() -> bytes:
+    return b"\r\n"
+
+
+# Decode one UTF-8 fragment or report a malformed field.
+func decode(data: bytes, what: str) -> str fails Error:
+    match strings.decode(data):
+        case Ok(text):
+            return text
+        case Err(_):
+            fail Error.Malformed(value=copy(what) + " is not valid UTF-8")
+
+
+# ASCII lowercase without allocating a second table for the common case.
+func lower(text: str) -> str:
+    return strings.lower(text)
+
+
+# The octet with ASCII capitals folded to lower case.
+func fold(octet: int) -> int:
+    if 65 <= octet <= 90:
+        return octet + 32
+    return octet
+
+
+# Whether a field name (a name of `fields`) is `wanted` ignoring ASCII case.
+# `width` is the length of `wanted` in characters, which rejects most names
+# without encoding them.
+func same_name(name: str, wanted: bytes, width: int) -> bool:
+    if strings.char_count(name) != width:
+        return False
+    mut octets = strings.encode(name)
+    if len(octets) != len(wanted):
+        return False
+    mut at = 0
+    while at < len(octets):
+        if fold(octets[at]) != fold(wanted[at]):
+            return False
+        at += 1
+    return True
+
+
+# Whether any field is named `wanted` (given in lower case), ignoring ASCII case.
+func has_header(fields: Header[], wanted: bytes) -> bool:
+    mut width = len(wanted)
+    for item in fields:
+        if same_name(item.name, wanted, width):
+            return True
+    return False
+
+
+# The first header with this case-insensitive name, if one exists.
+public func header(fields: Header[], name: str) -> str? from fields:
+    mut wanted = strings.encode(name)
+    mut width = strings.char_count(name)
+    for item in fields:
+        if same_name(item.name, wanted, width):
+            return Some(item.value)
+    return None
+
+
+# Every header with this case-insensitive name, in wire order.
+public func headers(fields: Header[], name: str) -> str[]:
+    mut wanted = strings.encode(name)
+    mut width = strings.char_count(name)
+    mut found: str[] = []
+    for item in fields:
+        if same_name(item.name, wanted, width):
+            append(mut found, copy(item.value))
+    return found
+
+
+# A stable lower-case method spelling for comparison.
+public func method(request: Request) -> str:
+    return lower(request.method)
+
+
+# The request target as it was sent, without its fragment (the text from the first `#`). A request that `parse_request`
+# returns has no fragment, so for it this is the target as it came.
+public func target(request: Request) -> str:
+    mut at = strings.char_find(request.target, "#")
+    if at < 0:
+        return copy(request.target)
+    return copy(strings.char_slice(request.target, 0, at))
+
+
+# The path part of a request target, by its form (RFC 9112 section 3.2). In origin form (`/` then a path, then an optional
+# `?query`) it is the text before the first `?`, so a `://` in the path or in the query changes nothing. In absolute form
+# (a scheme, `://`, an authority, then an optional path and query) it starts at the first `/` after the authority and is
+# `/` when there is none. The asterisk form (`*`, for OPTIONS) and the authority form (`host:port`, for CONNECT) have no
+# path, and the answer is the empty string: it is never a path a route table holds, where `/*` or `/host:port` could be.
+# A target of another form (only a request a program built by hand has one, `parse_request` refuses it) is read as
+# before: it is given a leading `/`.
+public func path(request: Request) -> str:
+    mut value = target(request)
+    if not strings.starts_with(value, "/"):
+        mut octets = strings.encode(value)
+        mut form = target_form(octets, 0, len(octets))
+        if form == FORM_ASTERISK or form == FORM_AUTHORITY:
+            return ""
+    mut question = strings.char_find(value, "?")
+    if question >= 0:
+        value = copy(strings.char_slice(value, 0, question))
+    if strings.starts_with(value, "/"):
+        return value
+    mut scheme = strings.char_find(value, "://")
+    if scheme >= 0:
+        mut slash = strings.char_find(value, "/", scheme + 3)
+        if slash < 0:
+            return "/"
+        return copy(strings.char_slice(value, slash, None))
+    return "/" + value
+
+
+# The query string: the text after the first `?` of the target without its fragment, so a later `?` belongs to the
+# query, and a `?` after a `#` is part of the fragment, not a query. The empty string when there is none, and for the
+# asterisk and authority forms, which have no query.
+public func query(request: Request) -> str:
+    mut value = target(request)
+    mut at = strings.char_find(value, "?")
+    if at < 0:
+        return ""
+    return copy(strings.char_slice(value, at + 1, None))
+
+
+# Where the blank line that ends the header section starts, or why the message
+# cannot be parsed yet; a section longer than `max_bytes` is too large.
+func head_end(data: bytes, max_bytes: int) -> int fails Error:
+    mut window = max_bytes + 4
+    if window < 4:
+        window = 4
+    mut end = bytes.find(data, header_end(), 0, window)
+    if end < 0:
+        if len(data) > max_bytes:
+            fail Error.HeaderTooLarge(value="header section is too large")
+        fail Error.Incomplete
+    if end > max_bytes:
+        fail Error.HeaderTooLarge(value="header section is too large")
+    return end
+
+
+# The header section `data[0:end]` as text, when it is valid UTF-8 made only of
+# ASCII: then every character is one octet, so an octet position is also a
+# character position.
+func ascii_head(data: bytes, end: int) -> str?:
+    match strings.decode(data[0:end]):
+        case Ok(text):
+            if strings.char_count(text) == end:
+                return Some(own text)
+            return None
+        case Err(_):
+            return None
+
+
+# Where the first line of the header section `data[0:end]` ends.
+func first_line_end(data: bytes, end: int) -> int:
+    return bytes.find(data, line_end(), 0, end + 2)
+
+
+# Parse one complete request. Extra bytes after the body are ignored; `parse_request_prefix` says where the message ends.
+public func parse_request(data: bytes) -> Request fails Error:
+    return try parse_request_within(data, Limits())
+
+
+# Parse one complete request held to `limits` instead of the defaults; everything else is `parse_request`. A body over
+# `limits.body_bytes` is `BodyTooLarge` (413), whatever the bytes after the header section hold.
+public func parse_request_within(data: bytes, limits: Limits) -> Request fails Error:
+    mut parsed = try parse_request_prefix(data, limits)
+    return own parsed.request
+
+
+# Parse the one complete request at the start of `data`, held to `limits`, and say how many octets it took: the header
+# section, its blank line and the body. `parse_request_within` is this function's `request`. A buffer that holds several
+# requests is read by calling it again on `data[length:]`. A request that is not complete yet fails with `Incomplete`
+# whatever follows it, exactly as `parse_request_within` does, and the octets after the request never change what it
+# says.
+public func parse_request_prefix(data: bytes, limits: Limits) -> ParsedRequest fails Error:
+    mut end = try head_end(data, limits.header_bytes)
+    mut request = try request_head(data, end, limits.header_fields)
+    if has_header(request.headers, b"transfer-encoding"):
+        fail Error.Unsupported(value="chunked request bodies are not supported")
+    mut body_start = end + 4
+    mut length = try content_length(request.headers)
+    if length > limits.body_bytes:
+        fail Error.BodyTooLarge(value="body length is outside the supported limit")
+    if len(data) < body_start + length:
+        fail Error.Incomplete
+    request.body = copy(data[body_start:body_start + length])
+    return ParsedRequest(request=own request, length=body_start + length)
+
+
+# The request line and header fields of the header section `data[0:end]`, with an
+# empty body; more than `max_fields` fields are too many.
+func request_head(data: bytes, end: int, max_fields: int) -> Request fails Error:
+    match ascii_head(data, end):
+        case Some(text):
+            mut stop = first_line_end(data, end)
+            mut request = try request_line_ascii(data, text, stop)
+            mut fields = try fields_ascii(data, text, stop, end, max_fields)
+            request.headers = own fields
+            return request
+        case None:
+            mut lines = bytes.split(data[0:end], line_end())
+            mut request = try request_line_general(lines[0])
+            mut fields = try fields_general(lines, max_fields)
+            request.headers = own fields
+            return request
+
+
+# Why `line` is not a request line of three parts separated by single spaces: it is empty, its parts are not separated by
+# exactly one space (a leading, doubled or trailing space, or a tab), it has no version, or it has some other number of
+# parts.
+func request_line_shape(line: str) -> Error:
+    if strings.char_count(line) == 0:
+        return Error.Malformed(value="request line is empty")
+    mut parts = strings.split(line, " ")
+    mut blank = False
+    for part in parts:
+        if strings.char_count(part) == 0:
+            blank = True
+    if blank or strings.char_find(line, "\t") >= 0:
+        return Error.Malformed(value="request line parts must be separated by a single space")
+    if len(parts) == 2:
+        return Error.Malformed(value="request line has no version")
+    return Error.Malformed(value="request line must have method, target and version")
+
+
+# The request line `data[0:stop]` of an ASCII section: exactly three parts
+# separated by single spaces, found without splitting the text.
+func request_line_ascii(data: bytes, text: str, stop: int) -> Request fails Error:
+    mut first_space = bytes.find(data, b" ", 0, stop)
+    if first_space < 0:
+        fail request_line_shape(strings.char_slice(text, 0, stop))
+    mut second_space = bytes.find(data, b" ", first_space + 1, stop)
+    if second_space < 0 or bytes.find(data, b" ", second_space + 1, stop) >= 0:
+        fail request_line_shape(strings.char_slice(text, 0, stop))
+    if not valid_token(data, 0, first_space):
+        fail Error.Malformed(value="request method is not a valid token")
+    _ = try check_target(data, first_space + 1, second_space)
+    mut version = copy(strings.char_slice(text, second_space + 1, stop))
+    if version != "HTTP/1.0" and version != "HTTP/1.1":
+        if not plain_octets(data, second_space + 1, stop):
+            fail Error.Malformed(value="request version contains a control character")
+        fail refused_version(version)
+    return Request(method=copy(strings.char_slice(text, 0, first_space)), target=copy(strings.char_slice(text, first_space + 1, second_space)), version=own version, headers=[], body=b"")
+
+
+# The request line of a section that is not plain ASCII, decoded as a whole.
+func request_line_general(line: bytes) -> Request fails Error:
+    mut first = try decode(line, "request line")
+    mut parts = strings.split(first, " ")
+    if len(parts) != 3:
+        fail request_line_shape(first)
+    mut verb = copy(parts[0])
+    mut destination = copy(parts[1])
+    mut version = copy(parts[2])
+    if not valid_name(verb):
+        fail Error.Malformed(value="request method is not a valid token")
+    mut octets = strings.encode(destination)
+    _ = try check_target(octets, 0, len(octets))
+    if version != "HTTP/1.0" and version != "HTTP/1.1":
+        if not plain_text(version):
+            fail Error.Malformed(value="request version contains a control character")
+        fail refused_version(version)
+    return Request(method=own verb, target=own destination, version=own version, headers=[], body=b"")
+
+
+# Parse one complete response. `closed` says whether the peer has already closed
+# the connection, which completes a response without Content-Length. Extra bytes after the body are ignored;
+# `parse_response_prefix` says where the message ends.
+public func parse_response(data: bytes, closed: bool) -> Response fails Error:
+    mut parsed = try parse_response_prefix(data, closed)
+    return own parsed.response
+
+
+# Whether a status has no body whatever its fields say (RFC 9112 section 6.3): 1xx, 204 and 304.
+func bodiless(code: int) -> bool:
+    return code == 204 or code == 304 or code < 200
+
+
+# Parse the one complete response at the start of `data` (`closed` as for `parse_response`) and say how many octets it
+# took: the header section, its blank line and the body, with the trailer section of a chunked body. A body that the
+# close of the connection ended takes the rest of `data`. A response that is not complete yet fails with `Incomplete`
+# as `parse_response` does.
+public func parse_response_prefix(data: bytes, closed: bool) -> ParsedResponse fails Error:
+    mut end = try head_end(data, MAX_HEADER_BYTES)
+    mut response = try response_head(data, end)
+    mut body_start = end + 4
+    mut chunked = try is_chunked(response.headers)
+    if chunked:
+        if has_header(response.headers, b"content-length"):
+            fail Error.Malformed(value="chunked response also has Content-Length")
+        if bodiless(response.status):
+            fail Error.Malformed(value="a response with this status has no body, so it cannot be chunked")
+        mut gathered = try parse_chunked(data, body_start)
+        mut message_end = gathered.end
+        response.body = own gathered.body
+        return ParsedResponse(response=own response, length=message_end)
+    if bodiless(response.status):
+        return ParsedResponse(response=own response, length=body_start)
+    mut declared = try length_of(response.headers)
+    if declared.value > MAX_BODY_BYTES:
+        fail Error.BodyTooLarge(value="body length is outside the supported limit")
+    if not declared.present:
+        if not closed:
+            fail Error.Incomplete
+        if len(data) - body_start > MAX_BODY_BYTES:
+            fail Error.BodyTooLarge(value="body is too large")
+        response.body = copy(data[body_start:])
+        return ParsedResponse(response=own response, length=len(data))
+    if len(data) < body_start + declared.value:
+        fail Error.Incomplete
+    response.body = copy(data[body_start:body_start + declared.value])
+    return ParsedResponse(response=own response, length=body_start + declared.value)
+
+
+# The status line and header fields of the header section `data[0:end]`, with an
+# empty body.
+func response_head(data: bytes, end: int) -> Response fails Error:
+    match ascii_head(data, end):
+        case Some(text):
+            mut stop = first_line_end(data, end)
+            mut response = try status_line(strings.char_slice(text, 0, stop))
+            mut fields = try fields_ascii(data, text, stop, end, MAX_HEADERS)
+            response.headers = own fields
+            return response
+        case None:
+            mut lines = bytes.split(data[0:end], line_end())
+            mut first = try decode(lines[0], "status line")
+            mut response = try status_line(first)
+            mut fields = try fields_general(lines, MAX_HEADERS)
+            response.headers = own fields
+            return response
+
+
+# The version, status code and reason of a status line.
+func status_line(first: str) -> Response fails Error:
+    mut first_space = strings.char_find(first, " ")
+    if first_space == 0:
+        fail Error.Malformed(value="status line must start with the version")
+    if first_space < 0:
+        fail Error.Malformed(value="status line has no status code")
+    mut version = copy(strings.char_slice(first, 0, first_space))
+    mut rest = trim_blanks(strings.char_slice(first, first_space + 1, None))
+    if version != "HTTP/1.0" and version != "HTTP/1.1":
+        if not plain_text(version):
+            fail Error.Malformed(value="status line version contains a control character")
+        fail refused_version(version)
+    mut second_space = strings.char_find(rest, " ")
+    mut code_text = copy(rest)
+    mut reason = ""
+    if second_space >= 0:
+        code_text = copy(strings.char_slice(rest, 0, second_space))
+        reason = copy(strings.char_slice(rest, second_space + 1, None))
+    if not valid_value(reason):
+        fail Error.Malformed(value="status reason contains an invalid character")
+    mut digits = strings.encode(code_text)
+    if len(digits) == 0:
+        fail Error.Malformed(value="status line has no status code")
+    if not all_digits(digits, 0, len(digits)):
+        fail Error.Malformed(value="status code is not a decimal integer")
+    if len(digits) != 3:
+        fail Error.Malformed(value="status code must be exactly three digits")
+    mut value = digits_value(digits, 0, 3)
+    if value < 100:
+        fail Error.Malformed(value="status code is outside 100..999")
+    return Response(version=own version, status=value, reason=own reason, headers=[], body=b"")
+
+
+# The header fields of an ASCII section in one scan of its octets. `data[first_stop:end]` holds
+# the CRLF-separated field lines (`first_stop` is where the first line ends and `end` where
+# the blank line starts); `text` is the same section decoded, so a field's text is a slice of
+# `text` at the octet positions found here. More than `max_fields` fields are too many.
+func fields_ascii(data: bytes, text: str, first_stop: int, end: int, max_fields: int) -> Header[] fails Error:
+    mut fields: Header[] = []
+    if first_stop >= end:
+        return fields
+    mut position = first_stop + 2
+    while True:
+        mut stop = bytes.find(data, line_end(), position, end + 2)
+        if stop <= position:
+            fail Error.Malformed(value="unexpected blank header line")
+        mut lead = data[position]
+        if lead == 32 or lead == 9:
+            fail Error.Malformed(value="obsolete header line folding is not supported")
+        mut colon = bytes.find(data, b":", position, stop)
+        if colon <= position:
+            fail Error.Malformed(value="header field has no name")
+        if not valid_token(data, position, colon):
+            fail Error.Malformed(value="header name contains an invalid character")
+        mut first = colon + 1
+        mut last = stop
+        while first < last and spacing(data[first]):
+            first += 1
+        while last > first and spacing(data[last - 1]):
+            last -= 1
+        if not valid_field(data, first, last):
+            fail Error.Malformed(value="header value contains an invalid character")
+        append(mut fields, Header(name=copy(strings.char_slice(text, position, colon)), value=copy(strings.char_slice(text, first, last))))
+        if len(fields) > max_fields:
+            fail Error.HeaderTooLarge(value="too many header fields")
+        if stop >= end:
+            return fields
+        position = stop + 2
+
+
+# The header fields of a section that is not plain ASCII: `lines[1:]`, each decoded on its own. More than
+# `max_fields` fields are too many.
+func fields_general(lines: bytes[], max_fields: int) -> Header[] fails Error:
+    mut fields: Header[] = []
+    mut index = 1
+    while index < len(lines):
+        mut line = copy(lines[index])
+        if len(line) == 0:
+            fail Error.Malformed(value="unexpected blank header line")
+        mut first_byte = line[0]
+        if first_byte == 32 or first_byte == 9:
+            fail Error.Malformed(value="obsolete header line folding is not supported")
+        mut colon = bytes.find(line, b":")
+        if colon <= 0:
+            fail Error.Malformed(value="header field has no name")
+        mut name = try decode(line[0:colon], "header name")
+        if not valid_name(name):
+            fail Error.Malformed(value="header name contains an invalid character")
+        mut first = colon + 1
+        mut last = len(line)
+        while first < last and spacing(line[first]):
+            first += 1
+        while last > first and spacing(line[last - 1]):
+            last -= 1
+        mut value = try decode(line[first:last], "header value")
+        if not valid_value(value):
+            fail Error.Malformed(value="header value contains an invalid character")
+        append(mut fields, Header(name=own name, value=own value))
+        if len(fields) > max_fields:
+            fail Error.HeaderTooLarge(value="too many header fields")
+        index += 1
+    return fields
+
+
+# Parse Content-Length, rejecting repeated conflicting values.
+func content_length(fields: Header[]) -> int fails Error:
+    mut declared = try length_of(fields)
+    return declared.value
+
+
+# The number a Content-Length field value spells. The grammar is RFC 9110's `1*DIGIT`: ASCII digits and nothing else, so a
+# sign, a space, an underscore, a list (`4, 4`) and a digit of another script are refused, and at most 18 of them (a
+# length of more is never one this codec can hold).
+func length_value(text: str) -> int fails Error:
+    mut octets = strings.encode(text)
+    if not all_digits(octets, 0, len(octets)):
+        if len(octets) > 1 and octets[0] == 45 and all_digits(octets, 1, len(octets)):
+            fail Error.Malformed(value="Content-Length is negative")
+        fail Error.Malformed(value="Content-Length is not a decimal integer")
+    if len(octets) > 18:
+        fail Error.Malformed(value="Content-Length has more than 18 digits")
+    return digits_value(octets, 0, len(octets))
+
+
+# Whether a field names Content-Length and what it says, rejecting repeated
+# conflicting values.
+func length_of(fields: Header[]) -> Declared fails Error:
+    mut found = 0 - 1
+    mut present = False
+    for item in fields:
+        if same_name(item.name, b"content-length", 14):
+            present = True
+            mut value = try length_value(item.value)
+            if found >= 0 and found != value:
+                fail Error.Malformed(value="conflicting Content-Length values")
+            found = value
+    if found < 0:
+        return Declared(present=present, value=0)
+    return Declared(present=present, value=found)
+
+
+# Whether the response body is chunked. A Transfer-Encoding other than the
+# exact single value `chunked` is unsupported.
+func is_chunked(fields: Header[]) -> bool fails Error:
+    if not has_header(fields, b"transfer-encoding"):
+        return False
+    mut values = headers(fields, "transfer-encoding")
+    if len(values) != 1 or lower(values[0]) != "chunked":
+        fail Error.Unsupported(value="only a single chunked transfer encoding is supported")
+    return True
+
+
+# Whether a trailer field names a field that frames the message. RFC 9110 section 6.5.1 forbids a sender to put one in a
+# trailer section; the codec does not hand trailers on, so a peer that does would read the message differently.
+func framing_field(name: str) -> bool:
+    if same_name(name, b"content-length", 14):
+        return True
+    return same_name(name, b"transfer-encoding", 17)
+
+
+# Parse a chunked body from `start`, after the header section: the chunks gathered in order (in one builder, so the time
+# is linear in the input) and the octet after the last trailer line. A chunk-size line is a hexadecimal size, optional
+# blanks and an optional chunk extension, which is read for its octets only; no control octet may stand in the line.
+func parse_chunked(data: bytes, start: int) -> Gathered fails Error:
+    mut position = start
+    mut gathered = byte_builder.create()
+    mut total = 0
+    while True:
+        mut line_end_at = bytes.find(data, line_end(), position)
+        if line_end_at < 0:
+            fail Error.Incomplete
+        mut size_text = try decode(data[position:line_end_at], "chunk size")
+        if not valid_value(size_text):
+            fail Error.Malformed(value="chunk size line contains an invalid character")
+        mut semicolon = strings.char_find(size_text, ";")
+        if semicolon >= 0:
+            size_text = trim_blanks(strings.char_slice(size_text, 0, semicolon))
+        mut size = try parse_hex(size_text)
+        position = line_end_at + 2
+        if size == 0:
+            break
+        if size > MAX_BODY_BYTES or total + size > MAX_BODY_BYTES:
+            fail Error.BodyTooLarge(value="chunked body is too large")
+        if len(data) < position + size + 2:
+            fail Error.Incomplete
+        if data[position + size] != 13 or data[position + size + 1] != 10:
+            fail Error.Malformed(value="chunk data is not followed by CRLF")
+        _ = byte_builder.append_range(mut gathered, data, position, position + size)
+        total += size
+        position += size + 2
+    # Trailer fields are accepted and ignored only when they are well formed.
+    while True:
+        mut trailer_end = bytes.find(data, line_end(), position)
+        if trailer_end < 0:
+            fail Error.Incomplete
+        if trailer_end == position:
+            position += 2
+            break
+        if data[position] == 32 or data[position] == 9:
+            fail Error.Malformed(value="obsolete trailer line folding is not supported")
+        mut trailer = try decode(data[position:trailer_end], "trailer field")
+        mut colon = strings.char_find(trailer, ":")
+        if colon <= 0:
+            fail Error.Malformed(value="trailer field has no name")
+        mut trailer_name = copy(strings.char_slice(trailer, 0, colon))
+        if not valid_name(trailer_name):
+            fail Error.Malformed(value="trailer name contains an invalid character")
+        if not valid_value(trim_blanks(strings.char_slice(trailer, colon + 1, None))):
+            fail Error.Malformed(value="trailer value contains an invalid character")
+        if framing_field(trailer_name):
+            fail Error.Malformed(value="trailer names a field that frames the message")
+        position = trailer_end + 2
+    return Gathered(body=byte_builder.finish(gathered), end=position)
+
+
+# Parse a nonempty hexadecimal chunk size.
+func parse_hex(text: str) -> int fails Error:
+    if strings.char_count(text) == 0:
+        fail Error.Malformed(value="empty chunk size")
+    mut value = 0
+    for character in strings.chars(text):
+        mut digit = 0 - 1
+        if character >= "0" and character <= "9":
+            digit = ord(character) - 48
+        elif character >= "a" and character <= "f":
+            digit = ord(character) - 87
+        elif character >= "A" and character <= "F":
+            digit = ord(character) - 55
+        if digit < 0:
+            fail Error.Malformed(value="chunk size is not hexadecimal")
+        if value > 268435455:
+            fail Error.BodyTooLarge(value="chunk size is too large")
+        value = value * 16 + digit
+    return value
+
+
+# Whether an octet belongs to the RFC 9110 token alphabet: printable ASCII except
+# the separators `"(),/:;<=>?@[\]{}`.
+func token_octet(octet: int) -> bool:
+    if octet < 33 or octet > 126:
+        return False
+    if octet in b'"(),/':
+        return False
+    if 58 <= octet <= 64:
+        return False
+    if 91 <= octet <= 93:
+        return False
+    return octet != 123 and octet != 125
+
+
+# Whether an octet is optional whitespace (RFC 9110 `OWS`): a space or a horizontal tab, the only octets trimmed from the
+# ends of a field value. Any other control octet there is part of the value, and a value may not hold one.
+func spacing(octet: int) -> bool:
+    return octet == 32 or octet == 9
+
+
+# `text` without the spaces and horizontal tabs at its ends, and without any other trimming.
+func trim_blanks(text: str) -> str:
+    mut first = 0
+    mut last = strings.char_count(text)
+    while first < last and strings.char_at(text, first) in " \t":
+        first += 1
+    while last > first and strings.char_at(text, last - 1) in " \t":
+        last -= 1
+    return copy(strings.char_slice(text, first, last))
+
+
+# Whether `data[start:end]` is one or more ASCII digits and nothing else.
+func all_digits(data: bytes, start: int, end: int) -> bool:
+    if end <= start:
+        return False
+    mut at = start
+    while at < end:
+        if data[at] < 48 or data[at] > 57:
+            return False
+        at += 1
+    return True
+
+
+# The number the decimal digits `data[start:end]` spell; the caller has checked that they are digits and few enough to fit.
+func digits_value(data: bytes, start: int, end: int) -> int:
+    mut value = 0
+    mut at = start
+    while at < end:
+        value = value * 10 + data[at] - 48
+        at += 1
+    return value
+
+
+# Whether `data[start:end]` holds no control octet at all, not even a horizontal tab.
+func plain_octets(data: bytes, start: int, end: int) -> bool:
+    mut at = start
+    while at < end:
+        if data[at] < 32 or data[at] == 127:
+            return False
+        at += 1
+    return True
+
+
+# `plain_octets` over the octets of `text`.
+func plain_text(text: str) -> bool:
+    mut octets = strings.encode(text)
+    return plain_octets(octets, 0, len(octets))
+
+
+# Whether an octet is allowed in a header value: anything but a control octet other
+# than horizontal tab.
+func field_octet(octet: int) -> bool:
+    if octet == 9:
+        return True
+    return octet >= 32 and octet != 127
+
+
+# Whether `data[start:end]` is a nonempty header name or method (a token).
+func valid_token(data: bytes, start: int, end: int) -> bool:
+    if end <= start:
+        return False
+    mut at = start
+    while at < end:
+        if not token_octet(data[at]):
+            return False
+        at += 1
+    return True
+
+
+# Whether `data[start:end]` is a nonempty request target without a control octet or a space.
+func valid_destination(data: bytes, start: int, end: int) -> bool:
+    if end <= start:
+        return False
+    mut at = start
+    while at < end:
+        mut octet = data[at]
+        if octet <= 32 or octet == 127:
+            return False
+        at += 1
+    return True
+
+
+# Whether `data[start:end]` is a header value with no control octets other than horizontal tab.
+func valid_field(data: bytes, start: int, end: int) -> bool:
+    mut at = start
+    while at < end:
+        if not field_octet(data[at]):
+            return False
+        at += 1
+    return True
+
+
+# `valid_token` over the octets a builder has gathered.
+func buffer_token(buffer: byte_buffer, start: int, end: int) -> bool:
+    if end <= start:
+        return False
+    mut at = start
+    while at < end:
+        if not token_octet(buffer[at]):
+            return False
+        at += 1
+    return True
+
+
+# `valid_field` over the octets a builder has gathered.
+func buffer_field(buffer: byte_buffer, start: int, end: int) -> bool:
+    mut at = start
+    while at < end:
+        if not field_octet(buffer[at]):
+            return False
+        at += 1
+    return True
+
+
+# Whether a header name uses the RFC 9110 token alphabet.
+func valid_name(name: str) -> bool:
+    mut octets = strings.encode(name)
+    return valid_token(octets, 0, len(octets))
+
+
+# A target that is none of the forms of RFC 9112 section 3.2.
+const FORM_NONE: int = 0
+
+
+# The origin form: `/`, a path and an optional `?query`.
+const FORM_ORIGIN: int = 1
+
+
+# The absolute form: a scheme, `://`, an authority, an optional path and query.
+const FORM_ABSOLUTE: int = 2
+
+
+# The asterisk form: `*`.
+const FORM_ASTERISK: int = 3
+
+
+# The authority form: `host:port`.
+const FORM_AUTHORITY: int = 4
+
+
+# Whether an octet may stand in the host of an authority: an RFC 3986 unreserved character, a percent sign or a
+# sub-delimiter.
+func host_octet(octet: int) -> bool:
+    if 48 <= octet <= 57 or 65 <= octet <= 90 or 97 <= octet <= 122:
+        return True
+    return octet in b"-._~%!$&'()*+,;="
+
+
+# Whether `data[start:end]` is one to five digits spelling a port, 0 to 65535.
+func valid_port(data: bytes, start: int, end: int) -> bool:
+    if end - start > 5 or not all_digits(data, start, end):
+        return False
+    return digits_value(data, start, end) <= 65535
+
+
+# Whether `data[start:end]` is an IP literal's inside (what stands between `[` and `]`).
+func literal_octets(data: bytes, start: int, end: int) -> bool:
+    if end <= start:
+        return False
+    mut at = start
+    while at < end:
+        mut octet = data[at]
+        if not (48 <= octet <= 57 or 65 <= octet <= 90 or 97 <= octet <= 122 or octet in b":.%-_~"):
+            return False
+        at += 1
+    return True
+
+
+# Whether `data[start:end]` is an authority-form target: a host and a port (`host:port`), the host a name, an IPv4 address
+# or a bracketed IP literal.
+func authority_form(data: bytes, start: int, end: int) -> bool:
+    mut colon = end - 1
+    while colon >= start and data[colon] != 58:
+        colon -= 1
+    if colon <= start or not valid_port(data, colon + 1, end):
+        return False
+    if data[start] == 91:
+        return data[colon - 1] == 93 and literal_octets(data, start + 1, colon - 1)
+    mut at = start
+    while at < colon:
+        if not host_octet(data[at]):
+            return False
+        at += 1
+    return True
+
+
+# Whether `data[start:end]` is an absolute-form target: a scheme (a letter, then letters, digits, `+`, `-` and `.`), `://`,
+# a nonempty authority (the octets up to the first `/` or `?`), then an optional path and query.
+func absolute_form(data: bytes, start: int, end: int) -> bool:
+    mut colon = bytes.find(data, b"://", start, end)
+    if colon <= start:
+        return False
+    mut first = data[start]
+    if not (65 <= first <= 90 or 97 <= first <= 122):
+        return False
+    mut at = start + 1
+    while at < colon:
+        mut octet = data[at]
+        if not (48 <= octet <= 57 or 65 <= octet <= 90 or 97 <= octet <= 122 or octet in b"+-."):
+            return False
+        at += 1
+    at = colon + 3
+    while at < end and data[at] != 47 and data[at] != 63:
+        if not (host_octet(data[at]) or data[at] in b":@[]"):
+            return False
+        at += 1
+    return at > colon + 3
+
+
+# Which form `data[start:end]` is as a request target, or `FORM_NONE`: an origin form (`/`, a path, an optional
+# `?query`), an absolute form (a scheme, `://`, an authority, an optional path and query), `*`, or an authority form
+# (`host:port`). A target that is empty or holds a space, a control octet or a `#` is none of them.
+func target_form(data: bytes, start: int, end: int) -> int:
+    if end <= start:
+        return FORM_NONE
+    mut at = start
+    while at < end:
+        mut octet = data[at]
+        if octet <= 32 or octet == 127 or octet == 35:
+            return FORM_NONE
+        at += 1
+    if data[start] == 47:
+        return FORM_ORIGIN
+    if end - start == 1 and data[start] == 42:
+        return FORM_ASTERISK
+    if absolute_form(data, start, end):
+        return FORM_ABSOLUTE
+    if authority_form(data, start, end):
+        return FORM_AUTHORITY
+    return FORM_NONE
+
+
+# Refuse a request target that is not one of the four forms, saying whether it holds a control octet or a space, a
+# fragment, or is simply none of the forms.
+func check_target(data: bytes, start: int, end: int) -> bool fails Error:
+    if not valid_destination(data, start, end):
+        fail Error.Malformed(value="request target contains a control character")
+    if bytes.find(data, b"#", start, end) >= 0:
+        fail Error.Malformed(value="request target contains a fragment")
+    if target_form(data, start, end) == FORM_NONE:
+        fail Error.Malformed(value="request target is not an origin, absolute, authority or asterisk form")
+    return True
+
+
+# Whether a request target is one of the four forms.
+func valid_target(destination: str) -> bool:
+    mut octets = strings.encode(destination)
+    return target_form(octets, 0, len(octets)) != FORM_NONE
+
+
+# Whether a header value has no control octets other than horizontal tab.
+func valid_value(value: str) -> bool:
+    mut octets = strings.encode(value)
+    return valid_field(octets, 0, len(octets))
+
+
+# Append one validated header field to a builder. The name and the value are
+# checked where the builder holds them, so no copy of either is made.
+func write_header(mut builder: byte_builder.Builder, item: Header) -> bool fails Error:
+    mut mark = len(builder.buffer)
+    byte_builder.append_text(mut builder, item.name)
+    if not buffer_token(builder.buffer, mark, len(builder.buffer)):
+        fail Error.Malformed(value="header name contains an invalid character")
+    byte_builder.append_text(mut builder, ": ")
+    mark = len(builder.buffer)
+    byte_builder.append_text(mut builder, item.value)
+    if not buffer_field(builder.buffer, mark, len(builder.buffer)):
+        fail Error.Malformed(value="header value contains an invalid character")
+    byte_builder.append(mut builder, line_end())
+    return True
+
+
+# The checks both writers make on the framing fields a caller gave beside the body: a Content-Length must match the body
+# (`head` lets it stand over an empty body, for the answer to a HEAD request), and a Transfer-Encoding cannot stand beside
+# a Content-Length or beside a body, for the writer would add a Content-Length for that body and a message with both
+# says two things about where it ends (RFC 9112 section 6.2). Whether the writer adds Content-Length is the caller's
+# `declared.present` and the absence of a Transfer-Encoding.
+func check_framing(fields: Header[], body: bytes, what: str, head: bool) -> Declared fails Error:
+    mut declared = try length_of(fields)
+    const bodiless_head = head and len(body) == 0
+    if declared.present and declared.value != len(body) and not bodiless_head:
+        fail Error.Malformed(value="Content-Length does not match the " + what + " body")
+    if has_header(fields, b"transfer-encoding"):
+        if declared.present:
+            fail Error.Malformed(value="Content-Length and Transfer-Encoding together say two things about the " + what + " body")
+        if len(body) > 0:
+            fail Error.Malformed(value="Transfer-Encoding cannot be written beside a body, which gets a Content-Length")
+    return declared
+
+
+# Append the Content-Length field the writer adds for a body of `size` octets.
+func append_length(mut builder: byte_builder.Builder, size: int):
+    byte_builder.append_text(mut builder, "Content-Length: ")
+    byte_builder.append_int(mut builder, size)
+    byte_builder.append(mut builder, line_end())
+
+
+# Serialize one request, adding Content-Length when a body is present and the caller did not provide one. The method must
+# be a token, the version `HTTP/1.0` or `HTTP/1.1`, and the target one of the four forms; a Transfer-Encoding beside a
+# body or a Content-Length is refused.
+public func write_request(request: Request) -> bytes fails Error:
+    mut builder = byte_builder.create()
+    if not valid_name(request.method):
+        fail Error.Malformed(value="request method is invalid")
+    if not valid_target(request.target):
+        fail Error.Malformed(value="request target is invalid")
+    if request.version != "HTTP/1.0" and request.version != "HTTP/1.1":
+        fail refused_version(request.version)
+    byte_builder.append_text(mut builder, request.method)
+    byte_builder.append_text(mut builder, " ")
+    byte_builder.append_text(mut builder, request.target)
+    byte_builder.append_text(mut builder, " ")
+    byte_builder.append_text(mut builder, request.version)
+    byte_builder.append(mut builder, line_end())
+    mut declared = try check_framing(request.headers, request.body, "request", False)
+    for item in request.headers:
+        _ = try write_header(mut builder, item)
+    if len(request.body) > 0 and not declared.present:
+        append_length(mut builder, len(request.body))
+    byte_builder.append(mut builder, line_end())
+    byte_builder.append(mut builder, request.body)
+    return byte_builder.finish(builder)
+
+
+# Serialize one response, adding Content-Length when the caller did not provide one: the body's length, which is 0 for an
+# empty body except for a 1xx, 204 or 304 answer, which has none (and may carry no body: one is refused), and except when
+# the caller's fields carry a Transfer-Encoding. A Transfer-Encoding beside a body or a Content-Length is refused.
+public func write_response(response: Response) -> bytes fails Error:
+    mut builder = byte_builder.create()
+    _ = try write_status_and_fields(mut builder, response, False)
+    byte_builder.append(mut builder, response.body)
+    return byte_builder.finish(builder)
+
+
+# The header section `write_response(response)` writes, its blank line included, and no body: the answer to a HEAD
+# request, whose headers are the GET answer's. Give it the GET answer, body and all, and its Content-Length is the body's;
+# or give it an empty body and the Content-Length the GET answer would carry, which is written as declared
+# (a declared length must still be a decimal integer, and a nonempty body must still match it). An empty body with no
+# declared length gets no Content-Length here, where `write_response` writes `Content-Length: 0`: the body of a HEAD answer
+# is always empty, so the writer cannot tell the GET answer's empty body from an omitted one.
+public func write_response_head(response: Response) -> bytes fails Error:
+    mut builder = byte_builder.create()
+    _ = try write_status_and_fields(mut builder, response, True)
+    return byte_builder.finish(builder)
+
+
+# Append the status line, the header fields and the blank line of `response` to `builder`, adding Content-Length when the
+# caller declares none (for an empty body only when the status has a body and `head` is false). A declared Content-Length
+# must match the body, except that `head` lets it stand over an empty body (the answer to a HEAD request); a body on a
+# 1xx, 204 or 304 answer is refused.
+func write_status_and_fields(mut builder: byte_builder.Builder, response: Response, head: bool) -> bool fails Error:
+    if response.version != "HTTP/1.0" and response.version != "HTTP/1.1":
+        fail refused_version(response.version)
+    if response.status < 100 or response.status > 999:
+        fail Error.Malformed(value="status code is outside 100..999")
+    byte_builder.append_text(mut builder, response.version)
+    byte_builder.append_text(mut builder, " ")
+    byte_builder.append_int(mut builder, response.status)
+    if strings.char_count(response.reason) > 0:
+        byte_builder.append_text(mut builder, " ")
+        mut mark = len(builder.buffer)
+        byte_builder.append_text(mut builder, response.reason)
+        if not buffer_field(builder.buffer, mark, len(builder.buffer)):
+            fail Error.Malformed(value="status reason contains an invalid character")
+    byte_builder.append(mut builder, line_end())
+    mut declared = try check_framing(response.headers, response.body, "response", head)
+    if bodiless(response.status) and len(response.body) > 0:
+        fail Error.Malformed(value="a response with this status has no body")
+    for item in response.headers:
+        _ = try write_header(mut builder, item)
+    if not declared.present and not has_header(response.headers, b"transfer-encoding"):
+        if len(response.body) > 0:
+            append_length(mut builder, len(response.body))
+        elif not head and not bodiless(response.status):
+            append_length(mut builder, 0)
+    byte_builder.append(mut builder, line_end())
+    return True

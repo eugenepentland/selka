@@ -1,0 +1,92 @@
+# Stability and order of the sorts: equal keys with different payloads, reverse order, descending sorts, negative and
+# duplicate integers. Each result is checked against a stable insertion sort written here; a bit of the status is set
+# for each check that fails, so 0 means every sort agreed (and Linux must agree too).
+record Item:
+    key: int
+    payload: int
+
+
+func key_of(it: Item) -> int:
+    return it.key
+
+
+func band_of(it: Item) -> int:
+    return it.key % 3
+
+
+# A stable insertion sort by `key % modulus` (modulus 0: the key itself), descending when asked: the reference.
+func reference(items: Item[], modulus: int, descending: bool) -> Item[]:
+    mut out: Item[] = []
+    for i in range(len(items)):
+        append(mut out, items[i])
+        mut j = len(out) - 1
+        while j > 0 and before(out[j], out[j - 1], modulus, descending):
+            const held = out[j]
+            out[j] = out[j - 1]
+            out[j - 1] = held
+            j -= 1
+    return out
+
+
+func before(a: Item, b: Item, modulus: int, descending: bool) -> bool:
+    mut x = a.key
+    mut y = b.key
+    if modulus != 0:
+        x = x % modulus
+        y = y % modulus
+    if descending:
+        return x > y
+    return x < y
+
+
+func same(a: Item[], b: Item[]) -> bool:
+    if len(a) != len(b):
+        return False
+    for i in range(len(a)):
+        if a[i].key != b[i].key or a[i].payload != b[i].payload:
+            return False
+    return True
+
+
+func ascending(values: int[]) -> bool:
+    for i in range(1, len(values)):
+        if values[i - 1] > values[i]:
+            return False
+    return True
+
+
+func falling_order(values: int[]) -> bool:
+    for i in range(1, len(values)):
+        if values[i - 1] < values[i]:
+            return False
+    return True
+
+
+func main() -> int:
+    mut items: Item[] = []
+    for i in range(90):
+        append(mut items, Item(key=(i * 37) % 11, payload=i))
+    mut failed = 0
+    if not same(sorted(items, key=key_of), reference(items, 0, False)):
+        failed += 1
+    if not same(sorted(items, key=key_of, reverse=True), reference(items, 0, True)):
+        failed += 2
+    if not same(sorted(items, key=band_of), reference(items, 3, False)):
+        failed += 4
+    mut in_place = sorted(items, key=band_of)
+    sort(mut in_place, key=key_of, reverse=True)
+    if not same(in_place, reference(reference(items, 3, False), 0, True)):
+        failed += 8
+    mut falling: int[] = []
+    for i in range(200):
+        append(mut falling, 100 - i)
+    sort(mut falling)
+    if not ascending(falling) or falling[0] != -99 or falling[199] != 100:
+        failed += 16
+    mut repeats: int[] = []
+    for i in range(150):
+        append(mut repeats, (i * 13) % 5 - 2)
+    sort(mut repeats, reverse=True)
+    if not falling_order(repeats) or repeats[0] != 2 or repeats[149] != -2:
+        failed += 32
+    return failed

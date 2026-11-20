@@ -1,0 +1,86 @@
+# Tests of the worker frame (component-worker-v1): one 64-octet header and a payload, written and read back, and every
+# way a header can be wrong. The golden octets are the contract the Zig host (src/worker_frame.zig) shares.
+import byte_builder
+import frame
+
+func repeated(value: int, count: int) -> bytes:
+    mut out = byte_builder.create()
+    for _ in range(count):
+        _ = byte_builder.append_byte(mut out, value)
+    return byte_builder.finish(out)
+
+
+func header_for(kind: int, length: int) -> bytes:
+    return copy(frame.encode(kind, b"\x01\x02\x03\x04\x05\x06\x07\x08", repeated(171, 32), repeated(0, length))[0:64])
+
+
+func rejected(data: bytes) -> str:
+    match frame.decode_header(data):
+        case Ok(_):
+            return ""
+        case Err(message):
+            return message
+
+
+public func test_a_request_frame_is_the_documented_octets() -> bool:
+    const octets = frame.encode(0, b"\x01\x02\x03\x04\x05\x06\x07\x08", repeated(171, 32), b"hi")
+    const expected = b"SLKWRK01" + b"\x01\x00\x00\x00" + b"\x01\x00\x00\x00" + b"\x00\x00\x00\x00" + b"\x02\x00\x00\x00" + b"\x01\x02\x03\x04\x05\x06\x07\x08" + repeated(171, 32) + b"hi"
+    return octets == expected and len(octets) == 66
+
+
+public func test_a_reply_frame_differs_only_in_its_kind() -> bool:
+    const request = frame.encode(0, b"\x09\x00\x00\x00\x00\x00\x00\x80", repeated(255, 32), b"payload")
+    const reply = frame.encode(1, b"\x09\x00\x00\x00\x00\x00\x00\x80", repeated(255, 32), b"payload")
+    return request[0:16] == reply[0:16] and request[16:20] == b"\x00\x00\x00\x00" and reply[16:20] == b"\x01\x00\x00\x00" and request[20:] == reply[20:]
+
+
+public func test_a_header_decodes_to_its_fields_with_opaque_identity() -> bool:
+    const octets = frame.encode(0, b"\xff\x00\xff\x00\xff\x00\xff\x00", repeated(128, 32), b"abc")
+    match frame.decode_header(octets[0:64]):
+        case Ok(header):
+            return header.kind == 0 and header.payload_length == 3 and header.request_id == b"\xff\x00\xff\x00\xff\x00\xff\x00" and header.snapshot == repeated(128, 32)
+        case Err(_):
+            return False
+
+
+public func test_a_quit_frame_has_no_payload() -> bool:
+    const octets = frame.encode(2, repeated(0, 8), repeated(0, 32), b"")
+    match frame.decode_header(octets):
+        case Ok(header):
+            return header.kind == 2 and header.payload_length == 0 and len(octets) == 64
+        case Err(_):
+            return False
+
+
+public func test_a_bad_magic_is_refused() -> bool:
+    const octets = header_for(0, 0)
+    return rejected(b"SLKWRK02" + octets[8:]) == "worker frame: bad magic" and rejected(b"XLKWRK01" + octets[8:]) == "worker frame: bad magic"
+
+
+public func test_an_unknown_version_or_schema_is_refused() -> bool:
+    const octets = header_for(0, 0)
+    return rejected(octets[0:8] + b"\x02\x00\x00\x00" + octets[12:]) == "worker frame: unsupported protocol version" and rejected(octets[0:12] + b"\x02\x00\x00\x00" + octets[16:]) == "worker frame: unsupported operation schema"
+
+
+public func test_an_unknown_kind_is_refused() -> bool:
+    return rejected(header_for(3, 0)) == "worker frame: unknown message kind" and rejected(header_for(1000, 0)) == "worker frame: unknown message kind"
+
+
+public func test_a_payload_over_the_limit_is_refused_before_it_is_read() -> bool:
+    const octets = header_for(0, 0)
+    const over = octets[0:20] + b"\x01\x00\x00\x01" + octets[24:]
+    return rejected(over) == "worker frame: payload over the limit" and rejected(octets[0:20] + b"\xff\xff\xff\xff" + octets[24:]) == "worker frame: payload over the limit"
+
+
+public func test_the_limit_itself_is_allowed() -> bool:
+    const octets = header_for(0, 0)
+    return rejected(octets[0:20] + b"\x00\x00\x00\x01" + octets[24:]) == ""
+
+
+public func test_a_header_of_the_wrong_length_is_refused() -> bool:
+    const octets = header_for(0, 0)
+    return rejected(octets[0:63]) == "worker frame: short header" and rejected(octets + b"x") == "worker frame: short header" and rejected(b"") == "worker frame: short header"
+
+
+public func test_a_quit_frame_with_a_payload_is_refused() -> bool:
+    return rejected(header_for(2, 1)) == "worker frame: a quit frame carries no payload"

@@ -1,0 +1,72 @@
+# A `with`-bound file lent whole to a helper as a `mut` argument (an exclusive borrow). The helper may read and
+# write the handle; the scope closes it exactly once at its end, with the value the helper left in the binding.
+import filesystem
+
+# Write one line through a lent file and report how many bytes the write took.
+func put(mut lease: File, line: bytes) -> int:
+    _ = lease.write(copy(line))
+    return len(line)
+
+
+# Two helpers write through one lent handle inside one scope, then the scope closes it.
+func fill(fs: Filesystem) -> int:
+    with fs.open("lines.bin", "wb") as lease:
+        const first = put(mut lease, b"one\n")
+        return first + put(mut lease, b"two\n")
+
+
+# A text result's value, or its message behind an `error: ` prefix.
+func text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(value):
+            return copy(value)
+        case Err(message):
+            return "error: " + message
+
+
+# A lent handle is written, the scope closes it, and the bytes are on disk when it is read back.
+public func test_a_lent_file_is_written_and_closed_once() -> bool:
+    mut fs = filesystem.memory()
+    const written = fill(fs)
+    return written == 8 and text(fs.read_text("lines.bin")) == "one\ntwo\n"
+
+
+# A helper that writes and returns early leaves the handle open for the caller's scope to close once.
+func put_then_return(mut lease: File) -> int:
+    _ = lease.write(b"early\n")
+    return 1
+
+
+func early(fs: Filesystem) -> int:
+    with fs.open("early.bin", "wb") as lease:
+        return put_then_return(mut lease)
+
+
+public func test_a_lent_file_survives_an_early_return_from_the_scope() -> bool:
+    mut fs = filesystem.memory()
+    const status = early(fs)
+    return status == 1 and text(fs.read_text("early.bin")) == "early\n"
+
+
+# A helper that reassigns the lent handle to a second file: the old handle is closed where it is replaced, and the
+# new one is closed by the scope's end, each exactly once.
+func reopen(mut f: File, fs: Filesystem) -> Unit fails str:
+    f = try fs.open("second.bin", "wb")
+    _ = f.write(b"new\n")
+    return ()
+
+
+func refill(fs: Filesystem) -> Unit fails str:
+    with try fs.open("first.bin", "wb") as lease:
+        _ = lease.write(b"old\n")
+        try reopen(mut lease, fs)
+        _ = lease.write(b"again\n")
+
+
+public func test_a_reassigned_lent_file_closes_each_handle_once() -> bool:
+    mut fs = filesystem.memory()
+    match refill(fs):
+        case Ok(_):
+            return text(fs.read_text("first.bin")) == "old\n" and text(fs.read_text("second.bin")) == "new\nagain\n"
+        case Err(_):
+            return False

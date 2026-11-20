@@ -1,0 +1,28 @@
+record Holder:
+    items: int[]
+    tag: int
+
+
+func measure(xs: int[]) -> int:
+    return len(xs)
+
+
+func bump(mut xs: int[]):
+    append(mut xs, 1)
+
+
+func keep_own(own xs: int[]) -> int:
+    return len(xs)
+
+
+func cell_plain_dict_mutarg_none(o: dict[str, int[]]) -> int:
+    mut total = 0
+    const e = o["a"]
+    bump(mut e)
+    total += len(e)
+    return total
+
+
+func main(out: Stream) -> int:
+    print(out, 0)
+    return 0

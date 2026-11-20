@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "build",
+      "kind": "build",
+      "commands": [
+        [
+          "zig",
+          "build"
+        ]
+      ],
+      "timeout": 180
+    },
+    {
+      "id": "format",
+      "kind": "format",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "fmt",
+          "tests/verification/smoke.selka",
+          "--check"
+        ]
+      ]
+    },
+    {
+      "id": "check",
+      "kind": "check",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "check",
+          "tests/verification/smoke.selka"
+        ]
+      ]
+    },
+    {
+      "id": "tests-debug",
+      "kind": "test",
+      "commands": [
+        [
+          "zig",
+          "build",
+          "test",
+          "--summary",
+          "all"
+        ]
+      ],
+      "timeout": 300
+    },
+    {
+      "id": "tests-release",
+      "kind": "test",
+      "commands": [
+        [
+          "zig",
+          "build",
+          "test",
+          "-Doptimize=ReleaseFast",
+          "--summary",
+          "all"
+        ]
+      ],
+      "timeout": 300
+    },
+    {
+      "id": "runtime",
+      "kind": "test",
+      "depends_on": [
+        "check"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "run",
+          "--print-result",
+          "tests/verification/smoke.selka"
+        ]
+      ],
+      "expect_stdout": "7\n"
+    },
+    {
+      "id": "dispatch-parity",
+      "kind": "parity",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "run",
+          "--print-result",
+          "tests/verification/smoke.selka",
+          "--dispatch=optimized"
+        ],
+        [
+          "zig-out/bin/selka",
+          "run",
+          "--print-result",
+          "tests/verification/smoke.selka",
+          "--dispatch=generic"
+        ]
+      ],
+      "expect_stdout": "7\n"
+    },
+    {
+      "id": "type-mutation",
+      "kind": "mutation",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "check",
+          "tests/verification/mistyped.selka"
+        ]
+      ],
+      "expect_exit": 1,
+      "expect_stderr_contains": "error[E_TYPE]"
+    },
+    {
+      "id": "semantics-link",
+      "kind": "spec",
+      "path": "docs/legacy/semantics.md",
+      "contains": "# Historical semantics checkpoints"
+    },
+    {
+      "id": "quality",
+      "kind": "advisory",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "report-quality",
+          "tests/verification/smoke.selka"
+        ]
+      ]
+    },
+    {
+      "id": "runtime-samples",
+      "kind": "benchmark",
+      "depends_on": [
+        "runtime"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/selka",
+          "run",
+          "--print-result",
+          "tests/verification/smoke.selka"
+        ]
+      ],
+      "expect_stdout": "7\n",
+      "repeats": 3
+    }
+  ]
+}

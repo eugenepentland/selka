@@ -1,0 +1,8 @@
+import dicts
+
+func main() -> int:
+    mut d = {"a": 1, "b": 2}
+    mut total = 0
+    for key, value in dicts.items(d):
+        total = total + value
+    return total

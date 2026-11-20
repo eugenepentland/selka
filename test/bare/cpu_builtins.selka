@@ -1,0 +1,36 @@
+# The `cpu` instructions on QEMU's Cortex-M0 (MCU-NOC1): interrupts held off around a loop, with PRIMASK read back
+# through the states `interrupts_off` answers (0 before the first hold, 1 inside it, 0 again after both restores); an
+# event sent and then waited for, which returns because the event is pending; and a barrier after a store. Each is the
+# instruction itself (`mrs`/`cpsid i`/`msr`, `sev`, `wfe`, `dsb sy`/`isb sy`), so a program that reaches `main`'s end
+# ran them all. `main` answers 40 + 2 when every read-back is right, and a small number naming the first that is not.
+# bare-platform: qemu
+# bare-status: 42
+import cpu
+import registers
+
+# A word of RAM past the 264 KiB the image uses: QEMU's mps2-an385 has more SRAM at 0x20000000 than that.
+const SCRATCH: u32 = 0x20100000
+
+
+func main(reg: Registers) -> int:
+    const outer = cpu.interrupts_off(reg)
+    mut total: u32 = 0
+    for i in range(10):
+        total += u32(i)
+    const inner = cpu.interrupts_off(reg)
+    const nested = inner.primask
+    cpu.interrupts_restore(reg, own inner)
+    const before = outer.primask
+    cpu.interrupts_restore(reg, own outer)
+    const after = cpu.interrupts_off(reg)
+    const again = after.primask
+    cpu.interrupts_restore(reg, own after)
+    if before != 0 or nested != 1 or again != 0:
+        return 1
+    cpu.send_event(reg)
+    cpu.wait_for_event(reg)
+    registers.write32(reg, SCRATCH, total)
+    cpu.barrier(reg)
+    if registers.read32(reg, SCRATCH) != 45:
+        return 2
+    return 42

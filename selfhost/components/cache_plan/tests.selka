@@ -1,0 +1,170 @@
+import codec
+import graph
+import incremental
+import lists
+
+# Repeat bytes using only operations the pinned seed and live compiler share.
+func repeated_bytes(data: bytes, count: int) -> bytes:
+    mut out = b""
+    for _ in range(count):
+        out = out + data
+    return out
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_empty_and_empty_roots() -> bool fails str:
+    mut empty = try graph.build([], [], [])
+    mut roots = try graph.build([repeated_bytes(b"a", 32)], [[]], [[]])
+    return empty == [] and roots == [[]]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_all_roots_excluded_duplicates_and_cycles() -> bool fails str:
+    mut reached = try graph.build([repeated_bytes(b"a", 32), repeated_bytes(b"b", 32), repeated_bytes(b"c", 32)], [[1, 1], [2], [0]], [[0, 2, 0], [1]])
+    return reached == [[1], [0, 2]]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_digest_order_and_distinct_equal_digest_multiplicity() -> bool fails str:
+    mut reached = try graph.build([repeated_bytes(b"z", 32), repeated_bytes(b"\xff", 32), repeated_bytes(b"a", 32), repeated_bytes(b"a", 32), repeated_bytes(b"\x80", 32)], [[1, 4, 3, 2, 2], [], [], [], []], [[0], [2], []])
+    return reached == [[2, 3, 4, 1], [], []]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_diamond_and_disconnected() -> bool fails str:
+    mut reached = try graph.build([repeated_bytes(b"a", 32), repeated_bytes(b"b", 32), repeated_bytes(b"c", 32), repeated_bytes(b"d", 32), repeated_bytes(b"e", 32)], [[1, 2], [3], [3], [3], []], [[0], [4]])
+    return reached == [[1, 2, 3], []]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_empty_protocol_golden() -> bool fails str:
+    mut data = b"SLKCP001\x01\0\0\0\x01\0\0\0\0\0\0\0\x14\0\0\0" + repeated_bytes(b"\xff", 40) + repeated_bytes(b"\0", 20)
+    mut request = try codec.decode(data)
+    mut reached = try graph.build(request.digests, request.adjacency, request.batches)
+    mut reply = try codec.encode(request, reached)
+    return reply == b"SLKCP001\x01\0\0\0\x01\0\0\0\x01\0\0\0\x04\0\0\0" + repeated_bytes(b"\xff", 40) + repeated_bytes(b"\0", 4)
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_malformed_and_unsupported_contract_rejected() -> bool:
+    mut data = b"SLKCP001\x01\0\0\0\x01\0\0\0\0\0\0\0\x14\0\0\0" + repeated_bytes(b"\0", 60)
+    match codec.decode(data + b"\0"):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match codec.decode(data[:83]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match codec.decode(data[:64] + b"\x01" + data[65:]):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True
+
+
+# spec-case: SELFHOST-CACHE-PLAN-1
+public func test_bad_ids_and_digests_rejected() -> bool:
+    match graph.build([repeated_bytes(b"a", 32)], [[1]], [[0]]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match graph.build([b"a"], [[]], [[0]]):
+        case Ok(value):
+            return False
+        case Err(message):
+            pass
+    match graph.build([repeated_bytes(b"a", 32)], [[]], [[-1]]):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True
+
+
+func input_v2(adjacency: int[][], roots: int[][], changed: int[], candidates: bool[]) -> incremental.Input:
+    mut digests: bytes[] = []
+    for node in range(len(adjacency)):
+        append(mut digests, repeated_bytes(b"a", 32))
+    return incremental.Input(graph=incremental.Graph(digests=own digests, adjacency=copy(adjacency), topology=repeated_bytes(b"t", 32)), roots=copy(roots), candidates=copy(candidates), changed=copy(changed), prior=incremental.Indexes(topology=b"", reverse=[], groups=[]))
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_cycle_sharing_and_repeated_roots() -> bool fails str:
+    mut input = input_v2([[1, 2], [0], [1], []], [[0, 0], [3], [1, 0]], [2], [True, True, True])
+    mut result = try incremental.build(input)
+    return result.indexes.groups == [0, 0, 0, 3] and result.reused == [False, True, False] and result.batches == [[1, 2], [], [2]] and result.work.affected_nodes == 3
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_retained_indexes_reuse_without_closure_work() -> bool fails str:
+    mut input = input_v2([[1], []], [[0], [1]], [], [False, False])
+    mut initial = try incremental.build(input)
+    input.prior = incremental.Indexes(topology=copy(initial.indexes.topology), reverse=copy(initial.indexes.reverse), groups=copy(initial.indexes.groups))
+    input.candidates = [True, True]
+    mut warm = try incremental.build(input)
+    return warm.reused == [True, True] and warm.work.closure_nodes == 0 and warm.work.closure_edges == 0 and warm.work.reused_tests == 2
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_cycle_splitting_removes_dependencies() -> bool fails str:
+    mut input = input_v2([[1], [0, 2], []], [[0], [2]], [1], [True, True])
+    mut cycle = try incremental.build(input)
+    input.graph.adjacency = [[1], [], []]
+    input.graph.topology = repeated_bytes(b"u", 32)
+    mut split = try incremental.build(input)
+    return cycle.indexes.groups == [0, 0, 2] and split.indexes.groups == [0, 1, 2] and split.batches == [[1], []] and split.reused == [False, True]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_single_root_chain_has_linear_closure_work() -> bool fails str:
+    mut adjacency: int[][] = []
+    for node in range(255):
+        append(mut adjacency, [node + 1])
+    # The pinned seed compiler cannot infer the element type of a bare `[]`
+    # operand, so the empty tail row names its type.
+    const no_targets: int[] = []
+    append(mut adjacency, copy(no_targets))
+    mut result = try incremental.build(input_v2(adjacency, [[0]], [], [False]))
+    return len(result.batches[0]) == 255 and result.work.closure_nodes <= 512 and result.work.closure_edges <= 256
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_malformed_reverse_index_is_refused() -> bool fails str:
+    mut input = input_v2([[1], []], [[0]], [], [True])
+    input.prior = incremental.Indexes(topology=copy(input.graph.topology), reverse=[[], []], groups=[0, 1])
+    match incremental.build(input):
+        case Ok(value):
+            return False
+        case Err(message):
+            return True
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_retained_groups_cannot_merge_unreachable_nodes() -> bool fails str:
+    mut input = input_v2([[1, 3], [], [3], []], [[0], [2]], [1], [True, True])
+    input.prior = incremental.Indexes(topology=copy(input.graph.topology), reverse=[[], [0], [], [0, 2]], groups=[0, 0, 0, 0])
+    mut result = try incremental.build(input)
+    return result.indexes.groups == [0, 1, 2, 3] and result.batches == [[1, 3], []] and result.reused == [False, True]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_retained_groups_cannot_split_recursive_nodes() -> bool fails str:
+    mut input = input_v2([[1], [0, 2], []], [[0], [2]], [1], [True, True])
+    input.prior = incremental.Indexes(topology=copy(input.graph.topology), reverse=[[1], [0], [1]], groups=[0, 1, 2])
+    mut result = try incremental.build(input)
+    return result.indexes.groups == [0, 0, 2] and result.batches == [[1, 2], []] and result.reused == [False, True]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_result_owns_retained_indexes() -> bool fails str:
+    mut input = input_v2([[1], []], [[0]], [], [True])
+    input.prior = incremental.Indexes(topology=copy(input.graph.topology), reverse=[[], [0]], groups=[0, 1])
+    mut result = try incremental.build(input)
+    lists.clear(mut input.prior.groups)
+    lists.clear(mut input.prior.reverse)
+    input.prior.topology = b"changed"
+    input.graph.topology = b"changed"
+    return result.indexes.topology == repeated_bytes(b"t", 32) and result.indexes.groups == [0, 1] and result.indexes.reverse == [[], [0]] and result.reused == [True]

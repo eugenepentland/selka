@@ -1,0 +1,16 @@
+[Unit]
+Description=Maintain the per-user Selka native object store
+
+[Timer]
+# A wall-clock trigger always has a next run. OnBootSec and OnUnitInactiveSec
+# alone stopped firing after the user manager restarted on 16 October 2026
+# (the service had never gone inactive under the new manager), so the store
+# grew past its cap for four days. Keep both, and add a calendar trigger.
+OnCalendar=*:0/15
+OnBootSec=10min
+OnUnitInactiveSec=15min
+RandomizedDelaySec=2min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

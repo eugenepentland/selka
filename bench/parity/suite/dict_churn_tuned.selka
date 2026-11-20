@@ -1,0 +1,125 @@
+# dict_churn: insert, look up, delete, reinsert and iterate over a dict keyed by
+# generated strings, then over a dict keyed by u64 values (SUITE.md section 15).
+# The keys are built once; the map stores a copy of each key it holds.
+#
+# _tuned: after the delete phase the map is rebuilt from its live keys, so the
+# iteration phase walks a table without tombstones. The idiomatic port walks a
+# table that still holds deleted entries, and the runtime's ordinal walk
+# (myl_core_dict_ordinal) scans from the start for every step: quadratic.
+# The rebuilt map holds the same keys and values, so the output is unchanged.
+import dicts
+
+func xorshift(input: u64) -> u64:
+    mut x = input
+    x = bit_xor(x, shift_left(x, 13u64))
+    x = bit_xor(x, shift_right(x, 7u64))
+    return bit_xor(x, shift_left(x, 17u64))
+
+
+func key_length(key: str) -> int:
+    return len(key)
+
+
+func key_high(key: u64) -> int:
+    return int(shift_right(key, 33u64))
+
+
+# The five phases over a map keyed by strings (SUITE.md section 15).
+func churn_str(out: Stream, keys: str[], miss: str[]):
+    mut table: dict[str, int] = {}
+    mut count = len(keys)
+    for i in range(count):
+        table[copy(keys[i])] = i
+    print(out, f"str insert {count}")
+    mut hits = 0
+    for key in keys:
+        hits += table[key]
+    mut misses = 0
+    for key in miss:
+        if key not in table:
+            misses += 1
+    print(out, f"str lookup hits_sum {hits} misses {misses}")
+    mut removed = 0
+    for i in range(0, count, 3):
+        if keys[i] in table:
+            _ = dicts.pop(mut table, keys[i])
+            removed += 1
+    print(out, f"str delete removed {removed} size {len(table)}")
+    mut live: dict[str, int] = {}
+    for key in keys:
+        if key in table:
+            live[copy(key)] = table[key]
+    table = own live
+    mut reinserted = 0
+    for i in range(0, count, 6):
+        table[copy(keys[i])] = 2 * i
+        reinserted += 1
+    print(out, f"str reinsert reinserted {reinserted} size {len(table)}")
+    mut value_sum = 0
+    mut key_len_sum = 0
+    for key in table:
+        value_sum += table[key]
+        key_len_sum += key_length(key)
+    print(out, f"str iterate size {len(table)} value_sum {value_sum} key_len_sum {key_len_sum}")
+
+
+# The same five phases over a map keyed by u64 values (SUITE.md section 15).
+func churn_int(out: Stream, keys: u64[], miss: u64[]):
+    mut table: dict[u64, int] = {}
+    mut count = len(keys)
+    for i in range(count):
+        table[keys[i]] = i
+    print(out, f"int insert {count}")
+    mut hits = 0
+    for key in keys:
+        hits += table[key]
+    mut misses = 0
+    for key in miss:
+        if key not in table:
+            misses += 1
+    print(out, f"int lookup hits_sum {hits} misses {misses}")
+    mut removed = 0
+    for i in range(0, count, 3):
+        if keys[i] in table:
+            _ = dicts.pop(mut table, keys[i])
+            removed += 1
+    print(out, f"int delete removed {removed} size {len(table)}")
+    mut live: dict[u64, int] = {}
+    for key in keys:
+        if key in table:
+            live[key] = table[key]
+    table = own live
+    mut reinserted = 0
+    for i in range(0, count, 6):
+        table[keys[i]] = 2 * i
+        reinserted += 1
+    print(out, f"int reinsert reinserted {reinserted} size {len(table)}")
+    mut value_sum = 0
+    mut key_sum = 0
+    for key in table:
+        value_sum += table[key]
+        key_sum += key_high(key)
+    print(out, f"int iterate size {len(table)} value_sum {value_sum} key_sum {key_sum}")
+
+
+func main(out: Stream) -> int:
+    mut state = 88172645463325252u64
+    mut str_keys: str[] = []
+    for i in range(800000):
+        state = xorshift(state)
+        append(mut str_keys, f"n{int(shift_right(state, 33u64))}_{i}")
+    mut str_miss: str[] = []
+    for i in range(800000):
+        state = xorshift(state)
+        append(mut str_miss, f"n{int(shift_right(state, 33u64))}_{i}")
+    churn_str(out, str_keys, str_miss)
+    mut int_keys: u64[] = []
+    for _ in range(2000000):
+        state = xorshift(state)
+        append(mut int_keys, state)
+    mut int_miss: u64[] = []
+    for _ in range(2000000):
+        state = xorshift(state)
+        append(mut int_miss, state)
+    churn_int(out, int_keys, int_miss)
+    return 0

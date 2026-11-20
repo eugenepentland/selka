@@ -1,0 +1,10 @@
+import emit
+import kicad.shape
+
+
+func main(out: Stream) -> int:
+    shape.note(out)
+    const first = shape.Unit(number=7, name="x")
+    const second = emit.build()
+    print(out, emit.count([copy(first), copy(second)]), first.number + second.number, first.name)
+    return shape.describe(shape.Mode.inverted)

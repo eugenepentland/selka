@@ -1,0 +1,14 @@
+{"version": "1.3.0",
+ "packagesDir": ".lake/packages",
+ "packages":
+ [{"type": "path",
+   "scope": "",
+   "name": "arith",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "../arith",
+   "copy": false,
+   "configFile": "lakefile.toml"}],
+ "name": "facts",
+ "lakeDir": ".lake",
+ "fixedToolchain": false}

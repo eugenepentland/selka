@@ -1,0 +1,85 @@
+# Fault-injection stand-ins: `random.failing_entropy(after)` and `time.failing_clock(start, reads)` answer normally a
+# fixed number of times and then fail every read the way a provider that has stopped working does. They are plain
+# test values, deterministic and cacheable.
+import random
+import time
+
+# What one entropy read answers: "ok", or the failure text.
+func draw(entropy: Entropy) -> str:
+    match random.from_entropy(entropy):
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+# What one clock read answers: the instant's nanoseconds, or the failure text.
+func stamp(clock: Clock) -> str:
+    match time.now(clock):
+        case Ok(instant):
+            return f"{instant.unix_nanoseconds}"
+        case Err(message):
+            return copy(message)
+
+
+public func test_failing_entropy_answers_its_count_then_fails() -> bool:
+    const entropy = random.failing_entropy(2)
+    const first = draw(entropy)
+    const second = draw(entropy)
+    const third = draw(entropy)
+    const fourth = draw(entropy)
+    return first == "ok" and second == "ok" and third == "entropy capability failed" and fourth == "entropy capability failed"
+
+
+public func test_failing_entropy_with_no_answers_fails_at_once() -> bool:
+    return draw(random.failing_entropy(0)) == "entropy capability failed" and draw(random.failing_entropy(-5)) == "entropy capability failed"
+
+
+public func test_failing_entropy_gives_the_words_of_the_seeded_stream_until_it_fails() -> bool:
+    const failing = random.failing_entropy(1)
+    const plain = random.seeded_entropy(0)
+    match random.from_entropy(failing):
+        case Ok(left):
+            match random.from_entropy(plain):
+                case Ok(right):
+                    return left.state == right.state and draw(failing) == "entropy capability failed"
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+public func test_failing_clock_reads_its_start_then_fails() -> bool:
+    const clock = time.failing_clock(time.from_unix_nanoseconds(1000), 1)
+    const first = stamp(clock)
+    const second = stamp(clock)
+    const third = stamp(clock)
+    return first == "1000" and second == "clock capability failed" and third == "clock capability failed"
+
+
+public func test_failing_clock_keeps_advancing_and_sleeping_while_its_reads_fail() -> bool:
+    const clock = time.failing_clock(time.from_unix_nanoseconds(1000), 0)
+    time.sleep(clock, 50)
+    return stamp(clock) == "clock capability failed" and time.monotonic(clock) == 50
+
+
+public func test_a_failing_clock_counts_its_reads_not_its_time() -> bool:
+    const clock = time.failing_clock(time.from_unix_nanoseconds(0), 2)
+    time.sleep(clock, 7)
+    const first = stamp(clock)
+    time.sleep(clock, 3)
+    const second = stamp(clock)
+    const third = stamp(clock)
+    return first == "7" and second == "10" and third == "clock capability failed"
+
+
+public func test_a_plain_simulated_clock_and_entropy_never_fail() -> bool:
+    const clock = time.simulated_clock(time.from_unix_nanoseconds(5))
+    const entropy = random.seeded_entropy(9)
+    mut failures = 0
+    for _ in range(100):
+        if stamp(clock) != "5":
+            failures += 1
+        if draw(entropy) != "ok":
+            failures += 1
+    return failures == 0

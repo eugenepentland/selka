@@ -1,0 +1,530 @@
+# Hard links (`filesystem.link`) and folders made with a mode (`filesystem.mkdir_mode`) on the in-memory Filesystem a test
+# receives. A hard link is a second name for one file: the two names share the bytes, the permission bits, the times and the
+# inode, `Stat.links` counts them, and removing one name leaves the other. The source of a link must be a regular file, both
+# names must fall where the handle may write, and no link is followed on the way or at the end, so a narrowed handle (`fs.dir`)
+# and a read-only one cannot be used to reach what they do not name. The real-directory behaviour, under `--restrict` grants
+# included, is pinned in src/io_hard_link_test.zig.
+import filesystem
+
+const NARROWED: str = "denied: a Filesystem narrowed by fs.dir takes a path inside its folder, without '..', '.', an empty part or a leading '/'"
+
+
+const READ_ONLY: str = "denied: this Filesystem was narrowed by fs.read_only() and does not write"
+
+
+const LINK: str = "is a symbolic link the sandbox does not follow, or links nest too deeply"
+
+
+const NOT_A_FOLDER: str = "a parent of the path is not a directory"
+
+
+const MISSING: str = "the path does not exist"
+
+
+# "ok" for a success, else the failure text.
+func note(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+# The text of a file, or the failure text.
+func read_of(fs: Filesystem, path: str) -> str:
+    match fs.read_text(path):
+        case Ok(text):
+            return copy(text)
+        case Err(message):
+            return "error: " + message
+
+
+func links_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.links
+        case Err(_):
+            return -1
+
+
+func mode_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.mode
+        case Err(_):
+            return -1
+
+
+func changed_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.changed
+        case Err(_):
+            return -1
+
+
+func time_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.modified
+        case Err(_):
+            return -1
+
+
+func inode_of(fs: Filesystem, path: str) -> u64:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.inode
+        case Err(_):
+            return 0u64
+
+
+func exists_as(fs: Filesystem, path: str) -> str:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            match info.kind:
+                case Regular:
+                    return "regular"
+                case Directory:
+                    return "directory"
+                case Symlink:
+                    return "symlink"
+                case Other:
+                    return "other"
+        case Err(error):
+            match error:
+                case Missing:
+                    return "missing"
+                case Failed(message=text):
+                    return "failed: " + text
+
+
+public func test_a_hard_link_is_a_second_name_with_the_same_inode_and_two_links_for_both() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("original", "hello")
+    assert links_of(fs, "original") == 1
+    assert note(filesystem.link(fs, "original", "second")) == "ok"
+    assert links_of(fs, "original") == 2
+    assert links_of(fs, "second") == 2
+    assert inode_of(fs, "original") == inode_of(fs, "second")
+    assert exists_as(fs, "second") == "regular"
+    assert read_of(fs, "second") == "hello"
+    return True
+
+
+public func test_the_method_spelling_and_the_module_function_make_the_same_link() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "x")
+    assert note(fs.link_path("f", "by_method")) == "ok"
+    assert note(filesystem.link(fs, "f", "by_function")) == "ok"
+    assert links_of(fs, "f") == 3
+    assert inode_of(fs, "by_method") == inode_of(fs, "by_function")
+    return True
+
+
+public func test_a_write_through_one_name_is_read_through_the_other_and_a_third_name_counts_three() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "first")
+    _ = filesystem.link(fs, "a", "b")
+    _ = fs.write_text("b", "written through b")
+    assert read_of(fs, "a") == "written through b"
+    _ = filesystem.link(fs, "b", "c")
+    assert links_of(fs, "a") == 3
+    assert links_of(fs, "c") == 3
+    _ = fs.write_text("c", "x")
+    assert read_of(fs, "a") == "x"
+    assert read_of(fs, "b") == "x"
+    return True
+
+
+func append_to(fs: Filesystem, path: str, text: str) -> Unit fails str:
+    with try fs.open(path, "a") as file:
+        _ = file.write(text)
+    return
+
+
+public func test_an_append_through_one_name_grows_the_file_the_other_name_reads() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "abc")
+    _ = filesystem.link(fs, "a", "b")
+    assert note(append_to(fs, "b", "def")) == "ok"
+    assert read_of(fs, "a") == "abcdef"
+    assert inode_of(fs, "a") == inode_of(fs, "b")
+    assert time_of(fs, "a") == time_of(fs, "b")
+    return True
+
+
+public func test_removing_one_name_leaves_the_other_with_the_bytes_and_one_link() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "kept")
+    _ = filesystem.link(fs, "a", "b")
+    assert note(fs.remove("a")) == "ok"
+    assert exists_as(fs, "a") == "missing"
+    assert read_of(fs, "b") == "kept"
+    assert links_of(fs, "b") == 1
+    _ = filesystem.link(fs, "b", "c")
+    _ = fs.remove("b")
+    assert read_of(fs, "c") == "kept"
+    assert links_of(fs, "c") == 1
+    return True
+
+
+func read_after_removal(fs: Filesystem) -> str fails str:
+    with try fs.open("a", "r") as file:
+        _ = fs.remove("a")
+        _ = fs.write_text("b", "newer text")
+        return file.read()
+
+
+public func test_a_handle_that_holds_a_removed_name_still_reads_what_the_other_name_writes() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "old")
+    _ = filesystem.link(fs, "a", "b")
+    match read_after_removal(fs):
+        case Ok(text):
+            return text == "newer text" and exists_as(fs, "a") == "missing" and links_of(fs, "b") == 1
+        case Err(_):
+            return False
+
+
+public func test_a_rename_of_one_name_keeps_the_link_and_a_rename_onto_the_other_name_does_nothing() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "x")
+    _ = filesystem.link(fs, "a", "b")
+    assert note(fs.rename_path("a", "moved")) == "ok"
+    assert exists_as(fs, "a") == "missing"
+    assert links_of(fs, "moved") == 2
+    assert inode_of(fs, "moved") == inode_of(fs, "b")
+    assert note(fs.rename_path("moved", "b")) == "ok"
+    assert exists_as(fs, "moved") == "regular"
+    assert exists_as(fs, "b") == "regular"
+    assert links_of(fs, "b") == 2
+    return True
+
+
+public func test_an_atomic_replace_of_one_name_makes_a_new_file_and_leaves_the_other_name_the_old_one() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "old")
+    _ = filesystem.link(fs, "a", "b")
+    assert note(fs.replace_file("a", b"new")) == "ok"
+    assert read_of(fs, "a") == "new"
+    assert read_of(fs, "b") == "old"
+    assert links_of(fs, "a") == 1
+    assert links_of(fs, "b") == 1
+    assert inode_of(fs, "a") != inode_of(fs, "b")
+    return True
+
+
+public func test_the_permission_bits_and_times_of_a_file_are_the_same_through_every_name() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "x")
+    _ = filesystem.link(fs, "a", "b")
+    assert note(filesystem.chmod(fs, "b", 0o600)) == "ok"
+    assert mode_of(fs, "a") == 0o600
+    assert note(filesystem.set_modified(fs, "a", 5000000000)) == "ok"
+    assert time_of(fs, "b") == 5000000000
+    assert note(filesystem.touch(fs, "b")) == "ok"
+    assert time_of(fs, "a") == time_of(fs, "b")
+    assert changed_of(fs, "a") == changed_of(fs, "b")
+    return True
+
+
+public func test_making_a_link_changes_the_status_time_of_the_file_and_the_modification_time_of_its_directory() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("e")
+    _ = fs.write_text("d/a", "x")
+    const file_time = time_of(fs, "d/a")
+    const file_changed = changed_of(fs, "d/a")
+    const first_time = time_of(fs, "d")
+    const second_time = time_of(fs, "e")
+    assert note(filesystem.link(fs, "d/a", "e/b")) == "ok"
+    assert changed_of(fs, "d/a") > file_changed
+    assert time_of(fs, "d/a") == file_time
+    assert time_of(fs, "d") == first_time
+    assert time_of(fs, "e") > second_time
+    return True
+
+
+public func test_a_failed_link_changes_nothing() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("a", "x")
+    const before = changed_of(fs, "a")
+    const directory_time = time_of(fs, "")
+    assert note(filesystem.link(fs, "a", "d")) == "link 'a' to 'd': already exists"
+    assert note(filesystem.link(fs, "nothing", "z")) == f"link 'nothing' to 'z': {MISSING}"
+    assert changed_of(fs, "a") == before
+    assert time_of(fs, "") == directory_time
+    assert links_of(fs, "a") == 1
+    return True
+
+
+public func test_the_source_must_be_a_regular_file_and_a_folder_a_link_and_the_root_are_refused() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "x")
+    _ = filesystem.symlink(fs, "d/f", "ln")
+    _ = filesystem.symlink(fs, "d", "dir_ln")
+    assert note(filesystem.link(fs, "d", "copy")) == "link 'd' to 'copy': is a directory"
+    assert note(filesystem.link(fs, "", "copy")) == f"link '' to 'copy': {MISSING}"
+    assert note(filesystem.link(fs, "ln", "copy")) == f"link 'ln' to 'copy': {LINK}"
+    assert note(filesystem.link(fs, "dir_ln", "copy")) == f"link 'dir_ln' to 'copy': {LINK}"
+    assert note(filesystem.link(fs, "dir_ln/f", "copy")) == f"link 'dir_ln/f' to 'copy': {NOT_A_FOLDER}"
+    assert note(filesystem.link(fs, ".", "copy")) == "link '.' to 'copy': is a directory"
+    assert note(filesystem.link(fs, "d/f/", "copy")) == f"link 'd/f/' to 'copy': {NOT_A_FOLDER}"
+    assert exists_as(fs, "copy") == "missing"
+    assert links_of(fs, "d/f") == 1
+    return True
+
+
+public func test_the_new_name_must_be_free_in_a_folder_that_exists_and_is_writable() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("closed")
+    _ = fs.write_text("d/f", "x")
+    _ = fs.write_text("d/g", "y")
+    _ = filesystem.symlink(fs, "d/f", "ln")
+    assert note(filesystem.link(fs, "d/f", "d/g")) == "link 'd/f' to 'd/g': already exists"
+    assert note(filesystem.link(fs, "d/f", "ln")) == "link 'd/f' to 'ln': already exists"
+    assert note(filesystem.link(fs, "d/f", "d")) == "link 'd/f' to 'd': already exists"
+    assert note(filesystem.link(fs, "d/f", "nowhere/x")) == f"link 'd/f' to 'nowhere/x': {MISSING}"
+    assert note(filesystem.link(fs, "d/f", "d/f/x")) == f"link 'd/f' to 'd/f/x': {NOT_A_FOLDER}"
+    assert note(filesystem.link(fs, "d/f", "ln/x")) == f"link 'd/f' to 'ln/x': {NOT_A_FOLDER}"
+    assert note(filesystem.link(fs, "d/f", "d/")) == "link 'd/f' to 'd/': already exists"
+    assert note(filesystem.link(fs, "d/f", "new/")) == f"link 'd/f' to 'new/': {MISSING}"
+    assert note(filesystem.link(fs, "d/f", "")) == f"link 'd/f' to '': {MISSING}"
+    assert note(filesystem.link(fs, "d/f", ".")) == "link 'd/f' to '.': already exists"
+    assert exists_as(fs, "new") == "missing"
+    assert note(filesystem.chmod(fs, "closed", 0o500)) == "ok"
+    assert note(filesystem.link(fs, "d/f", "closed/x")) == "link 'd/f' to 'closed/x': permission denied"
+    assert exists_as(fs, "closed/x") == "missing"
+    assert links_of(fs, "d/f") == 1
+    return True
+
+
+public func test_a_link_can_cross_folders_and_gives_the_other_folder_a_name_for_the_same_file() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("one")
+    _ = fs.mkdir("two")
+    _ = fs.write_text("one/f", "shared")
+    assert note(filesystem.link(fs, "one/f", "two/g")) == "ok"
+    _ = fs.write_text("two/g", "changed in two")
+    assert read_of(fs, "one/f") == "changed in two"
+    assert note(fs.remove("one/f")) == "ok"
+    assert read_of(fs, "two/g") == "changed in two"
+    assert links_of(fs, "two/g") == 1
+    return True
+
+
+public func test_a_lock_on_one_name_is_a_lock_on_the_file_every_name_reaches() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "x")
+    _ = filesystem.link(fs, "a", "b")
+    match held_through_the_other_name(fs):
+        case Ok(text):
+            return text == "try lock file 'b': the lock is held by another holder"
+        case Err(_):
+            return False
+
+
+func held_through_the_other_name(fs: Filesystem) -> str fails str:
+    with try fs.lock_file("a") as lease:
+        match fs.try_lock_file("b"):
+            case Ok(_):
+                return "second lock granted"
+            case Err(message):
+                return copy(message)
+
+
+public func test_an_archiver_recreates_a_member_that_is_a_second_name_for_an_earlier_one() -> bool:
+    # Three members as a tar archive records them: a file, a second name for it, and a file of its own.
+    const fs = filesystem.memory()
+    _ = fs.mkdir("out")
+    _ = fs.write_text("out/data.bin", "payload")
+    assert note(filesystem.link(fs, "out/data.bin", "out/alias.bin")) == "ok"
+    _ = fs.write_text("out/other.bin", "payload")
+    assert links_of(fs, "out/data.bin") == 2
+    assert links_of(fs, "out/alias.bin") == 2
+    assert links_of(fs, "out/other.bin") == 1
+    assert inode_of(fs, "out/data.bin") == inode_of(fs, "out/alias.bin")
+    assert inode_of(fs, "out/data.bin") != inode_of(fs, "out/other.bin")
+    return True
+
+
+public func test_a_narrowed_handle_links_only_inside_its_folder() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("box/sub")
+    _ = fs.mkdir("outside")
+    _ = fs.write_text("box/a", "inside")
+    _ = fs.write_text("outside/secret", "SECRET")
+    const box = fs.dir("box")
+    assert note(filesystem.link(box, "a", "b")) == "ok"
+    assert note(filesystem.link(box, "a", "sub/c")) == "ok"
+    assert links_of(fs, "box/a") == 3
+    assert note(filesystem.link(box, "../outside/secret", "stolen")) == f"link '../outside/secret' to 'stolen': {NARROWED}"
+    assert note(filesystem.link(box, "a", "../outside/copy")) == f"link 'a' to '../outside/copy': {NARROWED}"
+    assert note(filesystem.link(box, "sub/../../outside/secret", "stolen")) == f"link 'sub/../../outside/secret' to 'stolen': {NARROWED}"
+    assert note(filesystem.link(box, "a", "sub/../../outside/copy")) == f"link 'a' to 'sub/../../outside/copy': {NARROWED}"
+    assert note(filesystem.link(box, "/outside/secret", "stolen")) == f"link '/outside/secret' to 'stolen': {NARROWED}"
+    assert note(filesystem.link(box, "a", "/outside/copy")) == f"link 'a' to '/outside/copy': {NARROWED}"
+    assert note(filesystem.link(box, "./a", "dot")) == f"link './a' to 'dot': {NARROWED}"
+    assert note(filesystem.link(box, "a", "")) == f"link 'a' to '': {NARROWED}"
+    assert exists_as(fs, "box/stolen") == "missing"
+    assert exists_as(fs, "outside/copy") == "missing"
+    assert exists_as(fs, "outside/stolen") == "missing"
+    assert links_of(fs, "outside/secret") == 1
+    assert read_of(fs, "outside/secret") == "SECRET"
+    return True
+
+
+public func test_a_narrowed_handle_refuses_a_link_on_the_way_and_at_the_end_and_a_link_as_its_own_folder() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("outside")
+    _ = fs.write_text("outside/secret", "SECRET")
+    _ = fs.write_text("box/a", "inside")
+    _ = filesystem.symlink(fs, "../outside", "box/out")
+    _ = filesystem.symlink(fs, "../outside/secret", "box/outfile")
+    _ = filesystem.symlink(fs, "box", "boxlink")
+    const box = fs.dir("box")
+    assert note(filesystem.link(box, "out/secret", "stolen")) == f"link 'out/secret' to 'stolen': {NOT_A_FOLDER}"
+    assert note(filesystem.link(box, "a", "out/copy")) == f"link 'a' to 'out/copy': {NOT_A_FOLDER}"
+    assert note(filesystem.link(box, "outfile", "stolen")) == f"link 'outfile' to 'stolen': {LINK}"
+    assert note(filesystem.link(box, "out", "stolen")) == f"link 'out' to 'stolen': {LINK}"
+    const through = fs.dir("boxlink")
+    assert note(filesystem.link(through, "a", "b")) == f"link 'a' to 'b': {NOT_A_FOLDER}"
+    assert exists_as(fs, "box/stolen") == "missing"
+    assert exists_as(fs, "box/b") == "missing"
+    assert exists_as(fs, "outside/copy") == "missing"
+    assert links_of(fs, "outside/secret") == 1
+    assert links_of(fs, "box/a") == 1
+    return True
+
+
+public func test_a_read_only_handle_links_nothing() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.write_text("box/a", "x")
+    const frozen = fs.read_only()
+    assert note(filesystem.link(frozen, "box/a", "box/b")) == f"link 'box/a' to 'box/b': {READ_ONLY}"
+    const narrow = fs.dir("box").read_only()
+    assert note(filesystem.link(narrow, "a", "b")) == f"link 'a' to 'b': {READ_ONLY}"
+    assert exists_as(fs, "box/b") == "missing"
+    assert links_of(fs, "box/a") == 1
+    return True
+
+
+public func test_a_path_outside_the_memory_filesystem_is_refused_for_both_names() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "x")
+    const refused = "denied: '/etc/passwd' is outside the granted directories"
+    assert note(filesystem.link(fs, "/etc/passwd", "stolen")) == f"link '/etc/passwd' to 'stolen': {refused}"
+    assert note(filesystem.link(fs, "a", "/etc/passwd")) == f"link 'a' to '/etc/passwd': {refused}"
+    assert note(filesystem.link(fs, "../a", "b")) == "link '../a' to 'b': denied: '../a' is outside the granted directories"
+    assert note(filesystem.link(fs, "a", "../b")) == "link 'a' to '../b': denied: '../b' is outside the granted directories"
+    assert links_of(fs, "a") == 1
+    return True
+
+
+public func test_mkdir_mode_makes_a_folder_with_the_mode_it_is_given() -> bool:
+    const fs = filesystem.memory()
+    assert note(filesystem.mkdir_mode(fs, "private", 0o700)) == "ok"
+    assert note(filesystem.mkdir_mode(fs, "shared", 0o775)) == "ok"
+    assert note(fs.mkdir_mode("by_method", 0o750)) == "ok"
+    assert mode_of(fs, "private") == 0o700
+    assert mode_of(fs, "shared") == 0o775
+    assert mode_of(fs, "by_method") == 0o750
+    assert exists_as(fs, "private") == "directory"
+    assert links_of(fs, "private") == 2
+    assert mode_of(fs, "") == 0o755
+    return True
+
+
+public func test_mkdir_mode_keeps_the_sticky_bit_and_drops_the_set_user_and_set_group_bits() -> bool:
+    const fs = filesystem.memory()
+    assert note(filesystem.mkdir_mode(fs, "tmp", 0o1777)) == "ok"
+    assert note(filesystem.mkdir_mode(fs, "setuid", 0o4755)) == "ok"
+    assert note(filesystem.mkdir_mode(fs, "setgid", 0o2755)) == "ok"
+    assert mode_of(fs, "tmp") == 0o1777
+    assert mode_of(fs, "setuid") == 0o755
+    assert mode_of(fs, "setgid") == 0o755
+    assert note(filesystem.chmod(fs, "setgid", 0o2755)) == "ok"
+    assert mode_of(fs, "setgid") == 0o2755
+    return True
+
+
+public func test_a_folder_made_with_no_permission_bits_is_closed_until_chmod_opens_it() -> bool:
+    const fs = filesystem.memory()
+    assert note(filesystem.mkdir_mode(fs, "closed", 0o000)) == "ok"
+    assert mode_of(fs, "closed") == 0
+    assert note(fs.write_text("closed/f", "x")) == "write 'closed/f': permission denied"
+    assert note(filesystem.chmod(fs, "closed", 0o755)) == "ok"
+    assert note(fs.write_text("closed/f", "x")) == "ok"
+    assert read_of(fs, "closed/f") == "x"
+    return True
+
+
+public func test_mkdir_mode_takes_a_trailing_slash_and_refuses_a_taken_name_a_missing_parent_and_a_mode_out_of_range() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("file", "x")
+    _ = fs.mkdir("d")
+    assert note(filesystem.mkdir_mode(fs, "slashed/", 0o700)) == "ok"
+    assert mode_of(fs, "slashed") == 0o700
+    assert note(filesystem.mkdir_mode(fs, "d", 0o700)) == "mkdir 'd': already exists"
+    assert note(filesystem.mkdir_mode(fs, "file", 0o700)) == "mkdir 'file': already exists"
+    assert note(filesystem.mkdir_mode(fs, "a/b", 0o700)) == "mkdir 'a/b': the parent directory does not exist"
+    assert note(filesystem.mkdir_mode(fs, "file/b", 0o700)) == f"mkdir 'file/b': {NOT_A_FOLDER}"
+    assert note(filesystem.mkdir_mode(fs, "x", 0o10000)) == "mkdir 'x': the mode must be between 0 and 0o7777"
+    assert note(filesystem.mkdir_mode(fs, "x", -1)) == "mkdir 'x': the mode must be between 0 and 0o7777"
+    assert exists_as(fs, "x") == "missing"
+    return True
+
+
+public func test_mkdir_mode_needs_a_parent_that_may_be_written_and_stamps_it_as_mkdir_does() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("closed")
+    const before = time_of(fs, "d")
+    assert note(filesystem.mkdir_mode(fs, "d/new", 0o700)) == "ok"
+    assert time_of(fs, "d") > before
+    assert links_of(fs, "d") == 3
+    assert note(filesystem.chmod(fs, "closed", 0o500)) == "ok"
+    assert note(filesystem.mkdir_mode(fs, "closed/new", 0o700)) == "mkdir 'closed/new': permission denied"
+    assert exists_as(fs, "closed/new") == "missing"
+    return True
+
+
+public func test_mkdir_mode_on_a_narrowed_or_read_only_handle_stays_inside_the_folder() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("outside")
+    _ = filesystem.symlink(fs, "../outside", "box/out")
+    const box = fs.dir("box")
+    assert note(filesystem.mkdir_mode(box, "inner", 0o700)) == "ok"
+    assert mode_of(fs, "box/inner") == 0o700
+    assert note(filesystem.mkdir_mode(box, "../outside/new", 0o700)) == f"mkdir '../outside/new': {NARROWED}"
+    assert note(filesystem.mkdir_mode(box, "/outside/new", 0o700)) == f"mkdir '/outside/new': {NARROWED}"
+    assert note(filesystem.mkdir_mode(box, "inner/../../outside/new", 0o700)) == f"mkdir 'inner/../../outside/new': {NARROWED}"
+    assert note(filesystem.mkdir_mode(box, "out/new", 0o700)) == f"mkdir 'out/new': {NOT_A_FOLDER}"
+    assert note(filesystem.mkdir_mode(box, "out", 0o700)) == "mkdir 'out': already exists"
+    assert note(filesystem.mkdir_mode(box, "", 0o700)) == f"mkdir '': {NARROWED}"
+    assert note(filesystem.mkdir_mode(fs.read_only(), "box/new", 0o700)) == f"mkdir 'box/new': {READ_ONLY}"
+    assert note(filesystem.mkdir_mode(box.read_only(), "new", 0o700)) == f"mkdir 'new': {READ_ONLY}"
+    assert exists_as(fs, "outside/new") == "missing"
+    assert exists_as(fs, "box/new") == "missing"
+    return True
+
+
+public func test_mkdir_mode_then_chmod_is_the_way_to_a_mode_the_umask_would_narrow() -> bool:
+    const fs = filesystem.memory()
+    assert note(filesystem.mkdir_mode(fs, "tree", 0o700)) == "ok"
+    assert note(filesystem.mkdir_mode(fs, "tree/sub", 0o700)) == "ok"
+    assert note(fs.write_text("tree/sub/file", "x")) == "ok"
+    assert note(filesystem.chmod(fs, "tree/sub", 0o555)) == "ok"
+    assert note(filesystem.chmod(fs, "tree", 0o755)) == "ok"
+    assert mode_of(fs, "tree") == 0o755
+    assert mode_of(fs, "tree/sub") == 0o555
+    assert read_of(fs, "tree/sub/file") == "x"
+    return True

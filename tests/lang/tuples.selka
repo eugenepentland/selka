@@ -1,0 +1,170 @@
+import strings
+
+record NumberLetter:
+    number: int
+    letter: str
+
+
+record Label:
+    pair: NumberLetter
+
+
+record TextParts:
+    head: str
+    rest: str
+
+
+record IntPair:
+    left: int
+    right: int
+
+
+record ManagedPair:
+    number: int
+    items: int[]
+
+
+record Counted[T]:
+    value: T
+    count: int
+
+
+record GenericPair[T]:
+    left: T
+    right: T
+
+
+record NestedPair:
+    number: int
+    pair: NumberLetter
+
+
+func split_first(text: str, sep: str) -> TextParts:
+    mut at = strings.char_find(text, sep)
+    if at < 0:
+        return TextParts(head=copy(text), rest="")
+    return TextParts(head=copy(strings.char_slice(text, 0, at)), rest=copy(strings.char_slice(text, at + 1, strings.char_count(text))))
+
+
+func labelled(pair: NumberLetter) -> Label:
+    return Label(pair=copy(pair))
+
+
+func find(pairs: NumberLetter[], wanted: int) -> NumberLetter?:
+    for pair in pairs:
+        if pair.number == wanted:
+            return Some(NumberLetter(number=pair.number, letter=copy(pair.letter)))
+    return None
+
+
+func letter_of(found: NumberLetter?) -> str:
+    if found is None:
+        return ""
+    const pair = copy(found)
+    return copy(pair.letter)
+
+
+func pair_sum(pair: IntPair) -> int:
+    return pair.left + pair.right
+
+
+func managed_pair() -> ManagedPair:
+    mut seen: int[] = []
+    append(mut seen, 7)
+    return ManagedPair(number=3, items=own seen)
+
+
+func first_or[T](pair: Counted[T], fallback: T) -> T:
+    if pair.count > 0:
+        return copy(pair.value)
+    return copy(fallback)
+
+
+func swap_pair[T](pair: GenericPair[T]) -> GenericPair[T]:
+    return GenericPair[T](left=copy(pair.right), right=copy(pair.left))
+
+
+# A returned record exposes named fields; staged values preserve the swap idiom.
+# Historical public test names retain their original corpus identities.
+# spec-case: TUPLE-3
+public func test_a_returned_tuple_destructures_and_the_swap_idiom_works() -> bool:
+    const parts = split_first("key=value", "=")
+    if parts.head != "key" or parts.rest != "value":
+        return False
+    mut a = 1
+    mut b = 2
+    const next_a = b
+    const next_b = a
+    a = next_a
+    b = next_b
+    if a != 2 or b != 1:
+        return False
+    const first = split_first("a=b", "=")
+    return first.head == "a"
+
+
+# A record is an ordinary value: it lives in lists and record fields, and each
+# field keeps its own type.
+# spec-case: TUPLE-2
+public func test_a_tuple_nests_in_a_list_and_in_a_record_field() -> bool:
+    mut pairs = [NumberLetter(number=1, letter="a"), NumberLetter(number=2, letter="b")]
+    mut total = 0
+    for pair in pairs:
+        total = total + pair.number
+        if pair.letter == "":
+            return False
+    if total != 3:
+        return False
+    mut wrapped = labelled(NumberLetter(number=4, letter="d"))
+    const pair = wrapped.pair
+    return pair.number == 4 and pair.letter == "d"
+
+
+# spec-case: TUPLE-2
+public func test_an_option_and_a_result_payload_can_be_a_tuple() -> bool:
+    mut pairs = [NumberLetter(number=1, letter="a"), NumberLetter(number=2, letter="b")]
+    if letter_of(find(pairs, 2)) != "b":
+        return False
+    if letter_of(find(pairs, 9)) != "":
+        return False
+    mut ok: Result[NumberLetter, str] = Ok(NumberLetter(number=5, letter="e"))
+    match ok:
+        case Ok(pair):
+            const value = copy(pair)
+            return value.number == 5 and value.letter == "e"
+        case Err(_):
+            return False
+
+
+# spec-case: TUPLE-6
+public func test_tuple_equality_and_rendering_follow_the_aggregate_rule() -> bool:
+    mut left = NumberLetter(number=1, letter="a")
+    mut right = NumberLetter(number=1, letter="a")
+    if left != right:
+        return False
+    if left == NumberLetter(number=1, letter="b") or left == NumberLetter(number=2, letter="a"):
+        return False
+    if f"{left}" != "NumberLetter(number=1, letter='a')":
+        return False
+    mut nested = NestedPair(number=1, pair=NumberLetter(number=2, letter="b"))
+    if f"{nested}" != "NestedPair(number=1, pair=NumberLetter(number=2, letter='b'))":
+        return False
+    mut pairs = [own left, NumberLetter(number=2, letter="b")]
+    return f"{pairs}" == "[NumberLetter(number=1, letter='a'), NumberLetter(number=2, letter='b')]"
+
+
+# Generic records retain the parameter type across int and str actuals.
+# spec-case: TUPLE-8
+public func test_a_generic_function_over_a_tuple_keeps_its_element_type() -> bool:
+    if first_or(Counted[int](value=7, count=1), 0) != 7:
+        return False
+    if first_or(Counted[str](value="a", count=0), "b") != "b":
+        return False
+    const swapped = swap_pair(GenericPair[int](left=1, right=2))
+    if swapped.left != 2 or swapped.right != 1:
+        return False
+    mut pairs = [IntPair(left=1, right=2), IntPair(left=3, right=4)]
+    mut total = 0
+    for pair in pairs:
+        total = total + pair.left + pair.right
+    return total == 10

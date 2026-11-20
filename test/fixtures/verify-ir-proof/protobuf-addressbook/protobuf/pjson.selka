@@ -1,0 +1,603 @@
+# The proto3 JSON mapping, the part that does not depend on any generated message: errors, options, the registry of messages
+# (for `Any`), number parsing and printing, base64, names, and the text forms of Timestamp, Duration and FieldMask.
+# Generated code calls these from `to_json_M` and `from_json_M`.  The JSON text itself is the standard `json` module's.
+
+import base64
+import json
+import lists
+import math
+import strings
+
+# A refusal.  `parse` is for input that is not valid proto3 JSON, `serialize` for a message that cannot be written as JSON.
+public enum Error:
+    parse(value: str)
+    serialize(value: str)
+
+public record Options:
+    ignore_unknown: bool = False
+
+# The messages compiled into a program, by full name (`google.protobuf.Timestamp`).  `Any` uses it to write and read the message
+# it packs.  A printer takes the serialized message; a parser takes the JSON of the message and answers its serialized form.
+public record Registry:
+    printers: dict[str, func(bytes, Registry) -> json.Json fails Error]
+    parsers: dict[str, func(json.Json, Registry, Options) -> bytes fails Error]
+
+public func bad(what: str) -> Error:
+    return Error.parse(value=copy(what))
+
+# ---- numbers: parsing ----
+
+# True when `text` is a JSON number: -?(0|[1-9][0-9]*)(.[0-9]+)?([eE][+-]?[0-9]+)?
+func is_json_number(text: str) -> bool:
+    const n = len(text)
+    mut i = 0
+    if i < n and text[i] == 45:
+        i += 1
+    if i >= n:
+        return False
+    if text[i] == 48:
+        i += 1
+    elif 49 <= text[i] <= 57:
+        while i < n and 48 <= text[i] <= 57:
+            i += 1
+    else:
+        return False
+    if i < n and text[i] == 46:
+        i += 1
+        const start = i
+        while i < n and 48 <= text[i] <= 57:
+            i += 1
+        if i == start:
+            return False
+    if i < n and (text[i] == 101 or text[i] == 69):
+        i += 1
+        if i < n and (text[i] == 43 or text[i] == 45):
+            i += 1
+        const digits = i
+        while i < n and 48 <= text[i] <= 57:
+            i += 1
+        if i == digits:
+            return False
+    return i == n
+
+# True when `text` is an optional minus and decimal digits only.
+func is_plain_integer(text: str) -> bool:
+    const n = len(text)
+    mut i = 0
+    if i < n and text[i] == 45:
+        i += 1
+    if i >= n:
+        return False
+    if text[i] == 48 and i + 1 < n:
+        return False
+    while i < n:
+        if not (48 <= text[i] <= 57):
+            return False
+        i += 1
+    return True
+
+# The value of a JSON number held as a float, when it is a whole number in [low, high].
+func whole_float(x: float, low: i64, high: i64, what: str) -> i64 fails Error:
+    if math.is_nan(x) or math.is_inf(x) or floor(x) != x:
+        fail bad(f"{what}: not an integer")
+    if x < -9223372036854775808.0 or x >= 9223372036854775808.0:
+        fail bad(f"{what}: out of range")
+    const n = i64(x)
+    if n < low or n > high:
+        fail bad(f"{what}: out of range")
+    return n
+
+# An integer field of up to 64 bits (signed, or unsigned up to 32): a JSON integer, a whole JSON number, or a decimal string.
+public func parse_i64(value: json.Json, low: i64, high: i64, what: str) -> i64 fails Error:
+    match value:
+        case integer(value=n):
+            if i64(n) < low or i64(n) > high:
+                fail bad(f"{what}: out of range")
+            return i64(n)
+        case number(value=x):
+            return try whole_float(x, low, high, what)
+        case text(value=t):
+            if is_plain_integer(t):
+                match parse_int(t):
+                    case Some(n):
+                        if i64(n) < low or i64(n) > high:
+                            fail bad(f"{what}: out of range")
+                        return i64(n)
+                    case None:
+                        fail bad(f"{what}: out of range")
+            if is_json_number(t):
+                match parse_float(t):
+                    case Some(x):
+                        return try whole_float(x, low, high, what)
+                    case None:
+                        fail bad(f"{what}: bad number")
+            fail bad(f"{what}: bad number")
+        case _:
+            fail bad(f"{what}: expected a number")
+
+public func parse_i32(value: json.Json, what: str) -> i32 fails Error:
+    const n = try parse_i64(value, -2147483648, 2147483647, what)
+    return i32(n)
+
+public func parse_u32(value: json.Json, what: str) -> u32 fails Error:
+    const n = try parse_i64(value, 0, 4294967295, what)
+    return u32(n)
+
+public func parse_int64(value: json.Json, what: str) -> i64 fails Error:
+    return try parse_i64(value, -9223372036854775808, 9223372036854775807, what)
+
+# uint64: digits are read one at a time so the whole range is exact.
+func parse_u64_digits(text: str, what: str) -> u64 fails Error:
+    mut result: u64 = 0
+    for i in range(len(text)):
+        const digit = u64(text[i] - 48)
+        if result > 1844674407370955161u64:
+            fail bad(f"{what}: out of range")
+        const scaled = result * 10u64
+        if scaled > 18446744073709551615u64 - digit:
+            fail bad(f"{what}: out of range")
+        result = scaled + digit
+    return result
+
+public func parse_u64(value: json.Json, what: str) -> u64 fails Error:
+    match value:
+        case integer(value=n):
+            if n < 0:
+                fail bad(f"{what}: out of range")
+            return u64(n)
+        # (an integer token above 2^63 reaches here as a float: the json module cannot hold it exactly, F-PB-17)
+        case number(value=x):
+            if math.is_nan(x) or math.is_inf(x) or floor(x) != x or x < 0.0 or x >= 18446744073709551616.0:
+                fail bad(f"{what}: not an unsigned integer")
+            if x < 9223372036854775808.0:
+                return u64(i64(x))
+            return u64(i64(x - 9223372036854775808.0)) + 9223372036854775808u64
+        case text(value=t):
+            if is_plain_integer(t) and t[0] != 45:
+                return try parse_u64_digits(t, what)
+            if is_plain_integer(t) and t == "-0":
+                return 0u64
+            if is_json_number(t):
+                match parse_float(t):
+                    case Some(x):
+                        if floor(x) == x and x >= 0.0 and x < 9223372036854775808.0:
+                            return u64(i64(x))
+                        fail bad(f"{what}: bad number")
+                    case None:
+                        fail bad(f"{what}: bad number")
+            fail bad(f"{what}: bad number")
+        case _:
+            fail bad(f"{what}: expected a number")
+
+# double: a JSON number, or a string: a number, "NaN", "Infinity" or "-Infinity".
+public func parse_double(value: json.Json, what: str) -> float fails Error:
+    match value:
+        case integer(value=n):
+            return float(n)
+        case number(value=x):
+            if math.is_inf(x):
+                fail bad(f"{what}: out of range")
+            return x
+        case text(value=t):
+            if t == "NaN":
+                return math.nan()
+            if t == "Infinity":
+                return math.infinity()
+            if t == "-Infinity":
+                return -math.infinity()
+            if is_json_number(t):
+                match parse_float(t):
+                    case Some(x):
+                        if math.is_inf(x):
+                            fail bad(f"{what}: out of range")
+                        return x
+                    case None:
+                        fail bad(f"{what}: bad number")
+            fail bad(f"{what}: bad number")
+        case _:
+            fail bad(f"{what}: expected a number")
+
+public func parse_float32(value: json.Json, what: str) -> f32 fails Error:
+    const x = try parse_double(value, what)
+    if math.is_nan(x) or math.is_inf(x):
+        return f32(x)
+    if math.fabs(x) > 3.4028234663852886e38:
+        fail bad(f"{what}: out of range")
+    return f32(x)
+
+public func parse_bool(value: json.Json, what: str) -> bool fails Error:
+    match value:
+        case boolean(value=b):
+            return b
+        case _:
+            fail bad(f"{what}: expected true or false")
+
+public func parse_string(value: json.Json, what: str) -> str fails Error:
+    match value:
+        case text(value=t):
+            return copy(t)
+        case _:
+            fail bad(f"{what}: expected a string")
+
+# The six bits a base64 character stands for, in either alphabet; -1 for anything else.
+func base64_value(c: int) -> int:
+    if 65 <= c <= 90:
+        return c - 65
+    if 97 <= c <= 122:
+        return c - 71
+    if 48 <= c <= 57:
+        return c + 4
+    if c == 43 or c == 45:
+        return 62
+    if c == 47 or c == 95:
+        return 63
+    return -1
+
+# bytes: base64 in the standard or the URL-safe alphabet, with or without padding.  Bits left over after the last whole
+# octet are ignored, as other protobuf JSON readers do.
+public func parse_bytes(value: json.Json, what: str) -> bytes fails Error:
+    match value:
+        case text(value=t):
+            mut n = len(t)
+            while n > 0 and t[n - 1] == 61:
+                n -= 1
+            if n % 4 == 1:
+                fail bad(f"{what}: bad base64 length")
+            mut octets: int[] = []
+            mut accumulated = 0
+            mut bits = 0
+            for i in range(n):
+                const six = base64_value(t[i])
+                if six < 0:
+                    fail bad(f"{what}: bad base64 character")
+                accumulated = accumulated * 64 + six
+                bits += 6
+                if bits >= 8:
+                    bits -= 8
+                    const unit = int(math.pow(2.0, bits))
+                    append(mut octets, accumulated // unit)
+                    accumulated = accumulated % unit
+            return bytes(octets)
+        case _:
+            fail bad(f"{what}: expected a base64 string")
+
+# ---- numbers: printing ----
+
+public func i32_json(v: i32) -> json.Json:
+    return json.integer(int(v))
+
+public func u32_json(v: u32) -> json.Json:
+    return json.integer(int(v))
+
+public func i64_json(v: i64) -> json.Json:
+    return json.text(str(v))
+
+public func u64_json(v: u64) -> json.Json:
+    return json.text(f"{v}")
+
+public func double_json(v: float) -> json.Json:
+    if math.is_nan(v):
+        return json.text("NaN")
+    if math.is_inf(v):
+        if v > 0.0:
+            return json.text("Infinity")
+        return json.text("-Infinity")
+    return json.number(v)
+
+# A float prints with the shortest digits that read back as the same f32, so 0.1 stays 0.1.
+public func float_json(v: f32) -> json.Json:
+    const wide = float(v)
+    if math.is_nan(wide):
+        return json.text("NaN")
+    if math.is_inf(wide):
+        if wide > 0.0:
+            return json.text("Infinity")
+        return json.text("-Infinity")
+    match parse_float(str(v)):
+        case Some(x):
+            return json.number(x)
+        case None:
+            return json.number(wide)
+
+public func bytes_json(v: bytes) -> json.Json fails Error:
+    match strings.decode(base64.b64encode(v)):
+        case Ok(text):
+            return json.text(text)
+        case Err(message):
+            fail Error.serialize(value=copy(message))
+
+# ---- names ----
+
+# "foo_bar" -> "fooBar"
+public func lower_camel(name: str) -> str:
+    mut out = ""
+    mut upper = False
+    for part in strings.split(name, "_"):
+        if len(part) == 0:
+            continue
+        if upper:
+            out = out + strings.upper(part[0:1]) + part[1:]
+        else:
+            out = out + part
+        upper = True
+    return out
+
+# ---- map keys ----
+
+public func bool_key(k: bool) -> str:
+    if k:
+        return "true"
+    return "false"
+
+public func parse_bool_key(text: str, what: str) -> bool fails Error:
+    if text == "true":
+        return True
+    if text == "false":
+        return False
+    fail bad(f"{what}: bad bool key")
+
+# ---- Timestamp and Duration ----
+
+public record TimeParts:
+    seconds: i64
+    nanos: i32
+
+record Civil3:
+    year: int
+    month: int
+    day: int
+
+# The proleptic Gregorian date of a day count from 1970-01-01 (Howard Hinnant's civil_from_days).
+func civil_from_days(days: int) -> Civil3:
+    const z = days + 719468
+    const era = z // 146097
+    const doe = z - era * 146097
+    const yoe = (doe - doe // 1460 + doe // 36524 - doe // 146096) // 365
+    const doy = doe - (365 * yoe + yoe // 4 - yoe // 100)
+    const mp = (5 * doy + 2) // 153
+    const d = doy - (153 * mp + 2) // 5 + 1
+    mut m = mp + 3
+    if m > 12:
+        m -= 12
+    mut year = yoe + era * 400
+    if m <= 2:
+        year += 1
+    return Civil3(year=year, month=m, day=d)
+
+func days_from_civil(year: int, month: int, day: int) -> int:
+    mut y = year
+    if month <= 2:
+        y -= 1
+    const era = y // 400
+    const yoe = y - era * 400
+    mut mp = month + 9
+    if month > 2:
+        mp = month - 3
+    const doy = (153 * mp + 2) // 5 + day - 1
+    const doe = yoe * 365 + yoe // 4 - yoe // 100 + doy
+    return era * 146097 + doe - 719468
+
+func days_in_month(year: int, month: int) -> int:
+    if month == 2:
+        if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+            return 29
+        return 28
+    if month == 4 or month == 6 or month == 9 or month == 11:
+        return 30
+    return 31
+
+# 0.001 -> ".001", 0.000001 -> ".000001", 1 ns -> ".000000001", and nothing for a whole second.
+func fraction_text(nanos: int) -> str:
+    if nanos == 0:
+        return ""
+    if nanos % 1000000 == 0:
+        return f".{nanos // 1000000:03d}"
+    if nanos % 1000 == 0:
+        return f".{nanos // 1000:06d}"
+    return f".{nanos:09d}"
+
+public func timestamp_text(seconds: i64, nanos: i32) -> str fails Error:
+    if seconds < -62135596800 or seconds > 253402300799:
+        fail Error.serialize(value="Timestamp out of range")
+    if nanos < 0 or nanos > 999999999:
+        fail Error.serialize(value="Timestamp nanos out of range")
+    const total = int(seconds)
+    const days = total // 86400
+    const rest = total - days * 86400
+    const civil = civil_from_days(days)
+    const date = f"{civil.year:04d}-{civil.month:02d}-{civil.day:02d}"
+    const time = f"{rest // 3600:02d}:{(rest // 60) % 60:02d}:{rest % 60:02d}"
+    return date + "T" + time + fraction_text(int(nanos)) + "Z"
+
+# `count` decimal digits of `text` from `start`, or -1.
+func digits_at(text: str, start: int, count: int) -> int:
+    if start + count > len(text):
+        return -1
+    mut value = 0
+    for i in range(start, start + count):
+        const c = text[i]
+        if c < 48 or c > 57:
+            return -1
+        value = value * 10 + (c - 48)
+    return value
+
+# The nanoseconds of the digits `text[start:stop]` read as a fraction of a second (one to nine digits).
+func fraction_nanos(text: str, start: int, stop: int) -> int:
+    if stop - start < 1 or stop - start > 9:
+        return -1
+    mut value = 0
+    for i in range(start, stop):
+        const c = text[i]
+        if c < 48 or c > 57:
+            return -1
+        value = value * 10 + (c - 48)
+    for _ in range(stop - start, 9):
+        value = value * 10
+    return value
+
+public func timestamp_parse(text: str) -> TimeParts fails Error:
+    const bad_form = bad("Timestamp: not an RFC 3339 time")
+    if len(text) < 20:
+        fail bad_form
+    const year = digits_at(text, 0, 4)
+    const month = digits_at(text, 5, 2)
+    const day = digits_at(text, 8, 2)
+    const hour = digits_at(text, 11, 2)
+    const minute = digits_at(text, 14, 2)
+    const second = digits_at(text, 17, 2)
+    if year < 0 or month < 0 or day < 0 or hour < 0 or minute < 0 or second < 0:
+        fail bad_form
+    if text[4] != 45 or text[7] != 45 or text[10] != 84 or text[13] != 58 or text[16] != 58:
+        fail bad_form
+    if year < 1 or month < 1 or month > 12 or day < 1 or day > days_in_month(year, month):
+        fail bad("Timestamp: date out of range")
+    if hour > 23 or minute > 59 or second > 59:
+        fail bad("Timestamp: time out of range")
+    mut at = 19
+    mut nanos = 0
+    if text[at] == 46:
+        mut stop = at + 1
+        while stop < len(text) and 48 <= text[stop] <= 57:
+            stop += 1
+        nanos = fraction_nanos(text, at + 1, stop)
+        if nanos < 0:
+            fail bad_form
+        at = stop
+    mut offset = 0
+    if at >= len(text):
+        fail bad_form
+    if text[at] == 90:
+        if at + 1 != len(text):
+            fail bad_form
+    elif text[at] == 43 or text[at] == 45:
+        if at + 6 != len(text) or text[at + 3] != 58:
+            fail bad_form
+        const offset_hours = digits_at(text, at + 1, 2)
+        const offset_minutes = digits_at(text, at + 4, 2)
+        if offset_hours < 0 or offset_minutes < 0 or offset_hours > 23 or offset_minutes > 59:
+            fail bad_form
+        offset = offset_hours * 3600 + offset_minutes * 60
+        if text[at] == 45:
+            offset = -offset
+    else:
+        fail bad_form
+    const total = days_from_civil(year, month, day) * 86400 + hour * 3600 + minute * 60 + second - offset
+    if total < -62135596800 or total > 253402300799:
+        fail bad("Timestamp out of range")
+    return TimeParts(seconds=i64(total), nanos=i32(nanos))
+
+public func duration_text(seconds: i64, nanos: i32) -> str fails Error:
+    if seconds < -315576000000 or seconds > 315576000000:
+        fail Error.serialize(value="Duration out of range")
+    if nanos < -999999999 or nanos > 999999999:
+        fail Error.serialize(value="Duration nanos out of range")
+    if (seconds > 0 and nanos < 0) or (seconds < 0 and nanos > 0):
+        fail Error.serialize(value="Duration seconds and nanos differ in sign")
+    mut sign = ""
+    if seconds < 0 or nanos < 0:
+        sign = "-"
+    const whole = abs(int(seconds))
+    mut fraction = int(nanos)
+    if fraction < 0:
+        fraction = -fraction
+    return sign + str(whole) + fraction_text(fraction) + "s"
+
+public func duration_parse(text: str) -> TimeParts fails Error:
+    const bad_form = bad("Duration: expected a number of seconds ending in s")
+    const n = len(text)
+    if n < 2 or text[n - 1] != 115:
+        fail bad_form
+    mut i = 0
+    mut negative = False
+    if text[0] == 45:
+        negative = True
+        i = 1
+    mut stop = i
+    while stop < n - 1 and 48 <= text[stop] <= 57:
+        stop += 1
+    if stop == i or stop - i > 12:
+        fail bad_form
+    const whole = digits_at(text, i, stop - i)
+    mut nanos = 0
+    mut end = stop
+    if stop < n - 1:
+        if text[stop] != 46:
+            fail bad_form
+        nanos = fraction_nanos(text, stop + 1, n - 1)
+        if nanos < 0:
+            fail bad_form
+        end = n - 1
+    if end != n - 1:
+        fail bad_form
+    if whole > 315576000000:
+        fail bad("Duration out of range")
+    if negative:
+        return TimeParts(seconds=i64(-whole), nanos=i32(-nanos))
+    return TimeParts(seconds=i64(whole), nanos=i32(nanos))
+
+# ---- FieldMask ----
+
+# "foo_bar" -> "fooBar"; a path that does not survive the round trip (capitals, a digit after an underscore, a double underscore)
+# cannot be written.
+public func field_mask_text(paths: str[]) -> str fails Error:
+    mut pieces: str[] = []
+    for path in paths:
+        mut piece = ""
+        mut upper = False
+        for i in range(len(path)):
+            const c = path[i]
+            if 65 <= c <= 90:
+                fail Error.serialize(value="FieldMask path has a capital letter")
+            if c == 95:
+                if upper:
+                    fail Error.serialize(value="FieldMask path has a double underscore")
+                upper = True
+            elif upper:
+                if c < 97 or c > 122:
+                    fail Error.serialize(value="FieldMask path does not round trip")
+                piece = piece + strings.upper(path[i:i + 1])
+                upper = False
+            else:
+                piece = piece + path[i:i + 1]
+        if upper:
+            fail Error.serialize(value="FieldMask path ends with an underscore")
+        append(mut pieces, own piece)
+    return strings.join(pieces, ",")
+
+# "fooBar,baz" -> ["foo_bar", "baz"]
+public func field_mask_parse(text: str) -> str[] fails Error:
+    mut paths: str[] = []
+    if len(text) == 0:
+        return paths
+    for part in strings.split(text, ","):
+        mut path = ""
+        for i in range(len(part)):
+            const c = part[i]
+            if c == 95:
+                fail bad("FieldMask: underscore in a path")
+            if 65 <= c <= 90:
+                path = path + "_" + strings.lower(part[i:i + 1])
+            else:
+                path = path + part[i:i + 1]
+        append(mut paths, own path)
+    return paths
+
+# ---- Any ----
+
+# "type.googleapis.com/google.protobuf.Duration" -> "google.protobuf.Duration"
+public func type_name_of(url: str) -> str fails Error:
+    mut slash = -1
+    for i in range(len(url)):
+        if url[i] == 47:
+            slash = i
+    if slash < 0 or slash + 1 >= len(url):
+        fail bad("Any: bad type_url")
+    return copy(url[slash + 1:])
+
+# Messages whose JSON is not an object: Any carries them under "value".
+public func is_wkt_special(name: str) -> bool:
+    if not strings.starts_with(name, "google.protobuf."):
+        return False
+    const short = name[16:]
+    const specials = ["Any", "Timestamp", "Duration", "FieldMask", "Struct", "Value", "ListValue", "BoolValue", "Int32Value", "Int64Value", "UInt32Value", "UInt64Value", "FloatValue", "DoubleValue", "StringValue", "BytesValue"]
+    return lists.contains(specials, short)

@@ -1,0 +1,84 @@
+# knucleotide_tuned: the same counts as knucleotide.selka, but no substring is ever
+# materialized. What changed, and why:
+# - The sequence is generated as base codes (A=0, C=1, G=2, T=3) in a list[int]
+#   instead of letters in a str.
+# - Each k-letter key is packed into an int, two bits per base, and maintained
+#   as a rolling code: code = (code * 4 + base) % 4**k. Because A < C < G < T in
+#   both the code and the byte order, sorting codes sorts keys, and the dict
+#   becomes dict[int, int] instead of dict[str, int].
+# - Keys are turned back into text only for the 20 printed entries (decode) and
+#   the 5 queried keys are packed once (encode).
+# Everything else — one fresh dict per k, the get-then-store update, the two
+# stable sorts — is exactly the idiomatic port, so the difference between the
+# two files is what the str slices (allocation, hashing, collection) cost.
+import dicts
+import lists
+import strings
+
+record Entry:
+    code: int
+    count: int
+
+
+func generate(length: int) -> int[]:
+    mut codes: int[] = []
+    mut seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        append(mut codes, seed * 4 // 139968)
+    return codes
+
+
+func frequencies(codes: int[], k: int) -> dict[int, int]:
+    mut modulus = 1
+    for _ in range(k):
+        modulus = modulus * 4
+    mut counts: dict[int, int] = {}
+    mut code = 0
+    for i, base in enumerate(codes):
+        code = (code * 4 + base) % modulus
+        if i >= k - 1:
+            counts[code] = dicts.get(counts, code, 0) + 1
+    return counts
+
+
+func encode(key: str) -> int:
+    mut code = 0
+    for letter in strings.chars(key):
+        code = code * 4 + strings.char_find(("ACGT"), letter)
+    return code
+
+
+func decode(code: int, k: int) -> str:
+    mut letters: str[] = []
+    mut rest = code
+    for _ in range(k):
+        append(mut letters, strings.char_at("ACGT", rest % 4))
+        rest = rest // 4
+    lists.reverse(mut letters)
+    return strings.join(letters, "")
+
+
+func by_code(entry: Entry) -> int:
+    return entry.code
+
+
+func descending_count(entry: Entry) -> int:
+    return -entry.count
+
+
+func main(out: Stream) -> int:
+    mut codes = generate(1000000)
+    for k in [1, 2]:
+        mut counts = frequencies(codes, k)
+        mut entries: Entry[] = []
+        for item in dicts.items(counts):
+            append(mut entries, Entry(code=item.key, count=item.value))
+        # Two stable passes: key ascending, then count descending.
+        mut by_key = sorted(entries, key=by_code)
+        for entry in sorted(by_key, key=descending_count):
+            print(out, decode(entry.code, k), entry.count)
+    for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
+        mut counts = frequencies(codes, strings.char_count(key))
+        print(out, f"{dicts.get(counts, encode(key), 0)}\t{copy(key)}")
+    return 0

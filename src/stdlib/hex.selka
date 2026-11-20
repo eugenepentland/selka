@@ -1,0 +1,19 @@
+import strings
+
+# Lowercase hexadecimal text for a byte string, two digits per octet.
+public builtin func encode(data: bytes) -> str
+
+
+# Uppercase hexadecimal text for a byte string, two digits per octet.
+public func encode_upper(data: bytes) -> str:
+    return strings.upper(encode(data))
+
+
+# Bytes for even-length hexadecimal text, accepting either letter case.
+public func decode(text: str) -> bytes fails str:
+    return try bytes.fromhex(text)
+
+
+# Whether text is even-length hexadecimal that decode would accept.
+public func is_hex(text: str) -> bool:
+    return bytes.fromhex(text) is Ok

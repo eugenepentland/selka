@@ -1,0 +1,16 @@
+import lists
+
+func drain(n: int) -> int:
+    mut xs: int[] = []
+    for i in range(n):
+        append(mut xs, i)
+    mut total = 0
+    for i in range(n + 1):
+        total += lists.pop(mut xs)
+    return total
+
+
+func main(out: Stream) -> int:
+    print(out, drain(3))
+    print(out, drain(0))
+    return 0

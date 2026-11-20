@@ -1,0 +1,3 @@
+func main() -> int:
+    _ = divtrunc(1, 0)
+    return 7

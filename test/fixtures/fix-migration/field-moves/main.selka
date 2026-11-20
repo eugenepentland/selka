@@ -1,0 +1,48 @@
+# A field moved out of a record that a read of another field follows, and two fields moved out of one record (FR63).
+record Pair:
+    lat: int[]
+    status: int[]
+    flag: bool
+    name: str
+
+
+record Tally:
+    lat: int[]
+    status: int[]
+    flag: bool
+
+
+record Flagged:
+    lat: int[]
+    flag: bool
+
+
+# `flag=state.flag` read after `own state.lat` is refused: the repair reads it first, and copies nothing.
+func flagged() -> Flagged:
+    mut state = Pair(lat=[1, 2, 3], status=[2], flag=True, name="ab")
+    return Flagged(lat=own state.lat, flag=state.flag)
+
+
+# Two fields moved out of one `mut` record: no order helps, `take` moves each one and leaves its default.
+func tally() -> Tally:
+    mut state = Pair(lat=[4, 5], status=[2], flag=True, name="ab")
+    return Tally(lat=own state.lat, status=own state.status, flag=state.flag)
+
+
+func counted(own lat: int[], own status: int[]) -> int:
+    return len(lat) * 10 + len(status)
+
+
+# Two fields moved into two `const` locals that the next call takes: the repair moves both in that call (FR91B).
+func halves() -> int:
+    const state = Pair(lat=[6], status=[7, 8], flag=False, name="c")
+    const lat = own state.lat
+    const status = own state.status
+    return counted(own lat, own status)
+
+
+func main(out: Stream) -> int:
+    const first = flagged()
+    const second = tally()
+    print(out, len(first.lat), first.flag, len(second.lat), len(second.status), second.flag, halves())
+    return 0

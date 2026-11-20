@@ -1,0 +1,293 @@
+import buffers
+import bytes
+import strings
+
+record Packet:
+    tag: str
+    body: byte_buffer
+
+
+func buffer_of(data: bytes) -> byte_buffer:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffers.append_range(mut buffer, data, 0, len(data))
+    return buffer
+
+
+func widest(values: int[]) -> byte_buffer:
+    return byte_buffer(values)
+
+
+func optional_total(first: byte_buffer?) -> int:
+    match first:
+        case Some(b):
+            return 100 * len(b) + b[0]
+        case None:
+            return 1
+
+
+func result_total(r: Result[byte_buffer, str]) -> int:
+    const b = r else Err(e):
+        return len(e)
+    return bytes.find(b, b"-") + len(bytes(b))
+
+
+func buffer_pair[T: copy + storable](buffer: byte_buffer) -> byte_buffer[]:
+    mut both: byte_buffer[] = [copy(buffer), copy(buffer)]
+    append(mut both, copy(buffer))
+    if len(buffer) < 0:
+        return both
+    return both
+
+
+# The mutable octet buffer accepts every fragment kind, refuses an out-of-range
+# or misordered request without writing, and reads back exactly what it wrote.
+# spec-case: PY-BYTES-6
+public func test_append_methods_write_in_place_and_refuse_without_writing() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    if len(buffer) != 0 or buffer != b"":
+        return False
+    if not buffers.append_byte(mut buffer, 65):
+        return False
+    if not buffers.append_range(mut buffer, b"0123456789", 1, 4):
+        return False
+    buffers.append_utf8(mut buffer, "λ")
+    buffers.append_int(mut buffer, 0 - 7)
+    if buffer != b"A123\xce\xbb-7":
+        return False
+    if buffers.append_byte(mut buffer, 256) or buffers.append_byte(mut buffer, 0 - 1):
+        return False
+    if buffers.append_range(mut buffer, b"0123456789", 11, 12):
+        return False
+    if buffers.append_range(mut buffer, b"0123456789", 4, 3):
+        return False
+    if buffers.append_range(mut buffer, b"0123456789", 4, 11):
+        return False
+    if buffers.reserve(mut buffer, 0 - 1):
+        return False
+    if buffer != b"A123\xce\xbb-7":
+        return False
+    if not buffers.append_range(mut buffer, b"0123456789", 4, 4):
+        return False
+    if not buffers.reserve(mut buffer, 0):
+        return False
+    if buffer != b"A123\xce\xbb-7":
+        return False
+    return buffer[0] == 65 and len(buffer) == 8
+
+
+# A buffer update can be stored back explicitly; an immutable snapshot taken
+# before the append remains unchanged.
+# spec-case: PY-BYTES-6
+public func test_a_buffer_storeback_preserves_an_earlier_snapshot() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffers.append_range(mut buffer, b"seed", 0, 4)
+    mut alias = copy(buffer)
+    if len(alias) != 4 or alias != b"seed":
+        return False
+    mut snapshot = bytes(buffer)
+    if not buffers.append_byte(mut alias, 33):
+        return False
+    buffer = copy(alias)
+    if buffer != b"seed!" or alias != b"seed!":
+        return False
+    if snapshot != b"seed" or len(snapshot) != 4:
+        return False
+    if snapshot == buffer:
+        return False
+    return snapshot != alias
+
+
+# Growth past several capacity doublings keeps the content and identity, and
+# every earlier immutable snapshot stays byte-for-byte what it was.
+# spec-case: PY-BYTES-6
+public func test_growth_preserves_identity_content_and_earlier_snapshots() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    if not buffers.reserve(mut buffer, 4096):
+        return False
+    mut early = bytes(buffer)
+    mut total = 0
+    mut index = 0
+    while index < 5000:
+        if not buffers.append_byte(mut buffer, index % 256):
+            return False
+        total += index % 256
+        index += 1
+    if len(buffer) != 5000 or total != 629340:
+        return False
+    buffers.append_utf8(mut buffer, "λ")
+    buffers.append_int(mut buffer, 0 - 5000)
+    mut tail = bytes(buffer[5000:len(buffer)])
+    if tail != b"\xce\xbb-5000":
+        return False
+    if len(early) != 0 or buffer[4999] != 4999 % 256 or buffer[5000] != 206:
+        return False
+    return buffer[0] == 0 and buffer[255] == 255
+
+
+# The two byte kinds compare by content with each other, and the mutable one
+# keeps every read operation of the immutable one.
+# spec-case: PY-BYTES-6
+public func test_byte_kinds_share_reads_and_compare_by_content() -> bool:
+    mut buffer = buffer_of(b"needle-in-haystack")
+    mut immutable = b"needle-in-haystack"
+    if buffer != immutable or immutable != buffer:
+        return False
+    if bytes.find(buffer, b"-") != 6 or bytes.find_any(buffer, b"-", 7) != 9:
+        return False
+    if not bytes.starts_with(buffer, b"needle") or not bytes.ends_with(buffer, b"stack"):
+        return False
+    if b"-" not in buffer or b"hay" not in buffer:
+        return False
+    if buffer[0:6] != b"needle":
+        return False
+    if not buffers.append_byte(mut buffer, 33):
+        return False
+    if buffer == immutable:
+        return False
+    if immutable != b"needle-in-haystack":
+        return False
+    match strings.decode(buffer):
+        case Ok(text):
+            return text == "needle-in-haystack!"
+        case Err(_):
+            return False
+
+
+# A buffer survives collection at every allocation and can be stored back into
+# a record field or list slot after a local mutation.
+# spec-case: PY-BYTES-6
+public func test_buffers_are_traced_through_record_fields_lists_and_generics() -> bool:
+    mut packet = Packet(tag="head", body=buffer_of(b"body"))
+    if packet.body != b"body":
+        return False
+    mut body = copy(packet.body)
+    if not buffers.append_byte(mut body, 33):
+        return False
+    packet.body = own body
+    if packet.body != b"body!" or packet.tag != "head":
+        return False
+    mut both = buffer_pair[i64](buffer_of(b"7"))
+    both[1] = buffer_of(b"7")
+    both[2] = buffer_of(b"7")
+    if len(both) != 3:
+        return False
+    if both[0] != b"7" or both[2] != b"7":
+        return False
+    mut index = 0
+    mut first = copy(both[0])
+    while index < 200:
+        _ = buffers.append_byte(mut first, index % 256)
+        index += 1
+    both[0] = own first
+    if len(both[0]) != 201 or len(both[1]) != 1 or len(both[2]) != 1:
+        return False
+    return both[0][0] == 55 and both[0][200] == 199 and both[2][0] == 55
+
+
+# A buffer built from an integer list carries exactly those octets, and an
+# empty list builds the empty buffer.
+# spec-case: PY-BYTES-6
+public func test_byte_buffer_builds_from_an_integer_list() -> bool:
+    mut values: int[] = [0, 65, 255]
+    mut buffer = widest(values)
+    if len(buffer) != 3 or buffer != b"\x00A\xff":
+        return False
+    if not buffers.append_byte(mut buffer, 66):
+        return False
+    if len(values) != 3 or buffer != b"\x00A\xffB":
+        return False
+    mut empty: int[] = []
+    if len(byte_buffer(empty)) != 0:
+        return False
+    return bytes.to_list(buffer) == [0, 65, 255, 66]
+
+
+# The float append writes exactly the spelling `str(value)` prints, computed into
+# the buffer's own capacity, and a buffer that already holds text keeps it.
+# spec-case: PY-BYTES-6
+public func test_append_float_matches_the_printed_spelling() -> bool:
+    mut values: float[] = [0.1, 1.0, 2.5, 1.0 / 3.0, 1e300, 1e-300, 0.0 - 2.5e-7, 123456789.0]
+    mut empty: int[] = []
+    mut index = 0
+    while index < len(values):
+        mut value = values[index]
+        mut piece = byte_buffer(empty)
+        buffers.append_float(mut piece, value)
+        if bytes(piece) != strings.encode(str(value)):
+            return False
+        buffers.append_float(mut piece, value)
+        if bytes(piece) != strings.encode(str(value)) + strings.encode(str(value)):
+            return False
+        index += 1
+    mut seeded = byte_buffer(empty)
+    if not buffers.append_range(mut seeded, b"area=", 0, 5):
+        return False
+    buffers.append_float(mut seeded, 2.5)
+    buffers.append_utf8(mut seeded, "mm")
+    if bytes(seeded) != b"area=2.5mm":
+        return False
+    mut huge = 1e300 * 1e300
+    mut infinite = byte_buffer(empty)
+    buffers.append_float(mut infinite, huge)
+    if not buffers.append_byte(mut infinite, 44):
+        return False
+    buffers.append_float(mut infinite, 0.0 - huge)
+    if bytes(infinite) != b"inf,-inf":
+        return False
+    return len(bytes(seeded)) == 10
+
+
+# A backing that outgrows the size classes grows by extending its own
+# reservation, so every octet written before the growth is still there after it,
+# while the grown value's length and element descriptor are unchanged.
+# spec: BUFFER-GROWTH-1
+public func test_growth_past_the_segment_threshold_keeps_every_octet() -> bool:
+    mut gather_result: int[] = []
+    for index in range(0, 65536):
+        const gather_value: int = index % 256
+        append(mut gather_result, gather_value)
+    mut seed = byte_buffer(gather_result)
+    if len(seed) != 65536:
+        return False
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut writes = 0
+    while writes < 6:
+        if not buffers.append_range(mut buffer, seed, 0, 65536):
+            return False
+        writes += 1
+    if len(buffer) != 6 * 65536:
+        return False
+    mut check = 0
+    while check < 6 * 65536:
+        if buffer[check] != check % 256:
+            return False
+        check += 1021
+    if not buffers.append_byte(mut buffer, 7):
+        return False
+    if buffer[6 * 65536] != 7:
+        return False
+    return buffer[6 * 65536 - 1] == 255
+
+
+# A byte buffer an option or a result holds reads, through its payload binding,
+# as the buffer itself reads when passed as a plain parameter: its length, an
+# octet, a search and a copy out (FR92).
+public func test_a_buffer_in_an_option_or_a_result_reads_as_the_buffer_itself() -> bool:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    if not buffers.append_range(mut buffer, b"\x07-", 0, 2):
+        return False
+    const first: byte_buffer? = Some(copy(buffer))
+    const none: byte_buffer? = None
+    const failed: Result[byte_buffer, str] = Err("oops")
+    const failed_total = result_total(failed)
+    const found: Result[byte_buffer, str] = Ok(own buffer)
+    const found_total = result_total(found)
+    if optional_total(first) != 207 or optional_total(none) != 1:
+        return False
+    return found_total == 3 and failed_total == 4

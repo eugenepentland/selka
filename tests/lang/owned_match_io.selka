@@ -1,0 +1,75 @@
+# A file read is a fresh owned result, so `match` on it transfers its payload: the arm may
+# return, wrap or move the bytes, text or list without a `copy(value)` (managed-memory.md,
+# "Releasing memory"). Each test runs on the runner's in-memory filesystem stand-in; the
+# release run with the leak check proves the Err arm and the moved payload free exactly once.
+func wrapped(fs: Filesystem, path: str) -> bytes?:
+    match fs.read_file(path):
+        case Ok(data):
+            return data
+        case Err(_):
+            return None
+
+
+func wrapped_some(fs: Filesystem, path: str) -> bytes?:
+    match fs.read_file(path):
+        case Ok(data):
+            return Some(own data)
+        case Err(_):
+            return None
+
+
+func limited(fs: Filesystem, path: str, limit: int) -> bytes fails str:
+    match fs.read_file(path):
+        case Err(message):
+            fail message
+        case Ok(data):
+            if len(data) > limit:
+                fail "too long"
+            return data
+
+
+func text_of(fs: Filesystem, path: str) -> str:
+    match fs.read_text(path):
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+func names_in(fs: Filesystem, path: str) -> str[]:
+    match fs.listdir(path):
+        case Ok(names):
+            return names
+        case Err(_):
+            return []
+
+
+func size_or(value: Result[bytes, str]) -> int:
+    match value:
+        case Ok(data):
+            return len(data)
+        case Err(_):
+            return -1
+
+
+# spec: OWNED-MATCH-IO-1
+public func test_a_matched_file_read_returns_its_bytes_wrapped_as_an_option(fs: Filesystem) -> bool fails str:
+    _ = try fs.write_file("a.bin", b"abc")
+    const read = wrapped(fs, "a.bin")
+    const some = wrapped_some(fs, "a.bin")
+    return read.unwrap_or(b"") == b"abc" and some.unwrap_or(b"") == b"abc" and wrapped(fs, "missing.bin") is None
+
+
+# spec-case: OWNED-MATCH-IO-1
+public func test_a_matched_file_read_returns_from_a_fallible_function(fs: Filesystem) -> bool fails str:
+    _ = try fs.write_file("b.bin", b"hello")
+    const ok = size_or(limited(fs, "b.bin", 10))
+    const too_long = size_or(limited(fs, "b.bin", 2))
+    const missing = size_or(limited(fs, "missing.bin", 10))
+    return ok == 5 and too_long == -1 and missing == -1
+
+
+# spec-case: OWNED-MATCH-IO-1
+public func test_matched_text_and_directory_reads_transfer_their_payloads(fs: Filesystem) -> bool fails str:
+    _ = try fs.write_text("note.txt", "line")
+    return text_of(fs, "note.txt") == "line" and text_of(fs, "absent.txt") == "" and len(names_in(fs, "")) == 1 and len(names_in(fs, "absent")) == 0

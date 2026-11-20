@@ -1,0 +1,44 @@
+# Views read in place (CX2, CX-6): a text or bytes view needle or container of `in`, the whitespace split of a text
+# view, and a bytes view as a dictionary key are read where they are, so the copy-free census holds for each.
+import dicts
+import strings
+
+func contains_view(text: str, needle: str) -> bool:
+    return needle in text
+
+
+func contains_literal(needle: str) -> bool:
+    return needle in "fixed text"
+
+
+func count_pieces(text: str) -> int:
+    mut total = 0
+    for word in strings.words(text):
+        total += len(word)
+    return total
+
+
+func probe_bytes(keys: dict[bytes, int], a: bytes) -> int:
+    return keys[a[1:4]]
+
+
+func probe_default(keys: dict[bytes, int], t: bytes) -> int:
+    return dicts.get(keys, t[0:3], -1)
+
+
+public func test_a_text_view_needle_and_container_answer_membership_in_place() -> bool:
+    return contains_view("hello there", "ell") and not contains_view("hello there", "xyz") and contains_literal("text")
+
+
+public func test_a_whitespace_split_of_a_text_view_counts_its_pieces() -> bool:
+    return count_pieces("a bb  ccc") == 6 and count_pieces("   ") == 0
+
+
+public func test_a_bytes_view_key_probes_a_bytes_dictionary() -> bool:
+    const keys: dict[bytes, int] = {b"bcd": 7, b"xyz": 3}
+    return probe_bytes(keys, b"abcdef") == 7 and probe_default(keys, b"xyz123") == 3 and probe_default(keys, b"qqq") == -1
+
+
+public func test_a_bytes_view_key_membership_reads_the_dictionary() -> bool:
+    const keys: dict[bytes, int] = {b"bcd": 7}
+    return b"bcd" in keys and not (b"zz" in keys)

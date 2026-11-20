@@ -1,0 +1,40 @@
+enum Color:
+    red
+    green
+    blue
+
+
+record Point:
+    x: int
+    y: int
+
+
+enum Shape:
+    point(value: Point)
+    radius(value: int)
+    empty
+
+
+func score(shape: Shape) -> int:
+    match shape:
+        case empty:
+            return 0
+        case radius(value=r):
+            return r * r
+        case point(value=p):
+            return p.x + p.y
+
+
+func color_score(color: Color) -> int:
+    match color:
+        case red:
+            return 1
+        case green:
+            return 2
+        case blue:
+            return 3
+
+
+func main() -> int:
+    mut shapes: FixedArray[Shape, 3] = FixedArray[Shape, 3]([Shape.point(value=Point(x=2, y=3)), Shape.radius(value=4), Shape.empty])
+    return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(Color.blue)

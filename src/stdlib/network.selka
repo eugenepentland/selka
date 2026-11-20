@@ -1,0 +1,758 @@
+import byte_builder
+import lists
+
+# One open stream returned by `connect` or `accept`. Read and write consume and
+# close it; close consumes it too, and a failed completion returns the live
+# owner in Failure.
+public resource Connection: network
+
+
+# One bound listening socket returned by `listen`. It stays live across accepts.
+public resource Listener: network
+
+
+# One `read` result: up to `N` bytes, the count actually read, and the EOF flag.
+public record Chunk[const N: u64]:
+    bytes: FixedArray[u8, N]
+    length: u64
+    eof: bool
+
+
+# Typed carrier for one acquisition attempt.
+public result Connected:
+    ok: Connection,
+    err: int
+
+
+# Typed carrier for one listen attempt.
+public result Listening:
+    ok: Listener,
+    err: int
+
+
+# Typed carrier for one accept attempt. Accept the raw builtin directly so the
+# listener binding stays live across accepts:
+#   match accept_resource[Accepted](listener):
+#       case Accepted.ok(connection): ...
+#       case Accepted.err(code): ...
+public result Accepted:
+    ok: Connection,
+    err: int
+
+
+# Typed carrier for one read attempt of `N` bytes.
+public result Read[const N: u64]:
+    ok: Chunk[N],
+    err: int
+
+
+# Typed carrier for one write attempt.
+public result Written:
+    ok: u64,
+    err: int
+
+
+# The error payload `close` keeps so a failed completion can stay live.
+public record Failure:
+    resource: Connection
+    code: int
+
+
+# Typed carrier for one completion attempt.
+public result Closed:
+    ok: bool,
+    err: Failure
+
+
+# A Network stand-in that reaches nothing: every acquisition through it, or
+# through a `net.host(...)` narrowing of it, fails with `denied_here`. It grants
+# no real authority, so building one needs no capability and is not an effect.
+public func denied() -> Network:
+    return __stand_in[Network](0)
+
+
+# A Network stand-in whose endpoints live in memory, for tests of code that listens, accepts, connects, reads and
+# writes. A name from `net.host(name)` is an endpoint: `listen` registers it, `connect` to it makes a pair of ends and
+# `accept_resource` hands the listener's next server end out; bytes written on one end queue on the other. Nothing
+# blocks (a test has one thread), so a read with nothing queued while the peer is open, an accept with nothing
+# waiting and a connect to a name nobody listens on fail with the code 3, and a write after the peer closed fails.
+# A closed end gives its peer end of stream after the queued bytes. It offers no `Poller`. `denied()` is unchanged.
+public func memory() -> Network:
+    return __stand_in[Network](1)
+
+
+# The `Connected.err` code a stand-in Network answers every request with.
+public func denied_here() -> int:
+    return 6
+
+
+# A readable reason for a `Connected.err` code.
+public func describe(code: int) -> str:
+    if code == 1:
+        return "no network authority is available"
+    if code == 2:
+        return "denied: outside the granted endpoints"
+    if code == 4:
+        return "too many connections are open"
+    if code == timed_out():
+        return "timed out: the endpoint did not answer within the time limit"
+    if code == denied_here():
+        return "network access is denied in this context: this Network is a deterministic stand-in"
+    return "failed: the endpoint could not be reached"
+
+
+# Connect through a Network already narrowed to a single endpoint. The narrowed
+# capability pins the request, so no endpoint string is passed here.
+public func connect(net: Network) -> Connected:
+    const request = FixedArray[u8, 1]([0u8])
+    return acquire_resource[Connected](net, request)
+
+
+# The time limits of one outbound connection, in milliseconds, and the size of its receive buffer, in bytes.
+# `connect_ms` bounds the connect itself; `read_ms` and `write_ms` bound every later `read_resource` and
+# `write_resource` that moves no byte for that long. 0, the default, is no limit, and so is a negative value; a limit
+# above one day is one day. `receive_buffer_bytes` asks the kernel for that receive buffer (`SO_RCVBUF`, set before
+# the connect), 0 keeping the system's: Linux doubles the number for its own bookkeeping, keeps at least about 2 KiB
+# and at most `net.core.rmem_max`, so a peer's writes stop being taken after about twice that many bytes are unread.
+# A Poller's `dial_within` uses `connect_ms` and `receive_buffer_bytes`; nothing of a Poller blocks, so `read_ms` and
+# `write_ms` bound nothing there.
+public record Timeouts:
+    connect_ms: int = 0
+    read_ms: int = 0
+    write_ms: int = 0
+    receive_buffer_bytes: int = 0
+
+
+# The error code of a limit of `connect_within` that ran out: `Connected.err` when the endpoint did not accept the
+# connection in `connect_ms`, `Read.err` or `Written.err` when a read or write moved nothing in `read_ms` or
+# `write_ms`. It differs from a refused or unreachable endpoint (3) and from a closed peer (a read's end of stream).
+public func timed_out() -> int:
+    return 7
+
+
+# A limit as the runtime takes it: 0 for none, at most one day.
+func limit_ms(millis: int) -> int:
+    if millis <= 0:
+        return 0
+    if millis > 86400000:
+        return 86400000
+    return millis
+
+
+# A receive buffer as the runtime takes it: 0 for the system's, at most 1 GiB.
+func buffer_bytes(count: int) -> int:
+    if count <= 0:
+        return 0
+    if count > 1073741824:
+        return 1073741824
+    return count
+
+
+# Connect like `connect`, through a Network narrowed to one endpoint, within `limits`. A connect that does not complete
+# in `limits.connect_ms` fails with `timed_out()`; on the connection it returns, a `read_resource` that waits
+# `limits.read_ms` for a byte and a `write_resource` that waits `limits.write_ms` to send one fail with `timed_out()`
+# and leave the connection open. `connect_within(net, Timeouts())` is `connect(net)`. The limits are kept by the
+# runtime on the socket: no thread, no signal and no clock of the program's.
+public func connect_within(net: Network, limits: Timeouts) -> Connected:
+    const c = limit_ms(limits.connect_ms)
+    const r = limit_ms(limits.read_ms)
+    const w = limit_ms(limits.write_ms)
+    const b = buffer_bytes(limits.receive_buffer_bytes)
+    const request = FixedArray[u8, 17]([3u8, octet(c, 1), octet(c, 256), octet(c, 65536), octet(c, 16777216), octet(r, 1), octet(r, 256), octet(r, 65536), octet(r, 16777216), octet(w, 1), octet(w, 256), octet(w, 65536), octet(w, 16777216), octet(b, 1), octet(b, 256), octet(b, 65536), octet(b, 16777216)])
+    return acquire_resource[Connected](net, request)
+
+
+# The octet of the non-negative `value` at `place` (1, 256, 65536 or 16777216).
+func octet(value: int, place: int) -> u8:
+    return u8((value // place) % 256)
+
+
+# Bind a local listening socket. Narrow `net` with `net.host("IP:PORT")` first;
+# the narrowed endpoint must match an `--allow-listen=IP:PORT` grant. The request
+# carries a one-byte mode tag that the runtime preserves through narrowing.
+public func listen(net: Network) -> Listening:
+    const request = FixedArray[u8, 1]([1u8])
+    return acquire_resource[Listening](net, request)
+
+
+# Consume a live connection and read up to `N` bytes; EOF is reported in the chunk.
+public func read[const N: u64](own connection: Connection) -> Read[N]:
+    mut owned_connection = own connection
+    return read_resource[Read[N]](owned_connection)
+
+
+# Consume a live connection, write fixed bytes, and report the accepted count.
+public func write[const N: u64](own connection: Connection, data: FixedArray[u8, N]) -> Written:
+    mut owned_connection = own connection
+    return write_resource[Written](owned_connection, data)
+
+
+# Complete a connection, releasing its host handle on success.
+public func close(own connection: Connection) -> Closed:
+    return complete_resource[Closed](own connection)
+
+
+# ---- the event loop (docs/design/event-loop-2026-10-18.md) ----
+# One non-blocking event loop: a listening socket, a readiness set and a table of
+# accepted connections, all held by the runtime. The program names a connection
+# by the small integer id `accept` returned, so connections live in a
+# `dict[int, State]` rather than as resources. A `Poller` is a resource, so each
+# wrapper below takes it `own` and returns it: the caller gives the binding away on
+# the line, and a loop writes `live = network.wait(own live, 100, mut ready)`.
+public resource Poller: network
+
+
+# Typed carrier for one `open_poller` attempt.
+public result Polling:
+    ok: Poller,
+    err: int
+
+
+# What one `wait` found: `count` events, the connection ids in `ids` and, in the
+# same positions, the `EVENT_*` bits in `flags`. The listener is id `LISTENER`.
+public record Ready:
+    count: int
+    ids: int[]
+    flags: int[]
+
+
+# The result of one poller operation. `code` is an `OUTCOME_*` constant; `value`
+# is the new id (accept), the byte count (recv, send), the port (port) or the
+# address (peer); `extra` is the port of `peer` and the open count of
+# `connection_limit`.
+public record Outcome:
+    code: int
+    value: int
+    extra: int
+
+
+# The id of the listening socket in `Ready` and in `set_interest`.
+public const LISTENER: int = 0
+
+
+# `Ready.flags` and interest bit: bytes, a new connection or end of stream can be
+# read. Readiness is level-triggered, so the event repeats until the socket is drained.
+public const EVENT_READABLE: int = 1
+
+
+# `Ready.flags` and interest bit: the socket send buffer has room. Reported only
+# while the interest includes it (`set_interest`).
+public const EVENT_WRITABLE: int = 2
+
+
+# `Ready.flags` bit: the peer closed or reset the connection.
+public const EVENT_HANGUP: int = 4
+
+
+# `Ready.flags` bit: the socket has a pending error, which the next `recv` or `send` reports.
+public const EVENT_ERROR: int = 8
+
+
+# `Ready.flags` bit: the connection moved no bytes for the idle timeout (`set_idle_timeout`).
+public const EVENT_IDLE: int = 16
+
+
+# `Ready.flags` bit: a connection `dial` opened has finished connecting and is open. A dial that fails (refused,
+# unreachable, or past its `connect_ms`) is reported with `EVENT_ERROR` instead, and its next `recv` or `send` answers
+# `OUTCOME_FAILED` with the errno.
+public const EVENT_CONNECTED: int = 32
+
+
+# `Outcome.code`: the operation succeeded.
+public const OUTCOME_OK: int = 0
+
+
+# `Outcome.code`: nothing is available now (accept, recv) or the socket has no room now (send).
+public const OUTCOME_WOULD_BLOCK: int = 1
+
+
+# `Outcome.code`: the peer finished sending, so `recv` saw end of stream.
+public const OUTCOME_CLOSED: int = 2
+
+
+# `Outcome.code`: the socket reported an error; `Outcome.value` is its errno.
+public const OUTCOME_FAILED: int = 3
+
+
+# `Outcome.code`: the id names no open connection (never opened, or closed).
+public const OUTCOME_UNKNOWN: int = 4
+
+
+# `Outcome.code`: the connection table is at `connection_limit`.
+public const OUTCOME_FULL: int = 5
+
+
+# `Outcome.code`: a malformed command or an argument the operation does not take.
+public const OUTCOME_BAD: int = 6
+
+
+# `Outcome.code` of `dial`: the Network refused the dial before any socket was made; `value` is its `Connected.err`
+# code (1 no network authority, 2 outside the granted endpoints, 6 a stand-in).
+public const OUTCOME_DENIED: int = 7
+
+
+# The most bytes one `send` offers.
+public const TRANSFER_LIMIT: int = 65536
+
+
+# The most bytes one `recv` returns.
+public const RECV_LIMIT: int = 16384
+
+
+# The response header the runtime puts before any payload: status, value, extra.
+const HEADER: int = 12
+
+
+# `wait` fills at most this many events: 12 + 8 * 255 bytes.
+const MAX_EVENTS: int = 255
+
+
+# An empty `Ready` to pass to `wait`: `mut ready = network.new_ready()`.
+public func new_ready() -> Ready:
+    return Ready(count=0, ids=[], flags=[])
+
+
+# An `Outcome` to pass to the operations: `mut outcome = network.new_outcome()`.
+# Every call overwrites it.
+public func new_outcome() -> Outcome:
+    return Outcome(code=0, value=0, extra=0)
+
+
+# Whether `flags` has every bit of `flag`: `network.has(flags, network.EVENT_HANGUP)`.
+public func has(flags: int, flag: int) -> bool:
+    return bit_and(flags, flag) == flag
+
+
+# Bind the listening endpoint a narrowed Network names and return its poller.
+# Narrow `net` with `net.host("IP:PORT")` first; the endpoint must match an
+# `--allow-listen` grant, and `IP:0` (granted as `--allow-listen=IP:0`) lets the
+# kernel choose the port, which `port` then reports. Dropping the poller closes the
+# listener and every connection it holds.
+public func open_poller(net: Network) -> Polling:
+    const request = FixedArray[u8, 1]([2u8])
+    return acquire_resource[Polling](net, request)
+
+
+# Open a poller that listens on nothing, for a program that only connects out: `dial`, `dial_to` and their `_within` forms
+# add connections to it, and `wait`, `recv`, `send`, `set_interest`, the idle timeouts, `close_connection`, `peer` and
+# `connection_limit` work on them as on the connections of `open_poller`. Under `--restrict` it needs no `--allow-listen`
+# grant, and the program is granted nothing more by it: each dial still needs its own `--allow-endpoint=IP:PORT`, as
+# `connect` does, and a launch with no `--allow-endpoint` at all refuses the open with 1 (`describe(1)`, as a `connect`
+# does). On a Network narrowed with `net.host("IP:PORT")` that endpoint must be granted too (2 when it is not), but the
+# poller is not tied to it: a dial names its own Network. `network.memory()` offers no poller, so the open there is refused
+# with 2 as `open_poller` is, and `denied()` answers `denied_here()`.
+#
+# Nothing listens, so `accept` answers `OUTCOME_WOULD_BLOCK` (nothing is waiting, ever) and `wait` never reports `LISTENER`;
+# `port` and `set_interest` of `LISTENER` answer `OUTCOME_BAD`, as `peer` of `LISTENER` does on any poller.
+# The poller holds as many connections as `open_poller`'s (`connection_limit`). Dropping it closes every connection.
+public func open_client_poller(net: Network) -> Polling:
+    const request = FixedArray[u8, 1]([5u8])
+    return acquire_resource[Polling](net, request)
+
+
+# Four bytes, least significant first.
+func put_word(mut builder: byte_builder.Builder, value: int):
+    _ = byte_builder.append_byte(mut builder, value % 256)
+    _ = byte_builder.append_byte(mut builder, (value // 256) % 256)
+    _ = byte_builder.append_byte(mut builder, (value // 65536) % 256)
+    _ = byte_builder.append_byte(mut builder, (value // 16777216) % 256)
+
+
+# Four octets, least significant first, as one non-negative int.
+func word(a: u8, b: u8, c: u8, d: u8) -> int:
+    return int(a) + int(b) * 256 + int(c) * 65536 + int(d) * 16777216
+
+
+# A command header: operation, sub-operation, two pad bytes, id and two arguments.
+func header(op: int, what: int, id: int, a: int, b: int) -> byte_builder.Builder:
+    mut builder = byte_builder.create()
+    _ = byte_builder.reserve(mut builder, 12)
+    _ = byte_builder.append_byte(mut builder, op)
+    _ = byte_builder.append_byte(mut builder, what)
+    _ = byte_builder.append_byte(mut builder, 0)
+    _ = byte_builder.append_byte(mut builder, 0)
+    put_word(mut builder, id)
+    put_word(mut builder, a)
+    put_word(mut builder, b)
+    return builder
+
+
+# Record a failed exchange: the transport itself answered with `code`.
+func transport_failed(mut outcome: Outcome, code: int):
+    outcome.code = OUTCOME_FAILED
+    outcome.value = code
+    outcome.extra = 0
+
+
+# Send a command whose response is only the 12-byte header, and fill `outcome` from it.
+func exchange(own poller: Poller, command: bytes, mut outcome: Outcome) -> Poller:
+    mut live = own poller
+    match write_resource[Written](live, command):
+        case Ok(_):
+            match read_resource[Read[12]](live):
+                case Ok(chunk):
+                    if chunk.length < 12:
+                        transport_failed(mut outcome, 0)
+                    else:
+                        outcome.code = word(chunk.bytes[0], chunk.bytes[1], chunk.bytes[2], chunk.bytes[3])
+                        outcome.value = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+                        outcome.extra = word(chunk.bytes[8], chunk.bytes[9], chunk.bytes[10], chunk.bytes[11])
+                case Err(code):
+                    transport_failed(mut outcome, code)
+        case Err(code):
+            transport_failed(mut outcome, code)
+    return live
+
+
+# Wait up to `timeout_ms` milliseconds (0 polls, -1 waits for ever) until the
+# listener or a connection is ready, the idle timeout fires, or the time is up;
+# fill `ready` with what happened (an empty `ready` is a timeout). At most 255
+# events come back; anything left over is reported by the next wait.
+public func wait(own poller: Poller, timeout_ms: int, mut ready: Ready) -> Poller:
+    mut live = own poller
+    ready.count = 0
+    lists.clear(mut ready.ids)
+    lists.clear(mut ready.flags)
+    mut millis = timeout_ms
+    if millis < 0:
+        millis = 4294967295
+    const command = byte_builder.finish(header(1, 0, 0, millis, MAX_EVENTS))
+    match write_resource[Written](live, command):
+        case Ok(_):
+            match read_resource[Read[2060]](live):
+                case Ok(chunk):
+                    const count = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+                    mut index = 0
+                    while index < count and 12 + index * 8 + 8 <= int(chunk.length):
+                        const at = 12 + index * 8
+                        append(mut ready.ids, word(chunk.bytes[at], chunk.bytes[at + 1], chunk.bytes[at + 2], chunk.bytes[at + 3]))
+                        append(mut ready.flags, word(chunk.bytes[at + 4], chunk.bytes[at + 5], chunk.bytes[at + 6], chunk.bytes[at + 7]))
+                        index += 1
+                    ready.count = index
+                case Err(_):
+                    ready.count = 0
+        case Err(_):
+            ready.count = 0
+    return live
+
+
+# Accept one waiting connection without blocking. `OUTCOME_OK` carries the new id in
+# `value`; `OUTCOME_WOULD_BLOCK` means none is waiting (stop accepting for now);
+# `OUTCOME_FULL` means the table is at `connection_limit`.
+public func accept(own poller: Poller, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(2, 0, 0, 0, 0)), mut outcome)
+
+
+# Receive what is available from connection `id` without blocking and append it to
+# `raw`: at most `RECV_LIMIT` bytes, which `outcome.value` counts. `OUTCOME_WOULD_BLOCK`
+# is nothing now; `OUTCOME_CLOSED` is the peer's end of stream; `OUTCOME_UNKNOWN` is
+# an id that is not open. Readiness is level-triggered, so call again while bytes remain.
+# The runtime clears and copies every byte of the array a read names, so the answer is read
+# in two steps: the first 256 bytes (the 12-byte header and 244 of payload, which is the whole
+# of a typical request), then the rest in one array sized for it. A request of 30 bytes costs
+# a 256-byte read, not a 16,396-byte one.
+public func recv(own poller: Poller, id: int, mut raw: byte_builder.Builder, mut outcome: Outcome) -> Poller:
+    mut live = own poller
+    mut rest = 0
+    const command = byte_builder.finish(header(3, 0, id, RECV_LIMIT, 0))
+    match write_resource[Written](live, command):
+        case Ok(_):
+            match read_resource[Read[256]](live):
+                case Ok(chunk):
+                    if int(chunk.length) < HEADER:
+                        transport_failed(mut outcome, 0)
+                    else:
+                        outcome.code = word(chunk.bytes[0], chunk.bytes[1], chunk.bytes[2], chunk.bytes[3])
+                        outcome.value = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+                        outcome.extra = 0
+                        if outcome.code == OUTCOME_OK:
+                            _ = byte_builder.append_array_range(mut raw, chunk.bytes, HEADER, int(chunk.length))
+                            rest = outcome.value - (int(chunk.length) - HEADER)
+                case Err(code):
+                    transport_failed(mut outcome, code)
+        case Err(code):
+            transport_failed(mut outcome, code)
+    if rest > 0:
+        live = recv_rest(own live, rest, mut raw, mut outcome)
+    return live
+
+
+# The `rest` bytes of a `recv` answer that the first 256-byte read did not hold: read in one array of 2,048 bytes when
+# they fit and of 16,140 (what the longest answer, 16,396 bytes, leaves) when they do not.
+func recv_rest(own poller: Poller, rest: int, mut raw: byte_builder.Builder, mut outcome: Outcome) -> Poller:
+    mut live = own poller
+    if rest <= 2048:
+        match read_resource[Read[2048]](live):
+            case Ok(chunk):
+                _ = byte_builder.append_array_range(mut raw, chunk.bytes, 0, int(chunk.length))
+            case Err(code):
+                transport_failed(mut outcome, code)
+    else:
+        match read_resource[Read[16140]](live):
+            case Ok(chunk):
+                _ = byte_builder.append_array_range(mut raw, chunk.bytes, 0, int(chunk.length))
+            case Err(code):
+                transport_failed(mut outcome, code)
+    return live
+
+
+# Offer `data[offset:]` to connection `id` without blocking, at most `TRANSFER_LIMIT`
+# bytes per call, and report in `outcome.value` how many the kernel took. Advance your
+# own `offset` by that count and call again after `EVENT_WRITABLE` (request it with
+# `set_interest`) when the outcome is `OUTCOME_WOULD_BLOCK` or fewer bytes were taken.
+# Nothing is sliced, so the rest of `data` is not copied.
+public func send(own poller: Poller, id: int, data: bytes, offset: int, mut outcome: Outcome) -> Poller:
+    if offset < 0 or offset >= len(data):
+        outcome.code = OUTCOME_OK
+        outcome.value = 0
+        outcome.extra = 0
+        return poller
+    mut end = len(data)
+    if end - offset > TRANSFER_LIMIT:
+        end = offset + TRANSFER_LIMIT
+    mut command = header(4, 0, id, end - offset, 0)
+    _ = byte_builder.reserve(mut command, end - offset)
+    _ = byte_builder.append_range(mut command, data, offset, end)
+    return exchange(own poller, byte_builder.finish(command), mut outcome)
+
+
+# Half-close connection `id`: the peer sees end of stream after what was sent, and
+# the id stays open to receive. A graceful `Connection: close` calls this, then
+# `close_connection` once the peer has gone.
+public func shutdown_send(own poller: Poller, id: int, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(5, 1, id, 0, 0)), mut outcome)
+
+
+# Close connection `id` and free its slot. The id is never reused for another
+# connection, so a stale id answers `OUTCOME_UNKNOWN`.
+public func close_connection(own poller: Poller, id: int, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(5, 0, id, 0, 0)), mut outcome)
+
+
+# The local port of the listener (`LISTENER`) or of connection `id`, in
+# `outcome.value`. With an `IP:0` endpoint this is the port the kernel chose.
+public func port(own poller: Poller, id: int, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(6, 1, id, 0, 0)), mut outcome)
+
+
+# The peer of accepted connection `id`: its IPv4 address as an int in
+# `outcome.value` and its port in `outcome.extra`; spell it with `format_address`.
+public func peer(own poller: Poller, id: int, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(6, 2, id, 0, 0)), mut outcome)
+
+
+# The connection limit in `outcome.value` and the open connections in `outcome.extra`. The limit is the number of descriptors
+# the process may open less 64, at most 1,048,576; the table grows to it as connections arrive.
+public func connection_limit(own poller: Poller, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(6, 3, 0, 0, 0)), mut outcome)
+
+
+# Choose which readiness `wait` reports for `id`: `EVENT_READABLE`, `EVENT_WRITABLE`,
+# both added, or 0. A new connection is readable only. Drop `EVENT_READABLE` to
+# stop reading from a client whose response is still queued; ask for
+# `EVENT_WRITABLE` while a send is unfinished. `LISTENER` takes `EVENT_READABLE`
+# alone: without it the poller stops reporting new connections.
+public func set_interest(own poller: Poller, id: int, mask: int, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(7, 2, id, mask, 0)), mut outcome)
+
+
+# Report a connection that has moved no bytes for `millis` milliseconds with
+# `EVENT_IDLE` (0, the default, never). The timer starts at accept and restarts on
+# every `recv` or `send` that moves bytes and after each idle report, so a
+# connection left open is reported again after another `millis`. The runtime keeps
+# the time; the program learns none of it.
+public func set_idle_timeout(own poller: Poller, millis: int, mut outcome: Outcome) -> Poller:
+    return exchange(own poller, byte_builder.finish(header(7, 1, 0, millis, 0)), mut outcome)
+
+
+# Give connection `id` its own idle timeout, which replaces the poller's (`set_idle_timeout`) for it alone: `millis`
+# milliseconds, 0 never to report it idle (an event stream that is quiet between writes), or a negative value to return
+# it to the poller's. Setting it restarts the connection's timer, which then runs as the poller's does. A connection
+# that sets nothing keeps the poller's value, and closing the connection forgets its own. `OUTCOME_UNKNOWN` is an id
+# that is not open and `OUTCOME_BAD` is `LISTENER`.
+public func set_connection_idle_timeout(own poller: Poller, id: int, millis: int, mut outcome: Outcome) -> Poller:
+    mut value = millis
+    if value < 0:
+        value = 4294967295
+    elif value > 86400000:
+        value = 86400000
+    return exchange(own poller, byte_builder.finish(header(7, 3, id, value, 0)), mut outcome)
+
+
+# Open a connection to the endpoint a narrowed Network names and add it to the poller, as `accept` adds an accepted
+# one: `outcome.value` is its id. Nothing blocks: the connection is connecting, and a later `wait` reports
+# `EVENT_CONNECTED` once it is open, or `EVENT_ERROR` when it is refused, unreachable or not open within
+# `limits.connect_ms` (its next `recv` then answers `OUTCOME_FAILED` with the errno: 111 refused, 110 timed out).
+# `OUTCOME_FAILED` here is a failure known at once (often a refused port on this host), `OUTCOME_FULL` a full table, and
+# `OUTCOME_DENIED` a Network that refused the dial (`value` is its `Connected.err` code). The dial needs the grant a
+# blocking `connect` needs: `net.host("IP:PORT")` and `--allow-endpoint=IP:PORT`. A dialled connection is then like an
+# accepted one: `recv`, `send`, `set_interest`, the idle timeouts, `close_connection`, and its id is never reused. Its
+# receive buffer is `limits.receive_buffer_bytes`; `read_ms` and `write_ms` bound nothing in a Poller, whose operations
+# never wait. The poller is a `mut` borrow, not `own` like the other operations, because the dial also takes the
+# Network, and a function that returns a resource takes one resource or capability.
+public func dial_within(mut poller: Poller, net: Network, limits: Timeouts, mut outcome: Outcome):
+    match write_resource[Written](poller, byte_builder.finish(header(8, 0, 0, 0, 0))):
+        case Ok(_):
+            pass
+        case Err(code):
+            transport_failed(mut outcome, code)
+            return
+    mut token = 0
+    match read_resource[Read[12]](poller):
+        case Ok(chunk):
+            if chunk.length < 12:
+                transport_failed(mut outcome, 0)
+                return
+            token = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+        case Err(code):
+            transport_failed(mut outcome, code)
+            return
+    const c = limit_ms(limits.connect_ms)
+    const b = buffer_bytes(limits.receive_buffer_bytes)
+    const request = FixedArray[u8, 13]([4u8, octet(token, 1), octet(token, 256), octet(token, 65536), octet(token, 16777216), octet(c, 1), octet(c, 256), octet(c, 65536), octet(c, 16777216), octet(b, 1), octet(b, 256), octet(b, 65536), octet(b, 16777216)])
+    mut refused = 3
+    match acquire_resource[Connected](net, request):
+        case ok(made):
+            _ = close(own made)
+        case err(code):
+            refused = code
+    match read_resource[Read[12]](poller):
+        case Ok(chunk):
+            if chunk.length < 12:
+                outcome.code = OUTCOME_DENIED
+                outcome.value = refused
+                outcome.extra = 0
+            else:
+                outcome.code = word(chunk.bytes[0], chunk.bytes[1], chunk.bytes[2], chunk.bytes[3])
+                outcome.value = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+                outcome.extra = 0
+        case Err(code):
+            transport_failed(mut outcome, code)
+
+
+# `dial_within` with no connect limit and the system's receive buffer.
+public func dial(mut poller: Poller, net: Network, mut outcome: Outcome):
+    dial_within(mut poller, net, Timeouts(), mut outcome)
+
+
+# An IPv4 address (as `peer` returns it) and port spelled `a.b.c.d:port`.
+public func format_address(address: int, number: int) -> str:
+    return str(address // 16777216 % 256) + "." + str(address // 65536 % 256) + "." + str(address // 256 % 256) + "." + str(address % 256) + ":" + str(number)
+
+
+# ---- addresses given at run time (FR5a; docs/standard-library.md#addresses-given-at-run-time) ----
+# The flag of a request that names its address: the mode tag plus 128, the mode's header, then the address's octets.
+# Through a narrowed Network the runtime refuses any address but the narrowing's own; without the flag the narrowing
+# supplies the address.
+const ADDRESSED: int = 128
+
+
+# The request of an addressed operation: `head` (whose first octet is the mode tag plus `ADDRESSED`), then `address`.
+func addressed(mut head: byte_builder.Builder, address: str) -> bytes:
+    byte_builder.append_text(mut head, address)
+    return byte_builder.finish(head)
+
+
+# The addressed header of `connect_within_to`: the mode 3 and the four limits of `limits`.
+func limits_header(limits: Timeouts) -> byte_builder.Builder:
+    mut head = byte_builder.create()
+    _ = byte_builder.append_byte(mut head, ADDRESSED + 3)
+    put_word(mut head, limit_ms(limits.connect_ms))
+    put_word(mut head, limit_ms(limits.read_ms))
+    put_word(mut head, limit_ms(limits.write_ms))
+    put_word(mut head, buffer_bytes(limits.receive_buffer_bytes))
+    return head
+
+
+# Connect like `connect_within` to the endpoint `address`, a value the program has at run time (read from the
+# environment, an argument or a file) rather than a `net.host` literal. The address is `IP:PORT`: a dotted IPv4 address,
+# a colon and a port of 1 to 65535 in decimal digits alone, with no host name, no IPv6, no space and nothing after the
+# port. It is checked when the connect is asked for: an address the launch does not grant (`--allow-endpoint=IP:PORT`
+# under `--restrict`, matched verbatim) fails with 2, a launch with no connect grant at all with 1, and a malformed
+# address that is granted (every address is, without `--restrict`) with 3, as an endpoint nobody answers on. Through a
+# Network narrowed with `net.host("IP:PORT")` only that same address is reachable: another one fails with 2, so a
+# function handed a narrowed Network is as bounded as before. On `network.memory()` the address is an endpoint name.
+public func connect_within_to(net: Network, address: str, limits: Timeouts) -> Connected:
+    mut head = limits_header(limits)
+    return acquire_resource[Connected](net, addressed(mut head, address))
+
+
+# Connect to the endpoint `address` given at run time, with no time limits: `connect_within_to(net, address,
+# Timeouts())`, which checks the address against the launch's grants the same way.
+public func connect_to(net: Network, address: str) -> Connected:
+    return connect_within_to(net, address, Timeouts())
+
+
+# Bind a listening socket on `address`, a value the program has at run time, as `listen` binds the endpoint of a
+# narrowed Network. The address is `IP:PORT` as `connect_within_to` reads it and must match an `--allow-listen=IP:PORT`
+# grant verbatim under `--restrict` (otherwise 2; 1 with no listen grant at all); a malformed one fails with 3, and port
+# 0 with 2, since a `Listener` cannot report the port the kernel chose (`open_poller_at` can). Through a narrowed Network
+# only the narrowing's own address is allowed. On `network.memory()` the address is an endpoint name.
+public func listen_at(net: Network, address: str) -> Listening:
+    mut head = byte_builder.create()
+    _ = byte_builder.append_byte(mut head, ADDRESSED + 1)
+    return acquire_resource[Listening](net, addressed(mut head, address))
+
+
+# Bind the listening endpoint `address`, a value the program has at run time, and return its poller, as `open_poller`
+# does for a narrowed Network: a server reads where to listen from its configuration. The address is `IP:PORT` as
+# `connect_within_to` reads it, `IP:0` letting the kernel choose the port (which `port` reports); under `--restrict` it
+# must match an `--allow-listen=IP:PORT` grant verbatim (otherwise 2; 1 with no listen grant at all), and a malformed one
+# fails with 3. Through a narrowed Network only the narrowing's own address is allowed. `network.memory()` offers no
+# poller, as for `open_poller`.
+public func open_poller_at(net: Network, address: str) -> Polling:
+    mut head = byte_builder.create()
+    _ = byte_builder.append_byte(mut head, ADDRESSED + 2)
+    return acquire_resource[Polling](net, addressed(mut head, address))
+
+
+# Open a connection to `address`, a value the program has at run time, and add it to the poller, as `dial_within` does
+# for the endpoint of a narrowed Network: the same outcomes, events and limits. The address is `IP:PORT` as
+# `connect_within_to` reads it and must be granted as for `connect_to`: `OUTCOME_DENIED` with `value` 2 when the launch
+# does not grant it (or a narrowed Network names another), 1 with no connect grant at all; a malformed address that is
+# granted is `OUTCOME_FAILED` with 22, the errno of an invalid argument.
+public func dial_within_to(mut poller: Poller, net: Network, address: str, limits: Timeouts, mut outcome: Outcome):
+    match write_resource[Written](poller, byte_builder.finish(header(8, 0, 0, 0, 0))):
+        case Ok(_):
+            pass
+        case Err(code):
+            transport_failed(mut outcome, code)
+            return
+    mut token = 0
+    match read_resource[Read[12]](poller):
+        case Ok(chunk):
+            if chunk.length < 12:
+                transport_failed(mut outcome, 0)
+                return
+            token = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+        case Err(code):
+            transport_failed(mut outcome, code)
+            return
+    mut head = byte_builder.create()
+    _ = byte_builder.append_byte(mut head, ADDRESSED + 4)
+    put_word(mut head, token)
+    put_word(mut head, limit_ms(limits.connect_ms))
+    put_word(mut head, buffer_bytes(limits.receive_buffer_bytes))
+    mut refused = 3
+    match acquire_resource[Connected](net, addressed(mut head, address)):
+        case ok(made):
+            _ = close(own made)
+        case err(code):
+            refused = code
+    match read_resource[Read[12]](poller):
+        case Ok(chunk):
+            if chunk.length < 12:
+                outcome.code = OUTCOME_DENIED
+                outcome.value = refused
+                outcome.extra = 0
+            else:
+                outcome.code = word(chunk.bytes[0], chunk.bytes[1], chunk.bytes[2], chunk.bytes[3])
+                outcome.value = word(chunk.bytes[4], chunk.bytes[5], chunk.bytes[6], chunk.bytes[7])
+                outcome.extra = 0
+        case Err(code):
+            transport_failed(mut outcome, code)
+
+
+# `dial_within_to` with no connect limit and the system's receive buffer.
+public func dial_to(mut poller: Poller, net: Network, address: str, mut outcome: Outcome):
+    dial_within_to(mut poller, net, address, Timeouts(), mut outcome)

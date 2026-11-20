@@ -1,0 +1,25 @@
+# A skeleton written in the Zig's names: the module builds and reads its own `Unit`, which the builtin used to win, so it never
+# checked. The repair renames the declaration, the references in the importers and every `Unit` this module writes, since it
+# builds one (`Unit(number=...)`) and so plainly means its own record by the name.
+public record Unit:
+    number: int
+    name: str = "u"
+
+
+public enum Kind:
+    plain
+    tagged(code: int)
+
+
+public record Holder:
+    units: Unit[]
+
+
+public func make(n: int) -> Unit:
+    return Unit(number=n)
+
+
+public func maybe(n: int) -> Unit?:
+    if n > 0:
+        return Some(Unit(number=n, name="m"))
+    return None

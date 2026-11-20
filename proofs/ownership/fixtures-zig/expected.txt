@@ -1,0 +1,51 @@
+fixtures-zig/taskgroup.cert ok_group accept
+fixtures-zig/taskgroup.cert ok_group_borrowed accept
+fixtures-zig/taskgroup.cert ok_group_slot accept
+fixtures-zig/taskgroup.cert ok_group_two_lends accept
+fixtures-zig/taskgroup.cert ok_group_branch accept
+fixtures-zig/taskgroup.cert ok_group_branch_trap accept
+fixtures-zig/taskgroup.cert ok_group_phi accept
+fixtures-zig/taskgroup.cert ok_trap_group accept
+fixtures-zig/taskgroup.cert ok_lend_before_trap accept
+fixtures-zig/taskgroup.cert bad_lend_not_owned reject J1 b0 1
+fixtures-zig/taskgroup.cert bad_lend_three_reads reject J1 b0 2
+fixtures-zig/taskgroup.cert bad_lend_consumes reject J1 b0 2
+fixtures-zig/taskgroup.cert bad_group_not_ended reject J2 b0 5
+fixtures-zig/taskgroup.cert bad_group_dropped reject J2 b0 5
+fixtures-zig/taskgroup.cert bad_group_join_result reject J2 b0 5
+fixtures-zig/taskgroup.cert bad_group_stored reject J2 b0 5
+fixtures-zig/taskgroup.cert bad_trap_group reject J2 b1 0
+fixtures-zig/taskgroup.cert bad_submit_after_end reject J3 b0 6
+fixtures-zig/taskgroup.cert bad_lender_dropped reject J4 b0 5
+fixtures-zig/taskgroup.cert bad_lender_pushed reject J4 b0 5
+fixtures-zig/taskgroup.cert bad_lender_slot_taken reject J4 b0 6
+fixtures-zig/taskgroup.cert bad_lender_aggregate_dropped reject J4 b0 6
+fixtures-zig/taskgroup.cert bad_group_branch_ret reject J4 b2 0
+fixtures-zig/taskgroup.cert bad_emptied_lender reject J4 b0 5
+fixtures-zig/taskgroup.cert bad_holder_read_after_emptied reject J4 b0 3
+fixtures-zig/trap-region.cert bad_trap_meet_take_later reject J2 b1 0
+fixtures-zig/trap-region.cert bad_trap_meet_take_first reject J2 b1 1
+fixtures-zig/trap-region.cert bad_trap_meet_roots reject J4 b3 1
+fixtures-zig/trap-region.cert bad_trap_meet_roots_swapped reject J4 b3 1
+fixtures-zig/trap-region.cert bad_trap_holder reject J2 b1 0
+fixtures-zig/trap-region.cert bad_trap_closing reject J8 b3 0
+fixtures-zig/trap-region.cert bad_trap_branch_chain reject J2 b1 1
+fixtures-zig/trap-region.cert bad_trap_chain_phi reject J2 b1 1
+fixtures-zig/loans.cert bad_loan_lost_through_update reject J4 b0 4
+fixtures-zig/loans.cert ok_loan_through_update accept
+fixtures-zig/loans.cert bad_loan_lost_through_call reject J4 b0 4
+fixtures-zig/loans.cert bad_holder_with_its_root reject J4 b0 3
+fixtures-zig/take.cert bad_take_holds_view reject J4 b0 4
+fixtures-zig/take.cert ok_take_none_arm accept
+fixtures-zig/take.cert ok_take_holds_view_dropped_first accept
+fixtures-zig/construct-read.cert ok_construct_loan accept
+fixtures-zig/construct-read.cert ok_emptied_construct accept
+fixtures-zig/construct-read.cert ok_construct_read_slot accept
+fixtures-zig/construct-read.cert ok_construct_read_listed accept
+fixtures-zig/construct-read.cert bad_construct_read_listed_not_view reject J6 b0 2
+fixtures-zig/construct-read.cert bad_views_not_read reject J1 b0 2
+fixtures-zig/construct-read.cert bad_views_not_construct reject J1 b0 1
+fixtures-zig/construct-read.cert bad_construct_read_emptied reject J6 b0 2
+fixtures-zig/construct-read.cert bad_construct_read_caller reject J6 b0 0
+fixtures-zig/construct-read.cert bad_construct_read_owned reject J6 b0 2
+fixtures-zig/construct-read.cert bad_construct_read_two_owners reject J6 b0 4

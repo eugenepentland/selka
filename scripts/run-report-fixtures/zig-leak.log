@@ -1,0 +1,11 @@
+test-cli
++- verification action cli member 0 1 pass, 990 skip (991 total); 9 leaks
+test: test wall 1.04s; slowest over 50ms:
+test:   1.04s  integration.test.a directory run with no selka.json takes the directory as the import root of a nested test file, as check does
+test: FAIL — 0 failed of 1, 1 leaked, 9 error(s) logged
+test: RESULT {"passed":1,"failed":0,"skipped":0}
+error: 'integration.test.a directory run with no selka.json takes the directory as the import root of a nested test file, as check does' leaked 9 allocations:
+       
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 0 --root-id test/integ...
+
+Build Summary: 17/19 steps succeeded (1 failed); 1/991 tests passed (990 skipped)

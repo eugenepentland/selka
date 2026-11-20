@@ -1,0 +1,28 @@
+import bytes
+import strings
+
+func generic_tail[T: copy](marker: T, text: str) -> int:
+    _ = marker
+    return strings.char_rfind(text, "", 0, max(strings.char_count(text) - 1, 0))
+
+
+func main() -> int:
+    mut xs = [10, 20, 30]
+    const last = xs[len(xs) - 1]
+    xs[len(xs) - 2] = 22
+    const tail = xs[max(len(xs) - 2, 0):max(len(xs) - 1, 0)]
+    mut text = "aé中😀b"
+    const letter = text[len(text) - 1]
+    const piece = text[max(len(text) - 3, 0):]
+    mut data = b"abcd"
+    const octet = data[len(data) - 1]
+    const suffix = data[max(len(data) - 2, 0):]
+    const view = data[max(len(data) - 2, 0):max(len(data) - 1, 0)]
+    _ = strings.char_find(text, "b", max(strings.char_count(text) - 2, 0), max(strings.char_count(text) - 1, 0))
+    _ = bytes.parse_int_range(data, max(len(data) - 2, 0), 99)
+    _ = bytes.scalar_count_range(data, 0, max(len(data) - 1, 0))
+    mut fixed: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    fixed[len(fixed) - 1] = 4
+    const changed = replace(fixed, len(fixed) - 2, 5)
+    mut mapping: dict[int, int] = {-1: 42}
+    return last + len(tail) + letter + len(piece) + octet + len(suffix) + len(view) + changed[1] + mapping[-1]

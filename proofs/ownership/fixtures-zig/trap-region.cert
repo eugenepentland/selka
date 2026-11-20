@@ -1,0 +1,140 @@
+ownership-certificate-v2
+class call Call
+class drop Drop
+class iconst Constant
+class list_get Project
+class list_new Fresh
+class list_set Update
+class list_view_of View
+class print Output
+class record_make Construct
+function bad_trap_meet_take_later result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+term jump b3
+block b3 preds b1,b2
+inst %2 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+term unreachable
+end
+function bad_trap_meet_take_first result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+inst %2 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+term unreachable
+end
+function bad_trap_meet_roots result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst %2 list_view_of View reads %0 consumes - state borrowed parents %0
+term jump b3
+block b2 preds b0
+inst %3 list_view_of View reads %1 consumes - state borrowed parents %1
+term jump b3
+block b3 preds b1,b2
+phi %4 borrowed parents %0,%1 edges b1:%2,b2:%3
+inst - drop Drop reads - consumes %1 state none parents -
+inst - print Output reads %4 consumes - state none parents -
+term unreachable
+end
+function bad_trap_meet_roots_swapped result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst %2 list_view_of View reads %1 consumes - state borrowed parents %1
+term jump b3
+block b2 preds b0
+inst %3 list_view_of View reads %0 consumes - state borrowed parents %0
+term jump b3
+block b3 preds b1,b2
+phi %4 borrowed parents %0,%1 edges b1:%2,b2:%3
+inst - drop Drop reads - consumes %1 state none parents -
+inst - print Output reads %4 consumes - state none parents -
+term unreachable
+end
+function bad_trap_holder result scalar from - unchecked -
+callee 0 call runtime read scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst - drop Drop reads - consumes %2 state none parents -
+term jump b3
+block b3 preds b1,b2
+inst - call Call reads %9 consumes - state none parents - from - callee 0
+term unreachable
+end
+function bad_trap_closing result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %4 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+inst - drop Drop reads - consumes %1 state none parents -
+term jump b3
+block b3 preds b1,b2
+inst %2 list_set Update reads %9 consumes %0,%4 state owned parents - slot e#0 released -
+term unreachable
+end
+function bad_trap_branch_chain result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+term branch %9 b4 b5
+block b4 preds b3
+term unreachable
+block b5 preds b3
+term unreachable
+end
+function bad_trap_chain_phi result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+term jump b4
+block b4 preds b3
+phi %5 scalar parents - edges b3:%9
+term unreachable
+end

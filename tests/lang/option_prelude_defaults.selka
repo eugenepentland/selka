@@ -1,0 +1,38 @@
+# The prelude spelling unwrap_or(value, default) over each payload kind: a scalar
+# float, f32 and int, an aggregate str and list, and a float parsed from bytes.
+import bytes
+import strings
+
+public func test_prelude_unwrap_or_float_default() -> bool:
+    const present: float? = Some(1.5)
+    const absent: float? = None
+    return present.unwrap_or(0.0) == 1.5 and absent.unwrap_or(2.5) == 2.5
+
+
+public func test_prelude_unwrap_or_parsed_float_default() -> bool:
+    const data = strings.encode("123.456")
+    return bytes.parse_float_range(data, 0, 7).unwrap_or(0.0) == 123.456
+
+
+public func test_prelude_unwrap_or_f32_default() -> bool:
+    const present: f32? = Some(1.5)
+    const absent: f32? = None
+    return present.unwrap_or(0.25) == 1.5 and absent.unwrap_or(0.25) == 0.25
+
+
+public func test_prelude_unwrap_or_int_default() -> bool:
+    const present: int? = Some(4)
+    const absent: int? = None
+    return present.unwrap_or(9) == 4 and absent.unwrap_or(9) == 9
+
+
+public func test_prelude_unwrap_or_text_default() -> bool:
+    const present: str? = Some("left")
+    const absent: str? = None
+    return present.unwrap_or("right") == "left" and absent.unwrap_or("right") == "right"
+
+
+public func test_prelude_unwrap_or_list_default() -> bool:
+    const present: int[]? = Some([1, 2])
+    const absent: int[]? = None
+    return len(present.unwrap_or([7])) == 2 and absent.unwrap_or([7])[0] == 7

@@ -1,0 +1,4 @@
+func main() -> int:
+    mut xs = [1, 2, 3]
+    xs.remove(2)
+    return len(xs)

@@ -1,0 +1,293 @@
+# FR91: several fields move out of one owned record in one statement. The record is consumed once, at the first move, and
+# the fields no move names are destroyed there, as with one move (`owned_field_moves.selka`).
+import filesystem
+
+record Piece:
+    order: func(int, int) -> int
+    items: int[]
+
+
+record Pair:
+    lo: Piece
+    hi: Piece
+
+
+record Table:
+    ids: int[]
+    nodes: str[]
+    name: str
+
+
+record Graph:
+    ids: int[]
+    nodes: str[]
+
+
+record Four:
+    a: int[]
+    b: str
+    c: str[]
+    d: int[]
+
+
+record Duo[K]:
+    lo: K
+    hi: K
+    tag: str
+
+
+record Inner:
+    b: int[]
+    spare: str
+
+
+record Outer:
+    a: Inner
+    c: str[]
+    d: int[]
+
+
+record Tagged:
+    lo: Piece
+    hi: Piece
+    tag: str
+
+
+record Parts:
+    lo: int[]
+    hi: str[]
+    rest: str
+
+
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record Failure:
+    code: int
+    resource: File
+
+
+result Finish:
+    ok: bool,
+    err: Failure
+
+
+record WithResource:
+    values: int[]
+    file: File
+    spare: str[]
+
+
+func cmp(a: int, b: int) -> int:
+    return a - b
+
+
+func total(own a: Piece, own b: Piece) -> int:
+    return len(a.items) * 10 + len(b.items)
+
+
+func both(own p: Pair) -> int:
+    return total(own p.lo, own p.hi)
+
+
+func build(own t: Table) -> Graph:
+    return Graph(ids=own t.ids, nodes=own t.nodes)
+
+
+func sum3(own a: int[], own b: str, own c: str[]) -> int:
+    return len(a) * 100 + len(b) * 10 + len(c)
+
+
+func three(own f: Four) -> int:
+    return sum3(own f.a, own f.b, own f.c)
+
+
+func listed[K](own a: K, own b: K) -> K[]:
+    return [own a, own b]
+
+
+func joined[K](own d: Duo[K]) -> K[]:
+    return listed[K](own d.lo, own d.hi)
+
+
+func nested(own b: int[], own c: str[]) -> int:
+    return len(b) * 10 + len(c)
+
+
+func make(n: int) -> Tagged:
+    return Tagged(lo=Piece(order=cmp, items=[1, 2]), hi=Piece(order=cmp, items=[n]), tag="t-" + str(n))
+
+
+func from_const() -> int:
+    const p = make(1)
+    const before = len(p.tag)
+    return total(own p.lo, own p.hi) + before
+
+
+func from_mut() -> int:
+    mut p = make(2)
+    p.tag = "changed"
+    return total(own p.lo, own p.hi)
+
+
+func from_parameter(own p: Tagged) -> int:
+    return total(own p.hi, own p.lo)
+
+
+func from_moved_parameter(own p: Tagged) -> int:
+    mut q = own p
+    return total(own q.lo, own q.hi)
+
+
+func check(n: int) -> int fails str:
+    if n < 0:
+        fail "negative-" + str(n)
+    return n
+
+
+func parts(own a: int[], n: int, own b: str[]) -> int:
+    return len(a) * 100 + n + len(b)
+
+
+func between(own p: Parts, n: int) -> int fails str:
+    return parts(own p.lo, try check(n), own p.hi)
+
+
+func after(own p: Parts, n: int) -> int fails str:
+    return parts(own p.lo, 0, own p.hi) + try check(n)
+
+
+func fresh_parts() -> Parts:
+    return Parts(lo=[1, 2], hi=["a", "b", "c"], rest="r-" + str(1))
+
+
+func run_between(n: int) -> int:
+    const v = between(fresh_parts(), n) else Err(message):
+        return -len(message)
+    return v
+
+
+func run_after(n: int) -> int:
+    const v = after(fresh_parts(), n) else Err(message):
+        return -len(message)
+    return v
+
+
+public func test_two_fields_of_an_own_parameter_move_in_one_call() -> bool:
+    const p = Pair(lo=Piece(order=cmp, items=[1, 2]), hi=Piece(order=cmp, items=[3]))
+    return both(own p) == 21
+
+
+public func test_a_constructor_takes_two_fields_and_the_third_is_destroyed() -> bool:
+    const g = build(Table(ids=[1, 2, 3], nodes=["a", "b"], name="table-" + str(7)))
+    return g.ids == [1, 2, 3] and g.nodes == ["a", "b"]
+
+
+public func test_three_of_four_fields_move_and_the_fourth_list_is_destroyed() -> bool:
+    return three(Four(a=[1, 2], b="xyz-" + str(1), c=["p", "q", "r"], d=[9, 9, 9, 9])) == 253
+
+
+public func test_a_generic_record_moves_both_of_its_type_parameter_fields() -> bool:
+    const texts = joined[str](Duo[str](lo="lo-" + str(1), hi="hi-" + str(2), tag="t"))
+    const lists = joined[int[]](Duo[int[]](lo=[1], hi=[2, 3], tag="u-" + str(3)))
+    const numbers = joined[int](Duo[int](lo=4, hi=5, tag="v-" + str(4)))
+    return texts == ["lo-1", "hi-2"] and lists == [[1], [2, 3]] and numbers == [4, 5]
+
+
+public func test_a_nested_field_moves_beside_a_sibling() -> bool:
+    const p = Outer(a=Inner(b=[1, 2, 3], spare="s-" + str(1)), c=["x"], d=[4, 5])
+    return nested(own p.a.b, own p.c) == 31
+
+
+public func test_const_and_mut_locals_and_own_parameters_open_alike() -> bool:
+    return from_const() == 24 and from_mut() == 21 and from_parameter(make(3)) == 12 and from_moved_parameter(make(4)) == 21
+
+
+enum Slot:
+    full(value: Tagged)
+    empty
+
+
+func from_match_own(own s: Slot) -> int:
+    match own s:
+        case full(value=p):
+            return total(own p.lo, own p.hi)
+        case empty:
+            return -1
+
+
+func find(n: int) -> Tagged?:
+    if n > 0:
+        return Some(make(n))
+    return None
+
+
+func from_own_else(n: int) -> int:
+    const found = find(n)
+    const p = own found else:
+        return -1
+    return total(own p.hi, own p.lo)
+
+
+func from_consuming_loop(own ps: Tagged[]) -> int[]:
+    mut out: int[] = []
+    for p in own ps:
+        const value = total(own p.lo, own p.hi)
+        append(mut out, value)
+    return out
+
+
+# FR91B: a binding that owns what it names opens as an owned local does; the text field no move names is destroyed there.
+public func test_a_match_own_payload_an_own_else_payload_and_a_loop_element_open_alike() -> bool:
+    const matched = from_match_own(Slot.full(value=make(5))) == 21 and from_match_own(Slot.empty) == -1
+    const unwrapped = from_own_else(6) == 12 and from_own_else(0) == -1
+    return matched and unwrapped and from_consuming_loop([make(1), make(2)]) == [21, 21]
+
+
+public func test_a_failing_try_between_or_after_the_moves_destroys_each_field_once() -> bool:
+    return run_between(10) == 213 and run_between(-1) == -11 and run_after(10) == 213 and run_after(-1) == -11
+
+
+func acquired(fs: Filesystem) -> int:
+    match acquire_resource[Open](fs, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+        case ok(file):
+            _ = complete_resource[Finish](own file)
+            return 1
+        case err(_):
+            return 0
+
+
+func counted(own values: int[], n: int) -> int:
+    return len(values) * 10 + n
+
+
+func grouped(own values: int[], n: int, own spare: str[]) -> int:
+    return len(values) * 100 + n * 10 + len(spare)
+
+
+func with_reserved_handles(fs: Filesystem, remaining: int, group: bool) -> int:
+    match acquire_resource[Open](fs, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+        case ok(file):
+            if remaining > 0:
+                const observed = with_reserved_handles(fs, remaining - 1, group)
+                _ = complete_resource[Finish](own file)
+                return observed
+            const owner = WithResource(values=[21, 22], file=own file, spare=["discarded"])
+            if group:
+                return grouped(own owner.values, acquired(fs), own owner.spare)
+            return counted(own owner.values, acquired(fs))
+        case err(_):
+            return -1
+
+
+public func test_an_unmoved_resource_field_is_closed_at_the_first_move_as_with_one_move() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("data", "reserved")
+    # The recursive frames hold 255 handles and the record holds the last one: the acquisition between the moves succeeds
+    # only because the first move closed the record's `File`, as one move does.
+    return with_reserved_handles(fs, 255, False) == 21 and with_reserved_handles(fs, 255, True) == 211

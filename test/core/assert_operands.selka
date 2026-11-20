@@ -1,0 +1,67 @@
+# F-18: a failing `assert LEFT op RIGHT` names the two values it compared when they are integers, floats or texts; a
+# long text is cut, a text is quoted with its escapes, and a passing assert reports nothing.
+import strings
+
+func label(n: int) -> str:
+    return "item " + str(n)
+
+
+public func test_ints() -> bool:
+    const n = 3
+    assert n == 4
+    return True
+
+
+public func test_text_with_message() -> bool:
+    const code = 'a\nb "c"'
+    assert code == "abd", "the generated module"
+    return True
+
+
+public func test_text_from_a_call() -> bool:
+    assert label(2) == "item 3"
+    return True
+
+
+public func test_float_greater() -> bool:
+    const x = 1.5
+    const y = 2.5
+    assert x > y
+    return True
+
+
+public func test_unsigned() -> bool:
+    const big: u64 = 18446744073709551615
+    assert big < 1
+    return True
+
+
+public func test_long_text() -> bool:
+    const long = strings.repeat("x", 300)
+    assert long == "y"
+    return True
+
+
+public func test_bool_names_no_values() -> bool:
+    const flag = False
+    assert flag == True
+    return True
+
+
+record Point:
+    x: int
+    y: int
+
+
+public func test_record_names_no_values() -> bool:
+    const p = Point(x=1, y=2)
+    const q = Point(x=1, y=3)
+    assert p == q
+    return True
+
+
+public func test_passes() -> bool:
+    const n = 3
+    assert n == 3
+    assert label(1) == "item 1"
+    return True

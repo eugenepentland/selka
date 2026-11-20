@@ -1,0 +1,8 @@
+# `str` of integers and booleans.
+func main() -> int:
+    mut total = 0
+    for i in range(-5, 30):
+        total += len(str(i * 123457))
+    total += len(str(True)) + len(str(False))
+    total += len(str(9223372036854775807)) + len(str(-9223372036854775807 - 1))
+    return total % 256

@@ -1,0 +1,6 @@
+# contextual own is a binding before arithmetic, never a marker before '-'.
+public func test_contextual_own_arithmetic_keeps_its_value() -> bool:
+    const own = 10
+    const difference = own - 1
+    const combined = 3 + own - 1
+    return difference == 9 and combined == 12 and own - 2 == 8

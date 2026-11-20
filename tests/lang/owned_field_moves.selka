@@ -1,0 +1,560 @@
+# A field transfer consumes its complete record and destroys every sibling.
+import filesystem
+
+record Pair:
+    first: int[]
+    second: int[]
+    text: str
+
+
+record Wide:
+    first: int
+    second: int
+    third: int
+    fourth: int
+    values: int[]
+
+
+record Outer:
+    spare: str[]
+    wide: Wide
+    bytes: bytes
+
+
+record WithProvider:
+    values: int[]
+    fs: Filesystem
+
+
+record Holder[T]:
+    value: T
+    spare: str
+
+
+record Counter:
+    value: int
+
+
+record MappingHolder:
+    rows: dict[str, Pair]
+    counters: dict[str, Counter]
+    spare: str
+
+
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record WithResource:
+    values: int[]
+    file: File
+    spare: str[]
+
+
+record Failure:
+    code: int
+    resource: File
+
+
+result Finish:
+    ok: bool,
+    err: Failure
+
+
+func first(own pair: Pair) -> int[]:
+    return own pair.first
+
+
+func sized(before: int, own values: int[]) -> int:
+    return before + len(values)
+
+
+func branch(flag: bool) -> int[]:
+    const pair = Pair(first=[3, 4], second=[7, 8, 9], text="branch-" + str(1))
+    const selected: int[]
+    if flag:
+        selected = own pair.first
+    else:
+        selected = own pair.second
+    return selected
+
+
+func one_branch(flag: bool) -> int[]:
+    const pair = Pair(first=[5, 6], second=[8], text="untaken-" + str(2))
+    if flag:
+        return own pair.first
+    return [11]
+
+
+func take_wide(own outer: Outer) -> Wide:
+    return own outer.wide
+
+
+func extract[T](own holder: Holder[T]) -> T:
+    return own holder.value
+
+
+func read_provider_branches(own owner: WithProvider, flag: bool) -> bool:
+    _ = owner.fs.write_text("data", "shared")
+    mut observed = False
+    if flag:
+        const alias = owner
+        observed = alias.fs.exists("data") and len(alias.values) == 2
+    else:
+        const alias = owner.fs
+        observed = alias.exists("data")
+    return observed and owner.fs.exists("data") and owner.values == [4, 5]
+
+
+func index_after_carrier_drop(fs: Filesystem, mut observations: int[]) -> int:
+    match acquire_resource[Open](fs, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+        case ok(file):
+            append(mut observations, 1)
+            _ = complete_resource[Finish](own file)
+        case err(_):
+            append(mut observations, 0)
+    return 0
+
+
+func assign_with_reserved_handles(fs: Filesystem, remaining: int) -> bool:
+    match acquire_resource[Open](fs, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+        case ok(file):
+            if remaining > 0:
+                const observed = assign_with_reserved_handles(fs, remaining - 1)
+                _ = complete_resource[Finish](own file)
+                return observed
+            const owner = WithResource(values=[21, 22], file=own file, spare=["discarded"])
+            mut observations: int[] = []
+            mut rows: int[][] = [[]]
+            rows[index_after_carrier_drop(fs, mut observations)] = own owner.values
+            return observations == [1] and rows[0] == [21, 22]
+        case err(_):
+            return False
+
+
+func replace_existing_field(mut rows: dict[str, Pair], key: str, own values: int[]):
+    rows[key].first = own values
+
+
+func replace_existing_counter(mut rows: dict[str, Counter], key: str, value: int):
+    rows[key].value = value
+
+
+func replace_nested_field(mut holder: MappingHolder, key: str, own values: int[]):
+    holder.rows[key].first = own values
+
+
+func replace_nested_counter(mut holder: MappingHolder, key: str, value: int):
+    holder.counters[key].value = value
+
+
+public func test_local_field_transfer_preserves_earlier_reads() -> bool:
+    const pair = Pair(first=[1, 2], second=[3, 4, 5], text="side-" + str(3))
+    const before = len(pair.second) + len(pair.text)
+    const selected = own pair.first
+    return before == 9 and selected == [1, 2]
+
+
+public func test_own_parameter_field_transfer_destroys_managed_siblings() -> bool:
+    const selected = first(Pair(first=[2, 3], second=[4, 5], text="parameter-" + str(4)))
+    return selected == [2, 3]
+
+
+public func test_earlier_argument_reads_precede_a_later_field_transfer() -> bool:
+    const pair = Pair(first=[1, 2], second=[3, 4, 5], text="arguments")
+    return sized(len(pair.second), own pair.first) == 5
+
+
+public func test_branch_arms_consume_each_record_once() -> bool:
+    return branch(True) == [3, 4] and branch(False) == [7, 8, 9]
+
+
+public func test_untaken_branch_retains_ordinary_record_cleanup() -> bool:
+    return one_branch(True) == [5, 6] and one_branch(False) == [11]
+
+
+public func test_nested_field_transfer_consumes_every_enclosing_record() -> bool:
+    const outer = Outer(wide=Wide(first=1, second=2, third=3, fourth=4, values=[5, 6]), spare=["outer-" + str(5)], bytes=b"unused")
+    const selected = own outer.wide.values
+    return selected == [5, 6]
+
+
+public func test_wide_field_transfer_has_independent_storage() -> bool:
+    const wide = take_wide(Outer(wide=Wide(first=1, second=2, third=3, fourth=4, values=[5]), spare=["sibling"], bytes=b"unused"))
+    const replacement = Outer(wide=Wide(first=9, second=8, third=7, fourth=6, values=[99]), spare=["replacement"], bytes=b"new")
+    return wide.first == 1 and wide.values == [5] and replacement.wide.first == 9
+
+
+public func test_loop_reinitialization_restores_the_complete_owner() -> bool:
+    mut pair = Pair(first=[0], second=[10], text="loop")
+    mut sum = 0
+    for index in range(4):
+        const selected = own pair.first
+        sum += selected[0]
+        pair = Pair(first=[index + 1], second=[index + 10], text="loop-" + str(index))
+    return sum == 6 and pair.first == [4]
+
+
+public func test_provider_sibling_is_destroyed_when_the_field_moves() -> bool:
+    const owner = WithProvider(values=[3, 4], fs=filesystem.memory())
+    const selected = own owner.values
+    return selected == [3, 4]
+
+
+public func test_provider_field_transfer_clears_the_old_lexical_pin() -> bool:
+    const owner = WithProvider(values=[7, 8], fs=filesystem.memory())
+    const fs = own owner.fs
+    _ = fs.write_text("data", "kept")
+    return fs.exists("data")
+
+
+public func test_resource_siblings_close_before_the_next_acquisition() -> bool:
+    mut fs = filesystem.memory()
+    _ = fs.write_text("data", "owned")
+    mut kept: int[][] = []
+    for index in range(512):
+        match acquire_resource[Open](fs, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+            case ok(file):
+                const owner = WithResource(values=[index], file=own file, spare=["unused-" + str(index)])
+                append(mut kept, own owner.values)
+            case err(_):
+                return False
+    fs = filesystem.memory()
+    return len(kept) == 512 and kept[0] == [0] and kept[511] == [511]
+
+
+public func test_resource_field_transfer_destroys_managed_siblings() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("data", "owned")
+    match acquire_resource[Open](fs, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+        case ok(file):
+            const owner = WithResource(values=[13], file=own file, spare=["unused"])
+            const selected = own owner.file
+            _ = complete_resource[Finish](own selected)
+            return True
+        case err(_):
+            return False
+
+
+public func test_provider_const_aliases_preserve_the_original_owner() -> bool:
+    const owner = WithProvider(values=[1, 2], fs=filesystem.memory())
+    const alias = owner
+    const again = alias
+    _ = alias.fs.write_text("data", "borrowed")
+    return again.fs.exists("data") and alias.values == [1, 2] and owner.fs.exists("data")
+
+
+public func test_provider_field_aliases_share_the_existing_pin() -> bool:
+    const owner = WithProvider(values=[3], fs=filesystem.memory())
+    const fs = owner.fs
+    const again = fs
+    _ = fs.write_text("data", "field")
+    return owner.fs.exists("data") and again.exists("data") and owner.values == [3]
+
+
+public func test_provider_alias_last_use_allows_a_real_transfer() -> bool:
+    const owner = WithProvider(values=[6, 7], fs=filesystem.memory())
+    const alias = owner
+    _ = alias.fs.write_text("data", "transferred")
+    const observed = len(alias.values)
+    const moved = own owner
+    return observed == 2 and moved.fs.exists("data") and moved.values == [6, 7]
+
+
+public func test_own_parameter_provider_aliases_survive_branch_joins() -> bool:
+    return read_provider_branches(WithProvider(values=[4, 5], fs=filesystem.memory()), True) and read_provider_branches(WithProvider(values=[4, 5], fs=filesystem.memory()), False)
+
+
+public func test_generic_field_markers_read_scalars_and_transfer_managed_values() -> bool:
+    const scalar = extract[int](Holder[int](value=42, spare="scalar-" + str(1)))
+    const text = extract[str](Holder[str](value="managed-" + str(2), spare="sibling-" + str(3)))
+    return scalar == 42 and text == "managed-2"
+
+
+public func test_carrier_rhs_destroys_siblings_before_effectful_destination_index() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("data", "reserved")
+    # The recursive frames hold 255 handles and the carrier holds the last one.
+    # The destination's acquisition succeeds only after the RHS drops its sibling.
+    return assign_with_reserved_handles(fs, 255)
+
+
+public func test_dictionary_field_writeback_borrows_its_existing_managed_key() -> bool:
+    const key = "slot-" + str(1)
+    mut rows = {"slot-1": Pair(first=[1], second=[2, 3], text="kept-" + str(2))}
+    const source = [4, 5]
+    replace_existing_field(mut rows, key, own source)
+    mut counters = {"slot-1": Counter(value=1)}
+    replace_existing_counter(mut counters, key, 7)
+    mut holder = MappingHolder(rows={"slot-1": Pair(first=[6], second=[7], text="nested")}, counters={"slot-1": Counter(value=1)}, spare="outer-" + str(3))
+    const nested_source = [8, 9]
+    replace_nested_field(mut holder, key, own nested_source)
+    replace_nested_counter(mut holder, key, 10)
+    return key == "slot-1" and rows[key].first == [4, 5] and rows[key].second == [2, 3] and rows[key].text == "kept-2" and counters[key].value == 7 and holder.rows[key].first == [8, 9] and holder.rows[key].second == [7] and holder.counters[key].value == 10 and holder.spare == "outer-3"
+
+
+func deferred_numbers(seed: int) -> int[]:
+    return [seed, seed + 1]
+
+
+func deferred_text(seed: int) -> str:
+    return "join-" + str(seed)
+
+
+func deferred_read_numbers(values: int[]) -> int:
+    return values[0] * 10 + values[1]
+
+
+func deferred_read_text(value: str, expected: str) -> bool:
+    return value == expected
+
+
+func deferred_pressure(seed: int) -> int:
+    mut total = 0
+    for index in range(32):
+        const scratch = deferred_text(seed + index)
+        total += len(scratch)
+    return total
+
+
+func deferred_select_list_borrow_first(take: bool) -> bool:
+    mut owner = deferred_numbers(10)
+    const selected: int[]
+    if take:
+        selected = owner
+    else:
+        selected = deferred_numbers(30)
+    const observed = deferred_read_numbers(selected)
+    if take:
+        assert observed == 111
+    else:
+        assert observed == 331
+    owner[0] = 90
+    append(mut owner, 12)
+    return owner == [90, 11, 12]
+
+
+func deferred_select_list_fresh_first(take: bool) -> bool:
+    mut owner = deferred_numbers(10)
+    const selected: int[]
+    if take:
+        selected = deferred_numbers(30)
+    else:
+        selected = owner
+    const observed = deferred_read_numbers(selected)
+    if take:
+        assert observed == 331
+    else:
+        assert observed == 111
+    owner[0] = 90
+    append(mut owner, 12)
+    return owner == [90, 11, 12]
+
+
+public func test_deferred_const_list_branches_keep_borrowed_and_fresh_storage() -> bool:
+    return deferred_select_list_borrow_first(True) and deferred_select_list_borrow_first(False) and deferred_select_list_fresh_first(True) and deferred_select_list_fresh_first(False)
+
+
+func deferred_select_text_borrow_first(take: bool) -> bool:
+    mut owner = deferred_text(10)
+    const selected: str
+    if take:
+        selected = owner
+    else:
+        selected = deferred_text(30)
+    if take:
+        assert deferred_read_text(selected, "join-10")
+    else:
+        assert deferred_read_text(selected, "join-30")
+    owner = deferred_text(90)
+    return deferred_read_text(owner, "join-90")
+
+
+func deferred_select_text_fresh_first(take: bool) -> bool:
+    mut owner = deferred_text(10)
+    const selected: str
+    if take:
+        selected = deferred_text(30)
+    else:
+        selected = owner
+    if take:
+        assert deferred_read_text(selected, "join-30")
+    else:
+        assert deferred_read_text(selected, "join-10")
+    owner = deferred_text(90)
+    return deferred_read_text(owner, "join-90")
+
+
+public func test_deferred_const_text_branches_keep_borrowed_and_fresh_storage() -> bool:
+    return deferred_select_text_borrow_first(True) and deferred_select_text_borrow_first(False) and deferred_select_text_fresh_first(True) and deferred_select_text_fresh_first(False)
+
+
+func deferred_select_two_lenders(take_left: bool) -> bool:
+    mut left = deferred_numbers(10)
+    mut right = deferred_numbers(30)
+    mut left_text = deferred_text(10)
+    mut right_text = deferred_text(30)
+    const selected: int[]
+    const selected_text: str
+    if take_left:
+        selected = left
+        selected_text = left_text
+    else:
+        selected = right
+        selected_text = right_text
+    const observed = deferred_read_numbers(selected)
+    if take_left:
+        assert observed == 111 and deferred_read_text(selected_text, "join-10")
+    else:
+        assert observed == 331 and deferred_read_text(selected_text, "join-30")
+    left[0] = 90
+    right[0] = 80
+    left_text = deferred_text(90)
+    right_text = deferred_text(80)
+    return left == [90, 11] and right == [80, 31] and deferred_read_text(left_text, "join-90") and deferred_read_text(right_text, "join-80")
+
+
+public func test_deferred_const_two_lenders_are_reusable_after_the_last_read() -> bool:
+    return deferred_select_two_lenders(True) and deferred_select_two_lenders(False)
+
+
+func deferred_select_branch_locals(take_left: bool) -> bool:
+    const selected: int[]
+    const selected_text: str
+    if take_left:
+        const left = deferred_numbers(40)
+        const left_text = deferred_text(40)
+        selected = left
+        selected_text = left_text
+    else:
+        const right = deferred_numbers(60)
+        const right_text = deferred_text(60)
+        selected = right
+        selected_text = right_text
+    assert deferred_pressure(100) > 0
+    const observed = deferred_read_numbers(selected)
+    if take_left:
+        return observed == 441 and deferred_read_text(selected_text, "join-40")
+    return observed == 661 and deferred_read_text(selected_text, "join-60")
+
+
+public func test_deferred_const_branch_local_lenders_survive_allocation_pressure() -> bool:
+    return deferred_select_branch_locals(True) and deferred_select_branch_locals(False)
+
+
+func deferred_select_option_fresh_first(choice: int?) -> bool:
+    mut owner = deferred_numbers(10)
+    mut owner_text = deferred_text(10)
+    const selected: int[]
+    const selected_text: str
+    match choice:
+        case Some(seed):
+            selected = deferred_numbers(seed + 30)
+            selected_text = deferred_text(seed + 30)
+        case None:
+            selected = owner
+            selected_text = owner_text
+    const observed = deferred_read_numbers(selected)
+    if choice is None:
+        assert observed == 111 and deferred_read_text(selected_text, "join-10")
+    else:
+        assert observed == 342 and deferred_read_text(selected_text, "join-31")
+    owner[0] = 90
+    owner_text = deferred_text(90)
+    return owner == [90, 11] and deferred_read_text(owner_text, "join-90")
+
+
+func deferred_select_option_borrow_first(choice: int?) -> bool:
+    mut owner = deferred_numbers(10)
+    mut owner_text = deferred_text(10)
+    const selected: int[]
+    const selected_text: str
+    match choice:
+        case Some(seed):
+            _ = seed
+            selected = owner
+            selected_text = owner_text
+        case None:
+            selected = deferred_numbers(30)
+            selected_text = deferred_text(30)
+    const observed = deferred_read_numbers(selected)
+    if choice is None:
+        assert observed == 331 and deferred_read_text(selected_text, "join-30")
+    else:
+        assert observed == 111 and deferred_read_text(selected_text, "join-10")
+    owner[0] = 90
+    owner_text = deferred_text(90)
+    return owner == [90, 11] and deferred_read_text(owner_text, "join-90")
+
+
+public func test_deferred_const_option_arms_keep_borrowed_and_fresh_storage() -> bool:
+    return deferred_select_option_fresh_first(Some(1)) and deferred_select_option_fresh_first(None) and deferred_select_option_borrow_first(Some(1)) and deferred_select_option_borrow_first(None)
+
+
+func deferred_owned_numbers(take: bool) -> int[]:
+    const owner = deferred_numbers(20)
+    const selected: int[]
+    if take:
+        selected = own owner
+    else:
+        selected = deferred_numbers(40)
+    return selected
+
+
+func deferred_owned_text(take: bool) -> str:
+    const owner = deferred_text(20)
+    const selected: str
+    if take:
+        selected = deferred_text(40)
+    else:
+        selected = own owner
+    return selected
+
+
+func deferred_scalar(take: bool) -> int:
+    const selected: int
+    if take:
+        selected = 3
+    else:
+        selected = 5
+    return selected
+
+
+public func test_deferred_const_fresh_and_explicit_own_arms_keep_owning_returns() -> bool:
+    const first_values = deferred_owned_numbers(True)
+    const second = deferred_owned_numbers(False)
+    const first_text = deferred_owned_text(True)
+    const second_text = deferred_owned_text(False)
+    return deferred_read_numbers(first_values) == 221 and deferred_read_numbers(second) == 441 and deferred_read_text(first_text, "join-40") and deferred_read_text(second_text, "join-20") and deferred_scalar(True) == 3 and deferred_scalar(False) == 5
+
+
+func deferred_select_loop(flags: bool[]) -> int:
+    mut total = 0
+    for take in flags:
+        const selected: int[]
+        const selected_text: str
+        if take:
+            const local = deferred_numbers(10)
+            const local_text = deferred_text(10)
+            selected = local
+            selected_text = local_text
+        else:
+            selected = deferred_numbers(30)
+            selected_text = deferred_text(30)
+        total += deferred_read_numbers(selected)
+        if take:
+            assert deferred_read_text(selected_text, "join-10")
+        else:
+            assert deferred_read_text(selected_text, "join-30")
+        # Every owner is dead before the next iteration, including the arm
+        # that did not create a branch-local lender this time.
+        assert deferred_pressure(100) > 0
+    return total
+
+
+public func test_deferred_const_loop_backedges_forget_dead_branch_lenders() -> bool:
+    return deferred_select_loop([True, False, True]) == 553 and deferred_select_loop([False, True, False]) == 773

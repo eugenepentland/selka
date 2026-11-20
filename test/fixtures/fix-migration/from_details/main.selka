@@ -1,0 +1,16 @@
+func size(a: int[]) -> int from a fails str: # keep the failure contract
+    return len(a)
+func choose(a: int[], b: int[]) -> int[] from b, a, a:
+    _ = b
+    return a
+func main() -> int:
+    const left = [1, 2]
+    const right = [3]
+    const selected = choose(left, right)
+    match size(selected):
+        case Ok(count):
+            return count
+        case Err(error):
+            return len(error)
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

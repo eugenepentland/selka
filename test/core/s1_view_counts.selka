@@ -1,0 +1,28 @@
+# The knucleotide count (NEW-CORE-S1-VIEW-1): a counting build of it allocates in
+# `frequencies` only for the keys it inserts and for the table's growth.
+import dicts
+import strings
+
+func generate(length: int) -> str:
+    mut parts: str[] = []
+    mut seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        append(mut parts, strings.char_at("ACGT", seed * 4 // 139968))
+    return strings.join(parts, "")
+
+
+func frequencies(seq: str, k: int) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for i in range(strings.char_count(seq) - k + 1):
+        mut key = copy(strings.char_slice(seq, i, i + k))
+        counts[own key] = dicts.get(counts, key, 0) + 1
+    return counts
+
+
+func main(out: Stream) -> int:
+    mut seq = generate(20000)
+    mut small = frequencies(seq, 2)
+    mut large = frequencies(seq, 6)
+    print(out, len(small), small["GG"], len(large), dicts.get(large, "GGTATT", 0))
+    return 0

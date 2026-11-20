@@ -1,0 +1,77 @@
+# Apply a read-only function to each input, preserving order. The compiler supplies the
+# map (`builtin func`): workers on the thread pool borrow distinct elements in bounded
+# contiguous chunks, all work joins before map returns, and callback results become
+# independently owned output elements. A slice or a list parameter is read in place, with
+# no copy: the map borrows `values` until it returns.
+public builtin func map[T: storable, R: storable](values: T[], function: func(T) -> R) -> R[]
+
+
+# `parallel.map(values, function, a, ...)` with one to five trailing scalar arguments: `function` takes the item and then
+# the arguments, and the checker routes the call to the variant of its argument count. Each argument is read-only and is
+# the same for every item; the compiler supplies the map, as it does `map`.
+public builtin func map_with1[T: storable, R: storable, A1: copy + storable](values: T[], function: func(T, A1) -> R, a1: A1) -> R[]
+
+
+# parallel.map with 2 trailing arguments (the variant sema selects for that count).
+public builtin func map_with2[T: storable, R: storable, A1: copy + storable, A2: copy + storable](values: T[], function: func(T, A1, A2) -> R, a1: A1, a2: A2) -> R[]
+
+
+# parallel.map with 3 trailing arguments (the variant sema selects for that count).
+public builtin func map_with3[T: storable, R: storable, A1: copy + storable, A2: copy + storable, A3: copy + storable](values: T[], function: func(T, A1, A2, A3) -> R, a1: A1, a2: A2, a3: A3) -> R[]
+
+
+# parallel.map with 4 trailing arguments (the variant sema selects for that count).
+public builtin func map_with4[T: storable, R: storable, A1: copy + storable, A2: copy + storable, A3: copy + storable, A4: copy + storable](values: T[], function: func(T, A1, A2, A3, A4) -> R, a1: A1, a2: A2, a3: A3, a4: A4) -> R[]
+
+
+# parallel.map with 5 trailing arguments (the variant sema selects for that count).
+public builtin func map_with5[T: storable, R: storable, A1: copy + storable, A2: copy + storable, A3: copy + storable, A4: copy + storable, A5: copy + storable](values: T[], function: func(T, A1, A2, A3, A4, A5) -> R, a1: A1, a2: A2, a3: A3, a4: A4, a5: A5) -> R[]
+
+
+# The same map under its explicit name. A fallible function gives a list of results,
+# `Result[R, E][]`, one per input in input order; `parallel.map` gives `R[] fails E`
+# for it, so a call that wants the list of results spells this function.
+public builtin func map_results[T: storable, R: storable](values: T[], function: func(T) -> R) -> R[]
+
+
+# The lowest-index failure of a list of results, or the list of values when every item succeeded. Every
+# result is consumed before the failure returns, so no result is left unhandled.
+func first_failure[R: copy + storable, E: copy + storable](results: Result[R, E][]) -> R[] fails E:
+    mut out: R[] = []
+    mut failures: E[] = []
+    for result in results:
+        match result:
+            case Ok(value):
+                if len(failures) == 0:
+                    append(mut out, copy(value))
+            case Err(error):
+                if len(failures) == 0:
+                    append(mut failures, copy(error))
+    _ = results
+    if len(failures) > 0:
+        fail copy(failures[0])
+    return out
+
+
+# A fallible map: every item runs in parallel through `map_results`, and the failure
+# returned is the one with the lowest input index. The map fails with that failure only
+# after every item has finished. `values` is lent to the items as it is, with no copy.
+# `T` needs `copy` here, as the documented `map` does: a parameter that is only
+# `storable` counts as holding results during the body check.
+public func map_fallible[T: copy + storable, R: copy + storable, E: copy + storable](values: T[], function: func(T) -> Result[R, E]) -> R[] fails E:
+    return try first_failure[R, E](map_results(values, function))
+
+
+# The number of threads in the pool the program's tasks run on, at least 1: the count `--threads N` or `SELKA_THREADS=N`
+# sets, else one per CPU the process may use. The count is read once, when the pool starts, and a program cannot change
+# it; under a hard address-space limit the pool can start with fewer threads than this answers before its first task. A
+# test child runs one thread, and `--max-steps` and `--max-frames` force one, so in a test this answers what tasks would
+# really get. The call needs no capability, and a task gets the same answer the calling thread does. The compiler
+# supplies the read, as it does `map`.
+public builtin func threads() -> int
+
+
+# The number of CPUs the process may run on (its affinity mask, at least 1), read at the call: what the pool has when
+# nothing sets its size, so a program can print "using `threads()` of `cpus()`". `--threads` does not change it, and a test
+# child's one thread does not either. The call needs no capability. The compiler supplies the read, as it does `threads`.
+public builtin func cpus() -> int

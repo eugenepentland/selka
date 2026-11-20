@@ -1,0 +1,30 @@
+import lists
+import strings
+
+# scan_split: str.split(separator) over LIB.md's 4 MB text. Each piece is a
+# fresh str until shared string slices land (plan section 5.4).
+func shared_text() -> str:
+    mut block_parts: str[] = []
+    for i in range(2000):
+        append(mut block_parts, f"item{i},{(i * 7919) % 100003},{strings.char_slice('xxxxxx', None, i % 7)}\n")
+    mut block = strings.join(block_parts, "")
+    return strings.join(lists.filled[str](110, block), "")
+
+
+func main(out: Stream) -> int:
+    mut text = shared_text()
+    mut lines = 0
+    mut width = 0
+    mut fields = 0
+    mut runs = 0
+    mut run_width = 0
+    for _ in range(3):
+        for line in strings.split(text, "\n"):
+            lines += 1
+            width += strings.char_count(line)
+        fields += len(strings.split(text, ","))
+        for run in strings.split(text, "x\nitem"):
+            runs += 1
+            run_width += strings.char_count(run)
+    print(out, f"{lines} {width} {fields} {runs} {run_width}")
+    return 0

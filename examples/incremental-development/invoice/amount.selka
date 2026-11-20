@@ -1,0 +1,2 @@
+public func total() -> int:
+    return 42

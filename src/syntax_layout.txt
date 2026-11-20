@@ -1,0 +1,797 @@
+syntax-layout-v1
+
+The payload is `StoredSyntax` written by `persist_codec`:
+  integer     little-endian at its stored width (usize is 8 bytes)
+  bool        one byte, 0 or 1
+  enum        its tag integer, at the tag's storage width in bytes
+  optional    one byte, 0 or 1, then the value when 1
+  slice       u64 count, then the items; []u8 is the bytes alone
+  array       its items in order
+  struct      its fields in the order listed
+  union       its tag, then the active variant's payload
+A type keeps its declared name; an anonymous one is named by its path from
+the nearest declared type. Regenerate with
+`selka dump-syntax --layout > src/syntax_layout.txt` after an `ast.zig` change.
+
+StoredSyntax: struct
+  types: ast.TypeDeclarations
+  nodes: []ast.Node
+  statements: []ast.Statement
+  functions: []ast.Function
+  lambdas: []ast.Lambda
+  attributes: []ast.DeclarationAttributes
+  docstrings: []ast.DeclarationDoc
+
+ast.TypeDeclarations: struct
+  resources: []ast.Domain
+  domains: []ast.Domain
+  variants: []ast.Variants
+  expressions: ast.TypeExpressions
+  records: []ast.Record
+  constraints: []ast.Constraint
+  public_declarations: []source.Span
+
+ast.Domain: struct
+  managed: bool
+  type_parameters: []ast.TypeParameter
+  name: source.Span
+  backing: source.Span
+  codec: ?ast.Codec
+
+ast.TypeParameter: struct
+  default_copy: bool
+  constant_length: bool
+  name: source.Span
+  requirements: []source.Span
+  field_requirements: []ast.Parameter
+  operation_requirements: []ast.Operation
+  named_requirements: []ast.BoundReference
+
+source.Span: struct
+  start: usize
+  end: usize
+
+ast.Parameter: struct
+  named: bool
+  default_value: ?ast.NodeId
+  name: source.Span
+  ty: source.Span
+  mut: bool
+  own: bool
+
+ast.NodeId: enum, tag usize in 8 byte(s), non-exhaustive
+
+ast.Operation: struct
+  name: source.Span
+  parameters: []ast.Parameter
+  return_type: source.Span
+
+ast.BoundReference: struct
+  alias: ?source.Span
+  name: source.Span
+
+ast.Codec: struct
+  wire: source.Span
+  decode: source.Span
+  encode: source.Span
+
+ast.Variants: struct
+  type_parameters: []ast.TypeParameter
+  fallible: bool
+  name: source.Span
+  is_union: bool
+  cases: []ast.Variant
+
+ast.Variant: struct
+  name: source.Span
+  payload: ?source.Span
+  fields: []ast.Parameter
+
+ast.TypeExpressions: struct
+  suffixes: []ast.TypeSuffix
+  callbacks: []ast.CallbackType
+  arrays: []ast.ArrayType
+  applications: []ast.TypeApplication
+  aliases: []ast.TypeAlias
+  tuples: []ast.TupleType
+
+ast.TypeSuffix: struct
+  span: source.Span
+  base: source.Span
+  kind: ast.TypeSuffix.kind
+
+ast.TypeSuffix.kind: enum, tag u1 in 1 byte(s)
+  0 growable
+  1 optional
+
+ast.CallbackType: struct
+  failure_type: ?source.Span
+  span: source.Span
+  parameters: []source.Span
+  parameter_names: []?source.Span
+  return_type: source.Span
+  parameter_modes: ast.CallbackType.parameter_modes
+
+ast.CallbackType.parameter_modes: struct
+  mut: []bool
+  named: []bool
+  own: []bool
+
+ast.ArrayType: struct
+  span: source.Span
+  index: ast.ArrayIndex
+  element: source.Span
+
+ast.ArrayIndex: union, tag u1 in 1 byte(s)
+  0 length: source.Span
+  1 enum_type: source.Span
+
+ast.TypeApplication: struct
+  span: source.Span
+  name: source.Span
+  arguments: []source.Span
+
+ast.TypeAlias: struct
+  name: source.Span
+  target: source.Span
+
+ast.TupleType: struct
+  span: source.Span
+  elements: []source.Span
+
+ast.Record: struct
+  managed: bool
+  type_parameters: []ast.TypeParameter
+  name: source.Span
+  fields: []ast.Parameter
+
+ast.Constraint: struct
+  name: source.Span
+  span: source.Span
+  subject: ast.TypeParameter
+
+ast.Node: struct
+  span: source.Span
+  data: ast.Node.data
+
+ast.Node.data: union, tag u6 in 1 byte(s)
+  0 synthetic_name: []u8
+  1 field_assignment: ast.Node.data.field_assignment
+  2 index_assignment: ast.Node.data.index_assignment
+  3 list_literal: []ast.NodeId
+  4 method_call: ast.Node.data.method_call
+  5 list_operation: ast.Node.data.list_operation
+  6 buffer_operation: ast.Node.data.buffer_operation
+  7 file_operation: ast.Node.data.file_operation
+  8 slice: ast.Node.data.slice
+  9 integer: source.Span
+  10 bytes: []u8
+  11 text: []u8
+  12 format: []ast.NodeId
+  13 format_field: ast.Node.data.format_field
+  14 comprehension: ast.Comprehension
+  15 gather: ast.Gather
+  16 dictionary_literal: []ast.NodeId
+  17 set_literal: []ast.NodeId
+  18 membership: ast.Node.data.membership
+  19 boolean: bool
+  20 unit: void
+  21 name: source.Span
+  22 propagate: ast.NodeId
+  23 acquire_resource: ast.Node.data.acquire_resource
+  24 complete_resource: ast.Node.data.complete_resource
+  25 resource_io: ast.Node.data.resource_io
+  26 restrict_resource: ast.Node.data.restrict_resource
+  27 environment_get: ast.Node.data.environment_get
+  28 external_read: ast.Node.data.external_read
+  29 stand_in: ast.Node.data.stand_in
+  30 arena_escape: ast.Node.data.arena_escape
+  31 cast: ast.TypedValue
+  32 wrap: ast.TypedValue
+  33 variant: ast.Node.data.variant
+  34 unwrap: ast.NodeId
+  35 index: ast.Node.data.index
+  36 replace: ast.Node.data.replace
+  37 length: ast.NodeId
+  38 record: ast.Node.data.record
+  39 field: ast.Node.data.field
+  40 call: ast.Node.data.call
+  41 unary: ast.Node.data.unary
+  42 binary: ast.Node.data.binary
+  43 tuple: []ast.NodeId
+  44 conditional: ast.Node.data.conditional
+  45 mut_argument: ast.NodeId
+  46 own_argument: ast.NodeId
+  47 match_expression: ast.Node.data.match_expression
+  48 accept_resource: ast.Node.data.accept_resource
+  49 variant_test: ast.Node.data.variant_test
+
+ast.Node.data.field_assignment: struct
+  target: ast.NodeId
+  value: ast.NodeId
+  op: ast.AssignmentOp
+  declaration: ?bool
+
+ast.AssignmentOp: enum, tag u3 in 1 byte(s)
+  0 set
+  1 add
+  2 sub
+  3 mul
+  4 div
+  5 floor_div
+  6 rem
+
+ast.Node.data.index_assignment: struct
+  target: ast.NodeId
+  op: ast.AssignmentOp
+  value: ast.NodeId
+
+ast.Node.data.method_call: struct
+  base: ast.NodeId
+  name: source.Span
+  arguments: []ast.NodeId
+  argument_names: []?source.Span
+
+ast.Node.data.list_operation: struct
+  base: ast.NodeId
+  kind: buffer_operations.Kind
+  arguments: []ast.NodeId
+
+buffer_operations.Kind: enum, tag u7 in 1 byte(s)
+  0 length
+  1 iteration_check
+  2 key_at
+  3 value_at
+  4 slice
+  5 slice_bytes
+  6 slice_step
+  7 capacity
+  8 read
+  9 write
+  10 append
+  11 resize
+  12 reserve
+  13 take
+  14 truncate
+  15 get
+  16 contains
+  17 keys
+  18 values
+  19 split
+  20 join
+  21 encode
+  22 decode
+  23 to_list
+  24 hex
+  25 blake3
+  26 from_hex
+  27 starts_with
+  28 ends_with
+  29 find
+  30 find_any
+  31 strip
+  32 lstrip
+  33 rstrip
+  34 upper
+  35 lower
+  36 splitlines
+  37 is_digit
+  38 is_alpha
+  39 is_space
+  40 replace
+  41 count
+  42 zfill
+  43 parse_int
+  44 parse_float
+  45 parse_f32
+  46 parse_int_range
+  47 parse_float_range
+  48 view
+  49 scalar_count
+  50 scalar_count_range
+  51 extend
+  52 insert
+  53 pop
+  54 pop_at
+  55 remove
+  56 index_of
+  57 reverse
+  58 sort
+  59 sort_keyed
+  60 copy
+  61 clear
+  62 items
+  63 update
+  64 setdefault
+  65 pop_key
+  66 pop_default
+  67 buffer_reserve
+  68 buffer_append
+  69 buffer_append_byte
+  70 buffer_append_range
+  71 buffer_append_array
+  72 buffer_append_utf8
+  73 buffer_append_int
+  74 buffer_append_float
+  75 split_whitespace
+  76 text_ord
+  77 text_chr
+  78 set_add
+  79 set_discard
+  80 set_union
+  81 set_intersection
+  82 set_difference
+  83 set_symmetric_difference
+  84 set_subset
+  85 set_superset
+  86 set_disjoint
+  87 text_format
+  88 number_format
+  89 float_round
+  90 strip_chars
+  91 lstrip_chars
+  92 rstrip_chars
+  93 find_start
+  94 find_range
+  95 rfind
+  96 rfind_start
+  97 rfind_range
+  98 text_index
+  99 text_index_start
+  100 text_index_range
+  101 rindex
+  102 rindex_start
+  103 rindex_range
+  104 count_start
+  105 count_range
+  106 starts_with_start
+  107 starts_with_range
+  108 ends_with_start
+  109 ends_with_range
+  110 text_repr
+  111 text_tail
+  112 borrow_view
+  113 exchange
+  114 position_fail
+  115 buffer_read_from
+  116 sha256
+  117 find_any_range
+
+ast.Node.data.buffer_operation: struct
+  kind: buffer_operations.Kind
+  owner: source.Span
+  arguments: []ast.NodeId
+  scalar: bool
+
+ast.Node.data.file_operation: struct
+  kind: file_operations.Method
+  owner: source.Span
+  argument: ?ast.NodeId
+
+file_operations.Method: enum, tag u3 in 1 byte(s)
+  0 read
+  1 readline
+  2 readlines
+  3 write
+  4 flush
+  5 close
+  6 sync
+
+ast.Node.data.slice: struct
+  base: ast.NodeId
+  start: ?ast.NodeId
+  end: ?ast.NodeId
+  step: ?ast.NodeId
+
+ast.Node.data.format_field: struct
+  value: ast.NodeId
+  spec: source.Span
+
+ast.Comprehension: struct
+  output: ast.NodeId
+  name: source.Span
+  source: ast.Comprehension.Source
+  filter: ?ast.NodeId
+  set: bool
+
+ast.Comprehension.Source: union, tag u1 in 1 byte(s)
+  0 iterable: ast.NodeId
+  1 range: ast.RangeBounds
+
+ast.RangeBounds: struct
+  start: ast.NodeId
+  end: ast.NodeId
+  step: ?ast.NodeId
+
+ast.Gather: struct
+  shape: ast.GatherShape
+  loop: ast.StatementId
+  open: source.Span
+
+ast.GatherShape: enum, tag u2 in 1 byte(s)
+  0 list
+  1 set
+  2 dict
+  3 generator
+
+ast.StatementId: enum, tag usize in 8 byte(s), non-exhaustive
+
+ast.Node.data.membership: struct
+  needle: ast.NodeId
+  container: ast.NodeId
+  negate: bool
+
+ast.Node.data.acquire_resource: struct
+  ty: source.Span
+  capability: ast.NodeId
+  request: ast.NodeId
+
+ast.Node.data.complete_resource: struct
+  ty: source.Span
+  value: ast.NodeId
+
+ast.Node.data.resource_io: struct
+  kind: external_resources.IoKind
+  owner: source.Span
+  ty: source.Span
+  value: ?ast.NodeId
+
+external_resources.IoKind: enum, tag u1 in 1 byte(s)
+  0 read
+  1 write
+
+ast.Node.data.restrict_resource: struct
+  permissions: u8
+  value: ast.NodeId
+
+ast.Node.data.environment_get: struct
+  ty: source.Span
+  capability: ast.NodeId
+  name: ast.NodeId
+
+ast.Node.data.external_read: struct
+  kind: external_capabilities.Kind
+  ty: source.Span
+  capability: ast.NodeId
+
+external_capabilities.Kind: enum, tag u1 in 1 byte(s)
+  0 clock
+  1 random
+
+ast.Node.data.stand_in: struct
+  ty: ?source.Span
+  first: ast.NodeId
+  second: ?ast.NodeId
+  op: ast.Node.data.stand_in.op
+
+ast.Node.data.stand_in.op: enum, tag u3 in 1 byte(s)
+  0 build
+  1 advance
+  2 monotonic
+  3 sleep
+  4 stream_memory
+  5 stream_text
+  6 fail
+
+ast.Node.data.arena_escape: struct
+  arena: source.Span
+  value: ast.NodeId
+
+ast.TypedValue: struct
+  ty: source.Span
+  value: ast.NodeId
+
+ast.Node.data.variant: struct
+  ty: source.Span
+  name: source.Span
+  value: ?ast.NodeId
+  values: []ast.NodeId
+  value_names: []?source.Span
+  fielded: bool
+
+ast.Node.data.index: struct
+  base: ast.NodeId
+  index: ast.NodeId
+
+ast.Node.data.replace: struct
+  base: ast.NodeId
+  index: ast.NodeId
+  value: ast.NodeId
+
+ast.Node.data.record: struct
+  name: source.Span
+  fields: []ast.FieldInit
+
+ast.FieldInit: struct
+  name: source.Span
+  value: ast.NodeId
+  default: bool
+
+ast.Node.data.field: struct
+  base: ast.NodeId
+  name: source.Span
+
+ast.Node.data.call: struct
+  argument_names: []?source.Span
+  evaluation_order: []usize
+  owner: ?source.Span
+  type_arguments: []source.Span
+  name: source.Span
+  arguments: []ast.NodeId
+
+ast.Node.data.unary: struct
+  op: ast.UnaryOp
+  operand: ast.NodeId
+  op_span: source.Span
+
+ast.UnaryOp: enum, tag u5 in 1 byte(s)
+  0 neg
+  1 not
+  2 bit_not
+  3 is_none
+  4 f64_sqrt
+  5 f64_floor
+  6 f64_ceil
+  7 f64_trunc
+  8 f64_abs
+  9 f64_neg
+  10 f64_from_u64
+  11 f64_to_u64
+  12 f64_from_i64
+  13 f64_to_i64
+  14 f64_sin
+  15 f64_cos
+  16 f64_bits
+  17 f64_from_bits
+  18 f32_bits
+  19 f32_from_bits
+
+ast.Node.data.binary: struct
+  op: ast.BinaryOp
+  left: ast.NodeId
+  right: ast.NodeId
+  op_span: source.Span
+  chained: bool
+
+ast.BinaryOp: enum, tag u6 in 1 byte(s)
+  0 add
+  1 sub
+  2 mul
+  3 div
+  4 rem
+  5 floor_div
+  6 floor_rem
+  7 python_div
+  8 logical_and
+  9 logical_or
+  10 eq
+  11 ne
+  12 lt
+  13 le
+  14 gt
+  15 ge
+  16 bit_and
+  17 bit_or
+  18 bit_xor
+  19 shift_left
+  20 shift_right
+  21 wrapping_add
+  22 wrapping_sub
+  23 wrapping_mul
+  24 saturating_add
+  25 saturating_sub
+  26 saturating_mul
+  27 f64_add
+  28 f64_sub
+  29 f64_mul
+  30 f64_div
+  31 f64_eq
+  32 f64_lt
+  33 f64_le
+
+ast.Node.data.conditional: struct
+  condition: ast.NodeId
+  then_value: ast.NodeId
+  else_value: ast.NodeId
+
+ast.Node.data.match_expression: struct
+  value: ast.NodeId
+  arms: []ast.MatchArm
+
+ast.MatchArm: struct
+  internal: ast.MatchArm.internal
+  payload_patterns: []ast.PatternField
+  binding_names: []?source.Span
+  literals: []ast.NodeId
+  ty: source.Span
+  name: source.Span
+  bindings: []?source.Span
+  body: ast.StatementId
+  alternatives: ast.Alternatives
+
+ast.MatchArm.internal: struct
+  names: [][]u8
+  wildcard: bool
+  labelled: bool
+
+ast.PatternField: struct
+  name: ?source.Span
+  pattern: ast.Pattern
+
+ast.Pattern: struct
+  span: source.Span
+  data: ast.Pattern.data
+
+ast.Pattern.data: union, tag u1 in 1 byte(s)
+  0 binding: ?source.Span
+  1 variant: ast.Pattern.data.variant
+
+ast.Pattern.data.variant: struct
+  ty: source.Span
+  name: source.Span
+  fields: []ast.PatternField
+  rest: bool
+
+ast.Alternatives: struct
+  rest: bool
+  group: ?ast.StatementId
+  name_bodies: []ast.StatementId
+  bare: bool
+  role: ast.Role
+
+ast.Role: enum, tag u2 in 1 byte(s)
+  0 named
+  1 success
+  2 failure
+
+ast.Node.data.accept_resource: struct
+  ty: source.Span
+  value: ast.NodeId
+
+ast.Node.data.variant_test: struct
+  value: ast.NodeId
+  check: ast.StatementId
+  explicit: u32
+  binds: bool
+
+ast.Statement: struct
+  span: source.Span
+  implicit_discard: bool
+  data: ast.Statement.data
+
+ast.Statement.data: union, tag u4 in 1 byte(s)
+  0 with_scope: ast.Statement.data.with_scope
+  1 block: []ast.StatementId
+  2 assertion: ast.Assertion
+  3 ret: ast.NodeId
+  4 fail: ast.NodeId
+  5 yield_value: ast.NodeId
+  6 loop_exit: bool
+  7 for_each: ast.Statement.data.for_each
+  8 for_range: ast.Statement.data.for_range
+  9 discard: ast.NodeId
+  10 branch: ast.Statement.data.branch
+  11 match: ast.Statement.data.match
+  12 loop: ast.Statement.data.loop
+  13 binding: ast.Statement.data.binding
+  14 assignment: ast.Statement.data.assignment
+  15 gather_step: ast.GatherStep
+
+ast.Statement.data.with_scope: struct
+  resource: ?ast.NodeId
+  name: ?source.Span
+  body: ast.StatementId
+
+ast.Assertion: struct
+  condition: ast.NodeId
+  message: []u8
+  literal: ?source.Span
+  value: ?ast.NodeId
+
+ast.Statement.data.for_each: struct
+  name: source.Span
+  index_name: ?source.Span
+  iterable: ast.NodeId
+  body: ast.StatementId
+  enumerated: bool
+  vectorize: bool
+  detached: ?source.Span
+
+ast.Statement.data.for_range: struct
+  name: source.Span
+  start: ast.NodeId
+  end: ast.NodeId
+  body: ast.StatementId
+  step: ?ast.NodeId
+  vectorize: bool
+
+ast.Statement.data.branch: struct
+  condition: ast.NodeId
+  then_body: ast.StatementId
+  else_body: ?ast.StatementId
+
+ast.Statement.data.match: struct
+  value: ast.NodeId
+  arms: []ast.MatchArm
+  exclusive: bool
+
+ast.Statement.data.loop: struct
+  condition: ast.NodeId
+  body: ast.StatementId
+
+ast.Statement.data.binding: struct
+  name: source.Span
+  annotation: ?source.Span
+  mutable: bool
+  value: ast.NodeId
+  initialized: bool
+  adopt: bool
+
+ast.Statement.data.assignment: struct
+  name: source.Span
+  value: ast.NodeId
+  op: ast.AssignmentOp
+  op_span: source.Span
+
+ast.GatherStep: struct
+  value: ast.NodeId
+  key: ?ast.NodeId
+
+ast.Function: struct
+  policy: ast.FunctionPolicy
+  signature: ast.FunctionSignature
+  name: source.Span
+  body: ast.StatementId
+
+ast.FunctionPolicy: struct
+  constant: bool
+  c_abi: bool
+  host: ?source.Span
+  owner: ?source.Span
+  restricted: bool
+  conversion: bool
+  builtin: bool
+
+ast.FunctionSignature: struct
+  type_parameters: []ast.TypeParameter
+  parameters: []ast.Parameter
+  return_type: source.Span
+  mut_positions: []u16
+  borrowing: []source.Span
+  failure_type: ?source.Span
+  keyword_only_from: ?usize
+
+ast.Lambda: struct
+  span: source.Span
+  parameters: []source.Span
+  body: ast.NodeId
+
+ast.DeclarationAttributes: struct
+  declaration: source.Span
+  attributes: []ast.Attribute
+
+ast.Attribute: struct
+  kind: ast.AttributeKind
+  span: source.Span
+  argument: ?source.Span
+  reason: ?source.Span
+  condition: ?ast.NodeId
+  olds: []ast.NodeId
+
+ast.AttributeKind: enum, tag u4 in 1 byte(s)
+  0 deprecated
+  1 noalloc
+  2 test
+  3 allow
+  4 requires
+  5 ensures
+  6 invariant
+  7 linear
+  8 sealed
+  9 freestanding
+  10 address
+
+ast.DeclarationDoc: struct
+  declaration: source.Span
+  text: []u8
+  span: source.Span

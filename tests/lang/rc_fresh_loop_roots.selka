@@ -1,0 +1,94 @@
+func build(count: int) -> int[]:
+    mut items: int[] = []
+    for at in range(count):
+        append(mut items, at)
+    return items
+
+
+public func test_fresh_growth_and_post_loop_publication_keep_real_owners() -> bool:
+    mut items = build(257)
+    mut before = copy(items)
+    items[len(items) - 1] = 999
+    return len(items) == 257 and items[256] == 999 and before[256] == 256
+
+
+public func test_comprehension_handoff_and_plain_terminal_return() -> bool:
+    mut items: int[] = []
+    for at in range(0, 7):
+        append(mut items, at)
+    mut at = 0
+    while True:
+        if at == 10:
+            return items[0] == 9 and items[len(items) - 1] == 6
+        items[0] = at
+        at += 1
+
+
+public func test_preexisting_snapshot_refuses_fresh_loop_assumption() -> bool:
+    mut items = [1]
+    mut before = copy(items)
+    for at in range(5):
+        append(mut items, at)
+    return before == [1] and items == [1, 0, 1, 2, 3, 4]
+
+
+public func test_snapshot_created_inside_loop_stays_independent() -> bool:
+    mut items = [1]
+    mut before: int[] = []
+    for at in range(5):
+        # lint: allow copy-in-loop reason="snapshot test: items changes later in the same loop, so the snapshot must own its elements"
+        before = copy(items)
+        append(mut items, at)
+    return before == [1, 0, 1, 2, 3] and items == [1, 0, 1, 2, 3, 4]
+
+
+public func test_prior_enclosing_iteration_publication_refuses_freshness() -> bool:
+    mut items = [1]
+    mut saved: int[][] = []
+    for outer in range(3):
+        for at in range(2):
+            append(mut items, at)
+        # lint: allow copy-in-loop reason="snapshot test: items grows after each saved copy, so each saved value must own its elements"
+        append(mut saved, copy(items))
+    return saved == [[1, 0, 1], [1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1]]
+
+
+func change(mut items: int[]) -> int:
+    append(mut items, 9)
+    return 3
+
+
+public func test_callback_retains_pending_receiver_protocol() -> bool:
+    mut items = [1]
+    for at in range(3):
+        mut mutation_result_66 = change(mut items)
+        append(mut items, mutation_result_66)
+    return items == [1, 9, 3, 9, 3, 9, 3]
+
+
+public func test_zero_iterations_preserve_shared_receiver_and_order() -> bool:
+    mut items = [7]
+    mut before = copy(items)
+    for at in range(0):
+        items[100] = 9
+    return items == [7] and before == [7]
+
+
+public func test_sorted_hidden_parent_and_named_alias_survive_handoff() -> bool:
+    mut items = sorted([3, 1, 2])
+    mut before = copy(items)
+    for at in range(3):
+        items[at] = at + 10
+    return before == [1, 2, 3] and items == [10, 11, 12]
+
+
+func main() -> int:
+    assert test_fresh_growth_and_post_loop_publication_keep_real_owners()
+    assert test_comprehension_handoff_and_plain_terminal_return()
+    assert test_preexisting_snapshot_refuses_fresh_loop_assumption()
+    assert test_snapshot_created_inside_loop_stays_independent()
+    assert test_prior_enclosing_iteration_publication_refuses_freshness()
+    assert test_callback_retains_pending_receiver_protocol()
+    assert test_zero_iterations_preserve_shared_receiver_and_order()
+    assert test_sorted_hidden_parent_and_named_alias_survive_handoff()
+    return 0

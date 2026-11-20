@@ -1,0 +1,14 @@
+{
+  "name": "Selka",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
+  "postCreateCommand": "zig build",
+  "remoteEnv": {
+    "PATH": "${containerWorkspaceFolder}/zig-out/bin:${containerEnv:PATH}"
+  }
+}

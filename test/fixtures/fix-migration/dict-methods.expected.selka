@@ -1,0 +1,28 @@
+import dicts
+
+record Shelf:
+    counts: dict[str, int]
+
+
+func drain[K: equality, V: copy + storable](mut mapping: dict[K, V], key: K) -> V:
+    return dicts.pop(mut mapping, key)
+
+
+func main(out: Stream) -> int:
+    mut counts: dict[str, int] = {"a": 1, "b": 2}
+    print(out, dicts.get(counts, "a", 0), dicts.get(counts, "z", 7))
+    _ = dicts.setdefault(mut counts, "c", 3)
+    dicts.update(mut counts, {"d": 4})
+    mut total = 0
+    for key in dicts.keys(counts):
+        total += len(key)
+    for value in dicts.values(counts):
+        total += value
+    for name, value in dicts.items(counts):
+        total += value + len(name)
+    print(out, total, drain(mut counts, "d"), dicts.pop_default(mut counts, "zz", 9), dicts.pop(mut counts, "a"))
+    mut shelf = Shelf(counts={"s": 2})
+    print(out, dicts.get(shelf.counts, "s", 0))
+    dicts.clear(mut counts)
+    print(out, len(counts))
+    return 0

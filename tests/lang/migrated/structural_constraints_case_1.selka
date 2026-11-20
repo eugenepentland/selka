@@ -1,0 +1,6 @@
+func forward[T: copy](x: T, named domain_op_T_identity: func(T) -> T) -> T:
+    return domain_op_T_identity(x)
+
+
+public func program() -> int:
+    return 0

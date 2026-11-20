@@ -1,0 +1,69 @@
+# The `cpu` module on a simulated bank (MCU-NOC1): each operation does nothing to the machine, returns at once (a wait
+# too) and is recorded in the bank's event log beside its log of register writes, so a test reads how many of each ran
+# and which writes happened while interrupts were held off. The refusals (a forgotten restore, a double restore, a reader
+# in a device build) are Zig-side tests, because a guest test cannot expect a rejection.
+import cpu
+import registers
+
+const FLASH_CS: u32 = 0x40018000
+
+
+func flash_select(reg: Registers):
+    const held = cpu.interrupts_off(reg)
+    registers.write32(reg, FLASH_CS, 0)
+    registers.write32(reg, FLASH_CS + 4, 1)
+    cpu.interrupts_restore(reg, own held)
+
+
+@noalloc
+func idle(reg: Registers, rounds: int):
+    for _ in range(rounds):
+        cpu.send_event(reg)
+        cpu.wait_for_event(reg)
+    cpu.wait_for_interrupt(reg)
+    cpu.barrier(reg)
+    cpu.breakpoint(reg)
+
+
+public func test_each_operation_is_recorded_once_and_a_wait_returns() -> bool:
+    const reg = registers.simulated()
+    idle(reg, 3)
+    const kinds = [cpu.count_of(reg, "send_event"), cpu.count_of(reg, "wait_for_event"), cpu.count_of(reg, "wait_for_interrupt"), cpu.count_of(reg, "barrier"), cpu.count_of(reg, "breakpoint")]
+    return kinds == [3, 3, 1, 1, 1] and cpu.event_count(reg) == 9 and cpu.event_operation(reg, 0) == "send_event" and cpu.event_operation(reg, 8) == "breakpoint"
+
+
+public func test_a_fresh_bank_has_interrupts_on_and_no_events() -> bool:
+    const reg = registers.simulated()
+    return cpu.event_count(reg) == 0 and not cpu.interrupts_are_off(reg) and len(cpu.events(reg)) == 0
+
+
+public func test_writes_between_off_and_restore_happen_with_interrupts_off() -> bool:
+    const reg = registers.simulated()
+    registers.write32(reg, FLASH_CS, 1)
+    flash_select(reg)
+    registers.write32(reg, FLASH_CS, 2)
+    const during = [cpu.write_with_interrupts_off(reg, 0), cpu.write_with_interrupts_off(reg, 1), cpu.write_with_interrupts_off(reg, 2), cpu.write_with_interrupts_off(reg, 3)]
+    const log = cpu.events(reg)
+    const order = log[0].operation == "interrupts_off" and log[0].writes_before == 1 and log[1].operation == "interrupts_restore" and log[1].writes_before == 3
+    return during == [False, True, True, False] and order and not cpu.interrupts_are_off(reg)
+
+
+public func test_the_state_holds_primask_and_holds_nest() -> bool:
+    const reg = registers.simulated()
+    const outer = cpu.interrupts_off(reg)
+    const inner = cpu.interrupts_off(reg)
+    const seen = [outer.primask, inner.primask]
+    cpu.interrupts_restore(reg, own inner)
+    const still_off = cpu.interrupts_are_off(reg)
+    cpu.interrupts_restore(reg, own outer)
+    return seen == [0, 1] and still_off and not cpu.interrupts_are_off(reg) and cpu.count_of(reg, "interrupts_off") == 2
+
+
+public func test_the_event_log_is_per_bank() -> bool:
+    const first = registers.simulated()
+    const second = registers.simulated()
+    cpu.send_event(first)
+    const held = cpu.interrupts_off(first)
+    const apart = cpu.interrupts_are_off(first) and not cpu.interrupts_are_off(second) and cpu.event_count(second) == 0
+    cpu.interrupts_restore(first, own held)
+    return apart and cpu.event_count(first) == 3

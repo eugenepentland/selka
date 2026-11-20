@@ -1,0 +1,8 @@
+# A fixed array of text, read and replaced.
+func main() -> int:
+    mut names = FixedArray[str, 4](["ab", "cde", "f", "ghij"])
+    names[2] = "klmnop"
+    mut total = 0
+    for n in names:
+        total += len(n)
+    return total * 3 + len(names[3])

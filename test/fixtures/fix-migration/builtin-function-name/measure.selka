@@ -1,0 +1,7 @@
+# N4: a re-export that makes the bare `trunc` below call `rounding.trunc`.
+import rounding
+export rounding.trunc
+
+
+public func cut() -> float:
+    return trunc(1.5)

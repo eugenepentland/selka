@@ -1,0 +1,40 @@
+# Static UTF-8 literal data carries precomputed, read-only position samples.
+import strings
+
+const TEXT: str = """abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345
+abcdefghijklmnoé😀pqrstuvwxyz012345"""
+
+
+public func test_literal_indexes_in_both_directions_and_ranges() -> bool:
+    mut line = "abcdefghijklmnoé😀pqrstuvwxyz012345"
+    mut ok = strings.char_count(TEXT) == 699
+    for index in range(strings.char_count(TEXT)):
+        mut column = index % 35
+        mut expected = "\n"
+        if column < 34:
+            expected = strings.char_at(line, column)
+        ok = ok and strings.char_at(TEXT, index) == expected and strings.char_at(TEXT, index) == expected
+    ok = ok and strings.char_find(TEXT, "é", 100, 300) == 120 and strings.char_rfind(TEXT, "é", 100, 300) == 295
+    return ok and strings.char_count_of(TEXT, "é", 100, 300) == 6 and strings.char_at(TEXT, 128) == strings.char_at(line, 23)
+
+
+func main() -> int:
+    return 0

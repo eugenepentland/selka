@@ -1,0 +1,20 @@
+# Before the one-case rule: `fail` and `try` here convert a `str` into the first of two `str` cases.
+public enum AppErr:
+    Parse(value: str)
+    Io(message: str)
+    Code(value: int)
+
+public func parse(text: str) -> int fails str:
+    if len(text) == 0:
+        fail "empty"
+    return len(text)
+
+public func check_name(name: str) -> int fails AppErr:
+    if len(name) == 0:
+        fail "no name"
+    const message = "too long: " + name
+    if len(name) > 8:
+        fail message
+    if name == "zero":
+        fail 0
+    return len(name)

@@ -1,0 +1,152 @@
+# Library calls whose lowering copied a text or bytes argument that no `copy(...)` asked for (lane HC). `selka check`
+# accepted each of these and a `--verify-facts` build refused it (E_CORE_HIDDEN_COPY), so a build of this file under
+# fact verification is the test: a refused build fails every test here.
+#
+# - A bytes trim, and a trim with a character set, names new storage: the checker holds its result owned (no `from` on
+#   `bytes.strip`), so the runtime's copy is that new value, written like `split`'s.
+# - `strings.lines` and `zfill` of a plain text parameter read the parameter's octets in place; they used to copy the
+#   whole borrowed text first.
+import bytes
+import strings
+import testing
+
+record Row:
+    key: bytes
+    note: str
+
+
+# The port's shape (`export_kicad_footprint.nth_pad_at_angle`): a stripped element of a split, tested, sliced and split.
+func nth_angle(text: bytes, n: int) -> float?:
+    mut seen = 0
+    for raw_line in bytes.split(text, b"\n"):
+        const t = bytes.strip(raw_line)
+        if not bytes.starts_with(t, b"(at ") or not bytes.ends_with(t, b")"):
+            continue
+        if seen != n:
+            seen += 1
+            continue
+        const fields = bytes.split(t[4:len(t) - 1], b" ")
+        mut tokens: bytes[] = []
+        for f in fields:
+            if len(f) > 0:
+                append(mut tokens, copy(f))
+        if len(tokens) < 3:
+            return None
+        return bytes.parse_float_range(tokens[2], 0, len(tokens[2]))
+    return None
+
+
+func stripped(line: bytes) -> bytes:
+    return bytes.strip(line)
+
+
+func left(line: bytes) -> bytes:
+    return bytes.lstrip(line)
+
+
+func right(line: bytes) -> bytes:
+    return bytes.rstrip(line)
+
+
+func trimmed_set(text: str) -> str:
+    return strings.strip_chars(text, " x")
+
+
+func trimmed_bytes_set(data: bytes) -> bytes:
+    return bytes.strip_chars(data, b" x")
+
+
+func rows(lines: bytes[], notes: str[]) -> Row[]:
+    mut out: Row[] = []
+    for line in lines:
+        for note in notes:
+            append(mut out, Row(key=bytes.strip(line), note=strings.rstrip_chars(note, "!")))
+    return out
+
+
+func stripped_all(lines: bytes[]) -> bytes[]:
+    mut out: bytes[] = []
+    for line in lines:
+        append(mut out, bytes.strip(line))
+    return out
+
+
+func lines_of(text: str) -> str[]:
+    return strings.lines(text)
+
+
+func padded(text: str, width: int) -> str:
+    return strings.zfill(text, width)
+
+
+# A sliced trim that only a split and a length read, `count` times.
+func sliced_angles(count: int) -> int:
+    const line = b"  (at 1 2 90)  "
+    mut total = 0
+    for i in range(count):
+        const t = bytes.strip(line)
+        const fields = bytes.split(t[4:len(t) - 1], b" ")
+        total += len(fields)
+    return total
+
+
+# The same split of a slice of the line itself, with no trim.
+func sliced_line(count: int) -> int:
+    const line = b"  (at 1 2 90)  "
+    mut total = 0
+    for i in range(count):
+        const fields = bytes.split(line[6:len(line) - 3], b" ")
+        total += len(fields)
+    return total
+
+
+public func test_a_stripped_element_sliced_and_split_reads_its_angle() -> bool:
+    const text = b"(module x)\n  (pad 1)\n  (at 1 2 90)  \n  (at 3 4)\n (at 5 6 180.5) \n"
+    mut ok = False
+    match nth_angle(text, 0):
+        case Some(angle):
+            ok = angle == 90.0
+        case None:
+            ok = False
+    match nth_angle(text, 1):
+        case Some(_):
+            ok = False
+        case None:
+            ok = ok
+    match nth_angle(text, 2):
+        case Some(angle):
+            ok = ok and angle == 180.5
+        case None:
+            ok = False
+    return ok
+
+
+public func test_returned_bytes_trims_are_new_values() -> bool:
+    return stripped(b" \t ab c \n") == b"ab c" and left(b"  ab ") == b"ab " and right(b"  ab \r\n") == b"  ab" and stripped(b"   ") == b""
+
+
+public func test_trims_with_a_character_set_are_new_values() -> bool:
+    return trimmed_set("xx a x ") == "a" and trimmed_bytes_set(b" xbx ") == b"b" and trimmed_set("") == ""
+
+
+public func test_stored_trims_are_new_values() -> bool:
+    const got = rows([b" k1 ", b"k2\t"], ["n!", "m"])
+    const all = stripped_all([b" a ", b"\tb", b"c\n"])
+    return len(got) == 4 and got[0].key == b"k1" and got[0].note == "n" and got[3].key == b"k2" and got[3].note == "m" and len(all) == 3 and all[2] == b"c"
+
+
+public func test_lines_of_a_borrowed_text() -> bool:
+    const got = lines_of("one\ntwo\r\nthree\rfour\n")
+    return len(got) == 4 and got[0] == "one" and got[1] == "two" and got[2] == "three" and got[3] == "four" and len(lines_of("")) == 0 and len(lines_of("\n\n")) == 2
+
+
+public func test_zfill_of_a_borrowed_text() -> bool:
+    return padded("42", 5) == "00042" and padded("-7", 4) == "-007" and padded("+7", 3) == "+07" and padded("abc", 2) == "abc" and padded("é", 3) == "00é"
+
+
+# A trim that a slice and a split only read costs no copy: from 100 to 200 calls it grows by what the same split of a
+# slice of the line grows by (the split's list and pieces), with no block a call for the trim.
+public func test_a_sliced_trim_that_is_only_read_is_not_copied() -> bool:
+    const trimmed = testing.allocations(sliced_angles, 200) - testing.allocations(sliced_angles, 100)
+    const plain = testing.allocations(sliced_line, 200) - testing.allocations(sliced_line, 100)
+    return sliced_angles(3) == 9 and sliced_line(3) == 9 and trimmed <= plain

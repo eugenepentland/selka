@@ -1,0 +1,171 @@
+import filesystem
+import json
+import shadow_summary
+import shadow_summary_fixtures
+import streams
+import strings
+
+# The Selka shadow_summary must print what scripts/engine_shadow_summary.py prints. Every expected value below was
+# produced by running the Python original (tools/selka/gen_shadow_summary_fixtures.py writes them), so a difference
+# between the two tools is a failing test here before it is a failing driver run (tests/test_selka_tools.py).
+func fixture_text() -> str:
+    return strings.join(shadow_summary_fixtures.log_lines(), "\n") + "\n"
+
+
+func fixture_report(examples: int) -> shadow_summary.Report:
+    const log = shadow_summary.read_lines(fixture_text())
+    return shadow_summary.summarize(log.lines, examples)
+
+
+# A table of (input, expected) pairs laid flat: even positions are inputs, odd positions what Python returned.
+func normalize_matches(cases: str[]) -> bool:
+    mut at = 0
+    while at < len(cases):
+        if shadow_summary.normalize(cases[at]) != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+func rate_matches(cases: str[]) -> bool:
+    mut at = 0
+    while at < len(cases):
+        const part = parse_int(cases[at])
+        const whole = parse_int(cases[at + 1])
+        if part is None or whole is None:
+            return False
+        if shadow_summary.rate(part, whole) != cases[at + 2]:
+            return False
+        at += 3
+    return True
+
+
+func dumps_matches(cases: str[]) -> bool:
+    mut at = 0
+    while at < len(cases):
+        match json.loads(cases[at]):
+            case Ok(document):
+                if shadow_summary.dumps(document) != cases[at + 1]:
+                    return False
+            case Err(_):
+                return False
+        at += 2
+    return True
+
+
+public func test_normalize_buckets_reasons_like_python() -> bool:
+    return normalize_matches(shadow_summary_fixtures.normalize_cases())
+
+
+public func test_rate_formats_percentages_like_python() -> bool:
+    return rate_matches(shadow_summary_fixtures.rate_cases())
+
+
+public func test_dumps_is_python_json_dumps() -> bool:
+    return dumps_matches(shadow_summary_fixtures.dumps_cases())
+
+
+public func test_reading_skips_blank_lines_and_counts_the_unreadable_ones() -> bool:
+    const log = shadow_summary.read_lines(fixture_text())
+    return log.bad == shadow_summary_fixtures.bad_lines() and len(log.lines) == shadow_summary_fixtures.parsed_lines()
+
+
+public func test_the_report_renders_as_python_does_with_three_examples() -> bool:
+    return shadow_summary.render(fixture_report(3)) == shadow_summary_fixtures.expected_text_3()
+
+
+public func test_the_report_renders_as_python_does_with_no_examples() -> bool:
+    return shadow_summary.render(fixture_report(0)) == shadow_summary_fixtures.expected_text_0()
+
+
+public func test_the_report_renders_as_python_does_with_one_example() -> bool:
+    return shadow_summary.render(fixture_report(1)) == shadow_summary_fixtures.expected_text_1()
+
+
+public func test_the_json_report_is_pythons_json_dumps_with_three_examples() -> bool:
+    return shadow_summary.render_json(fixture_report(3)) == shadow_summary_fixtures.expected_json_3()
+
+
+public func test_the_json_report_is_pythons_json_dumps_with_no_examples() -> bool:
+    return shadow_summary.render_json(fixture_report(0)) == shadow_summary_fixtures.expected_json_0()
+
+
+public func test_the_json_report_is_pythons_json_dumps_with_one_example() -> bool:
+    return shadow_summary.render_json(fixture_report(1)) == shadow_summary_fixtures.expected_json_1()
+
+
+public func test_an_empty_log_reports_nothing() -> bool:
+    mut none: json.Json[] = []
+    const report = shadow_summary.summarize(none, 3)
+    if shadow_summary.render(report) != shadow_summary_fixtures.expected_empty_text():
+        return False
+    return shadow_summary.render_json(report) == shadow_summary_fixtures.expected_empty_json()
+
+
+public func test_a_differing_verdict_a_plan_or_a_verify_line_fails_the_log() -> bool:
+    if shadow_summary.failing(fixture_report(3)) != shadow_summary_fixtures.expected_failing():
+        return False
+    mut none: json.Json[] = []
+    return not shadow_summary.failing(shadow_summary.summarize(none, 3))
+
+
+public func test_the_self_test_passes() -> bool:
+    return shadow_summary.self_test() == "engine_shadow_summary self-test passed"
+
+
+func run_with(argv: str[], log: str) -> int:
+    mut fs = filesystem.memory()
+    match fs.write_text("log.jsonl", log):
+        case Ok(_):
+            pass
+        case Err(_):
+            return 99
+    const out = streams.memory()
+    const err = streams.memory()
+    return shadow_summary.run(argv, fs, out, err)
+
+
+public func test_run_reads_a_file_and_exits_with_the_verdict() -> bool:
+    if run_with(["log.jsonl"], fixture_text()) != 1:
+        return False
+    return run_with(["log.jsonl", "--json", "--examples", "1"], "") == 0
+
+
+public func test_run_refuses_a_missing_file_and_bad_arguments_with_status_two() -> bool:
+    if run_with(["absent.jsonl"], "") != 2:
+        return False
+    if run_with([], "") != 2:
+        return False
+    if run_with(["log.jsonl", "--examples", "many"], "") != 2:
+        return False
+    if run_with(["log.jsonl", "--nope"], "") != 2:
+        return False
+    return run_with(["--help"], "") == 2
+
+
+public func test_run_prints_the_report_to_the_output_stream() -> bool:
+    mut fs = filesystem.memory()
+    match fs.write_text("log.jsonl", fixture_text()):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    const out = streams.memory()
+    const err = streams.memory()
+    const status = shadow_summary.run(["log.jsonl"], fs, out, err)
+    const expected = shadow_summary_fixtures.expected_text_3() + "\n(1 unreadable lines skipped)\n"
+    return status == 1 and streams.text(out) == expected and streams.text(err) == ""
+
+
+public func test_file_errors_read_like_pythons_oserror() -> bool:
+    if shadow_summary.os_error_text("absent.jsonl", "read 'absent.jsonl': the path does not exist") != "[Errno 2] No such file or directory: 'absent.jsonl'":
+        return False
+    if shadow_summary.os_error_text("/tmp", "read '/tmp': is a directory") != "[Errno 21] Is a directory: '/tmp'":
+        return False
+    if shadow_summary.os_error_text("/root/x", "read '/root/x': permission denied") != "[Errno 13] Permission denied: '/root/x'":
+        return False
+    if shadow_summary.os_error_text("it's", "read: the path does not exist") != "[Errno 2] No such file or directory: \"it's\"":
+        return False
+    if shadow_summary.os_error_text("a\\b\n'\"", "read: is a directory") != "[Errno 21] Is a directory: 'a\\\\b\\n\\'\"'":
+        return False
+    return shadow_summary.os_error_text("x", "an unknown failure") == "an unknown failure"

@@ -1,0 +1,235 @@
+# `try` in a call's arguments (TRYARG, docs/results-and-options.md, "`try` in a call's arguments"): the arguments run left
+# to right, a failing `try` leaves the function before the later arguments and the call, and what the earlier arguments
+# made is destroyed once (the suite runs with the leak check on). The refusals (an operand, a `@linear` owner given away
+# before the `try`, an armed `on fail:` clause, a contract) are in src/advice_messages_test.zig.
+import filesystem
+
+record Row:
+    size: int
+    name: str
+
+
+@linear
+record Token:
+    id: int
+
+
+# The failure text, or "ok".
+func verdict(result: Result[int, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func value_of(result: Result[int, str]) -> int:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return -1
+
+
+func note(mut log: int[], n: int) -> int:
+    append(mut log, n)
+    return n
+
+
+func check(mut log: int[], n: int) -> int fails str:
+    append(mut log, 100 + n)
+    if n > 5:
+        fail "too big"
+    return n
+
+
+func plain(n: int) -> int fails str:
+    if n > 5:
+        fail "too big"
+    return n
+
+
+func three(a: int, b: int, c: int) -> int:
+    return a + b + c
+
+
+func ordered(n: int, mut log: int[]) -> int fails str:
+    return three(note(mut log, 1), try check(mut log, n), note(mut log, 3))
+
+
+public func test_arguments_run_left_to_right_and_a_failing_try_stops_the_rest() -> bool:
+    mut passed: int[] = []
+    mut failed: int[] = []
+    const good = value_of(ordered(2, mut passed))
+    const bad = verdict(ordered(9, mut failed))
+    return good == 6 and passed == [1, 102, 3] and bad == "too big" and failed == [1, 109]
+
+
+func made(n: int) -> int[]:
+    mut xs: int[] = []
+    for i in range(n):
+        append(mut xs, i)
+    return xs
+
+
+func label(n: int) -> str fails str:
+    if n > 5:
+        fail "too big"
+    return f"label {n}"
+
+
+func measure(own xs: int[], text: str) -> int:
+    return len(xs) + len(text)
+
+
+func after_a_list(n: int) -> int fails str:
+    return measure(made(n), try label(n))
+
+
+public func test_a_list_an_earlier_argument_made_is_destroyed_when_the_try_fails() -> bool:
+    return value_of(after_a_list(3)) == 10 and verdict(after_a_list(8)) == "too big"
+
+
+func keep(own xs: int[], n: int) -> int:
+    return len(xs) + n
+
+
+func after_own(n: int) -> int fails str:
+    mut xs = made(4)
+    return keep(own xs, try plain(n))
+
+
+public func test_a_name_passed_own_before_the_try_is_destroyed_once_when_it_fails() -> bool:
+    return value_of(after_own(1)) == 5 and verdict(after_own(7)) == "too big"
+
+
+func grow(mut xs: int[], n: int) -> int:
+    append(mut xs, n)
+    return len(xs)
+
+
+func after_mut(n: int, mut xs: int[]) -> int fails str:
+    return grow(mut xs, try plain(n))
+
+
+public func test_a_mut_argument_before_a_failing_try_is_not_written() -> bool:
+    mut xs = [1, 2]
+    const grown = value_of(after_mut(3, mut xs))
+    const failed = verdict(after_mut(8, mut xs))
+    return grown == 3 and failed == "too big" and xs == [1, 2, 3]
+
+
+func open_token(n: int) -> Token fails str:
+    if n > 5:
+        fail "too big"
+    return Token(id=n)
+
+
+func close(own token: Token, mut log: int[]):
+    append(mut log, own token.id)
+
+
+func closes(n: int, mut log: int[]) -> int fails str:
+    close(try open_token(n), mut log)
+    return len(log)
+
+
+func disarmed(n: int, mut log: int[]) -> int fails str:
+    const token = Token(id=n)
+    on fail: close(own token, mut log)
+    const first = try plain(n)
+    close(own token, mut log)
+    return three(first, try plain(first + 1), 0)
+
+
+public func test_a_linear_value_from_a_try_is_consumed_by_the_call_and_a_disarmed_clause_allows_one() -> bool:
+    mut log: int[] = []
+    const one = value_of(closes(4, mut log))
+    const none = verdict(closes(9, mut log))
+    mut clauses: int[] = []
+    const fine = value_of(disarmed(2, mut clauses))
+    const late = verdict(disarmed(5, mut clauses))
+    const early = verdict(disarmed(8, mut clauses))
+    return one == 1 and none == "too big" and log == [4] and fine == 5 and late == "too big" and early == "too big" and clauses == [2, 5, 8]
+
+
+func inner(n: int) -> int:
+    return n * 10
+
+
+func outer(n: int) -> int:
+    return n + 1
+
+
+func deep(n: int) -> int fails str:
+    return outer(inner(abs(try plain(n))))
+
+
+public func test_a_try_three_calls_deep_leaves_from_the_innermost() -> bool:
+    return value_of(deep(2)) == 21 and verdict(deep(6)) == "too big"
+
+
+func keyed(name: str, named size: int) -> int:
+    return size * 100 + len(name)
+
+
+func by_keyword(n: int, mut log: int[]) -> int fails str:
+    const sum = keyed(size=try check(mut log, n), name=f"{note(mut log, 7)}")
+    const row = Row(name=f"{note(mut log, 8)}", size=try check(mut log, n))
+    return sum + row.size
+
+
+public func test_keyword_arguments_and_a_constructor_run_in_the_order_written() -> bool:
+    mut passed: int[] = []
+    mut failed: int[] = []
+    const good = value_of(by_keyword(2, mut passed))
+    const bad = verdict(by_keyword(9, mut failed))
+    return good == 203 and passed == [102, 7, 8, 102] and bad == "too big" and failed == [109]
+
+
+func encode(n: int) -> bytes fails str:
+    if n > 5:
+        fail "too big"
+    return bytes([48 + n])
+
+
+func save(fs: Filesystem, n: int) -> int fails str:
+    with try fs.open("out.txt", "wb") as f:
+        _ = f.write(try encode(n))
+    return 0
+
+
+public func test_a_try_in_the_argument_of_a_call_on_a_file() -> bool:
+    mut fs = filesystem.memory()
+    const saved = value_of(save(fs, 3))
+    const written = fs.read_file("out.txt") == Ok(b"3")
+    const refused = verdict(save(fs, 7))
+    return saved == 0 and written and refused == "too big"
+
+
+func builtins(n: int, fallback: int?) -> int fails str:
+    const size = len(try label(n))
+    return size + fallback.unwrap_or(try plain(n))
+
+
+# The `try` runs on every test of the `while`, so the loop ends when `plain` reaches 5 or leaves when it fails.
+func steps_from(n: int) -> int fails str:
+    mut steps = 0
+    while abs(try plain(n + steps)) < 5:
+        steps += 1
+    return steps
+
+
+# The `try` of an `elif` runs only when that condition is tested: `plain(200)` would fail, and is never called.
+func branch(n: int) -> int fails str:
+    if n > 100:
+        return -1
+    elif abs(try plain(n)) > 0:
+        return 1
+    return 0
+
+
+public func test_a_builtin_an_option_method_and_while_and_elif_conditions() -> bool:
+    const sizes = value_of(builtins(2, None)) == 9 and value_of(builtins(2, Some(1))) == 8 and verdict(builtins(6, None)) == "too big"
+    const loops = value_of(steps_from(2)) == 3 and verdict(steps_from(9)) == "too big"
+    return sizes and loops and value_of(branch(200)) == -1 and value_of(branch(3)) == 1 and verdict(branch(7)) == "too big"

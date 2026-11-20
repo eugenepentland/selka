@@ -1,0 +1,20 @@
+# The long-qualification fixture: two ordinary functions give `check --report`
+# fresh bodies to count, and two tests give the forced test driver its work.
+func triangle(limit: int) -> int:
+    mut total = 0
+    for item in range(limit):
+        total = total + item
+    return total
+
+
+public func test_sum() -> bool:
+    return triangle(100) == 4950
+
+
+public func test_values() -> bool:
+    const values = [1, 2, 3, 4]
+    return values[2] == 3 and len(values) == 4
+
+
+func main() -> int:
+    return 0

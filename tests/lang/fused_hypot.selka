@@ -1,0 +1,38 @@
+# The fused multiply-add rounds once, and `hypot` answers the bits Zig's std.math.hypot does
+# (reference values printed by the pinned Zig toolchain, Debug and ReleaseFast alike).
+import math
+
+public func test_fma_rounds_the_product_and_sum_once() -> bool:
+    const eps = 1.0 / 1073741824.0
+    const x = 1.0 + eps
+    const c = -(1.0 + 2.0 * eps)
+    return math.fma(x, x, c) == eps * eps and x * x + c == 0.0
+
+
+public func test_f32_fma_rounds_once_to_binary32() -> bool:
+    const eps: f32 = 1.0f32 / 4096.0f32
+    const x = 1.0f32 + eps
+    const c = -(1.0f32 + 2.0f32 * eps)
+    return math.f32_fma(x, x, c) == eps * eps and x * x + c == 0.0f32
+
+
+public func test_fma_is_the_identity_on_exact_products() -> bool:
+    return math.fma(2.0, 3.0, 4.0) == 10.0 and math.fma(0.5, 0.5, -0.25) == 0.0
+
+
+public func test_hypot_matches_zig_on_ordinary_inputs() -> bool:
+    return math.bits(math.hypot(3.0, 4.0)) == 4617315517961601024u64 and math.bits(math.hypot(0.2, -0.34)) == 4600777609430229394u64 and math.bits(math.hypot(-3.0, 4.0)) == 4617315517961601024u64
+
+
+public func test_hypot_matches_zig_on_large_and_small_inputs() -> bool:
+    return math.bits(math.hypot(1.0e300, 1.0e300)) == 9097522851029299729u64 and math.bits(math.hypot(1.0e-310, 3.0e-310)) == 64005212400145u64
+
+
+public func test_hypot_special_values_follow_zig() -> bool:
+    const nan = 0.0 / 0.0
+    const inf = 1.0 / 0.0
+    return math.hypot(0.0, -1.2) == 1.2 and math.hypot(inf, nan) == inf and math.is_nan(math.hypot(nan, 1.0))
+
+
+public func test_f32_hypot_matches_zig() -> bool:
+    return math.f32_bits(math.f32_hypot(0.8923f32, 2.636890f32)) == 1077029203u32 and math.f32_bits(math.f32_hypot(1.0e30f32, 1.0e30f32)) == 1905183888u32

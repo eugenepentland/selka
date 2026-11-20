@@ -1,0 +1,219 @@
+# Directory listings on the in-memory Filesystem a test receives, past the sizes a fixed snapshot once capped (256
+# entries): `listdir`, the bounded `list_directory` and a loop over the names answer a directory of any size whole, and a
+# `list_directory` bound the directory outgrows is refused in words that name the bound, never the grants. The listing
+# is sorted by name. The real-directory counterpart is src/io_listing_test.zig.
+import filesystem
+import strings
+
+# The name of the index-th entry: "f" and five digits, so name order is index order.
+func name_of(index: int) -> str:
+    match strings.pad_left(str(index), 5, "0"):
+        case Ok(digits):
+            return "f" + digits
+        case Err(_):
+            return "?"
+
+
+# A fresh memory filesystem whose directory "d" holds `count` empty files.
+func filled(count: int) -> Filesystem:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    for index in range(count):
+        _ = fs.write_text("d/" + name_of(index), "")
+    return fs
+
+
+# The listing of "d" as `listdir` answers it, or the empty list when it fails.
+func listing(fs: Filesystem) -> str[]:
+    match fs.listdir("d"):
+        case Ok(names):
+            return copy(names)
+        case Err(_):
+            return []
+
+
+# The failure text of a listing, or "ok".
+func refusal(result: Result[str[], str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+# True when `count` entries list whole, in order, by each of the spellings.
+func lists_whole(count: int) -> bool:
+    const fs = filled(count)
+    const names = listing(fs)
+    if len(names) != count or names[0] != name_of(0) or names[count - 1] != name_of(count - 1):
+        return False
+    for index in range(count):
+        if names[index] != name_of(index):
+            return False
+    mut seen = 0
+    for name in names:
+        if strings.starts_with(name, "f"):
+            seen += 1
+    match fs.list_directory("d", count):
+        case Ok(bounded):
+            return seen == count and bounded == names
+        case Err(_):
+            return False
+
+
+public func test_a_directory_of_257_entries_lists_whole() -> bool:
+    return lists_whole(257)
+
+
+public func test_a_directory_of_1000_entries_lists_whole() -> bool:
+    return lists_whole(1000)
+
+
+public func test_a_directory_of_5000_entries_lists_whole() -> bool:
+    return lists_whole(5000)
+
+
+public func test_list_directory_takes_a_bound_past_4096() -> bool:
+    const fs = filled(300)
+    match fs.list_directory("d", 1000000):
+        case Ok(names):
+            return len(names) == 300
+        case Err(_):
+            return False
+
+
+public func test_a_bound_the_directory_outgrows_names_itself() -> bool:
+    const fs = filled(5000)
+    const message = refusal(fs.list_directory("d", 4999))
+    if message != "directory listing 'd': has more than 4999 entries (the max_entries bound)":
+        return False
+    return refusal(fs.list_directory("d", 4999)) == message and refusal(fs.list_directory("d", 5000)) == "ok"
+
+
+public func test_a_negative_bound_names_itself() -> bool:
+    const fs = filled(3)
+    return refusal(fs.list_directory("d", -1)) == "directory listing 'd': max_entries must not be negative"
+
+
+public func test_a_bound_of_zero_lists_an_empty_directory_and_refuses_a_full_one() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("empty")
+    _ = fs.mkdir("one")
+    _ = fs.write_text("one/x", "")
+    if refusal(fs.list_directory("empty", 0)) != "ok":
+        return False
+    return refusal(fs.list_directory("one", 0)) == "directory listing 'one': has more than 0 entries (the max_entries bound)"
+
+
+# True when `entries` holds `count` regular files named in index order.
+func regular_in_order(entries: filesystem.Entry[], count: int) -> bool:
+    if len(entries) != count:
+        return False
+    for index in range(count):
+        if entries[index].name != name_of(index) or entries[index].kind != filesystem.PathKind.Regular:
+            return False
+    return True
+
+
+# The entries of "d" through `list_entries`, or the empty list when it fails.
+func entries_of(fs: Filesystem) -> filesystem.Entry[]:
+    match filesystem.list_entries(fs, "d"):
+        case Ok(entries):
+            return entries
+        case Err(_):
+            return []
+
+
+public func test_list_entries_carries_each_kind_sorted_by_name() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("d/sub")
+    _ = fs.write_text("d/b.txt", "y")
+    _ = fs.write_text("d/a.txt", "x")
+    const entries = entries_of(fs)
+    if len(entries) != 3:
+        return False
+    return entries[0].name == "a.txt" and entries[0].kind == filesystem.PathKind.Regular and entries[1].name == "b.txt" and entries[1].kind == filesystem.PathKind.Regular and entries[2].name == "sub" and entries[2].kind == filesystem.PathKind.Directory
+
+
+public func test_list_entries_of_an_empty_directory_is_empty() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    match filesystem.list_entries(fs, "d"):
+        case Ok(entries):
+            return len(entries) == 0
+        case Err(_):
+            return False
+
+
+public func test_list_entries_of_the_root_and_a_narrowed_root() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("top", "t")
+    _ = fs.write_text("d/inner", "i")
+    match filesystem.list_entries(fs, ""):
+        case Ok(entries):
+            if len(entries) != 2 or entries[0].name != "d" or entries[0].kind != filesystem.PathKind.Directory or entries[1].name != "top":
+                return False
+        case Err(_):
+            return False
+    const narrow = fs.dir("d")
+    match filesystem.list_entries(narrow, ""):
+        case Ok(entries):
+            return len(entries) == 1 and entries[0].name == "inner" and entries[0].kind == filesystem.PathKind.Regular
+        case Err(_):
+            return False
+
+
+public func test_list_entries_lists_257_entries_whole() -> bool:
+    return regular_in_order(entries_of(filled(257)), 257)
+
+
+public func test_list_entries_lists_1000_entries_whole() -> bool:
+    return regular_in_order(entries_of(filled(1000)), 1000)
+
+
+public func test_list_entries_lists_5000_entries_whole() -> bool:
+    return regular_in_order(entries_of(filled(5000)), 5000)
+
+
+public func test_list_entries_agrees_with_stat_for_every_entry() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("d/sub")
+    _ = fs.write_text("d/file", "x")
+    for entry in entries_of(fs):
+        match filesystem.stat(fs, "d/" + entry.name):
+            case Ok(info):
+                if info.kind != entry.kind:
+                    return False
+            case Err(_):
+                return False
+    return True
+
+
+public func test_list_entries_refuses_a_file_and_a_missing_directory_in_words() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("file", "x")
+    match filesystem.list_entries(fs, "file"):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "directory listing 'file': is not a directory":
+                return False
+    match filesystem.list_entries(fs, "nothing"):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "directory listing 'nothing': the path does not exist"
+
+
+public func test_list_entries_needs_read_authority_only() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/x", "x")
+    match filesystem.list_entries(fs.read_only(), "d"):
+        case Ok(entries):
+            return len(entries) == 1 and entries[0].name == "x"
+        case Err(_):
+            return False

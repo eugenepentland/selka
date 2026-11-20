@@ -1,0 +1,232 @@
+# `on fail:` around `@linear` wrappers of C handles (D-FFI-15) against c_interop.c: each shape runs with its failure forced
+# at every step in turn (`ffi_fail_after`), and C counts the objects still live after each run, which must be 0 on the
+# success path and on every failure path.
+extern type Thing
+
+
+extern func ffi_thing_new(host: Host, value: i64) -> Thing
+
+
+extern func ffi_thing_free(host: Host, thing: Thing) -> Unit
+
+
+extern func ffi_live_things(host: Host) -> i64
+
+
+extern func ffi_fail_after(host: Host, n: i64) -> Unit
+
+
+extern func ffi_step(host: Host) -> i32
+
+
+@linear
+record Owned:
+    thing: Thing
+
+
+record Holder:
+    owned: Owned
+    count: int
+
+
+func open(host: Host) -> Owned:
+    return Owned(thing=ffi_thing_new(host, 1))
+
+
+func release(host: Host, own owned: Owned):
+    const thing = own owned.thing
+    ffi_thing_free(host, thing)
+
+
+func step(host: Host) -> Unit fails str:
+    if int(ffi_step(host)) != 0:
+        fail "step"
+
+
+func checked_release(host: Host, own owned: Owned) -> Unit fails str:
+    release(host, own owned)
+    try step(host)
+
+
+func sequence(host: Host) -> int fails str:
+    const a = open(host)
+    on fail: release(host, own a)
+    try step(host)
+    const b = open(host)
+    on fail: release(host, own b)
+    try step(host)
+    release(host, own b)
+    try step(host)
+    release(host, own a)
+    try step(host)
+    return 0
+
+
+func looped(host: Host) -> int fails str:
+    for i in range(3):
+        const owned = open(host)
+        on fail: release(host, own owned)
+        try step(host)
+        _ = try step(host)
+        release(host, own owned)
+    return 0
+
+
+func nested(host: Host, choice: int) -> int fails str:
+    const owned = open(host)
+    on fail: release(host, own owned)
+    match choice:
+        case 0:
+            try step(host)
+        case _:
+            if choice > 1:
+                try step(host)
+            try step(host)
+    try step(host)
+    release(host, own owned)
+    return choice
+
+
+func inner(host: Host) -> int fails str:
+    const owned = open(host)
+    on fail: release(host, own owned)
+    try step(host)
+    release(host, own owned)
+    return 1
+
+
+func calling(host: Host) -> int fails str:
+    const owned = open(host)
+    on fail: release(host, own owned)
+    const value = try inner(host)
+    try step(host)
+    release(host, own owned)
+    return value
+
+
+func closing(host: Host) -> int fails str:
+    const owned = open(host)
+    on fail: release(host, own owned)
+    try step(host)
+    try checked_release(host, own owned)
+    try step(host)
+    return 0
+
+
+func pair(host: Host) -> int fails str:
+    const a = open(host)
+    const b = open(host)
+    on fail:
+        release(host, own b)
+        release(host, own a)
+    try step(host)
+    try step(host)
+    release(host, own b)
+    release(host, own a)
+    return 0
+
+
+func direct(host: Host) -> int fails str:
+    const owned = open(host)
+    on fail: release(host, own owned)
+    if int(ffi_step(host)) != 0:
+        fail "direct"
+    _ = step(host) else Err(message):
+        fail message
+    release(host, own owned)
+    return 0
+
+
+func held(host: Host) -> int fails str:
+    const holder = Holder(owned=open(host), count=2)
+    on fail: release(host, own holder.owned)
+    try step(host)
+    release(host, own holder.owned)
+    return 0
+
+
+func lent_step(host: Host, mut owned: Owned) -> int fails str:
+    try step(host)
+    return int(ffi_live_things(host))
+
+
+func lending(host: Host) -> int fails str:
+    mut owned = open(host)
+    on fail: release(host, own owned)
+    const live = try lent_step(host, mut owned)
+    try step(host)
+    release(host, own owned)
+    return live
+
+
+func branches(host: Host, flag: bool) -> int fails str:
+    const owned = open(host)
+    on fail: release(host, own owned)
+    try step(host)
+    if flag:
+        release(host, own owned)
+    else:
+        try step(host)
+        release(host, own owned)
+    try step(host)
+    return 0
+
+
+# Run `shape` with its failure forced at call 0, 1, ... 7 and once never: how many runs failed, and the objects left live
+# after all of them (0).
+func run(host: Host, shape: int) -> int fails str:
+    mut failures = 0
+    mut live: i64 = 0
+    for n in range(-1, 8):
+        ffi_fail_after(host, i64(n))
+        const result = one(host, shape)
+        live += ffi_live_things(host)
+        match result:
+            case Ok(_):
+                pass
+            case Err(_):
+                failures += 1
+    ffi_fail_after(host, i64(-1))
+    if live != 0:
+        fail f"shape {shape}: {live} objects left live"
+    return failures
+
+
+func one(host: Host, shape: int) -> int fails str:
+    match shape:
+        case 0:
+            return try sequence(host)
+        case 1:
+            return try looped(host)
+        case 2:
+            return try nested(host, 0)
+        case 3:
+            return try nested(host, 2)
+        case 4:
+            return try calling(host)
+        case 5:
+            return try closing(host)
+        case 6:
+            return try pair(host)
+        case 7:
+            return try direct(host)
+        case 8:
+            return try held(host)
+        case 9:
+            return try lending(host)
+        case 10:
+            return try branches(host, True)
+        case _:
+            return try branches(host, False)
+
+
+func main(host: Host, out: Stream) -> int:
+    for shape in range(12):
+        match run(host, shape):
+            case Ok(failures):
+                print(out, shape, failures)
+            case Err(message):
+                print(out, message)
+                return 1
+    print(out, "live", ffi_live_things(host))
+    return 0

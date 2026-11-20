@@ -1,0 +1,98 @@
+# A `mut` local stored from a slice of a place borrows the place, as a store of the place does (D4), whether it is stored once
+# or rebound (lane OC's H4, plan Part B stage O3). Text, bytes and lists alike: no `copy(...)` is written and nothing is
+# copied while the local is only read; a list slice is a view of its elements. A write through it, a store of it or a change
+# of its owner while it is live keeps the slice's refusal and its `copy(...)` (src/core/borrowed_once_mut_test.zig).
+record Shelf:
+    name: str
+    raw: bytes
+    counts: int[]
+
+
+func make_shelf(n: int) -> Shelf:
+    return Shelf(name=f"shelf{n}", raw=b"abcd", counts=[n, n + 1, n + 2])
+
+
+func text_rebound(p: str, shelf: Shelf, n: int) -> int:
+    mut c = p[0:2]
+    if n > 3:
+        c = shelf.name
+    return len(c)
+
+
+func bytes_rebound(p: bytes, q: bytes, n: int) -> int:
+    mut c = p[0:2]
+    if n > 3:
+        c = q[1:]
+    return len(c)
+
+
+func list_rebound(p: int[], q: int[], n: int) -> int:
+    mut c = p[0:2]
+    if n > 3:
+        c = q[1:]
+    return len(c) * 100 + c[0]
+
+
+func stored_once(shelf: Shelf) -> int:
+    mut name = shelf.name[1:]
+    mut raw = shelf.raw[2:]
+    mut counts = shelf.counts[1:]
+    return len(name) * 100 + len(raw) * 10 + counts[0]
+
+
+func count_tail(p: str) -> int:
+    mut c = p[0:]
+    mut steps = 0
+    while len(c) > 0:
+        c = c[1:]
+        steps = steps + 1
+    return steps
+
+
+func sum_tail(xs: int[]) -> int:
+    mut c = xs[0:]
+    mut total = 0
+    while len(c) > 0:
+        total = total + c[0]
+        c = c[1:]
+    return total
+
+
+func lent(shelf: Shelf, n: int) -> int[] from shelf:
+    mut c = shelf.counts[1:]
+    if n > 3:
+        c = shelf.counts
+    return c
+
+
+func after_the_borrow(n: int) -> int:
+    mut text = f"abc{n}"
+    mut c = text[0:2]
+    if n > 3:
+        c = text[1:]
+    const seen = len(c)
+    # The borrow ended at its last use: the owner may change.
+    text = "x"
+    return seen * 10 + len(text)
+
+
+public func test_a_rebound_slice_local_borrows_text_bytes_and_lists() -> bool:
+    const shelf = make_shelf(1)
+    return text_rebound("abc", shelf, 1) == 2 and text_rebound("abc", shelf, 7) == 6 and bytes_rebound(b"abcd", b"xyz", 1) == 2 and bytes_rebound(b"abcd", b"xyz", 7) == 2 and list_rebound([1, 2, 3], [4, 5, 6], 1) == 201 and list_rebound([1, 2, 3], [4, 5, 6], 7) == 205
+
+
+public func test_a_slice_local_stored_once_borrows_its_place() -> bool:
+    return stored_once(make_shelf(3)) == 524
+
+
+public func test_a_slice_local_rebound_to_its_own_tail_in_a_loop() -> bool:
+    return count_tail("abcde") == 5 and count_tail("") == 0 and sum_tail([1, 2, 3, 4]) == 10
+
+
+public func test_a_slice_local_returns_under_from() -> bool:
+    const shelf = make_shelf(2)
+    return len(lent(shelf, 1)) == 2 and len(lent(shelf, 7)) == 3 and lent(shelf, 1)[0] == 3
+
+
+public func test_the_owner_changes_after_the_slice_locals_last_use() -> bool:
+    return after_the_borrow(1) == 21 and after_the_borrow(9) == 31

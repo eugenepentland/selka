@@ -1,0 +1,56 @@
+# Preserve former negative positions at each access, including after receiver resizing.
+func former_position(length: int, index: int) -> int:
+    if index < 0:
+        return length + index
+    return index
+
+
+record Runtime:
+    data: int[]
+    top: int
+
+
+record Interpreter:
+    rt: Runtime
+    tag: int
+
+
+func update(mut rt: Runtime, index: int, value: int):
+    rt.data[former_position(len(rt.data), index)] = value
+    rt.top += 1
+
+
+func carrier(mut it: Interpreter, index: int, value: int):
+    mut rt = copy(it.rt)
+    update(mut rt, index, value)
+    it.rt = own rt
+
+
+func replace(mut rt: Runtime, value: int):
+    if value < 0:
+        return
+    rt = Runtime(data=[value], top=2)
+
+
+func replacement(mut it: Interpreter, value: int):
+    mut rt = copy(it.rt)
+    replace(mut rt, value)
+    it.rt = own rt
+
+
+public func test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding() -> bool:
+    mut it = Interpreter(rt=Runtime(data=[1, 2], top=0), tag=9)
+    mut saved = copy(it)
+    mut alias = copy(it.rt.data)
+    carrier(mut it, -1, 7)
+    assert it.rt.data == [1, 7] and it.rt.top == 1
+    assert saved.rt.data == [1, 2] and saved.rt.top == 0
+    replacement(mut it, -1)
+    assert it.rt.data == [1, 7]
+    replacement(mut it, 11)
+    return it.rt.data == [11] and it.rt.top == 2 and alias == [1, 2]
+
+
+func main() -> int:
+    assert test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding()
+    return 0

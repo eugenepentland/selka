@@ -1,0 +1,16 @@
+# A scalar slice of text is a view (wave 2, lane C-c): an owned binding, a return and a
+# collection element refuse a stored `strings.char_slice` until `copy(...)` writes it.
+# `selka fix` writes each copy, and the repaired program prints the same 7.
+import strings
+
+
+func head(text: str, n: int) -> str:
+    return strings.char_slice(text, 0, n)
+
+
+func main(out: Stream) -> int:
+    mut kept = strings.char_slice("abcdef", 1, 4)
+    mut parts: str[] = []
+    append(mut parts, strings.char_slice("abcdef", 4, 6))
+    print(out, len(kept) + len(head("abcdef", 2)) + len(parts[0]))
+    return 0

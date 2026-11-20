@@ -1,0 +1,159 @@
+# Formatted output for byte builders, with Zig's number text. `shortest` is Zig's `{d}` of a float, `decimal` is Zig's `{d:.N}`,
+# and `format` (with `format1`, `format2` and `format3` for one to three texts) writes a template whose `{d}`, `{d:.N}` and `{s}`
+# placeholders take numbers and borrowed texts, so one call replaces the run of literal and number appends that a Zig
+# `w.print(...)` becomes. Every function appends to a `byte_builder.Builder` and allocates nothing for the pieces it writes
+# beyond the digits of a number.
+import byte_builder
+import strings
+
+# Append what Zig's `{d:.N}` prints for `value`: exactly `decimals` digits after the point, taken from the shortest digits
+# that round-trip (the ones `str(value)` shows) and rounded half up at the last place, so `6.475` at two decimals is `6.48`
+# where `strings.format_float`, which rounds the exact binary value, answers `6.47`. A result that rounds to zero keeps its
+# sign (`-0.00`), and `nan`, `inf` and `-inf` print as words. `decimals` outside `0` to `17` is rejected with `False` and
+# leaves the builder unchanged. The digits are spelled by `strings.format_decimal`; the result is appended to the buffer.
+public func decimal(mut builder: byte_builder.Builder, value: float, decimals: int) -> bool:
+    match strings.format_decimal(value, decimals):
+        case Ok(rendered):
+            byte_builder.append_text(mut builder, rendered)
+            return True
+        case Err(_):
+            return False
+
+
+# Append what Zig's `{d}` prints for a float: the shortest digits that round-trip, never in scientific notation, with no
+# `.0` after a whole number, so `100.0` is `100`, `0.1` is `0.1` and `-0.0` is `-0`. `byte_builder.append_float` is `str(value)` instead,
+# which keeps the `.0` (`100.0`).
+public func shortest(mut builder: byte_builder.Builder, value: float):
+    const rendered = str(value)
+    if strings.ends_with(rendered, ".0"):
+        byte_builder.append_text(mut builder, rendered[:len(rendered) - 2])
+    else:
+        byte_builder.append_text(mut builder, rendered)
+
+
+# The octets of the template the formatting functions below read.
+const open_brace: int = 123
+
+
+const close_brace: int = 125
+
+
+const letter_d: int = 100
+
+
+const letter_s: int = 115
+
+
+const colon: int = 58
+
+
+const point: int = 46
+
+
+# Stop the program with the template's mistake: the octet it was found at and what is wrong.
+func template_fault(at: int, reason: str):
+    assert False, f"byte_format.format: {reason}, at octet {at} of the template"
+
+
+# The decimals of a `{d:.N}` placeholder whose spec is `template[start:stop]` after `d:.`, one or two digits, or -1.
+func decimals_of(template: bytes, start: int, stop: int) -> int:
+    const width = stop - start
+    if width < 1 or width > 2:
+        return -1
+    mut value = 0
+    for position in range(start, stop):
+        const digit = int(template[position]) - 48
+        if digit < 0 or digit > 9:
+            return -1
+        value = value * 10 + digit
+    return value
+
+
+# The shared engine of `format` and its text-taking forms: copy the template to the builder, replacing `{d}`, `{d:.N}` and
+# `{s}` with the next number (shortest or fixed), the next text, and `{{` and `}}` with a brace. `given` texts are held by
+# `a`, `b` and `c`. A template that does not fit the arguments is a mistake in the program, not in its input, so it traps
+# `R_ASSERT` naming the octet and the reason, whatever it had written so far.
+func render(mut builder: byte_builder.Builder, template: bytes, numbers: float[], given: int, a: bytes, b: bytes, c: bytes):
+    const size = len(template)
+    mut at = 0
+    mut run = 0
+    mut next_number = 0
+    mut next_text = 0
+    while at < size:
+        const octet = int(template[at])
+        if octet == close_brace:
+            if at + 1 >= size or int(template[at + 1]) != close_brace:
+                template_fault(at, "a lone `}`; write `}}` for a brace")
+            _ = byte_builder.append_range(mut builder, template, run, at + 1)
+            at += 2
+            run = at
+        elif octet == open_brace:
+            _ = byte_builder.append_range(mut builder, template, run, at)
+            if at + 1 < size and int(template[at + 1]) == open_brace:
+                _ = byte_builder.append_byte(mut builder, open_brace)
+                at += 2
+                run = at
+            else:
+                mut close = at + 1
+                while close < size and int(template[close]) != close_brace:
+                    close += 1
+                if close >= size:
+                    template_fault(at, "a `{` with no closing `}`")
+                const spec = close - at - 1
+                if spec == 1 and int(template[at + 1]) == letter_s:
+                    if next_text >= given:
+                        template_fault(at, "more `{s}` than texts")
+                    if next_text == 0:
+                        byte_builder.append(mut builder, a)
+                    elif next_text == 1:
+                        byte_builder.append(mut builder, b)
+                    else:
+                        byte_builder.append(mut builder, c)
+                    next_text += 1
+                elif spec >= 1 and int(template[at + 1]) == letter_d:
+                    if next_number >= len(numbers):
+                        template_fault(at, "more `{d}` than numbers")
+                    if spec == 1:
+                        shortest(mut builder, numbers[next_number])
+                    else:
+                        const places = decimals_of(template, at + 4, close)
+                        if spec < 4 or int(template[at + 2]) != colon or int(template[at + 3]) != point or places < 0 or places > 17:
+                            template_fault(at, "a placeholder is `{d}`, `{d:.N}` with N in 0 to 17, or `{s}`")
+                        _ = decimal(mut builder, numbers[next_number], places)
+                    next_number += 1
+                else:
+                    template_fault(at, "a placeholder is `{d}`, `{d:.N}` with N in 0 to 17, or `{s}`")
+                at = close + 1
+                run = at
+        else:
+            at += 1
+    _ = byte_builder.append_range(mut builder, template, run, size)
+    if next_number != len(numbers):
+        template_fault(size, "more numbers than `{d}` placeholders")
+    if next_text != given:
+        template_fault(size, "more texts than `{s}` placeholders")
+
+
+# Append `template` with its placeholders filled from `numbers`: `{d}` takes the next number as Zig's `{d}` prints it
+# (`shortest`), `{d:.N}` as Zig's `{d:.N}` does (`decimal`, N from 0 to 17), and `{{` and `}}` write a brace.
+# One call replaces the run of literal and number appends a Zig `w.print("<rect x=\"{d:.1}\" y=\"{d:.1}\"/>", .{x, y})` is:
+# `format(mut out, b'<rect x="{d:.1}" y="{d:.1}"/>', [x, y])`. An integer travels as `float(n)` and prints in full up to 2^53.
+# A template that does not fit its numbers (a placeholder that is not one of these, an unclosed brace, too few or too many
+# numbers) is a mistake in the program and traps `R_ASSERT` with the octet and the reason.
+public func format(mut builder: byte_builder.Builder, template: bytes, numbers: float[]):
+    render(mut builder, template, numbers, 0, b"", b"", b"")
+
+
+# `format` with one text: `{s}` writes `a` as it is, no copy of it.
+public func format1(mut builder: byte_builder.Builder, template: bytes, numbers: float[], a: bytes):
+    render(mut builder, template, numbers, 1, a, b"", b"")
+
+
+# `format` with two texts, taken by `{s}` in order.
+public func format2(mut builder: byte_builder.Builder, template: bytes, numbers: float[], a: bytes, b: bytes):
+    render(mut builder, template, numbers, 2, a, b, b"")
+
+
+# `format` with three texts, taken by `{s}` in order.
+public func format3(mut builder: byte_builder.Builder, template: bytes, numbers: float[], a: bytes, b: bytes, c: bytes):
+    render(mut builder, template, numbers, 3, a, b, c)

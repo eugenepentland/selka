@@ -1,0 +1,104 @@
+# A `const` binding of a place the function cannot move is a read-only borrow (borrowed results R1, the performance
+# plan's B7): it reads the owner's storage in place, so it costs no copy, and the owner cannot change while the binding
+# is live. Each accepted shape measures growth from 100 to 200 calls, so a copy per call would show as growth; setup
+# that runs once per call of the measured workload does not count. The refusals are in tests/borrowed_const/refused.
+import testing
+
+record Box:
+    items: int[]
+    tag: int
+
+
+func share(xs: int[]) -> int:
+    const ys = xs
+    return len(ys)
+
+
+func element_length(xs: str[]) -> int:
+    const e = xs[1]
+    return len(e)
+
+
+func field_total(box: Box) -> int:
+    const items = box.items
+    return len(items) + box.tag
+
+
+func dict_value_length(d: dict[str, int[]]) -> int:
+    const v = d["a"]
+    return len(v)
+
+
+func shared_work(n: int) -> int:
+    mut data = [1, 2, 3]
+    mut total = 0
+    for i in range(n):
+        total += share(data)
+    return total
+
+
+func element_work(n: int) -> int:
+    mut names = ["a", "bb", "ccc"]
+    mut total = 0
+    for i in range(n):
+        total += element_length(names)
+    return total
+
+
+func field_work(n: int) -> int:
+    mut box = Box(items=[1, 2, 3], tag=1)
+    mut total = 0
+    for i in range(n):
+        total += field_total(box)
+    return total
+
+
+func dict_work(n: int) -> int:
+    mut d: dict[str, int[]] = {}
+    d["a"] = [1, 2]
+    mut total = 0
+    for i in range(n):
+        total += dict_value_length(d)
+    return total
+
+
+func local_element_work(n: int) -> int:
+    mut grid: int[][] = [[1, 2, 3], [4, 5]]
+    mut total = 0
+    for i in range(n):
+        const row = grid[1]
+        total += len(row)
+    return total
+
+
+func local_field_work(n: int) -> int:
+    mut box = Box(items=[1, 2, 3], tag=1)
+    mut total = 0
+    for i in range(n):
+        const items = box.items
+        total += len(items)
+    return total
+
+
+public func test_a_const_of_a_parameter_reads_it_in_place() -> bool:
+    return share([4, 5]) == 2 and testing.allocations(shared_work, 200) - testing.allocations(shared_work, 100) == 0
+
+
+public func test_a_const_element_of_a_parameter_reads_it_in_place() -> bool:
+    return element_length(["x", "yyy"]) == 3 and testing.allocations(element_work, 200) - testing.allocations(element_work, 100) == 0
+
+
+public func test_a_const_field_of_a_parameter_reads_it_in_place() -> bool:
+    return field_total(Box(items=[1, 2], tag=5)) == 7 and testing.allocations(field_work, 200) - testing.allocations(field_work, 100) == 0
+
+
+public func test_a_const_dictionary_value_of_a_parameter_reads_it_in_place() -> bool:
+    return dict_value_length({"a": [1, 2, 3]}) == 3 and testing.allocations(dict_work, 200) - testing.allocations(dict_work, 100) == 0
+
+
+public func test_a_const_element_of_a_local_list_reads_it_in_place() -> bool:
+    return local_element_work(3) == 6 and testing.allocations(local_element_work, 200) - testing.allocations(local_element_work, 100) == 0
+
+
+public func test_a_const_field_of_a_local_record_reads_it_in_place() -> bool:
+    return local_field_work(3) == 9 and testing.allocations(local_field_work, 200) - testing.allocations(local_field_work, 100) == 0

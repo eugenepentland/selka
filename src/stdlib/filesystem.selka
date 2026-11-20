@@ -1,0 +1,443 @@
+import binary
+import byte_builder
+import lists
+import strings
+
+# An empty in-memory Filesystem, and the one a test's `fs` parameter is. Ordinary whole-path helpers, `open`,
+# `fs.dir(...)`, `read_only()`, `exists` and `listdir` work on it; it starts with no files, its root is the path `.`,
+# it accepts only relative paths, sorts its listings by name, and never touches the real filesystem. It grants no real
+# authority, so building one needs no capability and is not an effect. The durable family (atomic writes, rename,
+# stat, permissions, times, listings, bounded reads and locks) works on it too, deterministically: inodes count up,
+# a new file is 0644 and a new directory 0755, and a logical clock that starts at the test clock's epoch moves one
+# second for each call that changes it, so a test never sleeps. A lock is held until its `File` is released;
+# `lock_file` on a held path fails at once because a stand-in cannot wait.
+public func memory() -> Filesystem:
+    return __stand_in[Filesystem](0)
+
+
+# What a path is, as `stat` reports it. The final component is not followed, so a symbolic link is `Symlink`.
+public enum PathKind:
+    Other
+    Regular
+    Directory
+    Symlink
+
+
+# The metadata of one path: its kind, its size in octets, its modification time in nanoseconds since the Unix epoch,
+# its inode number (a hard link shares it, a replaced file gets a new one), its permission bits (`0o644`, with the
+# set-user-ID, set-group-ID and sticky bits when set; the kind is not among them), its status-change time, in the same
+# nanoseconds, and the device it is on. The status-change time (`changed`, the `ctime` of `stat(2)`) is the last moment
+# anything about the entry changed: a write, a rename, `chmod`, and `set_modified`, which can set `modified` back to any
+# value and cannot hide that it ran. The device (`st_dev`) is the number `stat(2)` returns, which `device_major` and
+# `device_minor` take apart: an inode names a file only together with its device, as `/proc/locks` writes a lock's file
+# (`MAJ:MIN:INODE`). `owner` and `group` are the numeric user and group that own the entry (`st_uid` and `st_gid`, the
+# numbers `ls -n` prints), and `links` is its number of hard links (`st_nlink`): 1 for a file with a single name, and for a
+# directory 2 plus the directories inside it on the usual disk filesystems. A constructor may leave `mode`, `changed`,
+# `device`, `owner`, `group` and `links` out.
+public record Stat:
+    kind: PathKind
+    size: int
+    modified: int
+    inode: u64
+    mode: int = 0
+    changed: int = 0
+    device: u64 = 0
+    owner: int = 0
+    group: int = 0
+    links: int = 0
+
+
+# The device every entry of a `memory()` filesystem is on: major 0, minor 1.
+public const MEMORY_DEVICE: u64 = 1
+
+
+# The user that owns every entry of a `memory()` filesystem: 1000, the first ordinary account of a system, whose permission
+# bits the stand-in honours. A fixed number, so a test reads the same on every machine.
+public const MEMORY_OWNER: int = 1000
+
+
+# The group that owns every entry of a `memory()` filesystem: 1000, as `MEMORY_OWNER` is.
+public const MEMORY_GROUP: int = 1000
+
+
+# The major number of `Stat.device`, as `major(3)` takes it from a `dev_t`: the number `/proc/locks` and
+# `/proc/self/mountinfo` print before the colon (in hexadecimal).
+public func device_major(device: u64) -> int:
+    return int(bit_or(bit_and(shift_right(device, 8u64), 4095u64), bit_and(shift_right(device, 32u64), 4294963200u64)))
+
+
+# The minor number of `Stat.device`, as `minor(3)` takes it from a `dev_t`: the number `/proc/locks` and
+# `/proc/self/mountinfo` print after the colon (in hexadecimal).
+public func device_minor(device: u64) -> int:
+    return int(bit_or(bit_and(device, 255u64), bit_and(shift_right(device, 12u64), 4294967040u64)))
+
+
+# Why `stat` has no answer: nothing is at the path (the case a caller matches to create it), or the system refused,
+# with the same text the other filesystem calls give.
+public enum StatError:
+    Missing
+    Failed(message: str)
+
+
+# Decode the octets `stat_path` and `stat_follow_path` answer: empty for a path with nothing at it, otherwise the size,
+# modification time, inode and kind words and, from the fifth word, the permission bits, from the sixth, the
+# status-change time, from the seventh, the device and, from the eighth, the owning user, the owning group and the hard links.
+func unpack_stat(packed: bytes) -> Stat fails StatError:
+    if len(packed) == 0:
+        fail StatError.Missing
+    mut kind = PathKind.Other
+    const code = __read_u64_le(packed, 24)
+    if code == 1u64:
+        kind = PathKind.Regular
+    if code == 2u64:
+        kind = PathKind.Directory
+    if code == 3u64:
+        kind = PathKind.Symlink
+    mut mode = 0
+    if len(packed) >= 40:
+        mode = int(__read_u64_le(packed, 32))
+    mut changed = 0
+    if len(packed) >= 48:
+        changed = __read_i64_le(packed, 40)
+    mut device = 0u64
+    if len(packed) >= 56:
+        device = __read_u64_le(packed, 48)
+    mut owner = 0
+    mut group = 0
+    mut links = 0
+    if len(packed) >= 80:
+        owner = int(__read_u64_le(packed, 56))
+        group = int(__read_u64_le(packed, 64))
+        links = int(__read_u64_le(packed, 72))
+    return Stat(kind=kind, size=int(__read_u64_le(packed, 0)), modified=__read_i64_le(packed, 8), inode=__read_u64_le(packed, 16), mode=mode, changed=changed, device=device, owner=owner, group=group, links=links)
+
+
+# The kind, size, modification and status-change times, inode, permission bits, device, owner, group and hard links of the
+# path, read without following a symbolic link at its end. A path with nothing at it, or under a directory that does not exist,
+# fails with `Missing`; any other refusal fails with `Failed`. Needs read authority over the path (`--allow-read`), and like the
+# other durable calls it is refused on a path with a `.` or `..` component. On a `memory()` filesystem it reports the
+# stand-in's own entries: a time from its logical clock, inodes counting up, the one device `MEMORY_DEVICE`, the one owner
+# `MEMORY_OWNER` and group `MEMORY_GROUP`, and one hard link for a file or a symbolic link (2 plus the number of directories
+# inside it for a directory). Under `--restrict` a symbolic link anywhere in the path is refused; without it the links on the
+# way to the final component are followed.
+public func stat(fs: Filesystem, path: str) -> Stat fails StatError:
+    match fs.stat_path(path):
+        case Ok(packed):
+            return try unpack_stat(packed)
+        case Err(message):
+            fail StatError.Failed(message=own message)
+
+
+# `stat` that follows a symbolic link at the end of the path and describes what it names, as Zig's `statFile` does; a
+# link to nothing is `Missing`. Under `--restrict` or `fs.dir(...)` the link is followed only while the target stays
+# inside the granted directory, and a target outside it fails with `Failed`.
+public func stat_follow(fs: Filesystem, path: str) -> Stat fails StatError:
+    match fs.stat_follow_path(path):
+        case Ok(packed):
+            return try unpack_stat(packed)
+        case Err(message):
+            fail StatError.Failed(message=own message)
+
+
+# The space of one filesystem, as `statfs` reports it, in bytes: its whole size, the bytes free on it, and the bytes an
+# ordinary (unprivileged) process may still use, which is at most the free bytes (the system keeps some back for itself).
+public record Space:
+    size_bytes: int
+    free_bytes: int
+    available_bytes: int
+
+
+# The space of the filesystem that holds `path`, as `statfs(2)` answers it (the blocks times the fragment size): a path
+# on a mounted disk describes that disk, a path under `/proc` the pseudo-filesystem. A path with nothing at it, or under
+# a directory that does not exist, fails with `Missing`; any other refusal fails with `Failed`. Like `stat` it needs read
+# authority over the path (`--allow-read`), it is refused on a path with a `.` or `..` component, a final symbolic link
+# is described by the filesystem that holds the link, and under `--restrict` a link anywhere in the path is refused. On
+# a `memory()` filesystem every existing path answers the same numbers, whatever the filesystem holds: 1073741824 bytes
+# in all, 536870912 free and 402653184 available.
+public func statfs(fs: Filesystem, path: str) -> Space fails StatError:
+    match fs.statfs_path(path):
+        case Ok(packed):
+            if len(packed) < 24:
+                fail StatError.Missing
+            return Space(size_bytes=int(__read_u64_le(packed, 0)), free_bytes=int(__read_u64_le(packed, 8)), available_bytes=int(__read_u64_le(packed, 16)))
+        case Err(message):
+            fail StatError.Failed(message=own message)
+
+
+# At most `max_bytes` octets of the regular file at `path`, starting at byte `offset`: fewer when the file ends first, and
+# none (an empty `bytes`) at or past its end, so a reader of a file that only grows asks again from the offset where
+# its last answer ended and meets nothing it has read. The file is opened as `read_regular_file` opens it (a link, a
+# directory or a device is refused) and read without reading what comes before the offset. A negative `offset` or
+# `max_bytes`, or a `max_bytes` over 64 MiB, fails; so does a missing file, with the same texts as `read_regular_file`.
+# Needs read authority over the path. On a `memory()` filesystem it answers the same.
+public func read_at(fs: Filesystem, path: str, offset: int, max_bytes: int) -> bytes fails str:
+    if offset < 0:
+        fail "read at '" + path + "': the offset must not be negative"
+    mut window = byte_builder.create()
+    binary.put_u64_le(mut window, u64(offset))
+    return try fs.read_at_path(path, byte_builder.finish(window), max_bytes)
+
+
+# One entry of a directory listing: its name and what it is. The kind is the one the directory record itself carries, so
+# a caller that wants only the directories, or only the files, never has to `stat` an entry to learn it. Like `stat`, a
+# symbolic link is `Symlink` (it is not followed), and `Other` is a device, a socket or a pipe.
+public record Entry:
+    name: str
+    kind: PathKind
+
+
+# Decode the octets `list_entries_path` answers: for each entry a kind octet (1 regular, 2 directory, 3 symbolic link,
+# anything else other), a little-endian u16 name length and the name, which the provider has checked to be UTF-8.
+func unpack_entries(packed: bytes) -> Entry[] fails str:
+    mut entries: Entry[] = []
+    mut at = 0
+    while at < len(packed):
+        const code = int(__read_u8_le(packed, at))
+        const width = int(__read_u16_le(packed, at + 1))
+        at += 3
+        mut kind = PathKind.Other
+        if code == 1:
+            kind = PathKind.Regular
+        if code == 2:
+            kind = PathKind.Directory
+        if code == 3:
+            kind = PathKind.Symlink
+        match strings.decode(packed[at:at + width]):
+            case Ok(name):
+                append(mut entries, Entry(name=own name, kind=kind))
+            case Err(message):
+                fail message
+        at += width
+    return entries
+
+
+# Every entry of the directory with its kind, in one listing: the names `listdir` answers (a real directory in the
+# system's order, `memory()` sorted by name), each with the kind the directory record carries, taken from the directory
+# itself with no `stat` of the entry. A path that is not a directory, is missing, or is refused fails with the same text
+# as `listdir`. Needs read authority; a directory of any size lists whole. A symbolic link to a directory is `Symlink`,
+# and is neither followed nor listed through.
+public func list_entries(fs: Filesystem, path: str) -> Entry[] fails str:
+    match fs.list_entries_path(path):
+        case Ok(packed):
+            return try unpack_entries(packed)
+        case Err(message):
+            fail message
+
+
+# The path with every symbolic link resolved, as `realpath(3)` answers. Without a restriction it is the absolute path
+# (a missing path fails). Under `--restrict`, `--allow-read` or `fs.dir(...)` it is the path relative to the granted
+# directory, which is `""` for the directory itself, so a program learns nothing of the host's layout beyond its grant;
+# a link that leaves the grant fails. The name is a valid argument to every other call on the same filesystem. Needs
+# read authority; `.` alone names the root and any other `.` or `..` component is denied.
+public func realpath(fs: Filesystem, path: str) -> str fails str:
+    return try fs.canonical_path(path)
+
+
+# The working directory: the `realpath` of `.`, which is the process's directory without a restriction and `""` under one.
+public func cwd(fs: Filesystem) -> str fails str:
+    return try fs.canonical_path(".")
+
+
+# `mkdir -p`: the folder `path` and every folder on the way to it, each made only when nothing is there. A part of the way
+# that exists and is not a folder fails as `fs.mkdir` fails under it. Needs write authority.
+public func mkdir_all(fs: Filesystem, path: str) -> Unit fails str:
+    mut current = ""
+    if strings.starts_with(path, "/"):
+        current = "/"
+    for part in strings.split(path, "/"):
+        if len(part) > 0 and part != ".":
+            current = walk_join(current, part)
+            if not fs.exists(current):
+                try fs.mkdir(current)
+
+
+# `cp SOURCE TARGET`: the octets of the file `source` written to `target`, which is made or replaced (with the mode a new
+# file gets, not the source's). Reads the whole file at once; needs read authority for `source` and write for `target`.
+public func copy_file(fs: Filesystem, source: str, target: str) -> Unit fails str:
+    const data = try fs.read_file(source)
+    try fs.write_file(target, data)
+
+
+# Every regular file below the folder `root` whose name ends in `suffix` (`""` for every file), as a path from `root`,
+# sorted. A folder is not entered when its name or its path from `root` is in `skip`; the entry `".*"` skips every folder
+# whose name starts with a dot (`.git`, a cache). Symbolic links are neither followed nor listed. A folder that cannot be
+# listed fails with `list_entries`'s reason. Needs read authority.
+public func walk(fs: Filesystem, root: str, suffix: str, skip: str[]) -> str[] fails str:
+    mut found: str[] = []
+    mut pending: str[] = [""]
+    while len(pending) > 0:
+        const relative = lists.pop(mut pending)
+        for entry in try list_entries(fs, walk_join(root, relative)):
+            const below = walk_join(relative, entry.name)
+            if entry.kind == PathKind.Directory:
+                if not walk_skips(entry.name, below, skip):
+                    append(mut pending, own below)
+            elif entry.kind == PathKind.Regular and strings.ends_with(entry.name, suffix):
+                append(mut found, own below)
+    return sorted(found)
+
+
+# `left/right`, or the one that is not empty.
+func walk_join(left: str, right: str) -> str:
+    if len(right) == 0:
+        return copy(left)
+    if len(left) == 0:
+        return copy(right)
+    if strings.ends_with(left, "/"):
+        return left + right
+    return left + "/" + right
+
+
+# Whether `walk` leaves out the folder `name` at `relative` from its root.
+func walk_skips(name: str, relative: str, skip: str[]) -> bool:
+    for rule in skip:
+        if rule == name or rule == relative:
+            return True
+        if rule == ".*" and strings.starts_with(name, "."):
+            return True
+    return False
+
+
+# `fs` narrowed to the folder `path`, which the program learns at run time (a command-line argument, a setting), as
+# `fs.dir("literal")` narrows it to a folder written in the source; the handle is a `fs.dir` handle (docs/io.md, "A folder
+# named at run time"). `path` is read as `fs` reads a path: on the Filesystem a run hands to `main` as an ordinary process
+# reads it (absolute, or against the working directory) and, under `--restrict`, inside a granted directory; on a narrowed
+# handle by its own rule (relative to its folder, without `..`, `.`, an empty part or a leading `/`), so a narrowing only goes
+# further in. The folder must exist and be a directory, and no component the path names may be a symbolic link: the folder,
+# one on the way or one a `..` steps back out of. An empty path fails (`.` names the working directory). A failure reads
+# `dir_at 'PATH': REASON`.
+public func dir_at(fs: Filesystem, path: str) -> Filesystem fails str:
+    if len(path) == 0:
+        fail "dir_at '': the path is empty; '.' names the working directory"
+    const found = try folder_stat(fs, path, path)
+    if strings.count(path, "..") > 0:
+        try refuse_climb_out_of_link(fs, path)
+    const folder = fs.dir(copy(path))
+    # The new handle walks its folder's name without following a link, as every call through it will: a link on the way
+    # fails here, and a folder that is not the one `stat` found means the path reached it through a link.
+    const reached = try folder_stat(folder, "", path)
+    if reached.inode != found.inode or reached.device != found.device:
+        fail f"dir_at '{path}': reaches its folder through a symbolic link the sandbox does not follow"
+    return folder
+
+
+# The `stat` of the folder `dir_at` narrows to, or its failure as `dir_at` words it for the path the program gave (`shown`).
+func folder_stat(fs: Filesystem, path: str, shown: str) -> Stat fails str:
+    match stat(fs, path):
+        case Ok(found):
+            if found.kind == PathKind.Symlink:
+                fail f"dir_at '{shown}': is a symbolic link the sandbox does not follow"
+            if found.kind != PathKind.Directory:
+                fail f"dir_at '{shown}': is not a directory"
+            return found
+        case Err(error):
+            match error:
+                case Missing:
+                    fail f"dir_at '{shown}': no such file or directory"
+                case Failed(message=message):
+                    # The reason without the `stat 'PATH': ` that `stat` puts first.
+                    const head = f"stat '{path}': "
+                    if strings.starts_with(message, head):
+                        fail f"dir_at '{shown}': {message[len(head):]}"
+                    fail f"dir_at '{shown}': {message}"
+
+
+# Refuse a `..` in a `dir_at` path that steps back out of a symbolic link, which the system would follow before climbing:
+# each component a `..` removes must be a folder that is not a link. A `..` before the first component of a relative path
+# removes a component of the working directory, which has no link in it, and stays in the prefix of what follows.
+func refuse_climb_out_of_link(fs: Filesystem, path: str) -> Unit fails str:
+    mut kept: str[] = []
+    for piece in strings.split(path, "/"):
+        if len(piece) == 0 or piece == ".":
+            continue
+        if piece != "..":
+            append(mut kept, copy(piece))
+            continue
+        if len(kept) == 0 or kept[len(kept) - 1] == "..":
+            append(mut kept, "..")
+            continue
+        mut prefix = strings.join(kept, "/")
+        if strings.starts_with(path, "/"):
+            prefix = "/" + prefix
+        _ = try folder_stat(fs, prefix, path)
+        _ = lists.pop(mut kept)
+    return ()
+
+
+# Create the symbolic link `path` holding the text `target`, written as `ln -s TARGET LINK` and Zig's `symLink` take it. The
+# target is stored as written: relative to the link's directory, absolute, or naming nothing. The link is made where the path
+# says, in a directory that exists and under write authority, and a path that is already taken fails with `already exists`.
+# No call follows a link under `--restrict`, `--allow-*` or `fs.dir(...)` but `realpath` and `stat_follow`, which do it only
+# while the link stays inside the granted directory, and a test's `memory()` filesystem keeps the same rule. `stat` of the
+# link is the link (`Symlink`, its size the length of its target), `remove` unlinks it and `rename_path` moves it.
+public func symlink(fs: Filesystem, target: str, path: str) -> Unit fails str:
+    _ = try fs.symlink_path(target, path)
+    return ()
+
+
+# Create the hard link `path` to the existing regular file `target`: a second name for one file, written as `ln TARGET LINK` and
+# `link(2)` take it. The two names are equal: a write through either is read through the other, and `stat` of each answers the
+# same inode and a `links` count of 2, until one is removed. Each path is resolved as `symlink` resolves its own, and each must
+# fall where the call may write: under `--restrict` both inside write grants (a file that can only be read is never linked into
+# a place that can be written), on an `fs.dir(...)` handle both inside its folder, and no link is followed on the way or at
+# the end. `target` must be a regular file: a folder fails with `is a directory`, a symbolic link with `is a symbolic link the
+# sandbox does not follow, or links nest too deeply`, anything else with `is not a regular file`. A `path` that is taken fails
+# with `already exists`, and the two names must be on one disk. The failure names both ends: `link 'TARGET' to 'PATH': REASON`.
+public func link(fs: Filesystem, target: str, path: str) -> Unit fails str:
+    _ = try fs.link_path(target, path)
+    return ()
+
+
+# The text stored in the symbolic link at `path`, exactly as `symlink` stored it or as `ln -s` wrote it (relative or absolute,
+# naming something or nothing), as `readlink(2)` answers. The link is never followed: what it names is not looked at, so a link
+# to nothing, or to a place outside the granted directory, is read like any other. A path that is not a symbolic link (a file,
+# a directory, the root) fails with `is not a symbolic link`, and a path with nothing at it with the generic failure. The path
+# is resolved as `stat` resolves it, on every kind of root: it needs read authority, refuses a `.` or `..` component, and under
+# `--restrict`, `--allow-read` or `fs.dir(...)` refuses a symbolic link on the way to the final component, while the link itself
+# may be read. A target that is not valid UTF-8 text fails. On a `memory()` filesystem it answers from the stand-in's links.
+public func read_link(fs: Filesystem, path: str) -> str fails str:
+    return try fs.read_link_path(path)
+
+
+# Set the permission bits of the path (`0` to `0o7777`), not following a symbolic link at its end. Needs write authority.
+public func chmod(fs: Filesystem, path: str, mode: int) -> Unit fails str:
+    _ = try fs.chmod_path(path, mode)
+    return ()
+
+
+# Create the directory `path` with the permission bits `mode` (`0` to `0o7777`), as `mkdir(2)` takes them: the directory is never
+# seen with the default mode first, which `fs.mkdir(path)` then `chmod` is. The process's umask narrows `mode` as it does a file's
+# (`atomic_write_file_mode`), so `0o700` stays `0o700` and `0o777` becomes `0o775` under the usual `0o002`; the system keeps the nine
+# permission bits and the sticky bit, and the set-user and set-group bits are `chmod`'s. A mode a program wants exactly, whatever the
+# umask, is `chmod` after this call. The path is resolved as `fs.mkdir` resolves it, its parent must exist and be writable, and a
+# path that is taken fails with `already exists`. Needs write authority.
+public func mkdir_mode(fs: Filesystem, path: str, mode: int) -> Unit fails str:
+    _ = try fs.mkdir_mode(path, mode)
+    return ()
+
+
+# Open `path` for writing as `fs.open(path, "wb")` does, a new file made with the permission bits `mode` (`0` to `0o7777`) in the
+# one `open(2)` that creates it, as `creat(2)` takes them: the file is never seen with the default mode while it fills, which
+# `fs.open` then `chmod` is. The umask narrows `mode` as it does `mkdir_mode`'s. A file that exists is truncated and keeps its own
+# mode, as `fs.open(path, "wb")` leaves it. The path is resolved as every write resolves it. Needs write authority.
+public func create_mode(fs: Filesystem, path: str, mode: int) -> File fails str:
+    return try fs.create_mode(path, mode)
+
+
+# Set the access and modification times of an existing path to now, not following a symbolic link at its end. A missing
+# path fails: create it with `write_file` first. Needs write authority.
+public func touch(fs: Filesystem, path: str) -> Unit fails str:
+    _ = try fs.touch_path(path)
+    return ()
+
+
+# Set the modification time of an existing path to `nanoseconds` since the Unix epoch, leaving its access time, not
+# following a symbolic link at its end. Needs write authority.
+public func set_modified(fs: Filesystem, path: str, nanoseconds: int) -> Unit fails str:
+    _ = try fs.set_modified_path(path, nanoseconds)
+    return ()
+
+
+# Whether the failure text of `try_lock_file` says the lock is held by another holder, as opposed to any other refusal.
+public func is_lock_busy(message: str) -> bool:
+    return strings.ends_with(message, ": the lock is held by another holder")

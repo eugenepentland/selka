@@ -1,0 +1,33 @@
+# The second core on a platform with one (MCU-CORE1): QEMU's mps2-an385 has one core, so `registers.start_core1`
+# answers False and `main` goes on alone; the lists it builds and frees around the call use the runtime's per-core state
+# (its free lists and live count are core 0's copies), and the leak check still finds every block freed. `main` answers
+# 40 + 2 when the start was refused, as it is here, and the sums are right.
+# bare-platform: qemu
+# bare-status: 42
+import registers
+
+func spin(reg: Registers) -> int:
+    registers.write32(reg, 0x20000000, 1)
+    return 1
+
+
+func sums(rounds: int) -> int:
+    mut total = 0
+    for round in range(rounds):
+        mut values: int[] = []
+        for i in range(round + 1):
+            append(mut values, i)
+        for value in values:
+            total += value
+    return total
+
+
+func main(reg: Registers) -> int:
+    const before = sums(20)
+    const started = registers.start_core1(reg, spin)
+    const after = sums(20)
+    if before != 1330 or after != 1330:
+        return 1
+    if started:
+        return 2
+    return 42

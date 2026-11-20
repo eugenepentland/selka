@@ -1,0 +1,210 @@
+import filesystem
+import gate_summary
+import gate_summary_fixtures
+import hex
+import streams
+import strings
+
+# The Selka gate_summary must print what scripts/gate_summary.py prints. The logs and every expected output come from
+# running the Python original (tools/selka/gen_gate_summary_fixtures.py), so a difference is a failing test here before it
+# is a failing driver run (tests/test_selka_tools.py).
+# The directory as the command line prints it: "" stays empty, any other name goes through pathlib's rules.
+func normalized(directory: str) -> str:
+    if len(directory) == 0:
+        return ""
+    return gate_summary.path_text(directory)
+
+
+# The index of the first log in [start, stop) whose summary differs from the original's, or -1.
+func first_difference(start: int, stop: int) -> int:
+    const texts = gate_summary_fixtures.texts()
+    const directories = gate_summary_fixtures.directories()
+    const expected = gate_summary_fixtures.expected()
+    mut at = start
+    while at < len(texts) and at < stop:
+        const got = strings.join(gate_summary.summarize(texts[at], normalized(directories[at])), "\n")
+        if got != expected[at]:
+            return at
+        at += 1
+    return 0 - 1
+
+
+func slice_agrees(out: Stream, start: int, stop: int) -> bool:
+    const found = first_difference(start, stop)
+    if found >= 0:
+        print(out, "differs at", found, gate_summary_fixtures.names()[found])
+        print(out, "expected:", gate_summary_fixtures.expected()[found])
+        print(out, "got:", strings.join(gate_summary.summarize(gate_summary_fixtures.texts()[found], normalized(gate_summary_fixtures.directories()[found])), "\n"))
+    return found < 0
+
+
+public func test_the_first_logs_summarize_as_the_original_does(out: Stream) -> bool:
+    return slice_agrees(out, 0, 25)
+
+
+public func test_the_next_logs_summarize_as_the_original_does(out: Stream) -> bool:
+    return slice_agrees(out, 25, 50)
+
+
+public func test_the_logs_after_those_summarize_as_the_original_does(out: Stream) -> bool:
+    return slice_agrees(out, 50, 75)
+
+
+public func test_the_later_logs_summarize_as_the_original_does(out: Stream) -> bool:
+    return slice_agrees(out, 75, 100)
+
+
+public func test_the_last_logs_summarize_as_the_original_does(out: Stream) -> bool:
+    return slice_agrees(out, 100, 1000)
+
+
+public func test_the_corpus_is_larger_than_the_slices_cover() -> bool:
+    return len(gate_summary_fixtures.texts()) <= 130 and len(gate_summary_fixtures.texts()) == len(gate_summary_fixtures.expected())
+
+
+public func test_repository_paths_are_shortened_like_the_original() -> bool:
+    const cases = gate_summary_fixtures.repository_path_cases()
+    mut at = 0
+    while at < len(cases):
+        if gate_summary.repository_path(cases[at]) != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+public func test_the_first_location_inside_the_repository() -> bool:
+    const cases = gate_summary_fixtures.location_cases()
+    mut at = 0
+    while at < len(cases):
+        mut found = "-"
+        match gate_summary.location(strings_split(cases[at])):
+            case Some(place):
+                found = own place
+            case None:
+                pass
+        if found != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+func strings_split(joined: str) -> str[]:
+    return strings.split(joined, "|")
+
+
+public func test_paths_print_as_pathlib_prints_them() -> bool:
+    const cases = gate_summary_fixtures.path_cases()
+    mut at = 0
+    while at < len(cases):
+        if gate_summary.path_text(cases[at]) != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+func hex_text(data: bytes) -> str:
+    return hex.encode(data)
+
+
+func bytes_of_hex(text: str) -> bytes:
+    match hex.decode(text):
+        case Ok(data):
+            return data
+        case Err(_):
+            return b""
+
+
+public func test_decoding_replaces_ill_formed_utf8_like_the_original() -> bool:
+    const cases = gate_summary_fixtures.decode_cases()
+    mut at = 0
+    while at < len(cases):
+        const decoded = gate_summary.decode_lossy(bytes_of_hex(cases[at]))
+        if hex_text(strings.encode(decoded)) != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+public func test_lines_split_like_the_original() -> bool:
+    const cases = gate_summary_fixtures.splitlines_cases()
+    mut at = 0
+    while at < len(cases):
+        const lines = gate_summary.splitlines(cases[at])
+        if f"{len(lines)}:" + strings.join(lines, "|") != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+public func test_stripping_matches_the_original() -> bool:
+    const cases = gate_summary_fixtures.strip_cases()
+    mut at = 0
+    while at < len(cases):
+        if "|" + gate_summary.py_strip(cases[at]) + "|" != cases[at + 1]:
+            return False
+        at += 2
+    return True
+
+
+# A memory filesystem holding the files of one command line's tree.
+func filesystem_of(tree: str[]) -> Filesystem:
+    mut fs = filesystem.memory()
+    mut at = 0
+    while at < len(tree):
+        make_parents(fs, tree[at])
+        match fs.write_text(tree[at], tree[at + 1]):
+            case Ok(_):
+                pass
+            case Err(_):
+                pass
+        at += 2
+    return fs
+
+
+func make_parents(fs: Filesystem, path: str):
+    const parts = strings.split(path, "/")
+    mut made = ""
+    mut index = 0
+    while index + 1 < len(parts):
+        if len(made) > 0:
+            made = made + "/"
+        made = made + parts[index]
+        _ = fs.mkdir(made)
+        index += 1
+
+
+# The index of the first command line in [first, last) whose output differs from the original's, or -1. A test runs a
+# slice so that none passes the default step budget.
+func first_cli_difference(out: Stream, first: int, last: int) -> int:
+    const argvs = gate_summary_fixtures.cli_argvs()
+    const trees = gate_summary_fixtures.cli_trees()
+    const stdouts = gate_summary_fixtures.cli_stdout()
+    const stderrs = gate_summary_fixtures.cli_stderr()
+    const statuses = gate_summary_fixtures.cli_status()
+    mut at = first
+    while at < len(argvs) and at < last:
+        const fs = filesystem_of(trees[at])
+        const captured = streams.memory()
+        const errors = streams.memory()
+        const status = gate_summary.run(argvs[at], fs, captured, errors)
+        if status != statuses[at] or streams.text(captured) != stdouts[at] or streams.text(errors) != stderrs[at]:
+            print(out, "differs at", at, argvs[at], "status", status, "expected", statuses[at])
+            print(out, "stdout:", streams.text(captured))
+            print(out, "expected:", stdouts[at])
+            print(out, "stderr:", streams.text(errors))
+            print(out, "expected:", stderrs[at])
+            return at
+        at += 1
+    return 0 - 1
+
+
+public func test_the_first_command_lines_print_what_the_original_prints(out: Stream) -> bool:
+    return first_cli_difference(out, 0, 8) < 0
+
+
+public func test_the_next_command_lines_print_what_the_original_prints(out: Stream) -> bool:
+    return first_cli_difference(out, 8, 16) < 0
+
+
+public func test_the_last_command_lines_print_what_the_original_prints(out: Stream) -> bool:
+    return first_cli_difference(out, 16, 100) < 0

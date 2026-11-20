@@ -1,0 +1,14 @@
+# 64-bit shifts, multiplies and divisions at their edges.
+func main() -> int:
+    const big = 9223372036854775807
+    const low = -9223372036854775807 - 1
+    mut total = 0
+    total += shift_right(big, 62) + bit_and(shift_right(low, 63), 3)
+    total += shift_right(shift_left(1, 40), 38)
+    total += (big // 3) % 97
+    total += (low // 7) % 89
+    total += (big % 1000003) % 50
+    total += shift_right(123456789 * 987654321, 20) % 61
+    total += (-17 // 5) + (-17 % 5)
+    total += ((low + 1) * -1) % 113
+    return (total % 256 + 256) % 256

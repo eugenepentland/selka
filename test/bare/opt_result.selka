@@ -1,0 +1,27 @@
+# Options and results: Some, None, Ok, Err, match.
+func half(n: int) -> int?:
+    if n % 2 == 0:
+        return Some(n // 2)
+    return None
+
+
+func checked(n: int) -> int fails str:
+    if n > 50:
+        fail "too big"
+    return n * 3
+
+
+func main() -> int:
+    mut total = 0
+    for i in range(60):
+        match half(i):
+            case Some(h):
+                total += h
+            case None:
+                total += 1
+        match checked(i):
+            case Ok(v):
+                total += v
+            case Err(e):
+                total += len(e)
+    return total % 256

@@ -1,0 +1,11 @@
+# `@noalloc` reads callee bodies at build (goal G7's known exception, G8-X1, W14): the whole program refuses `hot`
+# because `count_of` copies, and the check against `lib`'s interface cannot see that body.
+import lib
+
+@noalloc
+func hot(xs: str[]) -> int:
+    return lib.count_of(xs)
+
+
+func main() -> int:
+    return hot(["a"])

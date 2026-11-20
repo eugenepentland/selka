@@ -1,0 +1,180 @@
+# Spans: text that lives in a long-lived buffer, named by where it is.
+#
+# A `Sources` table holds the text of every file or buffer a program reads, each under a file number, for as long as the table
+# lives. Files are only ever added: a file's text is never changed, moved or dropped, so a position in it never goes stale. The
+# table is meant to live as long as the data that points into it, which is usually the whole program (an evaluator, a design
+# model, a compiler's session), not the parse that first read the text.
+#
+# A `Span` is a file number, a start and a length: three integers. It is copied freely, kept in records, lists and dictionary
+# values, and costs none of the allocation a stored `bytes` would. The text is read through the table, never from the span:
+# `text(sources, span)` is a view of the file's own octets, borrowed from the table for as long as it is used. The checker holds
+# the whole record a view came from, so read the text where you use it (a comparison, a copy into a message) and keep spans, not
+# views, in the data; a `Sources` kept in a local or passed as its own parameter is not held against the rest of a record.
+#
+# A span belongs to the table that numbered its file. Using it against another table reads another file, or traps `R_ASSERT`
+# when the file number or the range is outside the table. Spans compare by position, not by text: two spans with the same text
+# are `same(sources, a, b)`, and a dictionary keyed by `Span` would key by position. To key by text, intern the name
+# (`symbols.intern_span`) and key by the `Symbol`.
+#
+# A place in a file of a `Sources` table: the file number, the first octet and the number of octets. It is sealed: only
+# this module builds or changes one (`of`, `between`, `empty_at`, `whole`), so another module reads its fields and never
+# writes them.
+@sealed
+public record Span:
+    file: int
+    start: int
+    length: int
+
+
+# The files of a program: their text, and a name for each (a path, for messages).
+public record Sources:
+    texts: bytes[]
+    names: str[]
+
+
+# An empty table.
+public func create() -> Sources:
+    mut texts: bytes[] = []
+    mut names: str[] = []
+    return Sources(texts=own texts, names=own names)
+
+
+# Add a file and answer its number (0 for the first). The table takes `data`, so it is moved in, not copied; the file is
+# never changed afterwards.
+public func add(mut sources: Sources, name: str, own data: bytes) -> int:
+    const file = len(sources.texts)
+    append(mut sources.texts, own data)
+    append(mut sources.names, copy(name))
+    return file
+
+
+# How many files the table holds.
+public func count(sources: Sources) -> int:
+    return len(sources.texts)
+
+
+# Whether `file` is the number of a file of the table.
+public func has_file(sources: Sources, file: int) -> bool:
+    return 0 <= file < len(sources.texts)
+
+
+# The text of a whole file, a view of the table's copy. A number the table did not give traps `R_ASSERT`.
+public func file_text(sources: Sources, file: int) -> bytes from sources:
+    assert has_file(sources, file), "the file is not in the table"
+    return sources.texts[file]
+
+
+# The name a file was added under, a view of the table's copy.
+public func file_name(sources: Sources, file: int) -> str from sources:
+    assert has_file(sources, file), "the file is not in the table"
+    return sources.names[file]
+
+
+# The span of a whole file.
+public func whole(sources: Sources, file: int) -> Span:
+    return Span(file=file, start=0, length=len(file_text(sources, file)))
+
+
+# The span of `length` octets starting at `start` in `file`.
+public func of(file: int, start: int, length: int) -> Span:
+    assert start >= 0 and length >= 0, "a span starts at 0 or later and is not negative in length"
+    return Span(file=file, start=start, length=length)
+
+
+# The span from `start` up to, not including, `stop`.
+public func between(file: int, start: int, stop: int) -> Span:
+    assert 0 <= start <= stop, "a span starts at 0 or later and ends at or after its start"
+    return Span(file=file, start=start, length=stop - start)
+
+
+# The empty span at `start`, the position of a token that has no text.
+public func empty_at(file: int, start: int) -> Span:
+    assert start >= 0, "a span starts at 0 or later"
+    return Span(file=file, start=start, length=0)
+
+
+# One past the last octet of the span.
+public func end_of(span: Span) -> int:
+    return span.start + span.length
+
+
+# Whether the span holds no octets.
+public func is_empty(span: Span) -> bool:
+    return span.length == 0
+
+
+# Whether the span names a range inside a file of the table.
+public func fits(sources: Sources, span: Span) -> bool:
+    if not has_file(sources, span.file):
+        return False
+    const size = len(sources.texts[span.file])
+    return span.start >= 0 and span.length >= 0 and span.start <= size and span.length <= size - span.start
+
+
+# The octets the span names, a view of the file: no copy, and the table cannot change while the view is used. A span that does
+# not fit the table traps `R_ASSERT`, so a stale or foreign span fails stop instead of reading the wrong text.
+public func text(sources: Sources, span: Span) -> bytes from sources:
+    assert fits(sources, span), "the span is outside its source"
+    return sources.texts[span.file][span.start:span.start + span.length]
+
+
+# The sub-span of `length` octets at `offset` from the start of `span`.
+public func sub(span: Span, offset: int, length: int) -> Span:
+    assert offset >= 0 and length >= 0 and offset + length <= span.length, "the sub-span is outside its span"
+    return Span(file=span.file, start=span.start + offset, length=length)
+
+
+# The smallest span that holds both `a` and `b`, which must lie in one file.
+public func join(a: Span, b: Span) -> Span:
+    assert a.file == b.file, "only spans of one file can be joined"
+    mut first = a.start
+    if b.start < first:
+        first = b.start
+    mut last = a.start + a.length
+    if b.start + b.length > last:
+        last = b.start + b.length
+    return Span(file=a.file, start=first, length=last - first)
+
+
+# Whether the span's text is exactly `other`. No copy.
+public func equals(sources: Sources, span: Span, other: bytes) -> bool:
+    return text(sources, span) == other
+
+
+# Whether two spans name the same text, in one file or two.
+public func same(sources: Sources, a: Span, b: Span) -> bool:
+    return text(sources, a) == text(sources, b)
+
+
+# Whether the span's text starts with `prefix`.
+public func starts_with(sources: Sources, span: Span, prefix: bytes) -> bool:
+    return len(prefix) <= span.length and text(sources, sub(span, 0, len(prefix))) == prefix
+
+
+# -1, 0 or 1 as the span's text sorts before, equal to or after the other span's text, octet by octet.
+public func compare(sources: Sources, a: Span, b: Span) -> int:
+    const left = text(sources, a)
+    const right = text(sources, b)
+    if left < right:
+        return -1
+    if left > right:
+        return 1
+    return 0
+
+
+# A hash of the octets of `data` (32-bit FNV-1a), in 0 to 4294967295. Equal text hashes equal, whichever way it is held.
+public func hash_bytes(data: bytes) -> int:
+    mut state = 2166136261
+    for octet in data:
+        state = bit_and(bit_xor(state, int(octet)) * 16777619, 4294967295)
+    return state
+
+
+# The hash of the span's text, read in place and equal to `hash_bytes` of the same octets.
+public func hash(sources: Sources, span: Span) -> int:
+    assert fits(sources, span), "the span is outside its source"
+    const data = sources.texts[span.file]
+    mut state = 2166136261
+    for position in range(span.start, span.start + span.length):
+        state = bit_and(bit_xor(state, int(data[position])) * 16777619, 4294967295)
+    return state

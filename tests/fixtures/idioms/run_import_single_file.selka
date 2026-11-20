@@ -1,0 +1,4 @@
+import math
+
+func main() -> int:
+    return int(math.hypot(42.0, 0.0))

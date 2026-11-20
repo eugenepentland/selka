@@ -1,0 +1,373 @@
+//! Relocate owned checked function trees into a fresh compilation's source,
+//! declaration and catalog identity space.
+const std = @import("std");
+const typed = @import("typed.zig");
+const source = @import("source.zig");
+/// Source interval whose bytes are unchanged at a new offset.
+pub const Segment = struct { before: source.Span, after: usize };
+/// Contiguous expression/statement IDs belonging to one checked function.
+pub const Range = struct { nodes: source.Span, statements: source.Span };
+/// One old declaration ordinal resolved to a fresh function identity. The list
+/// is sized by the body's actual references, never by the whole program
+/// catalog, so relocation stays proportional to the body it copies.
+pub const FunctionRemap = struct { old: usize, fresh: typed.FunctionId };
+/// One old aggregate ordinal resolved to a fresh aggregate type.
+pub const RecordRemap = struct { old: usize, fresh: typed.Type };
+/// Sort a function remap list so `findFunction` can binary-search it.
+pub fn sortFunctionRemaps(remaps: []FunctionRemap) void {
+    std.mem.sort(FunctionRemap, remaps, {}, lessFunctionRemap);
+}
+/// Sort a record remap list so `findRecord` can binary-search it.
+pub fn sortRecordRemaps(remaps: []RecordRemap) void {
+    std.mem.sort(RecordRemap, remaps, {}, lessRecordRemap);
+}
+fn lessFunctionRemap(_: void, a: FunctionRemap, b: FunctionRemap) bool {
+    return a.old < b.old;
+}
+fn lessRecordRemap(_: void, a: RecordRemap, b: RecordRemap) bool {
+    return a.old < b.old;
+}
+/// Resolve one old function ordinal, or null when the body did not reference it.
+pub fn findFunction(remaps: []const FunctionRemap, id: usize) ?typed.FunctionId {
+    var low: usize = 0;
+    var high = remaps.len;
+    while (low < high) {
+        const middle = low + (high - low) / 2;
+        if (remaps[middle].old < id) low = middle + 1 else high = middle;
+    }
+    if (low >= remaps.len or remaps[low].old != id) return null;
+    return remaps[low].fresh;
+}
+/// Resolve one old aggregate ordinal, or null when the body did not reference it.
+pub fn findRecord(remaps: []const RecordRemap, index: usize) ?typed.Type {
+    var low: usize = 0;
+    var high = remaps.len;
+    while (low < high) {
+        const middle = low + (high - low) / 2;
+        if (remaps[middle].old < index) low = middle + 1 else high = middle;
+    }
+    if (low >= remaps.len or remaps[low].old != index) return null;
+    return remaps[low].fresh;
+}
+/// Validation failures indicate a cache miss, never a trusted unchecked identity.
+pub const Error = error{ OutOfMemory, InternalError, InvalidRelocation };
+
+/// Declaration references found in one checked function tree. Old numeric ids
+/// are exchanged for stable identities by the caller; the map only accumulates
+/// the ordinal positions that need remapping.
+pub const RefSet = struct {
+    allocator: std.mem.Allocator,
+    functions: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    records: std.AutoHashMapUnmanaged(usize, void) = .empty,
+    /// True when the tree stores a function value, which interns a callable
+    /// contract record during checking.
+    function_values: bool = false,
+    /// True when the tree indirectly invokes a callable-typed slot.
+    invokes: bool = false,
+    /// Source-span collection is opt-in for ordinary body persistence.
+    sources: struct { enabled: bool = false, local: ?source.Span = null, items: std.AutoHashMapUnmanaged(source.Span, void) = .empty } = .{},
+
+    /// Initialize an accumulator tied to one allocator.
+    pub fn init(allocator: std.mem.Allocator) RefSet {
+        return .{ .allocator = allocator };
+    }
+    /// Release accumulator storage. The caller retains every referenced key.
+    pub fn deinit(self: *RefSet) void {
+        self.functions.deinit(self.allocator);
+        self.records.deinit(self.allocator);
+        self.sources.items.deinit(self.allocator);
+    }
+    /// Record one declaration reference, recursing through owned value shapes.
+    pub fn collect(self: *RefSet, comptime T: type, value: T) error{OutOfMemory}!void {
+        if (T == source.Span) {
+            if (self.sources.local) |local| {
+                if (value.start >= local.start and value.end <= local.end) return;
+            }
+            if (self.sources.enabled) try self.sources.items.put(self.allocator, value, {});
+            return;
+        }
+        if (T == typed.FunctionId) {
+            try self.functions.put(self.allocator, @backingInt(value), {});
+            return;
+        }
+        if (T == typed.Type) {
+            if (value.isAggregate()) try self.records.put(self.allocator, value.recordIndex(), {});
+            return;
+        }
+        switch (@typeInfo(T)) {
+            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |field_name, Field| {
+                try self.collect(Field, @field(value, field_name));
+            },
+            .@"union" => inline for (@typeInfo(T).@"union".field_names, @typeInfo(T).@"union".field_types) |field_name, Field| {
+                if (std.meta.activeTag(value) == @field(std.meta.Tag(T), field_name)) try self.collect(Field, @field(value, field_name));
+            },
+            .optional => |optional| if (value) |present| try self.collect(optional.child, present),
+            .pointer => |pointer| {
+                if (pointer.size != .slice or pointer.child == u8) return;
+                for (value) |item| try self.collect(pointer.child, item);
+            },
+            .array => |array| for (value) |item| try self.collect(array.child, item),
+            else => {},
+        }
+    }
+};
+
+/// Collect every function/type reference from one checked function, its node
+/// range and its statement range. The copy mapper visits exactly the same value
+/// shape, so a reference that is absent from the set is a relocation miss.
+pub fn collectRefs(allocator: std.mem.Allocator, function: typed.Function, nodes: []const typed.Node, statements: []const typed.Statement, refs: *RefSet) error{ OutOfMemory, InternalError }!void {
+    refs.allocator = allocator;
+    refs.collect(typed.Function, function) catch return error.OutOfMemory;
+    refs.collect([]const typed.Node, nodes) catch return error.OutOfMemory;
+    refs.collect([]const typed.Statement, statements) catch return error.OutOfMemory;
+    for (nodes) |node| switch (node.data) {
+        .function_value => refs.function_values = true,
+        .invoke => refs.invokes = true,
+        else => {},
+    };
+}
+
+/// The first exact identity rejected by a checked-tree relocation.
+pub const Failure = union(enum) { none, span: source.Span, node: usize, statement: usize, function: usize, record: usize };
+/// Number of relocation failure tags, including the unset slot.
+pub const failure_count = std.meta.tags(std.meta.Tag(Failure)).len;
+
+/// Copy owned metadata, then relocate spans, local table identities and
+/// declaration/catalog references into the fresh compilation.
+pub const Mapper = struct {
+    segments: []const Segment,
+    before: Range,
+    after: Range,
+    /// Legacy dense old FunctionId ordinal -> remapped identity, or null when
+    /// ambiguous. Used by callers that already build a full-catalog table (the
+    /// concrete-specialization replay); new per-body callers should prefer the
+    /// reference-sized `function_remaps` below.
+    functions: []const ?typed.FunctionId = &.{},
+    /// Legacy dense old record ordinal -> remapped aggregate type, or null.
+    records: []const ?typed.Type = &.{},
+    /// Reference-sized old function ordinal -> fresh identity, sorted by `old`.
+    /// Takes precedence over the legacy dense `functions` when non-empty.
+    function_remaps: []const FunctionRemap = &.{},
+    /// Reference-sized old record ordinal -> fresh aggregate type.
+    record_remaps: []const RecordRemap = &.{},
+    /// Return an independently owned function subtree without borrowing cached storage.
+    pub fn copy(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: T) Error!T {
+        var failure: Failure = .none;
+        const copied = try self.copyWithFailure(allocator, T, input, &failure);
+        return copied;
+    }
+    /// Copy as usual and identify the first invalid source or catalog reference.
+    pub fn copyWithFailure(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: T, failure: *Failure) Error!T {
+        const clone: @import("ast_copy.zig").Mapper = .{};
+        var output = clone.value(allocator, T, input) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
+        try self.relocate(T, &output, failure);
+        return output;
+    }
+    /// Clone and relocate into caller-reserved storage, avoiding an additional
+    /// owned outer slice. On failure the caller must keep this storage unpublished.
+    pub fn copySliceInto(self: Mapper, allocator: std.mem.Allocator, comptime T: type, input: []const T, output: []T, failure: *Failure) Error!void {
+        std.debug.assert(input.len == output.len);
+        for (input, output) |item, *destination| destination.* = try self.copyWithFailure(allocator, T, item, failure);
+    }
+    fn relocateSpan(self: Mapper, value: *source.Span, failure: *Failure) error{InvalidRelocation}!void {
+        var low: usize = 0;
+        var high = self.segments.len;
+        while (low < high) {
+            const middle = low + (high - low) / 2;
+            if (self.segments[middle].before.start <= value.start) low = middle + 1 else high = middle;
+        }
+        if (low == 0) return failed(failure, .{ .span = value.* });
+        const segment = self.segments[low - 1];
+        if (value.end < value.start or value.end > segment.before.end) return failed(failure, .{ .span = value.* });
+        value.* = .{ .start = segment.after + value.start - segment.before.start, .end = segment.after + value.end - segment.before.start };
+    }
+    fn relocate(self: Mapper, comptime T: type, value: *T, failure: *Failure) error{InvalidRelocation}!void {
+        if (T == source.Span) return self.relocateSpan(value, failure);
+        if (T == typed.NodeId or T == typed.StatementId) {
+            const before = if (T == typed.NodeId) self.before.nodes else self.before.statements;
+            const after = if (T == typed.NodeId) self.after.nodes else self.after.statements;
+            const id = @backingInt(value.*);
+            if (id < before.start or id >= before.end) return failed(failure, if (T == typed.NodeId) .{ .node = id } else .{ .statement = id });
+            value.* = @fromBackingInt(after.start + id - before.start);
+            return;
+        }
+        if (T == typed.FunctionId) {
+            const id = @backingInt(value.*);
+            if (self.function_remaps.len != 0) {
+                value.* = findFunction(self.function_remaps, id) orelse return failed(failure, .{ .function = id });
+                return;
+            }
+            if (id >= self.functions.len) return failed(failure, .{ .function = id });
+            value.* = self.functions[id] orelse return failed(failure, .{ .function = id });
+            return;
+        }
+        if (T == typed.Type) {
+            if (!value.isAggregate()) return;
+            const index = value.recordIndex();
+            if (self.record_remaps.len != 0) {
+                value.* = findRecord(self.record_remaps, index) orelse return failed(failure, .{ .record = index });
+                return;
+            }
+            if (index >= self.records.len) return failed(failure, .{ .record = index });
+            value.* = self.records[index] orelse return failed(failure, .{ .record = index });
+            return;
+        }
+        switch (@typeInfo(T)) {
+            .@"struct" => inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |name, Field| try self.relocate(Field, &@field(value.*, name), failure),
+            .@"union" => inline for (@typeInfo(T).@"union".field_names, @typeInfo(T).@"union".field_types) |name, Field| {
+                if (std.meta.activeTag(value.*) == @field(std.meta.Tag(T), name)) try self.relocate(Field, &@field(value.*, name), failure);
+            },
+            .optional => |optional| if (value.*) |*present| try self.relocate(optional.child, present, failure),
+            .pointer => |pointer| {
+                if (pointer.size != .slice) @compileError("checked trees require owned slices");
+                if (pointer.child != u8) for (@constCast(value.*)) |*item| try self.relocate(pointer.child, item, failure);
+            },
+            .array => |array| for (value) |*item| try self.relocate(array.child, item, failure),
+            .@"enum", .int, .float, .bool, .void => {},
+            else => @compileError("checked field needs explicit relocation: " ++ @typeName(T)),
+        }
+    }
+};
+
+fn failed(failure: *Failure, detail: Failure) error{InvalidRelocation} {
+    failure.* = detail;
+    return error.InvalidRelocation;
+}
+
+/// Map every unchanged source interval, including relocated headers and imported files.
+/// Retained for callers that relocate whole-program syntax snapshots; per-function
+/// reuse uses a single declaration-region segment instead.
+pub fn segments(allocator: std.mem.Allocator, before: []const u8, old: []const source.Span, after: []const u8, current: []const source.Span) error{ OutOfMemory, InternalError }![]const Segment {
+    if (old.len != current.len) return error.InternalError;
+    const order = try allocator.alloc(usize, old.len);
+    defer allocator.free(order);
+    for (order, 0..) |*index, i| index.* = i;
+    std.mem.sort(usize, order, old, less);
+    var result: std.ArrayList(Segment) = .empty;
+    var old_start: usize = 0;
+    var new_start: usize = 0;
+    for (order) |i| {
+        try result.append(allocator, .{ .before = .{ .start = old_start, .end = old[i].start }, .after = new_start });
+        if (std.mem.eql(u8, before[old[i].start..old[i].end], after[current[i].start..current[i].end]))
+            try result.append(allocator, .{ .before = old[i], .after = current[i].start });
+        old_start = old[i].end;
+        new_start = current[i].end;
+    }
+    try result.append(allocator, .{ .before = .{ .start = old_start, .end = before.len }, .after = new_start });
+    return result.toOwnedSlice(allocator);
+}
+fn less(bodies: []const source.Span, a: usize, b: usize) bool {
+    return bodies[a].start < bodies[b].start;
+}
+
+// spec-case: SEMANTIC-CACHE-3
+test "A08 unpack semantic relocation preserves local IDs and independently owns field slots" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var fields = [_]?typed.LocalId{ @fromBackingInt(3), null, @fromBackingInt(7) };
+    const before: typed.Statement = .{
+        .span = .{ .start = 10, .end = 20 },
+        .terminates = false,
+        .data = .{ .initialize = .{ .slot = @fromBackingInt(2), .value = @fromBackingInt(5), .unpack = &fields } },
+    };
+    const mapper: Mapper = .{
+        .segments = &.{.{ .before = .{ .start = 10, .end = 20 }, .after = 100 }},
+        .before = .{ .nodes = .{ .start = 5, .end = 6 }, .statements = .{ .start = 0, .end = 1 } },
+        .after = .{ .nodes = .{ .start = 35, .end = 36 }, .statements = .{ .start = 40, .end = 41 } },
+    };
+    const after = try mapper.copy(arena.allocator(), typed.Statement, before);
+    try t.expectEqual(@as(usize, 100), after.span.start);
+    try t.expectEqual(@as(usize, 110), after.span.end);
+    try t.expectEqual(@as(usize, 35), @backingInt(after.data.initialize.value));
+    try t.expectEqual(@as(usize, 2), @backingInt(after.data.initialize.slot));
+    try t.expectEqualSlices(?typed.LocalId, &fields, after.data.initialize.unpack.?);
+    fields[0] = null;
+    fields[2] = @fromBackingInt(8);
+    try t.expectEqualSlices(?typed.LocalId, &.{ @fromBackingInt(3), null, @fromBackingInt(7) }, after.data.initialize.unpack.?);
+}
+
+// spec-case: SEMANTIC-CACHE-3
+test "A08 selection semantic copy relocates both ordered operand NodeIds" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const before: typed.Node = .{
+        .ty = .i64,
+        .span = .{ .start = 10, .end = 20 },
+        .data = .{ .borrow_selection = .{ .kind = .optional_default, .first = @fromBackingInt(7), .second = @fromBackingInt(8) } },
+    };
+    const mapper: Mapper = .{
+        .segments = &.{.{ .before = .{ .start = 10, .end = 20 }, .after = 100 }},
+        .before = .{ .nodes = .{ .start = 7, .end = 10 }, .statements = .{ .start = 0, .end = 1 } },
+        .after = .{ .nodes = .{ .start = 40, .end = 43 }, .statements = .{ .start = 50, .end = 51 } },
+    };
+    const after = try mapper.copy(arena.allocator(), typed.Node, before);
+    try t.expectEqual(@as(usize, 100), after.span.start);
+    try t.expectEqual(@as(usize, 110), after.span.end);
+    try t.expectEqual(before.data.borrow_selection.kind, after.data.borrow_selection.kind);
+    try t.expectEqual(@as(usize, 40), @backingInt(after.data.borrow_selection.first));
+    try t.expectEqual(@as(usize, 41), @backingInt(after.data.borrow_selection.second));
+    try t.expectEqual(@as(usize, 7), @backingInt(before.data.borrow_selection.first));
+    try t.expectEqual(@as(usize, 8), @backingInt(before.data.borrow_selection.second));
+}
+
+test "O4 semantic relocation and wire replay retain own and view facts independently" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const before = [_]typed.Node{
+        .{ .ty = .i64, .span = .{ .start = 10, .end = 20 }, .own = true, .type_dependent = true, .data = .{ .local = @fromBackingInt(0) } },
+        .{ .ty = .i64, .span = .{ .start = 20, .end = 30 }, .view = true, .data = .{ .local = @fromBackingInt(1) } },
+    };
+    const mapper: Mapper = .{
+        .segments = &.{.{ .before = .{ .start = 10, .end = 30 }, .after = 100 }},
+        .before = .{ .nodes = .{ .start = 0, .end = 2 }, .statements = .{ .start = 0, .end = 0 } },
+        .after = .{ .nodes = .{ .start = 0, .end = 2 }, .statements = .{ .start = 0, .end = 0 } },
+    };
+    const moved = try mapper.copy(a, []const typed.Node, &before);
+    var writer = @import("persist_codec.zig").Writer.init(a);
+    try writer.write([]const typed.Node, moved);
+    var reader = @import("persist_codec.zig").Reader.init(a, writer.bytes.items);
+    const replayed = try reader.read([]const typed.Node);
+    try t.expect(reader.done());
+    try t.expect(replayed[0].own and !replayed[0].view);
+    try t.expect(!replayed[1].own and replayed[1].view);
+    try t.expect(replayed[0].type_dependent and !replayed[1].type_dependent);
+    try t.expectEqual(@as(usize, 100), replayed[0].span.start);
+    try t.expectEqual(@as(usize, 110), replayed[0].span.end);
+    try t.expectEqual(@as(usize, 110), replayed[1].span.start);
+    try t.expectEqual(@as(usize, 120), replayed[1].span.end);
+    try t.expectEqualSlices(typed.LocalId, &.{ @fromBackingInt(0), @fromBackingInt(1) }, &.{ replayed[0].data.local, replayed[1].data.local });
+    try t.expectEqual(@as(usize, 10), before[0].span.start);
+}
+
+test "O4 semantic relocation and wire replay distinguish owning RHS staging from read temporaries" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const before = [_]typed.Statement{
+        .{ .span = .{ .start = 10, .end = 20 }, .terminates = false, .data = .{ .initialize = .{ .slot = @fromBackingInt(0), .value = @fromBackingInt(7), .transfer = true } } },
+        .{ .span = .{ .start = 20, .end = 30 }, .terminates = false, .data = .{ .initialize = .{ .slot = @fromBackingInt(1), .value = @fromBackingInt(8) } } },
+    };
+    const mapper: Mapper = .{
+        .segments = &.{.{ .before = .{ .start = 10, .end = 30 }, .after = 100 }},
+        .before = .{ .nodes = .{ .start = 7, .end = 9 }, .statements = .{ .start = 0, .end = 2 } },
+        .after = .{ .nodes = .{ .start = 40, .end = 42 }, .statements = .{ .start = 50, .end = 52 } },
+    };
+    const moved = try mapper.copy(a, []const typed.Statement, &before);
+    var writer = @import("persist_codec.zig").Writer.init(a);
+    try writer.write([]const typed.Statement, moved);
+    var reader = @import("persist_codec.zig").Reader.init(a, writer.bytes.items);
+    const replayed = try reader.read([]const typed.Statement);
+    try t.expect(reader.done());
+    try t.expect(replayed[0].data.initialize.transfer);
+    try t.expect(!replayed[1].data.initialize.transfer);
+    try t.expectEqual(@as(usize, 40), @backingInt(replayed[0].data.initialize.value));
+    try t.expectEqual(@as(usize, 41), @backingInt(replayed[1].data.initialize.value));
+    try t.expectEqual(@as(usize, 100), replayed[0].span.start);
+    try t.expectEqual(@as(usize, 120), replayed[1].span.end);
+    try t.expectEqual(@as(usize, 7), @backingInt(before[0].data.initialize.value));
+}

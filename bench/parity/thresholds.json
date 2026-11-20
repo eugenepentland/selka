@@ -1,0 +1,576 @@
+{
+ "schema": "selka-parity-thresholds-v1",
+ "note": "Checked-ownership default, 2026-10-17: one fixed three-round observation under ordinary build admission, without explicit benchmark CPU pinning, timing admission, load qualification or confirmation runs. Existing tolerances are unchanged; seven arms exceeded their prior configured limits. K4, 2026-10-23: json_roundtrip, hash_bytes and netlist_union_find (all arms, default rounds) and dict_churn my-tuned were added from one quiet batch each. K4F, 2026-10-23: dict_churn my was not thresholded while the dictionary iteration was quadratic (myl_core_dict_ordinal, 386x). After the Fenwick rank fix it is 1.26x (one 7-round run, batch 2026-10-23-k4f-after, load rose from 3.5 to 8.4 during it). knucleotide my fell from 1.28x to 1.07x and is not rebaselined here.",
+ "metric": "wall",
+ "reference": "zig-fast",
+ "default_tolerance": 0.15,
+ "batches": {
+  "2026-09-22-cpu10-loaded": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-ksort/bin/mylang",
+   "compiler_sha256": "f430917a25d715db1a815a195a527043e18a46baa26927a06e9b573cefcd6085",
+   "commit": "79835b133cbc3c0a68fe30808fa094bdd8b8740c",
+   "runs": [
+    {
+     "started": "2026-09-22T23:49:49Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       28.3876953125,
+       18.19775390625,
+       13.53515625
+      ],
+      [
+       15.63037109375,
+       19.9921875,
+       18.72314453125
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:04:33Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       14.51708984375,
+       19.1689453125,
+       18.49072265625
+      ],
+      [
+       18.5712890625,
+       23.56103515625,
+       20.00244140625
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:18:49Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       12.3935546875,
+       20.31396484375,
+       19.23681640625
+      ],
+      [
+       15.8818359375,
+       14.044921875,
+       16.2880859375
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-09-23-cpu10-loaded": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-ksort/bin/mylang",
+   "compiler_sha256": "f430917a25d715db1a815a195a527043e18a46baa26927a06e9b573cefcd6085",
+   "commit": "79835b133cbc3c0a68fe30808fa094bdd8b8740c",
+   "runs": [
+    {
+     "started": "2026-09-23T00:31:27Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       10.6396484375,
+       12.9423828125,
+       15.72216796875
+      ],
+      [
+       5.50439453125,
+       7.41943359375,
+       11.54833984375
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T00:41:33Z",
+     "cpu": 10,
+     "rounds": 9,
+     "load": [
+      [
+       5.806640625,
+       7.30126953125,
+       11.3759765625
+      ],
+      [
+       4.7158203125,
+       6.3623046875,
+       9.28173828125
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-09-23-cpu2-quiet": {
+   "label": "quiet",
+   "compiler": "/home/epentland/ai/canopy/mylang/.tmp/perf-plan-20260922/install-mem2/bin/mylang",
+   "compiler_sha256": "e6c5877d08c9872426babf257dbaec5684c28688e795507a8c1f8c9883284332",
+   "commit": "8a289c96e81f3665336336db771e264fcd64dcda",
+   "runs": [
+    {
+     "started": "2026-09-23T08:48:24Z",
+     "cpu": 2,
+     "rounds": 9,
+     "load": [
+      [
+       1.06103515625,
+       1.564453125,
+       2.72119140625
+      ],
+      [
+       1.1572265625,
+       1.92529296875,
+       2.6162109375
+      ]
+     ]
+    },
+    {
+     "started": "2026-09-23T08:54:54Z",
+     "cpu": 2,
+     "rounds": 9,
+     "load": [
+      [
+       1.1572265625,
+       1.92529296875,
+       2.6162109375
+      ],
+      [
+       1.169921875,
+       2.03662109375,
+       2.55810546875
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-10-17-ownership-default-r3": {
+   "label": "ownership-default-r3",
+   "mode": "default",
+   "admission": "build",
+   "runs": [
+    {
+     "cpu": null,
+     "rounds": 3,
+     "load": [
+      [
+       21.32666015625,
+       16.83251953125,
+       12.8486328125
+      ],
+      [
+       19.625,
+       17.025390625,
+       13.1044921875
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-10-23-cpu2-quiet": {
+   "label": "quiet",
+   "compiler": "/home/epentland/ai/.home-cache/mylang-pins/main-03e60dfff-rf/bin/mylang",
+   "compiler_sha256": "00d283b1da3f1a7fb26bdbc701154d745aff78b7ce1885e0ce8ac7d5b4b5b9dc",
+   "commit": "03e60dfff5cde04872fec5a5de1d321dcde8726d",
+   "runs": [
+    {
+     "started": "2026-10-23T09:25:58Z",
+     "cpu": 2,
+     "rounds": 7,
+     "load": [
+      [
+       1.0859375,
+       1.54052734375,
+       1.814453125
+      ],
+      [
+       1.68603515625,
+       1.6435546875,
+       1.82080078125
+      ]
+     ]
+    },
+    {
+     "started": "2026-10-23T09:27:58Z",
+     "cpu": 2,
+     "rounds": 7,
+     "load": [
+      [
+       1.8017578125,
+       1.67138671875,
+       1.82763671875
+      ],
+      [
+       1.7197265625,
+       1.67333984375,
+       1.8193359375
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-10-23-k4f-after": {
+   "label": "loaded",
+   "compiler": "/home/epentland/ai/canopy/mylang-fix/zig-out/bin/mylang",
+   "compiler_sha256": "f10f6092e37c0d4a2ed30ccb9178f22dec1b6fa5a7df5565da7d7bfbe1a4dc44",
+   "commit": "daa32e4bb + uncommitted K4F part 1 (dictionary ordinal fix)",
+   "runs": [
+    {
+     "started": "2026-10-23T10:32:37Z",
+     "cpu": 2,
+     "rounds": 7,
+     "load": [
+      [
+       3.482421875,
+       2.421875,
+       3.60498046875
+      ],
+      [
+       8.3916015625,
+       8.45068359375,
+       6.00146484375
+      ]
+     ]
+    }
+   ]
+  },
+  "2026-10-23-k4f-part5": {
+   "label": "quiet",
+   "compiler": "/home/epentland/ai/canopy/mylang-fix/zig-out/bin/mylang",
+   "compiler_sha256": "599a4390f2687e1c5c765e49d972d321d70729f33f9b02cd9d44beb249c83273",
+   "commit": "after K4F part 5 (typed byte reads, uncommitted at measurement)",
+   "runs": [
+    {
+     "started": "2026-10-23T11:12:05Z",
+     "cpu": 2,
+     "rounds": 7,
+     "load": [
+      [
+       1.52783203125,
+       2.400390625,
+       5.96728515625
+      ],
+      [
+       1.53759765625,
+       1.814453125,
+       4.56591796875
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "benchmarks": {
+  "alloc_churn": {
+   "selka": {
+    "ratio": 0.793,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-arena": {
+    "ratio": 0.777,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "binary_trees": {
+   "selka": {
+    "ratio": 1.529,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-arena": {
+    "ratio": 1.373,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "bytes_scan": {
+   "selka": {
+    "ratio": 0.591,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-wrapping": {
+    "ratio": 0.414,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "calls": {
+   "selka": {
+    "ratio": 0.991,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "dict_churn": {
+   "my-tuned": {
+    "ratio": 1.527,
+    "tolerance": 0.15,
+    "batch": "2026-10-23-cpu2-quiet"
+   },
+   "selka": {
+    "ratio": 1.257,
+    "tolerance": 0.15,
+    "batch": "2026-10-23-k4f-after"
+   }
+  },
+  "dict_count": {
+   "selka": {
+    "ratio": 0.512,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "fannkuch_redux": {
+   "selka": {
+    "ratio": 0.874,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-array": {
+    "ratio": 0.731,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 0.823,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "fib": {
+   "selka": {
+    "ratio": 1.666,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "float_loop": {
+   "selka": {
+    "ratio": 1.016,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "hash_bytes": {
+   "selka": {
+    "ratio": 1.142,
+    "tolerance": 0.15,
+    "batch": "2026-10-23-k4f-part5"
+   }
+  },
+  "intloop": {
+   "selka": {
+    "ratio": 0.994,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "json_roundtrip": {
+   "selka": {
+    "ratio": 1.388,
+    "tolerance": 0.15,
+    "batch": "2026-10-23-cpu2-quiet"
+   }
+  },
+  "knucleotide": {
+   "selka": {
+    "ratio": 1.283,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-arena": {
+    "ratio": 1.317,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 0.501,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "list_append_sum": {
+   "selka": {
+    "ratio": 0.83,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "list_records": {
+   "selka": {
+    "ratio": 1.152,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-wrapping": {
+    "ratio": 0.985,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "mandelbrot": {
+   "selka": {
+    "ratio": 0.955,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "matmul": {
+   "selka": {
+    "ratio": 0.652,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-flat": {
+    "ratio": 0.625,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 5.309,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "nbody": {
+   "selka": {
+    "ratio": 1.451,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-class": {
+    "ratio": 1.374,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "netlist_union_find": {
+   "selka": {
+    "ratio": 1.207,
+    "tolerance": 0.15,
+    "batch": "2026-10-23-cpu2-quiet"
+   }
+  },
+  "raytrace": {
+   "selka": {
+    "ratio": 1.15,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 1.352,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "records": {
+   "selka": {
+    "ratio": 0.861,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "scan_count": {
+   "selka": {
+    "ratio": 1.213,
+    "tolerance": 0.5,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "scan_replace": {
+   "selka": {
+    "ratio": 0.42,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "scan_split": {
+   "selka": {
+    "ratio": 0.717,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "sieve": {
+   "selka": {
+    "ratio": 1.105,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 1.095,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "sort_builtin": {
+   "selka": {
+    "ratio": 0.223,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "sort_quick": {
+   "selka": {
+    "ratio": 1.032,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "sort_records": {
+   "selka": {
+    "ratio": 0.339,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-keyed": {
+    "ratio": 0.262,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-sorted": {
+    "ratio": 0.28,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "spectral_norm": {
+   "selka": {
+    "ratio": 1.026,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 1.032,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "str_build": {
+   "selka": {
+    "ratio": 1.031,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  },
+  "text_ops": {
+   "selka": {
+    "ratio": 1.514,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   },
+   "my-tuned": {
+    "ratio": 0.756,
+    "tolerance": 0.15,
+    "batch": "2026-10-17-ownership-default-r3"
+   }
+  }
+ }
+}

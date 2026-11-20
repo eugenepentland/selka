@@ -1,0 +1,154 @@
+# `own NAME` of an option local narrowed to `Some` (an earlier `if NAME is None:` that leaves, or the `else:` of one) moves
+# the payload out and consumes the option, as `const c = own NAME else:` does, with no copy (decision NARROW-OWN). A bare
+# `return NAME` or `fail NAME` gives the payload the same way. The refusals are pinned in src/core/single_owner_test.zig.
+record Cmd:
+    name: str
+    args: str[]
+
+
+record Inv:
+    db: str?
+    cmd: Cmd
+
+
+func find(name: str) -> Cmd?:
+    if name == "a":
+        return Some(Cmd(name="a", args=["x", "y"]))
+    return None
+
+
+func keep(own c: Cmd) -> int:
+    return len(c.args)
+
+
+func into_field(name: str) -> Inv fails str:
+    mut found: Cmd? = None
+    if name == "a":
+        found = find(name)
+    if found is None:
+        fail "unknown"
+    return Inv(db=None, cmd=own found)
+
+
+func bound(name: str) -> Cmd fails str:
+    const found = find(name)
+    if found is None:
+        fail "unknown"
+    const c = own found
+    return c
+
+
+func appended(name: str) -> Cmd[]:
+    mut all: Cmd[] = []
+    const found = find(name)
+    if found is None:
+        return all
+    append(mut all, own found)
+    return all
+
+
+func in_else(name: str) -> int:
+    const found = find(name)
+    if found is None:
+        return -1
+    else:
+        return keep(own found)
+
+
+func from_own_parameter(own found: Cmd?) -> int:
+    if found is None:
+        return -1
+    return keep(own found)
+
+
+func rewrapped(name: str) -> Cmd?:
+    const found = find(name)
+    if found is None:
+        return None
+    const again: Cmd? = Some(own found)
+    return again
+
+
+func reassigned(name: str) -> int:
+    mut found = find(name)
+    if found is None:
+        return -1
+    const n = keep(own found)
+    found = find("b")
+    if found is None:
+        return n
+    return -2
+
+
+func returned(name: str) -> Cmd fails str:
+    const found = find(name)
+    if found is None:
+        fail "unknown"
+    return found
+
+
+func failed(name: str) -> int fails Cmd:
+    const found = find(name)
+    if found is None:
+        return 0
+    fail found
+
+
+# The payload moves on one path, and the option is dropped whole on the others.
+func one_path(name: str, take: bool) -> Inv fails str:
+    mut found = find(name)
+    if found is None:
+        fail "unknown"
+    if take:
+        return Inv(db=None, cmd=own found)
+    fail "kept " + found.name
+
+
+public func test_own_into_a_field() -> bool:
+    const inv = into_field("a") else Err(_):
+        return False
+    match into_field("b"):
+        case Ok(_):
+            return False
+        case Err(reason):
+            return inv.cmd.name == "a" and len(inv.cmd.args) == 2 and reason == "unknown"
+
+
+public func test_own_bound_appended_and_given() -> bool:
+    const c = bound("a") else Err(_):
+        return False
+    const all = appended("a")
+    return c.args[1] == "y" and len(all) == 1 and all[0].args[0] == "x" and len(appended("b")) == 0
+
+
+public func test_own_in_else_and_from_own_parameter() -> bool:
+    return in_else("a") == 2 and in_else("b") == -1 and from_own_parameter(find("a")) == 2 and from_own_parameter(None) == -1
+
+
+public func test_some_of_own_and_reassigned_after() -> bool:
+    const again = rewrapped("a")
+    if again is None:
+        return False
+    return again.args[0] == "x" and rewrapped("b") is None and reassigned("a") == 2
+
+
+public func test_bare_return_and_fail_move() -> bool:
+    const c = returned("a") else Err(_):
+        return False
+    const none = failed("b") else Err(_):
+        return False
+    match failed("a"):
+        case Ok(_):
+            return False
+        case Err(given):
+            return c.name == "a" and given.args[1] == "y" and none == 0
+
+
+public func test_moved_on_one_path_dropped_on_another() -> bool:
+    const inv = one_path("a", True) else Err(_):
+        return False
+    match one_path("a", False):
+        case Ok(_):
+            return False
+        case Err(reason):
+            return inv.cmd.args[0] == "x" and reason == "kept a"

@@ -1,0 +1,380 @@
+# A call given `mut` a binding of a `match mut` arm whose scrutinee is a binding of an enclosing `match mut` arm (`one(mut u)`
+# in `case two(u, v):` of `match mut x:` in `case both(x, y):`). Until lane FR77 the call took the inner payload with no tag
+# test the IR verifier relates to the inner match's, so the gate's strict verifier refused the function, and `check` kept
+# two such bindings, or bindings of two nested arms, overlapping in one call. Each test compares with the record form.
+enum Inner:
+    two(u: int[], v: int[])
+    none_in
+
+
+enum Outer:
+    both(x: Inner, y: int[])
+    none_out
+
+
+record RInner:
+    u: int[]
+    v: int[]
+
+
+record ROuter:
+    x: RInner
+    y: int[]
+
+
+record Holder:
+    name: str
+    t: Outer
+
+
+record RHolder:
+    name: str
+    r: ROuter
+
+
+record Bag:
+    n: int
+    items: int[]
+
+
+enum Slot:
+    full(value: Bag)
+    empty
+
+
+enum Wrap:
+    wrapped(s: Slot, y: int[])
+    bare
+
+
+record RWrap:
+    s: Bag
+    y: int[]
+
+
+enum L3:
+    three(a: int[], b: int[])
+    n3
+
+
+enum L2:
+    two2(m: L3, w: int[])
+    n2
+
+
+enum L1:
+    top(k: L2, z: int[])
+    n1
+
+
+record R3:
+    a: int[]
+    b: int[]
+
+
+record R2:
+    m: R3
+    w: int[]
+
+
+record R1:
+    k: R2
+    z: int[]
+
+
+record ROpt:
+    x: int[]
+
+
+record ROpt2:
+    y: ROpt
+
+
+func one(mut a: int[]):
+    append(mut a, 1)
+
+
+func fill(mut a: int[], mut b: int[]):
+    append(mut a, 2)
+    append(mut b, 3)
+
+
+func bump1(mut a: int):
+    a = a + 1
+
+
+func add_or_fail(mut a: int[], fails_now: bool) -> Unit fails str:
+    append(mut a, 10)
+    if fails_now:
+        fail "stop"
+
+
+func outcome(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func fresh() -> Outer:
+    return Outer.both(x=Inner.two(u=[5], v=[]), y=[])
+
+
+func rfresh() -> ROuter:
+    return ROuter(x=RInner(u=[5], v=[]), y=[])
+
+
+func show(t: Outer) -> str:
+    match t:
+        case both(x, y):
+            match x:
+                case two(u, v):
+                    return f"{u} {v} {y}"
+                case none_in:
+                    return "none_in"
+        case none_out:
+            return "none_out"
+
+
+func rshow(r: ROuter) -> str:
+    return f"{r.x.u} {r.x.v} {r.y}"
+
+
+public func test_one_call_and_three_calls() -> bool:
+    mut t = fresh()
+    match mut t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    one(mut u)
+                    one(mut v)
+                case none_in:
+                    pass
+            one(mut y)
+        case none_out:
+            pass
+    mut r = rfresh()
+    one(mut r.x.u)
+    one(mut r.x.v)
+    one(mut r.y)
+    return show(t) == rshow(r) and show(t) == "[5, 1] [1] [1]"
+
+
+public func test_two_bindings_of_the_inner_arm_and_bindings_of_two_arms_in_one_call() -> bool:
+    mut t = fresh()
+    match mut t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    fill(mut u, mut v)
+                    fill(mut u, mut y)
+                    fill(mut y, mut v)
+                case none_in:
+                    pass
+        case none_out:
+            pass
+    mut r = rfresh()
+    fill(mut r.x.u, mut r.x.v)
+    fill(mut r.x.u, mut r.y)
+    fill(mut r.y, mut r.x.v)
+    return show(t) == rshow(r) and show(t) == "[5, 2, 2] [3, 3] [3, 2]"
+
+
+public func test_three_levels() -> bool:
+    mut t = L1.top(k=L2.two2(m=L3.three(a=[], b=[]), w=[]), z=[])
+    match mut t:
+        case top(k, z):
+            match mut k:
+                case two2(m, w):
+                    match mut m:
+                        case three(a, b):
+                            one(mut a)
+                            fill(mut a, mut b)
+                        case n3:
+                            pass
+                    one(mut w)
+                case n2:
+                    pass
+            one(mut z)
+        case n1:
+            pass
+    mut r = R1(k=R2(m=R3(a=[], b=[]), w=[]), z=[])
+    one(mut r.k.m.a)
+    fill(mut r.k.m.a, mut r.k.m.b)
+    one(mut r.k.w)
+    one(mut r.z)
+    return f"{t}" == "L1.top(k=L2.two2(m=L3.three(a=[1, 2], b=[3]), w=[1]), z=[1])" and f"{r}" == "R1(k=R2(m=R3(a=[1, 2], b=[3]), w=[1]), z=[1])"
+
+
+func work(mut t: Outer):
+    match mut t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    one(mut u)
+                    fill(mut v, mut y)
+                case none_in:
+                    pass
+        case none_out:
+            pass
+
+
+func rwork(mut r: ROuter):
+    one(mut r.x.u)
+    fill(mut r.x.v, mut r.y)
+
+
+public func test_a_mut_parameter_scrutinee() -> bool:
+    mut t = fresh()
+    work(mut t)
+    mut r = rfresh()
+    rwork(mut r)
+    return show(t) == rshow(r) and show(t) == "[5, 1] [2] [3]"
+
+
+public func test_a_field_of_a_local_scrutinee() -> bool:
+    mut h = Holder(name="h", t=fresh())
+    match mut h.t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    one(mut u)
+                case none_in:
+                    pass
+        case none_out:
+            pass
+    mut g = RHolder(name="h", r=rfresh())
+    one(mut g.r.x.u)
+    return show(h.t) == rshow(g.r) and h.name == "h" and show(h.t) == "[5, 1] [] []"
+
+
+public func test_a_record_payload_field_and_its_scalar() -> bool:
+    mut w = Wrap.wrapped(s=Slot.full(value=Bag(n=1, items=[2])), y=[])
+    match mut w:
+        case wrapped(s, y):
+            match mut s:
+                case full(value=p):
+                    one(mut p.items)
+                    bump1(mut p.n)
+                    one(mut y)
+                case empty:
+                    pass
+        case bare:
+            pass
+    mut r = RWrap(s=Bag(n=1, items=[2]), y=[])
+    one(mut r.s.items)
+    bump1(mut r.s.n)
+    one(mut r.y)
+    return f"{w}" == "Wrap.wrapped(s=Slot.full(value=Bag(n=2, items=[2, 1])), y=[1])" and f"{r}" == "RWrap(s=Bag(n=2, items=[2, 1]), y=[1])"
+
+
+public func test_a_scalar_element_under_the_inner_binding() -> bool:
+    mut t = fresh()
+    match mut t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    bump1(mut u[0])
+                    one(mut v)
+                    bump1(mut u[0])
+                case none_in:
+                    pass
+        case none_out:
+            pass
+    mut r = rfresh()
+    bump1(mut r.x.u[0])
+    one(mut r.x.v)
+    bump1(mut r.x.u[0])
+    return show(t) == rshow(r) and show(t) == "[7] [1] []"
+
+
+public func test_a_call_in_a_loop_in_the_inner_arm() -> bool:
+    mut t = fresh()
+    match mut t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    mut i = 0
+                    while i < 3:
+                        one(mut u)
+                        if i == 1:
+                            fill(mut v, mut y)
+                        i = i + 1
+                case none_in:
+                    pass
+        case none_out:
+            pass
+    mut r = rfresh()
+    mut j = 0
+    while j < 3:
+        one(mut r.x.u)
+        if j == 1:
+            fill(mut r.x.v, mut r.y)
+        j = j + 1
+    return show(t) == rshow(r) and show(t) == "[5, 1, 1, 1] [2] [3]"
+
+
+func through(mut t: Outer, fails_now: bool) -> Unit fails str:
+    match mut t:
+        case both(x, y):
+            match mut x:
+                case two(u, v):
+                    try add_or_fail(mut u, fails_now)
+                case none_in:
+                    pass
+        case none_out:
+            pass
+
+
+func rthrough(mut r: ROuter, fails_now: bool) -> Unit fails str:
+    try add_or_fail(mut r.x.u, fails_now)
+
+
+# After a failure the place holds what the callee wrote before it failed, as a record's field does.
+public func test_a_callee_that_fails() -> bool:
+    mut t = fresh()
+    const failed = outcome(through(mut t, True))
+    const after_failure = show(t)
+    const passed = outcome(through(mut t, False))
+    mut r = rfresh()
+    const record_failed = outcome(rthrough(mut r, True))
+    const record_after_failure = rshow(r)
+    _ = outcome(rthrough(mut r, False))
+    return failed == "stop" and record_failed == "stop" and passed == "ok" and after_failure == record_after_failure and show(t) == rshow(r) and show(t) == "[5, 10, 10] [] []"
+
+
+func deep(own o: int[]??) -> int[]??:
+    match mut o:
+        case Some(y):
+            match mut y:
+                case Some(x):
+                    one(mut x)
+                    one(mut x)
+                case None:
+                    pass
+        case None:
+            pass
+    return o
+
+
+func rdeep(own o: ROpt2) -> ROpt2:
+    one(mut o.y.x)
+    one(mut o.y.x)
+    return o
+
+
+public func test_an_own_option_payload_two_levels_deep() -> bool:
+    const got = deep(Some(Some([3])))
+    const r = rdeep(ROpt2(y=ROpt(x=[3])))
+    mut seen = "none"
+    match got:
+        case Some(y):
+            match y:
+                case Some(x):
+                    seen = f"{x}"
+                case None:
+                    pass
+        case None:
+            pass
+    return seen == f"{r.y.x}" and seen == "[3, 1, 1]"

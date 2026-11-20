@@ -1,0 +1,8 @@
+import lists
+
+public func program() -> i64:
+    mut values: i64[] = []
+    append(mut values, 42)
+    if lists.contains(values, 42):
+        return 42
+    return 0

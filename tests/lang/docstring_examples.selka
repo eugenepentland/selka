@@ -1,0 +1,101 @@
+import time
+
+"""Runnable documentation keeps examples beside their defining functions."""
+
+
+public const ANSWER: int = 42
+
+
+func private_answer() -> int:
+    return ANSWER
+
+
+public func value() -> int:
+    """The ordinary scalar value and a private helper in the same scope.
+
+    >>> value() # inline explanation
+    42
+    >>> private_answer()
+    42
+    >>> (
+    ...     value() + 1
+    ... )
+    43
+    """
+    return private_answer()
+
+
+public func text() -> str:
+    """Strings and bytes display with repr, including the empty string.
+
+    >>> text()
+    '1'
+    >>> ''
+    ''
+    >>> b'one'
+    b'one'
+    >>> ['one', 'two']
+    ['one', 'two']
+    """
+    return "1"
+
+
+func announce(out: Stream) -> int:
+    print(out, "counting")
+    return 2
+
+
+public func output() -> int:
+    """Captured output precedes an expression's displayed value.
+
+    >>> announce(out)
+    counting
+    2
+    >>> print(out, 'first\n\nlast')
+    first
+    <BLANKLINE>
+    last
+    """
+    return 2
+
+
+public func state() -> int:
+    """Statements share local state and unit expressions display no value.
+
+    >>> mut total = 0
+    >>> for item in [1, 2, 3]:
+    ...     total += item
+    >>> total
+    6
+    >>> total = total + 1
+    >>> print(out, total)
+    7
+    """
+    return 7
+
+
+func capability_names(fs: Filesystem, net: Network, clock: Clock, entropy: Entropy, env: Environment, out: Stream) -> bool:
+    _ = fs
+    _ = net
+    _ = clock
+    _ = entropy
+    _ = env
+    _ = out
+    return True
+
+
+public func capabilities() -> int:
+    """All six names are bound to deterministic test capability stand-ins.
+
+    >>> capability_names(fs, net, clock, entropy, env, out)
+    True
+    >>> env.names()
+    []
+    >>> time.now(clock)
+    Ok(Instant(unix_nanoseconds=946684800000000000))
+    """
+    return 0
+
+
+public func test_documented_functions_keep_their_ordinary_behavior() -> bool:
+    return value() == ANSWER and text() == "1" and output() == 2 and state() == 7

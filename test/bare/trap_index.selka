@@ -1,0 +1,10 @@
+# A list index out of range: the trap's text and status 1, as on Linux.
+func pick(values: int[], at: int) -> int:
+    return values[at]
+
+
+func main() -> int:
+    mut values: int[] = [1, 2, 3]
+    for i in range(4):
+        append(mut values, i)
+    return pick(values, len(values) + 2)

@@ -1,0 +1,69 @@
+# `strings.format_float` renders the exact binary value of a float. Above 2^52 the scaled
+# value is already an integer, so the rounding error of the multiply decides the last
+# digit, and these rows pin that range. Every expected text is Python's `decimal`
+# rounding of `Decimal(value)` to the given places with ROUND_HALF_UP (away from zero
+# for these magnitudes), with the sign applied afterwards and no sign on a zero result.
+import strings
+
+func text_of(result: Result[str, strings.Error]) -> str:
+    match result:
+        case Ok(text):
+            return copy(text)
+        case Err(error):
+            return "error: " + strings.message(error)
+
+
+func fixed(value: float, decimals: int) -> str:
+    return text_of(strings.format_float(value, decimals))
+
+
+public func test_large_values_round_their_exact_binary_value() -> bool:
+    if fixed(1000000000000000.5, 1) != "1000000000000000.5":
+        return False
+    if fixed(35035188590890568.0, 1) != "35035188590890568.0":
+        return False
+    if fixed(-214118625782737312.0, 1) != "-214118625782737312.0":
+        return False
+    if fixed(-510989414391477.5625, 2) != "-510989414391477.56":
+        return False
+    return fixed(84391967654.7491455078125, 6) == "84391967654.749146"
+
+
+public func test_exact_ties_above_two_to_the_fifty_two_round_away_from_zero() -> bool:
+    if fixed(500000000000000.25, 1) != "500000000000000.3":
+        return False
+    if fixed(1000000000000000.25, 1) != "1000000000000000.3":
+        return False
+    if fixed(1000000000000000.75, 1) != "1000000000000000.8":
+        return False
+    return fixed(450359962737049.75, 1) == "450359962737049.8"
+
+
+public func test_integers_and_negatives_above_two_to_the_fifty_two_render_exactly() -> bool:
+    if fixed(4503599627370497.0, 0) != "4503599627370497":
+        return False
+    if fixed(1000000000000000.0, 3) != "1000000000000000.000":
+        return False
+    if fixed(9223372036854700.0, 3) != "9223372036854700.000":
+        return False
+    return fixed(-9223372036854700.0, 3) == "-9223372036854700.000"
+
+
+public func test_controls_below_two_to_the_fifty_two_are_unchanged() -> bool:
+    if fixed(2.675, 2) != "2.67":
+        return False
+    if fixed(0.125, 2) != "0.13":
+        return False
+    if fixed(-0.0, 1) != "0.0":
+        return False
+    if fixed(-0.001, 2) != "0.00":
+        return False
+    if fixed(1.5, 0) != "2":
+        return False
+    return fixed(4503599627370495.5, 0) == "4503599627370496"
+
+
+public func test_scaled_values_at_two_to_the_sixty_three_fail_with_overflow() -> bool:
+    if fixed(1.7976931348623157e308, 0) != "error: value is too large to render with fixed decimals":
+        return False
+    return fixed(9300000000000000.0, 3) == "error: value is too large to render with fixed decimals"

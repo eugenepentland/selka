@@ -1,0 +1,17 @@
+# A `@freestanding(ram)` function whose index is out of range (MCU-NOC2B): its failed check calls nothing, as a plain
+# freestanding one's does (`freestanding_bounds.selka`): `udf #83` with the code and place in r0-r2, and the runtime's fault
+# handler reports `error[R_LIST_BOUNDS] PATH:LINE` in every build mode, then status 1. The path's address is passed in r1
+# and never read, which the image check allows. On Linux the instruction ends the process with SIGILL (status 132).
+# bare: R_LIST_BOUNDS
+# bare-text: error[R_LIST_BOUNDS] freestanding_ram_bounds.selka:9
+@freestanding(ram)
+func pick(words: FixedArray[u32, 4], index: int) -> u32:
+    return words[index]
+
+
+func main() -> int:
+    const words = FixedArray[u32, 4]([1, 2, 3, 4])
+    mut total: u32 = 0
+    for i in range(6):
+        total = total + pick(words, i)
+    return int(total)

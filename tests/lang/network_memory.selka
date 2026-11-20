@@ -1,0 +1,492 @@
+import byte_builder
+import http
+import network
+import strings
+
+# `network.memory()` is a Network stand-in whose endpoints are names: a listener on a narrowed name, a client connected
+# to it and the server end `accept` hands out are live resources in the test, and the bytes one end writes queue on
+# the other. Nothing blocks, so the tests also pin what happens where a real socket would wait. A narrowed capability
+# lives in a `with` scope, so `in_pair` opens one pair and runs the numbered scenario on its two ends.
+# The bytes of a chunk, as the `bytes` value they spell.
+func bytes_of(chunk: network.Chunk[64]) -> bytes:
+    mut out = byte_builder.create()
+    mut at = 0
+    while at < int(chunk.length):
+        _ = byte_builder.append_byte(mut out, int(chunk.bytes[at]))
+        at += 1
+    return byte_builder.finish(out)
+
+
+# The text a byte string spells, or a marker when it is not UTF-8.
+func text_of(data: bytes) -> str:
+    match strings.decode(data):
+        case Ok(text):
+            return text
+        case Err(_):
+            return "<not text>"
+
+
+# Write `data` on one end and report whether the whole of it was accepted.
+func send(mut end: network.Connection, data: bytes) -> bool:
+    match write_resource[network.Written](end, data):
+        case Ok(count):
+            return int(count) == len(data)
+        case Err(_):
+            return False
+
+
+# The text of what is queued on one end, up to 64 bytes; "<end>" for an end of stream, "<error N>" for a failed read.
+func receive(mut end: network.Connection) -> str:
+    match read_resource[network.Read[64]](end):
+        case Ok(chunk):
+            if chunk.eof:
+                return "<end>"
+            return text_of(bytes_of(chunk))
+        case Err(code):
+            return f"<error {code}>"
+
+
+# Like `receive`, but at most two bytes.
+func receive_two(mut end: network.Connection) -> str:
+    match read_resource[network.Read[2]](end):
+        case Ok(chunk):
+            if chunk.eof:
+                return "<end>"
+            mut out = byte_builder.create()
+            mut at = 0
+            while at < int(chunk.length):
+                _ = byte_builder.append_byte(mut out, int(chunk.bytes[at]))
+                at += 1
+            return text_of(byte_builder.finish(out))
+        case Err(code):
+            return f"<error {code}>"
+
+
+# Whether a write on the end fails.
+func send_fails(mut end: network.Connection, data: bytes) -> bool:
+    match write_resource[network.Written](end, data):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+func close_end(own end: network.Connection) -> bool:
+    match network.close(own end):
+        case ok(done):
+            return done
+        case err(failure):
+            return False
+
+
+# Scenario 1: bytes cross in both directions, in order, and a read returns what was queued so far.
+func round_trip(mut client: network.Connection, mut server: network.Connection) -> bool:
+    if not send(mut client, b"GET ") or not send(mut client, b"/ HTTP"):
+        return False
+    if receive(mut server) != "GET / HTTP":
+        return False
+    if not send(mut server, b"200 OK"):
+        return False
+    return receive(mut client) == "200 OK"
+
+
+# Scenario 2: a read of N bytes takes at most N; the rest stays queued.
+func partial_reads(mut client: network.Connection, mut server: network.Connection) -> bool:
+    if not send(mut client, b"hello"):
+        return False
+    return receive_two(mut server) == "he" and receive_two(mut server) == "ll" and receive_two(mut server) == "o"
+
+
+# Scenario 3: nothing queued and the peer open is a failed read (a real socket would block), on both ends.
+func empty_reads_fail(mut client: network.Connection, mut server: network.Connection) -> bool:
+    return receive(mut server) == "<error 3>" and receive(mut client) == "<error 3>"
+
+
+# Scenario 4: a closed end gives its peer the queued bytes and then end of stream, every time it is asked.
+func closing_ends_the_stream(own client: network.Connection, mut server: network.Connection) -> bool:
+    mut sender = own client
+    if not send(mut sender, b"bye"):
+        return False
+    if not close_end(own sender):
+        return False
+    return receive(mut server) == "bye" and receive(mut server) == "<end>" and receive(mut server) == "<end>"
+
+
+# Scenario 5: a write toward a closed peer fails.
+func writing_to_a_closed_peer_fails(mut client: network.Connection, own server: network.Connection) -> bool:
+    if not close_end(own server):
+        return False
+    return send_fails(mut client, b"late")
+
+
+# Scenario 6: the two directions are independent queues.
+func directions_are_independent(mut client: network.Connection, mut server: network.Connection) -> bool:
+    if not send(mut client, b"a") or not send(mut server, b"b") or not send(mut client, b"c"):
+        return False
+    return receive(mut client) == "b" and receive(mut server) == "ac"
+
+
+# Scenario 7: an empty write is accepted and queues nothing.
+func empty_writes_queue_nothing(mut client: network.Connection, mut server: network.Connection) -> bool:
+    if not send(mut client, b""):
+        return False
+    return receive(mut server) == "<error 3>"
+
+
+func scenario(which: int, own first: network.Connection, own second: network.Connection) -> bool:
+    mut client = own first
+    mut server = own second
+    if which == 1:
+        return round_trip(mut client, mut server)
+    if which == 2:
+        return partial_reads(mut client, mut server)
+    if which == 3:
+        return empty_reads_fail(mut client, mut server)
+    if which == 4:
+        return closing_ends_the_stream(own client, mut server)
+    if which == 5:
+        return writing_to_a_closed_peer_fails(mut client, own server)
+    if which == 6:
+        return directions_are_independent(mut client, mut server)
+    return empty_writes_queue_nothing(mut client, mut server)
+
+
+# A listener, a client connected to it and the server end it accepted, on a fresh in-memory network; then the scenario.
+func in_pair(which: int) -> bool:
+    mut net = network.memory()
+    with net.host("memory:80") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match network.connect(scoped):
+                    case ok(made):
+                        mut client = own made
+                        match accept_resource[network.Accepted](listener):
+                            case Ok(accepted):
+                                mut server = own accepted
+                                return scenario(which, own client, own server)
+                            case Err(_):
+                                return False
+                    case err(_):
+                        return False
+            case err(_):
+                return False
+
+
+public func test_bytes_cross_the_pair_in_order() -> bool:
+    return in_pair(1)
+
+
+public func test_a_read_takes_at_most_the_size_it_asks_for() -> bool:
+    return in_pair(2)
+
+
+public func test_a_read_with_nothing_queued_fails_instead_of_blocking() -> bool:
+    return in_pair(3)
+
+
+public func test_a_closed_end_gives_its_peer_the_queued_bytes_and_then_the_end() -> bool:
+    return in_pair(4)
+
+
+public func test_a_write_toward_a_closed_peer_fails() -> bool:
+    return in_pair(5)
+
+
+public func test_the_two_directions_are_independent() -> bool:
+    return in_pair(6)
+
+
+public func test_an_empty_write_queues_nothing() -> bool:
+    return in_pair(7)
+
+
+# Connecting to a name nobody listens on fails (code 3), and a listener is a failed accept until a client has connected.
+public func test_connect_and_accept_fail_where_a_socket_would_wait() -> bool:
+    mut net = network.memory()
+    with net.host("memory:81") as scoped:
+        match network.connect(scoped):
+            case ok(_):
+                return False
+            case err(code):
+                if code != 3:
+                    return False
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match accept_resource[network.Accepted](listener):
+                    case Ok(_):
+                        return False
+                    case Err(code):
+                        return code == 3
+            case err(_):
+                return False
+
+
+# Two clients are accepted in the order they connected, each with its own queue; a second listener on the same name fails.
+public func test_clients_are_accepted_in_connection_order_and_a_name_listens_once() -> bool:
+    mut net = network.memory()
+    with net.host("memory:82") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match network.listen(scoped):
+                    case ok(_):
+                        return False
+                    case err(code):
+                        if code != 3:
+                            return False
+                match network.connect(scoped):
+                    case ok(first_made):
+                        mut first = own first_made
+                        match network.connect(scoped):
+                            case ok(second_made):
+                                mut second = own second_made
+                                return serve_both(mut listener, mut first, mut second)
+                            case err(_):
+                                return False
+                    case err(_):
+                        return False
+            case err(_):
+                return False
+
+
+func serve_both(mut listener: network.Listener, mut first: network.Connection, mut second: network.Connection) -> bool:
+    if not send(mut first, b"one") or not send(mut second, b"two"):
+        return False
+    match accept_resource[network.Accepted](listener):
+        case Ok(accepted_first):
+            mut server_first = own accepted_first
+            match accept_resource[network.Accepted](listener):
+                case Ok(accepted_second):
+                    mut server_second = own accepted_second
+                    return receive(mut server_first) == "one" and receive(mut server_second) == "two"
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+# The denied stand-in is unchanged by the in-memory one.
+public func test_the_denied_network_still_refuses() -> bool:
+    mut net = network.denied()
+    with net.host("memory:80") as scoped:
+        match network.connect(scoped):
+            case ok(_):
+                return False
+            case err(code):
+                return code == network.denied_here()
+
+
+# What the stand-in is for: the server half of a program, run against a client the test drives. This handler answers a
+# request with the status the HTTP codec gives it.
+func serve(mut connection: network.Connection) -> bool:
+    match read_resource[network.Read[64]](connection):
+        case Ok(chunk):
+            match http.parse_request(bytes_of(chunk)):
+                case Ok(request):
+                    if http.path(request) == "/":
+                        return send(mut connection, b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nhi")
+                    return send(mut connection, b"HTTP/1.1 404 Not Found\r\n\r\n")
+                case Err(_):
+                    return send(mut connection, b"HTTP/1.1 400 Bad Request\r\n\r\n")
+        case Err(_):
+            return False
+
+
+func status_of(mut client: network.Connection, request: bytes, mut server: network.Connection) -> int:
+    if not send(mut client, request) or not serve(mut server):
+        return 0
+    match read_resource[network.Read[64]](client):
+        case Ok(chunk):
+            match http.parse_response(bytes_of(chunk), False):
+                case Ok(response):
+                    return response.status
+                case Err(_):
+                    return 0
+        case Err(_):
+            return 0
+
+
+public func test_a_server_handler_runs_against_a_client_the_test_drives() -> bool:
+    mut net = network.memory()
+    with net.host("memory:8080") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match network.connect(scoped):
+                    case ok(made):
+                        mut client = own made
+                        match accept_resource[network.Accepted](listener):
+                            case Ok(accepted):
+                                mut server = own accepted
+                                return status_of(mut client, b"GET / HTTP/1.1\r\nHost: x\r\n\r\n", mut server) == 200
+                            case Err(_):
+                                return False
+                    case err(_):
+                        return False
+            case err(_):
+                return False
+
+
+# FR1: `connect_within` connects through the stand-in as `connect` does. Nothing here blocks, so a limit has nothing to
+# bound: a read with nothing queued still fails at once with 3, never with `timed_out()`.
+func limited_pair() -> str:
+    mut net = network.memory()
+    with net.host("memory:81") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match network.connect_within(scoped, network.Timeouts(connect_ms=50, read_ms=50, write_ms=50)):
+                    case ok(made):
+                        mut client = own made
+                        match accept_resource[network.Accepted](listener):
+                            case Ok(accepted):
+                                mut server = own accepted
+                                const empty = receive(mut client)
+                                if not send(mut client, b"ping"):
+                                    return "send failed"
+                                return empty + " " + receive(mut server)
+                            case Err(_):
+                                return "accept failed"
+                    case err(code):
+                        return f"connect failed {code}"
+            case err(_):
+                return "listen failed"
+
+
+public func test_connect_within_connects_through_the_memory_network_like_connect() -> bool:
+    return limited_pair() == "<error 3> ping"
+
+
+# A name nobody listens on fails with 3 through `connect_within` too, and the unnarrowed stand-in names nothing.
+public func test_connect_within_to_an_unknown_name_fails_like_connect() -> bool:
+    mut net = network.memory()
+    with net.host("memory:82") as scoped:
+        match network.connect_within(scoped, network.Timeouts(connect_ms=50)):
+            case ok(made):
+                _ = network.close(own made)
+                return False
+            case err(code):
+                return code == 3
+
+
+public func test_connect_within_through_a_denied_network_is_denied_here() -> bool:
+    mut net = network.denied()
+    with net.host("127.0.0.1:8000") as scoped:
+        match network.connect_within(scoped, network.Timeouts(connect_ms=50, read_ms=50)):
+            case ok(made):
+                _ = network.close(own made)
+                return False
+            case err(code):
+                return code == network.denied_here()
+
+
+public func test_timeouts_default_to_no_limit_and_the_timeout_code_is_its_own() -> bool:
+    const none = network.Timeouts()
+    const some = network.Timeouts(read_ms=5000)
+    const codes_differ = network.timed_out() != network.denied_here() and network.timed_out() != 3
+    return none.connect_ms == 0 and none.read_ms == 0 and none.write_ms == 0 and some.read_ms == 5000 and some.write_ms == 0 and codes_differ
+
+
+public func test_describe_names_a_timeout() -> bool:
+    return network.timed_out() == 7 and network.describe(network.timed_out()) == "timed out: the endpoint did not answer within the time limit" and network.describe(3) == "failed: the endpoint could not be reached"
+
+
+# F-43. A listener is a resource, so it ends at its last use (a binding that is never used again ends where it was made),
+# and a name is held only while a live listener has it. The result is the refusal's code, or 0 when the listen succeeded;
+# the listener it made ends at the end of the call.
+func listen_code(net: Network) -> int:
+    with net.host("memory:90") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match accept_resource[network.Accepted](listener):
+                    case Ok(_):
+                        return -1
+                    case Err(_):
+                        return 0
+            case err(code):
+                return code
+
+
+# A second `listen` on a name a live listener holds is refused with the code 3, which the real network answers for an
+# address in use, and answers the same once the first listener has ended: first by its last use, then by its scope.
+public func test_a_second_listen_is_refused_while_the_first_lives_and_succeeds_after_it_ends() -> bool:
+    const net = network.memory()
+    with net.host("memory:90") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut first = own owned
+                if listen_code(net) != 3:
+                    return False
+                match accept_resource[network.Accepted](first):
+                    case Ok(_):
+                        return False
+                    case Err(code):
+                        if code != 3:
+                            return False
+            case err(_):
+                return False
+    return listen_code(net) == 0 and listen_code(net) == 0
+
+
+# The friction's own program held its first listener in a binding it never read again, so the first listener ended at once and
+# the second listen succeeded, on the real network as on the stand-in. A listener that is used afterwards is held until then.
+public func test_a_listener_that_is_never_used_again_holds_nothing() -> bool:
+    const net = network.memory()
+    with net.host("memory:90") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut unused = own owned
+                return listen_code(net) == 0
+            case err(_):
+                return False
+
+
+# Two different names are two endpoints: holding one leaves the other free, and a refused listen holds nothing.
+public func test_a_held_name_blocks_only_that_name() -> bool:
+    const net = network.memory()
+    with net.host("memory:91") as other:
+        match network.listen(other):
+            case ok(owned):
+                mut elsewhere = own owned
+                if listen_code(net) != 0:
+                    return False
+                match accept_resource[network.Accepted](elsewhere):
+                    case Ok(_):
+                        return False
+                    case Err(code):
+                        return code == 3
+            case err(_):
+                return False
+
+
+# The refused second listen leaves the first listener working: a client still reaches it and its server end is accepted.
+public func test_a_refused_second_listen_leaves_the_first_listener_serving() -> bool:
+    const net = network.memory()
+    with net.host("memory:92") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut first = own owned
+                match network.listen(scoped):
+                    case ok(_):
+                        return False
+                    case err(code):
+                        if code != 3:
+                            return False
+                match network.connect(scoped):
+                    case ok(client):
+                        mut dialled = own client
+                        if not send(mut dialled, b"hi"):
+                            return False
+                        match accept_resource[network.Accepted](first):
+                            case Ok(server):
+                                mut served = own server
+                                return receive(mut served) == "hi"
+                            case Err(_):
+                                return False
+                    case err(_):
+                        return False
+            case err(_):
+                return False

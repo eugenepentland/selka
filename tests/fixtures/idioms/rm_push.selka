@@ -1,0 +1,4 @@
+func main() -> int:
+    mut xs = [1]
+    xs.push(2)
+    return len(xs)

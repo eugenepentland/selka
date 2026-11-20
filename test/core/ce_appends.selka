@@ -1,0 +1,66 @@
+# Inline byte-buffer appends (NEW-CORE-CE-LISTS-6): every answer here is the base
+# compiler's. `grow N` appends until the buffer holds N octets.
+import buffers
+
+func checksum(buffer: byte_buffer) -> int:
+    mut total = 0
+    for i in range(len(buffer)):
+        total = (total * 31 + buffer[i]) % 1000003
+    return total
+
+
+func parse(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"abcdefgh"
+    mut accepted = 0
+    # Valid, empty, reversed and past-the-end ranges, through several growths.
+    for i in range(3000):
+        const start = i % 11 - 2
+        const end = (i * 7) % 12 - 1
+        if start >= 0 and end >= 0:
+            if buffers.append_range(mut buffer, piece, start, end):
+                accepted += 1
+    print(out, len(buffer), accepted, checksum(buffer))
+    # Exactly at the capacity boundary: reserve room for 16 octets, fill it, then one more.
+    mut exact = byte_buffer(empty)
+    _ = buffers.reserve(mut exact, 16)
+    _ = buffers.append_range(mut exact, piece, 0, 8)
+    _ = buffers.append_range(mut exact, piece, 0, 8)
+    mut full = len(exact)
+    _ = buffers.append_range(mut exact, piece, 7, 8)
+    print(out, full, len(exact), checksum(exact))
+    # Explicit snapshots keep independent octets across later appends; appending
+    # a snapshot to its source buffer reads the complete earlier value.
+    mut snapshot = bytes(buffer)
+    mut alias = copy(buffer)
+    _ = buffers.append_range(mut buffer, snapshot, 0, 5)
+    _ = buffers.append_range(mut buffer, snapshot, len(snapshot) - 3, len(snapshot))
+    buffers.append_utf8(mut buffer, "héllo")
+    print(out, len(snapshot), len(buffer), len(alias), checksum(buffer))
+    # Appending from another buffer.
+    mut other = byte_buffer(empty)
+    _ = buffers.append_range(mut other, piece, 2, 6)
+    _ = buffers.append_range(mut buffer, bytes(other), 0, 4)
+    print(out, len(buffer), checksum(buffer), checksum(other))
+    # A buffer appended to itself, with and without room.
+    const first_snapshot = bytes(other)
+    _ = buffers.append_range(mut other, first_snapshot, 0, len(first_snapshot))
+    const second_snapshot = bytes(other)
+    _ = buffers.append_range(mut other, second_snapshot, 1, 3)
+    print(out, len(other), checksum(other))
+    if len(args) > 1 and args[0] == "grow":
+        mut target = parse(args[1])
+        mut grown = byte_buffer(empty)
+        while len(grown) < target:
+            _ = buffers.append_range(mut grown, piece, 0, 8)
+        print(out, len(grown))
+    return 0

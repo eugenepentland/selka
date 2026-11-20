@@ -1,0 +1,37 @@
+{
+  "schema": "mylang-runtime-optimization-audit-validation-v1",
+  "date": "2026-10-03",
+  "status": "pass",
+  "scope": "Documentation and evidence audit only; no runtime implementation or fresh guest timings.",
+  "checks": {
+    "35_microbenchmark_rows_present_once": true,
+    "5_application_rows_present_once": true,
+    "80_case_size_targets_present": true,
+    "160_mylang_ratios_match_saved_assessment": true,
+    "40_displayed_large_ratios_match_at_two_decimals": true,
+    "all_local_links_and_primary_source_paths_exist": true,
+    "24_original_executable_hashes_match": true,
+    "src_and_vendor_qbe_match_compiler_pin": true,
+    "14_static_functions_inspected": true,
+    "10_old_profile_summaries_recounted": true,
+    "newer_main_33_changed_source_files_catalogued_and_relevant_overlap_reviewed": true
+  },
+  "saved_baseline_verifier": {
+    "command": "python3 benchmarks/runtime/expanded/verify.py benchmarks/runtime/expanded/results/baseline_main_20261003.json",
+    "exit_status": 0,
+    "stdout": "PASS complete expanded baseline: 480 groups, 7200 samples, 720 qualifications",
+    "check_current_artifacts": false
+  },
+  "files": {
+    "README.md": "c799673389712209e5454aa3a08f1a0bb2de5f12c2d7f0c89c9b0f1f1855efde",
+    "measurements.md": "6d81319def2e287e94a9a2d76e0ce0204ff25d7bbf0ea134ab4750ab2d880573",
+    "evidence.json": "ea2435d983d4015e4a0fd40133e689388ccbcead24c2a91188a07db1d6bad0fa"
+  },
+  "limitations": [
+    "No candidate code was implemented or benchmarked.",
+    "Static and old sampled evidence identifies candidates; causal per-case profiling is planned in P0.",
+    "Saved numerical verification is distinct from current source-artifact verification."
+  ],
+  "current_main_revision": "1fd1d566793dcae92449d937aca595c55ee318c8",
+  "current_main_measured": false
+}

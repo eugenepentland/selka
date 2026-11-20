@@ -1,0 +1,35 @@
+# A device `main` whose `@freestanding` functions do the work (MCU-NOC2): a checksum over a fixed array, and register
+# writes through QEMU's UART0 (as `uart_qemu.selka` does) that send the checksum's low byte. Nothing they call needs the
+# runtime. The words sum to 0x10 + 0x20 + 0x30 + 0x40 = 160 before the mix below; the checksum is 0x4D ("M"), the status 77.
+# bare-platform: qemu
+# bare-status: 77
+# bare-serial: M
+import registers
+
+const UART_DATA: u32 = 0x40004000
+const UART_CONTROL: u32 = 0x40004008
+
+
+const UART_BAUD: u32 = 0x40004010
+
+
+@freestanding
+func checksum(words: FixedArray[u32, 4]) -> u32:
+    mut total: u32 = 0
+    for i in range(4):
+        total = total + words[i]
+    return bit_and(bit_xor(total, 0xED), 0xFF)
+
+
+@freestanding
+func uart_send(reg: Registers, byte: u32):
+    registers.write32(reg, UART_BAUD, 16)
+    registers.write32(reg, UART_CONTROL, 1)
+    registers.write32(reg, UART_DATA, byte)
+
+
+func main(reg: Registers) -> int:
+    const words = FixedArray[u32, 4]([0x10, 0x20, 0x30, 0x40])
+    const sum = checksum(words)
+    uart_send(reg, sum)
+    return int(sum)

@@ -1,0 +1,31 @@
+# F-25: `in` over a list, where one operand is a call. A pure read on the other side cannot trap or change, so
+# `lists.contains(container, needle)` keeps what the program observes; `selka fix` writes it and the import.
+record Slot:
+    kind: str
+    names: str[]
+
+
+func kinds() -> str[]:
+    return ["a", "b"]
+
+
+func label() -> str:
+    return "a"
+
+
+func count(slot: Slot, seen: str[]) -> int:
+    mut n = 0
+    if slot.kind in seen:
+        n = n + 1
+    if label() in seen:
+        n = n + 10
+    if "a" in kinds():
+        n = n + 100
+    if label() not in slot.names:
+        n = n + 1000
+    return n
+
+
+func main(out: Stream) -> int:
+    print(out, count(Slot(kind="a", names=["b"]), ["a"]))
+    return 0

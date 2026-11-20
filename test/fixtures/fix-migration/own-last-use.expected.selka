@@ -1,0 +1,63 @@
+# A copy of an owned local or an `own` parameter at its last use, where the value is taken over, is a needless copy
+# (W_NEEDLESS_COPY case v): `selka fix` writes `own value` (a bare `value` when returned). The copies that must stay are
+# beside them: a value used again, copied in a loop it was not declared in, borrowed by a live alias, or a borrowed
+# parameter.
+import sets
+
+
+record Box:
+    name: str
+
+
+func eat(own s: str) -> int:
+    return len(s)
+
+
+func keep(own x: str, mut out: str[]):
+    append(mut out, own x)
+
+
+func keep_each(own x: str, mut out: str[]):
+    for i in range(2):
+        append(mut out, copy(x))
+
+
+func keep_borrowed(x: str, mut out: str[]):
+    append(mut out, copy(x))
+
+
+func fresh() -> str:
+    const x = "r" + str(1)
+    return x
+
+
+func main(out: Stream) -> int:
+    mut list: str[] = []
+    mut seen: dict[str, int] = {}
+    mut names: set[str] = set()
+    const a = "a" + str(1)
+    append(mut list, own a)
+    const b = "b" + str(2)
+    seen[own b] = 1
+    const c = "c" + str(3)
+    sets.add(mut names, own c)
+    const e = "e" + str(5)
+    const box = Box(name=own e)
+    const g = "g" + str(7)
+    const n = eat(own g)
+    for i in range(2):
+        const inside = "i" + str(i)
+        append(mut list, own inside)
+    const outside = "o" + str(1)
+    for i in range(2):
+        append(mut list, copy(outside))
+    const later = "l" + str(1)
+    append(mut list, copy(later))
+    const aliased = "s" + str(1)
+    const alias = aliased
+    append(mut list, copy(aliased))
+    keep("k", mut list)
+    keep_each("p", mut list)
+    keep_borrowed("q", mut list)
+    print(out, len(list), len(seen), len(names), box.name, n, fresh(), later, alias)
+    return 0

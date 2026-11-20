@@ -1,0 +1,15 @@
+name = "cache"
+version = "0.1.0"
+defaultTargets = ["Cache", "cacheplan"]
+
+[leanOptions]
+autoImplicit = false
+
+# The model of the build cache and its theorem (core Lean 4 only, no Mathlib).
+[[lean_lib]]
+name = "Cache"
+
+# `lake exe cacheplan` runs the cache's decisions on recorded traces (README.md).
+[[lean_exe]]
+name = "cacheplan"
+root = "Main"

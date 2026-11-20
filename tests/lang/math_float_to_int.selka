@@ -1,0 +1,43 @@
+import math
+
+func smallest() -> int:
+    return 0 - 9223372036854775807 - 1
+
+
+func whole_matches(probe: float) -> bool:
+    const whole = math.to_int(probe) else:
+        return False
+    return whole == int(probe) and whole == math.to_int_saturating(probe)
+
+
+func all_in_range_values_agree() -> bool:
+    const probes = [0.0, -0.0, 0.5, 0.0 - 0.5, 41.9, 0.0 - 41.9, 1e18, 9223372036854774784.0, 0.0 - 9223372036854775808.0]
+    for probe in probes:
+        if not whole_matches(probe):
+            return False
+    return True
+
+
+# spec: FLOAT-TO-INT-1
+public func test_to_int_saturating_truncates_in_range_values() -> bool:
+    return math.to_int_saturating(0.0) == 0 and math.to_int_saturating(-0.0) == 0 and math.to_int_saturating(1.9) == 1 and math.to_int_saturating(0.0 - 1.9) == 0 - 1 and math.to_int_saturating(9223372036854774784.0) == 9223372036854774784 and math.to_int_saturating(0.0 - 9223372036854775808.0) == smallest() and math.to_int_saturating(0.0 - 0.5) == 0 and math.to_int_saturating(1e18) == 1000000000000000000
+
+
+# spec-case: FLOAT-TO-INT-1
+public func test_to_int_saturating_clamps_what_does_not_fit() -> bool:
+    return math.to_int_saturating(9223372036854775808.0) == 9223372036854775807 and math.to_int_saturating(1e300) == 9223372036854775807 and math.to_int_saturating(math.infinity()) == 9223372036854775807 and math.to_int_saturating(0.0 - 9223372036854777856.0) == smallest() and math.to_int_saturating(0.0 - 1e300) == smallest() and math.to_int_saturating(0.0 - math.infinity()) == smallest()
+
+
+# spec-case: FLOAT-TO-INT-1
+public func test_to_int_saturating_of_not_a_number_is_zero() -> bool:
+    return math.to_int_saturating(math.nan()) == 0 and math.to_int_saturating(0.0 / 0.0) == 0
+
+
+# spec-case: FLOAT-TO-INT-1
+public func test_to_int_answers_none_where_int_would_trap() -> bool:
+    return math.to_int(9223372036854775808.0) is None and math.to_int(1e300) is None and math.to_int(0.0 - 9223372036854777856.0) is None and math.to_int(0.0 - 1e300) is None and math.to_int(math.infinity()) is None and math.to_int(0.0 - math.infinity()) is None and math.to_int(math.nan()) is None
+
+
+# spec-case: FLOAT-TO-INT-1
+public func test_to_int_agrees_with_int_wherever_it_answers() -> bool:
+    return all_in_range_values_agree()

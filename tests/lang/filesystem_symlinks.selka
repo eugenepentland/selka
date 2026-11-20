@@ -1,0 +1,835 @@
+# Symbolic links and the status-change time on the in-memory Filesystem a test receives. `symlink_path` makes a link entry
+# that holds its target text; as under a granted directory of the real provider, only `realpath` and `stat_follow` follow one,
+# and only while it stays inside the filesystem, and every other call refuses a link on the way to its path or a read, a
+# write or a lock of a link itself. `Stat.changed` is the status-change time (ctime): the write time of a call that writes,
+# and for `chmod` and `set_modified`, which leave the clock where it is, the next nanosecond after the last change. The
+# real-directory behaviour is pinned in src/io_paths_test.zig.
+import filesystem
+import strings
+
+const SECOND: int = 1000000000
+
+
+const EPOCH: int = 946684800000000000
+
+
+const READ_ONLY: str = "denied: this Filesystem was narrowed by fs.read_only() and does not write"
+
+
+const NARROWED: str = "denied: a Filesystem narrowed by fs.dir takes a path inside its folder, without '..', '.', an empty part or a leading '/'"
+
+
+const MISSING: str = "the path does not exist"
+
+
+const NO_FOLDER: str = "a folder on the way does not exist"
+
+
+const LINK: str = "is a symbolic link the sandbox does not follow, or links nest too deeply"
+
+
+const OUTSIDE: str = "resolves outside the granted directory"
+
+
+# "ok" for a success, else the failure text.
+func note(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+# "ok" for a success of any payload, else the failure text.
+func note_text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(text):
+            return copy(text)
+        case Err(message):
+            return "error: " + message
+
+
+func kind_of(fs: Filesystem, path: str) -> str:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            match info.kind:
+                case Regular:
+                    return "regular"
+                case Directory:
+                    return "directory"
+                case Symlink:
+                    return "symlink"
+                case Other:
+                    return "other"
+        case Err(error):
+            match error:
+                case Missing:
+                    return "missing"
+                case Failed(message=text):
+                    return "failed: " + text
+
+
+# What `stat_follow` finds: the kind of what the links name, missing, or the failure text.
+func followed(fs: Filesystem, path: str) -> str:
+    match filesystem.stat_follow(fs, path):
+        case Ok(info):
+            match info.kind:
+                case Regular:
+                    return "regular"
+                case Directory:
+                    return "directory"
+                case Symlink:
+                    return "symlink"
+                case Other:
+                    return "other"
+        case Err(error):
+            match error:
+                case Missing:
+                    return "missing"
+                case Failed(message=text):
+                    return "failed: " + text
+
+
+func size_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.size
+        case Err(_):
+            return -1
+
+
+func mode_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.mode
+        case Err(_):
+            return -1
+
+
+func time_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.modified
+        case Err(_):
+            return -1
+
+
+func changed_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.changed
+        case Err(_):
+            return -1
+
+
+func inode_of(fs: Filesystem, path: str) -> u64:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.inode
+        case Err(_):
+            return 0u64
+
+
+# The link-free name of a path, or the failure text.
+func named(fs: Filesystem, path: str) -> str:
+    match filesystem.realpath(fs, path):
+        case Ok(name):
+            return copy(name)
+        case Err(message):
+            return "error: " + message
+
+
+func listed(fs: Filesystem, path: str) -> str:
+    match filesystem.list_entries(fs, path):
+        case Ok(entries):
+            mut text = ""
+            for entry in entries:
+                match entry.kind:
+                    case Symlink:
+                        text = text + entry.name + "@ "
+                    case Directory:
+                        text = text + entry.name + "/ "
+                    case Regular:
+                        text = text + entry.name + " "
+                    case Other:
+                        text = text + entry.name + "? "
+            return text
+        case Err(message):
+            return "error: " + message
+
+
+public func test_a_link_is_an_entry_of_its_own_with_its_target_as_size_and_mode_0777() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "hello")
+    if note(filesystem.symlink(fs, "f", "ln")) != "ok" or kind_of(fs, "ln") != "symlink":
+        return False
+    if size_of(fs, "ln") != 1 or mode_of(fs, "ln") != 0o777 or inode_of(fs, "ln") != 3u64:
+        return False
+    if note(filesystem.symlink(fs, "some/longer/relative/target", "far")) != "ok":
+        return False
+    return size_of(fs, "far") == 27 and kind_of(fs, "f") == "regular" and size_of(fs, "f") == 5
+
+
+public func test_creating_a_link_moves_the_clock_and_stamps_the_directory_as_a_new_file_does() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = filesystem.symlink(fs, "x", "d/ln")
+    return time_of(fs, "d/ln") == EPOCH + 2 * SECOND and time_of(fs, "d") == EPOCH + 2 * SECOND and changed_of(fs, "d/ln") == EPOCH + 2 * SECOND
+
+
+public func test_a_link_needs_write_authority_a_free_name_and_a_directory_that_exists() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "x")
+    _ = fs.mkdir("d")
+    if note(filesystem.symlink(fs, "f", "f")) != "symlink 'f': already exists":
+        return False
+    if note(filesystem.symlink(fs, "f", "d")) != "symlink 'd': already exists":
+        return False
+    if note(filesystem.symlink(fs, "f", "no/dir/ln")) != "symlink 'no/dir/ln': " + NO_FOLDER:
+        return False
+    if note(filesystem.symlink(fs, "f", "f/ln")) != "symlink 'f/ln': a parent of the path is not a directory":
+        return False
+    if note(filesystem.symlink(fs, "f", "../ln")) != "symlink '../ln': denied: '../ln' is outside the granted directories":
+        return False
+    if note(filesystem.symlink(fs, "f", "d/./ln")) != "ok" or kind_of(fs, "d/ln") != "symlink":
+        return False
+    if note(filesystem.symlink(fs, "f", "/tmp/ln")) != "symlink '/tmp/ln': denied: '/tmp/ln' is outside the granted directories":
+        return False
+    if note(filesystem.symlink(fs, "f", "")) != "symlink '': " + MISSING:
+        return False
+    if note(filesystem.symlink(fs.read_only(), "f", "ro")) != "symlink 'ro': " + READ_ONLY:
+        return False
+    return kind_of(fs, "ro") == "missing" and kind_of(fs, "ln") == "missing"
+
+
+public func test_a_target_is_text_of_one_to_4094_octets_stored_as_written() -> bool:
+    const fs = filesystem.memory()
+    const empty = "symlink 'e': the link target must be text of 1 to 4094 octets with no NUL"
+    if note(filesystem.symlink(fs, "", "e")) != empty:
+        return False
+    if note(filesystem.symlink(fs, "/etc/passwd", "abs")) != "ok" or note(filesystem.symlink(fs, "../../up", "up")) != "ok":
+        return False
+    if note(filesystem.symlink(fs, "not/there", "dangling")) != "ok":
+        return False
+    return size_of(fs, "abs") == 11 and size_of(fs, "up") == 8 and size_of(fs, "dangling") == 9 and kind_of(fs, "e") == "missing"
+
+
+public func test_realpath_and_stat_follow_follow_a_link_inside_the_filesystem() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("real")
+    _ = fs.write_text("real/file", "hello")
+    _ = filesystem.symlink(fs, "real/file", "ln")
+    _ = filesystem.symlink(fs, "real", "dirln")
+    _ = filesystem.symlink(fs, "ln", "chain")
+    _ = filesystem.symlink(fs, "file", "real/sibling")
+    if named(fs, "ln") != "real/file" or named(fs, "dirln") != "real" or named(fs, "dirln/file") != "real/file":
+        return False
+    if named(fs, "chain") != "real/file" or named(fs, "real/sibling") != "real/file" or named(fs, "real") != "real":
+        return False
+    if named(fs, "") != "" or named(fs, ".") != "":
+        return False
+    return followed(fs, "ln") == "regular" and followed(fs, "dirln") == "directory" and followed(fs, "chain") == "regular" and followed(fs, "real/file") == "regular"
+
+
+public func test_stat_follow_describes_the_target_and_stat_the_link() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "hello")
+    _ = filesystem.symlink(fs, "f", "ln")
+    match filesystem.stat_follow(fs, "ln"):
+        case Ok(info):
+            if info.size != 5 or info.inode != inode_of(fs, "f") or info.modified != time_of(fs, "f"):
+                return False
+        case Err(_):
+            return False
+    return kind_of(fs, "ln") == "symlink" and size_of(fs, "ln") == 1 and inode_of(fs, "ln") != inode_of(fs, "f")
+
+
+public func test_a_link_to_nothing_is_missing_to_stat_follow_and_a_failure_to_realpath() -> bool:
+    const fs = filesystem.memory()
+    _ = filesystem.symlink(fs, "not/there", "dangling")
+    _ = filesystem.symlink(fs, "dangling", "second")
+    if followed(fs, "dangling") != "missing" or followed(fs, "second") != "missing" or followed(fs, "dangling/x") != "missing":
+        return False
+    return named(fs, "dangling") == "error: realpath 'dangling': " + MISSING and kind_of(fs, "dangling") == "symlink"
+
+
+public func test_a_link_that_leaves_the_filesystem_is_refused_by_the_calls_that_follow_it() -> bool:
+    const fs = filesystem.memory()
+    _ = filesystem.symlink(fs, "/etc", "abs")
+    _ = filesystem.symlink(fs, "..", "up")
+    _ = fs.mkdir("d")
+    _ = filesystem.symlink(fs, "../..", "d/climb")
+    _ = filesystem.symlink(fs, "..", "d/back")
+    if named(fs, "abs") != "error: realpath 'abs': " + OUTSIDE or named(fs, "up") != "error: realpath 'up': " + OUTSIDE:
+        return False
+    if named(fs, "d/climb") != "error: realpath 'd/climb': " + OUTSIDE or named(fs, "abs/passwd") != "error: realpath 'abs/passwd': " + OUTSIDE:
+        return False
+    if followed(fs, "abs") != "failed: stat 'abs': " + OUTSIDE:
+        return False
+    return named(fs, "d/back") == "" and followed(fs, "d/back") == "directory"
+
+
+public func test_links_that_nest_too_deeply_or_form_a_loop_are_refused() -> bool:
+    const fs = filesystem.memory()
+    _ = filesystem.symlink(fs, "b", "a")
+    _ = filesystem.symlink(fs, "a", "b")
+    if named(fs, "a") != "error: realpath 'a': " + LINK:
+        return False
+    _ = fs.write_text("end", "x")
+    _ = filesystem.symlink(fs, "end", "l0")
+    for index in range(1, 45):
+        _ = filesystem.symlink(fs, "l" + str(index - 1), "l" + str(index))
+    return named(fs, "l30") == "end" and named(fs, "l44") == "error: realpath 'l44': " + LINK
+
+
+public func test_a_narrowed_filesystem_resolves_links_inside_the_narrowing_and_names_them_relative_to_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("box/sub")
+    _ = fs.write_text("box/sub/file", "x")
+    _ = fs.write_text("outside", "x")
+    const box = fs.dir("box")
+    _ = filesystem.symlink(box, "sub/file", "ln")
+    _ = filesystem.symlink(box, "sub", "dirln")
+    _ = filesystem.symlink(box, "../outside", "esc")
+    _ = filesystem.symlink(box, "..", "up")
+    if named(box, "ln") != "sub/file" or named(box, "dirln/file") != "sub/file" or named(box, "") != "":
+        return False
+    if named(box, "esc") != "error: realpath 'esc': " + OUTSIDE or named(box, "up") != "error: realpath 'up': " + OUTSIDE:
+        return False
+    return kind_of(fs, "box/ln") == "symlink" and followed(box, "esc") == "failed: stat 'esc': " + OUTSIDE and kind_of(fs, "ln") == "missing"
+
+
+public func test_a_narrowed_filesystem_refuses_a_link_on_the_way_at_the_end_and_as_its_prefix() -> bool:
+    const fs = filesystem.memory()
+    const parent = "a parent of the path is not a directory"
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("outside")
+    _ = fs.write_text("outside/secret.txt", "SECRET")
+    _ = fs.write_text("box/file.txt", "inside")
+    _ = filesystem.symlink(fs, "../outside", "box/link")
+    _ = filesystem.symlink(fs, "../outside/secret.txt", "box/flink")
+    const box = fs.dir("box")
+    if note_text(box.read_text("file.txt")) != "inside":
+        return False
+    if note_text(box.read_text("link/secret.txt")) != "error: read 'link/secret.txt': " + parent:
+        return False
+    if note_text(box.read_text("flink")) != "error: read 'flink': " + LINK:
+        return False
+    if note(box.write_text("link/w.txt", "w")) != "write 'link/w.txt': " + parent or note(box.write_text("flink", "w")) != "write 'flink': " + LINK:
+        return False
+    if note(box.mkdir("link/made")) != "mkdir 'link/made': " + parent or note(box.remove("link/secret.txt")) != "remove 'link/secret.txt': " + parent:
+        return False
+    if note_text(fs.dir("box/link").read_text("secret.txt")) != "error: read 'secret.txt': " + parent:
+        return False
+    match box.listdir("link"):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "listdir 'link': is not a directory":
+                return False
+    return note_text(fs.read_text("outside/secret.txt")) == "SECRET" and kind_of(fs, "outside/w.txt") == "missing" and kind_of(fs, "outside/made") == "missing"
+
+
+# "ok" when `text` was appended to `path`, else the failure text.
+func appended(fs: Filesystem, path: str, text: str) -> Unit fails str:
+    with try fs.open(path, "a") as file:
+        _ = file.write(text)
+    return
+
+
+public func test_an_append_through_a_link_is_refused_and_creates_nothing_whole_or_narrowed() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("outside")
+    _ = fs.write_text("outside/secret.txt", "SECRET")
+    _ = fs.write_text("box/file.txt", "inside")
+    _ = filesystem.symlink(fs, "../outside/secret.txt", "box/flink")
+    _ = filesystem.symlink(fs, "../outside/new.txt", "box/dangling")
+    _ = filesystem.symlink(fs, "file.txt", "box/inside")
+    const box = fs.dir("box")
+    if note(appended(box, "flink", "A")) != "open 'flink': " + LINK or note(appended(box, "dangling", "A")) != "open 'dangling': " + LINK:
+        return False
+    if note(appended(box, "inside", "A")) != "open 'inside': " + LINK or note(appended(fs, "box/flink", "A")) != "open 'box/flink': " + LINK:
+        return False
+    if note(appended(fs, "box/dangling", "A")) != "open 'box/dangling': " + LINK:
+        return False
+    if note(appended(box, "file.txt", "+1")) != "ok" or note(appended(box, "fresh.txt", "new")) != "ok":
+        return False
+    if note_text(fs.read_text("box/file.txt")) != "inside+1" or note_text(fs.read_text("box/fresh.txt")) != "new":
+        return False
+    return note_text(fs.read_text("outside/secret.txt")) == "SECRET" and kind_of(fs, "outside/new.txt") == "missing"
+
+
+public func test_no_other_call_follows_a_link_so_a_read_a_write_or_a_lock_of_one_is_refused() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "hello")
+    _ = filesystem.symlink(fs, "f", "ln")
+    if note_text(fs.read_text("ln")) != "error: read 'ln': " + LINK:
+        return False
+    if note(fs.write_text("ln", "new")) != "write 'ln': " + LINK:
+        return False
+    match fs.read_regular_file("ln", 64):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "regular read 'ln': " + LINK:
+                return False
+    if note(fs.atomic_write_file("ln", b"new")) != "atomic write 'ln': " + LINK:
+        return False
+    if note(fs.replace_file("ln", b"new")) != "replace 'ln': " + LINK:
+        return False
+    match fs.try_lock_file("ln"):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "try lock file 'ln': " + LINK:
+                return False
+    return note_text(fs.read_text("f")) == "hello" and kind_of(fs, "ln") == "symlink"
+
+
+public func test_a_link_on_the_way_to_a_path_is_refused_with_the_wording_of_the_call() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("real")
+    _ = fs.write_text("real/file", "hello")
+    _ = filesystem.symlink(fs, "real", "dirln")
+    if note_text(fs.read_text("dirln/file")) != "error: read 'dirln/file': a parent of the path is not a directory":
+        return False
+    if kind_of(fs, "dirln/file") != "failed: stat 'dirln/file': " + LINK:
+        return False
+    match fs.read_regular_file("dirln/file", 64):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "regular read 'dirln/file': a parent of the path is not a directory":
+                return False
+    if note(fs.atomic_write_file("dirln/new", b"x")) != "atomic write 'dirln/new': a parent of the path is not a directory":
+        return False
+    if note(filesystem.symlink(fs, "x", "dirln/ln")) != "symlink 'dirln/ln': a parent of the path is not a directory":
+        return False
+    if note(filesystem.chmod(fs, "dirln/file", 0o600)) != "chmod 'dirln/file': a parent of the path is not a directory":
+        return False
+    if note(fs.rename_path("dirln/file", "z")) != "rename 'dirln/file' to 'z': a parent of the path is not a directory":
+        return False
+    if note(fs.remove("dirln/file")) != "remove 'dirln/file': a parent of the path is not a directory":
+        return False
+    return not fs.exists("real/new") and kind_of(fs, "real/new") == "missing"
+
+
+public func test_a_listing_names_a_link_a_symlink_and_a_walk_through_one_is_refused() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/file", "x")
+    _ = filesystem.symlink(fs, "file", "d/ln")
+    _ = filesystem.symlink(fs, "d", "dl")
+    if listed(fs, "d") != "file ln@ " or listed(fs, "") != "d/ dl@ ":
+        return False
+    if listed(fs, "dl") != "error: directory listing 'dl': is not a directory":
+        return False
+    match fs.listdir("d"):
+        case Ok(names):
+            return len(names) == 2
+        case Err(_):
+            return False
+
+
+public func test_chmod_of_a_link_fails_and_touch_and_set_modified_change_the_link_itself() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "hello")
+    _ = filesystem.symlink(fs, "f", "ln")
+    if note(filesystem.chmod(fs, "ln", 0o600)) != "chmod 'ln': a symbolic link has no permission bits of its own":
+        return False
+    const target_time = time_of(fs, "f")
+    if note(filesystem.set_modified(fs, "ln", 777)) != "ok" or time_of(fs, "ln") != 777 or time_of(fs, "f") != target_time:
+        return False
+    if note(filesystem.touch(fs, "ln")) != "ok" or time_of(fs, "ln") != EPOCH + 3 * SECOND or time_of(fs, "f") != target_time:
+        return False
+    return mode_of(fs, "f") == 0o644 and mode_of(fs, "ln") == 0o777
+
+
+public func test_remove_unlinks_the_link_and_rename_moves_it_with_its_target_text() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("f", "hello")
+    _ = fs.write_text("d/f", "inner")
+    _ = filesystem.symlink(fs, "f", "d/ln")
+    if named(fs, "d/ln") != "d/f":
+        return False
+    if note(fs.rename_path("d/ln", "ln")) != "ok" or kind_of(fs, "d/ln") != "missing" or named(fs, "ln") != "f":
+        return False
+    if note(fs.remove("ln")) != "ok" or kind_of(fs, "ln") != "missing":
+        return False
+    return note_text(fs.read_text("f")) == "hello" and note_text(fs.read_text("d/f")) == "inner"
+
+
+public func test_a_rename_replaces_a_link_and_a_link_may_replace_a_file() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    _ = fs.write_text("b", "b")
+    _ = filesystem.symlink(fs, "a", "ln")
+    if note(fs.rename_path("b", "ln")) != "ok" or kind_of(fs, "ln") != "regular" or note_text(fs.read_text("ln")) != "b":
+        return False
+    _ = filesystem.symlink(fs, "a", "ln2")
+    if note(fs.rename_path("ln2", "a")) != "ok":
+        return False
+    return kind_of(fs, "a") == "symlink" and named(fs, "a") == "error: realpath 'a': " + LINK
+
+
+public func test_changed_is_the_write_time_for_a_call_that_writes() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    if time_of(fs, "a") != EPOCH + SECOND or changed_of(fs, "a") != EPOCH + SECOND:
+        return False
+    _ = fs.atomic_write_file("b", b"bb")
+    if time_of(fs, "b") != EPOCH + 2 * SECOND or changed_of(fs, "b") != EPOCH + 2 * SECOND:
+        return False
+    _ = fs.mkdir("d")
+    return changed_of(fs, "d") == EPOCH + 3 * SECOND and changed_of(fs, "") == EPOCH + 3 * SECOND
+
+
+public func test_set_modified_can_put_the_modification_time_back_but_changed_still_moves() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    const stamp = time_of(fs, "a")
+    const before = changed_of(fs, "a")
+    _ = fs.write_text("a", "rewritten")
+    if note(filesystem.set_modified(fs, "a", stamp)) != "ok":
+        return False
+    return time_of(fs, "a") == stamp and changed_of(fs, "a") > before and changed_of(fs, "a") == EPOCH + 2 * SECOND + 1
+
+
+public func test_set_modified_and_chmod_move_changed_by_a_nanosecond_and_leave_the_clock_alone() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    _ = filesystem.set_modified(fs, "a", 12345)
+    if time_of(fs, "a") != 12345 or changed_of(fs, "a") != EPOCH + SECOND + 1:
+        return False
+    _ = filesystem.chmod(fs, "a", 0o600)
+    if changed_of(fs, "a") != EPOCH + SECOND + 2 or time_of(fs, "a") != 12345:
+        return False
+    _ = fs.write_text("b", "b")
+    return time_of(fs, "b") == EPOCH + 2 * SECOND and changed_of(fs, "b") == EPOCH + 2 * SECOND
+
+
+public func test_a_failed_call_changes_nothing_and_touch_reads_the_clock() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    const before = changed_of(fs, "a")
+    _ = filesystem.chmod(fs, "a", 0o10000)
+    _ = filesystem.chmod(fs, "absent", 0o600)
+    _ = filesystem.symlink(fs, "a", "a")
+    if changed_of(fs, "a") != before:
+        return False
+    _ = filesystem.touch(fs, "a")
+    return time_of(fs, "a") == EPOCH + 2 * SECOND and changed_of(fs, "a") == EPOCH + 2 * SECOND
+
+
+public func test_a_rename_changes_the_moved_entry_and_the_directories_it_leaves_and_enters() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("from")
+    _ = fs.mkdir("to")
+    _ = fs.write_text("from/f", "f")
+    const stamp = time_of(fs, "from/f")
+    _ = fs.rename_path("from/f", "to/f")
+    if time_of(fs, "to/f") != stamp or changed_of(fs, "to/f") != EPOCH + 4 * SECOND:
+        return False
+    return changed_of(fs, "from") == EPOCH + 4 * SECOND and changed_of(fs, "to") == EPOCH + 4 * SECOND and time_of(fs, "from") == EPOCH + 4 * SECOND
+
+
+public func test_changed_never_decreases_across_a_run_of_changes() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    mut last = changed_of(fs, "a")
+    for step in range(6):
+        if step % 3 == 0:
+            _ = filesystem.set_modified(fs, "a", step)
+        elif step % 3 == 1:
+            _ = filesystem.chmod(fs, "a", 0o600 + step)
+        else:
+            _ = filesystem.touch(fs, "a")
+        const now = changed_of(fs, "a")
+        if now <= last:
+            return False
+        last = now
+    return True
+
+
+public func test_two_filesystems_that_run_the_same_calls_read_the_same_changed_words() -> bool:
+    const first = filesystem.memory()
+    const second = filesystem.memory()
+    for fs in [first, second]:
+        _ = fs.write_text("a", "a")
+        _ = filesystem.symlink(fs, "a", "ln")
+        _ = filesystem.set_modified(fs, "a", 5)
+        _ = filesystem.chmod(fs, "a", 0o600)
+    return changed_of(first, "a") == changed_of(second, "a") and changed_of(first, "ln") == changed_of(second, "ln") and changed_of(first, "") == changed_of(second, "")
+
+
+# The text of the link at `path`, or the failure text (which names the call).
+func link_text(fs: Filesystem, path: str) -> str:
+    match filesystem.read_link(fs, path):
+        case Ok(text):
+            return "ok " + text
+        case Err(message):
+            return copy(message)
+
+
+# What `stat` says of a path: `found`, or its failure text (a path with nothing at it worded as every other call words it).
+func stat_message(fs: Filesystem, path: str) -> str:
+    match filesystem.stat(fs, path):
+        case Ok(_):
+            return "found"
+        case Err(error):
+            match error:
+                case Missing:
+                    return f"stat '{path}': {MISSING}"
+                case Failed(message=text):
+                    return copy(text)
+
+
+# Whether `read_link` of the path says what `stat` says of it, with its own verb, where `stat` refuses the path, and where
+# `stat` finds an entry says that it is not a link or answers the text of the one it is.
+func says_what_stat_says(fs: Filesystem, path: str) -> bool:
+    const seen = stat_message(fs, path)
+    const read = link_text(fs, path)
+    if seen == "found":
+        return read == f"read link '{path}': is not a symbolic link" or strings.starts_with_at(read, "ok ", 0)
+    return read == "read link" + seen[4:]
+
+
+public func test_read_link_answers_the_text_stored_relative_absolute_or_naming_nothing() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "hello")
+    _ = filesystem.symlink(fs, "d/f", "rel")
+    _ = filesystem.symlink(fs, "/etc/passwd", "abs")
+    _ = filesystem.symlink(fs, "nowhere", "dangling")
+    _ = filesystem.symlink(fs, "../up/../x", "climb")
+    _ = filesystem.symlink(fs, "rel", "chain")
+    _ = filesystem.symlink(fs, "d", "dl")
+    assert link_text(fs, "rel") == "ok d/f"
+    assert link_text(fs, "abs") == "ok /etc/passwd"
+    assert link_text(fs, "dangling") == "ok nowhere"
+    assert link_text(fs, "climb") == "ok ../up/../x"
+    assert link_text(fs, "chain") == "ok rel"
+    assert link_text(fs, "dl") == "ok d"
+    return True
+
+
+public func test_read_link_of_a_link_to_a_link_is_the_first_text_and_never_follows() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("target", "x")
+    _ = filesystem.symlink(fs, "target", "one")
+    _ = filesystem.symlink(fs, "one", "two")
+    _ = filesystem.symlink(fs, "two", "three")
+    _ = filesystem.symlink(fs, "three", "loop_a")
+    _ = filesystem.symlink(fs, "loop_a", "three")
+    assert link_text(fs, "three") == "ok two"
+    assert link_text(fs, "two") == "ok one"
+    assert link_text(fs, "one") == "ok target"
+    assert link_text(fs, "loop_a") == "ok three"
+    return True
+
+
+public func test_read_link_of_a_file_a_directory_and_the_root_says_it_is_not_a_link() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "hello")
+    const not_link = "is not a symbolic link"
+    assert link_text(fs, "d/f") == f"read link 'd/f': {not_link}"
+    assert link_text(fs, "d") == f"read link 'd': {not_link}"
+    assert link_text(fs, "") == f"read link '': {not_link}"
+    assert link_text(fs, ".") == f"read link '.': {not_link}"
+    assert stat_message(fs, ".") == "found"
+    return True
+
+
+public func test_read_link_of_nothing_fails_with_the_generic_wording_of_every_missing_path() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    assert link_text(fs, "nope") == f"read link 'nope': {MISSING}"
+    assert link_text(fs, "d/nope") == f"read link 'd/nope': {MISSING}"
+    assert link_text(fs, "no/dir/x") == f"read link 'no/dir/x': {MISSING}"
+    return True
+
+
+public func test_read_link_refuses_a_link_on_the_way_and_reads_one_that_leaves_the_filesystem() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = filesystem.symlink(fs, "d", "dl")
+    _ = filesystem.symlink(fs, "/outside/place", "d/out")
+    _ = filesystem.symlink(fs, "../../beyond", "d/up")
+    assert link_text(fs, "dl/out") == f"read link 'dl/out': {LINK}"
+    assert link_text(fs, "d/out") == "ok /outside/place"
+    assert link_text(fs, "d/up") == "ok ../../beyond"
+    assert link_text(fs, "dl") == "ok d"
+    return True
+
+
+# `.`, `..` inside the filesystem, `//` and a trailing slash mean what they mean to the system (docs/io.md, "How a path is
+# read"); an absolute path and a `..` past the root are outside the filesystem, for `read_link` as for `stat`.
+public func test_read_link_reads_dot_components_as_the_system_does_and_refuses_an_absolute_path_as_stat_does() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = filesystem.symlink(fs, "d", "ln")
+    assert link_text(fs, "d/../ln") == "ok d" and link_text(fs, "./ln") == "ok d" and link_text(fs, ".//ln") == "ok d"
+    assert link_text(fs, "d/./x") == f"read link 'd/./x': {MISSING}" and link_text(fs, "d//x") == f"read link 'd//x': {MISSING}"
+    assert link_text(fs, "d/") == "read link 'd/': is not a symbolic link"
+    for path in ["/ln", "../ln"]:
+        const outside = f"denied: '{path}' is outside the granted directories"
+        if link_text(fs, path) != f"read link '{path}': {outside}" or stat_message(fs, path) != f"stat '{path}': {outside}":
+            return False
+    return True
+
+
+public func test_read_link_gives_the_refusals_stat_gives_for_the_same_path() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "x")
+    _ = filesystem.symlink(fs, "d", "dl")
+    _ = filesystem.symlink(fs, "d/f", "fl")
+    _ = fs.write_text("plain", "p")
+    _ = filesystem.chmod(fs, "d", 0o000)
+    const paths = ["dl/f", "fl/x", "plain/x", "d/nope", "d/f", "nope/x", "dl", "fl", "plain", "dl/nope", "d/f/x"]
+    for path in paths:
+        if not says_what_stat_says(fs, path):
+            return False
+    return True
+
+
+public func test_read_link_on_a_narrowed_directory_reads_a_link_whose_target_is_outside_and_refuses_a_link_prefix() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("box")
+    _ = fs.mkdir("elsewhere")
+    _ = filesystem.symlink(fs, "../elsewhere/secret", "box/out")
+    _ = filesystem.symlink(fs, "/etc/passwd", "box/abs")
+    _ = filesystem.symlink(fs, "box", "boxlink")
+    _ = fs.write_text("box/file", "x")
+    const box = fs.dir("box")
+    const via_link = fs.dir("boxlink")
+    assert link_text(box, "out") == "ok ../elsewhere/secret"
+    assert link_text(box, "abs") == "ok /etc/passwd"
+    assert link_text(box, "file") == "read link 'file': is not a symbolic link"
+    assert link_text(box, "") == "read link '': is not a symbolic link"
+    assert link_text(via_link, "out") == f"read link 'out': {LINK}"
+    assert link_text(box, "../out") == f"read link '../out': {NARROWED}"
+    return True
+
+
+public func test_read_link_works_on_a_read_only_handle_and_changes_nothing() -> bool:
+    const fs = filesystem.memory()
+    _ = filesystem.symlink(fs, "somewhere", "ln")
+    const before_changed = changed_of(fs, "ln")
+    const before_time = time_of(fs, "ln")
+    const before_root = time_of(fs, "")
+    const frozen = fs.read_only()
+    const first = link_text(frozen, "ln")
+    const second = link_text(fs, "ln")
+    assert first == "ok somewhere"
+    assert second == "ok somewhere"
+    assert changed_of(fs, "ln") == before_changed
+    assert time_of(fs, "ln") == before_time
+    assert time_of(fs, "") == before_root
+    return True
+
+
+public func test_read_link_reads_the_text_after_a_rename_and_not_after_a_remove() -> bool:
+    const fs = filesystem.memory()
+    _ = filesystem.symlink(fs, "where/it/points", "old")
+    _ = fs.rename_path("old", "new")
+    const moved = link_text(fs, "new")
+    const gone = link_text(fs, "old")
+    _ = fs.remove("new")
+    assert moved == "ok where/it/points"
+    assert gone == f"read link 'old': {MISSING}"
+    assert link_text(fs, "new") == f"read link 'new': {MISSING}"
+    return True
+
+
+public func test_the_method_spelling_and_the_raw_call_read_the_same_link() -> bool:
+    const fs = filesystem.memory()
+    _ = filesystem.symlink(fs, "a/b", "ln")
+    match fs.read_link_path("ln"):
+        case Ok(text):
+            assert text == "a/b"
+            assert link_text(fs, "ln") == "ok a/b"
+            return True
+        case Err(_):
+            return False
+
+
+public func test_stat_names_the_owner_group_and_one_link_for_a_file_and_a_symbolic_link() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "hello")
+    _ = filesystem.symlink(fs, "f", "ln")
+    match filesystem.stat(fs, "f"):
+        case Ok(file):
+            match filesystem.stat(fs, "ln"):
+                case Ok(link):
+                    assert file.owner == filesystem.MEMORY_OWNER
+                    assert file.group == filesystem.MEMORY_GROUP
+                    assert file.links == 1
+                    assert link.owner == 1000
+                    assert link.group == 1000
+                    assert link.links == 1
+                    return True
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+public func test_a_directory_has_two_links_and_one_more_for_each_directory_inside_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    const empty = links_of(fs, "d")
+    _ = fs.mkdir("d/a")
+    _ = fs.mkdir("d/b")
+    _ = fs.write_text("d/file", "x")
+    _ = filesystem.symlink(fs, "a", "d/ln")
+    const two = links_of(fs, "d")
+    _ = fs.mkdir("d/a/deep")
+    _ = fs.remove("d/b")
+    assert empty == 2
+    assert two == 4
+    assert links_of(fs, "d") == 3
+    assert links_of(fs, "d/a") == 3
+    assert links_of(fs, "d/file") == 1
+    assert links_of(fs, "") == 3
+    return True
+
+
+public func test_stat_follow_describes_the_owner_group_and_links_of_the_target() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("d/sub")
+    _ = filesystem.symlink(fs, "d", "dl")
+    match filesystem.stat_follow(fs, "dl"):
+        case Ok(info):
+            assert info.kind == filesystem.PathKind.Directory
+            assert info.owner == 1000
+            assert info.group == 1000
+            assert info.links == 3
+            return True
+        case Err(_):
+            return False
+
+
+public func test_a_stat_built_by_hand_may_leave_the_owner_group_and_links_out() -> bool:
+    const built = filesystem.Stat(kind=filesystem.PathKind.Regular, size=1, modified=2, inode=3u64)
+    const owned = filesystem.Stat(kind=filesystem.PathKind.Regular, size=1, modified=2, inode=3u64, owner=7, group=8, links=2)
+    assert built.owner == 0
+    assert built.group == 0
+    assert built.links == 0
+    assert owned.owner == 7
+    assert owned.group == 8
+    assert owned.links == 2
+    return True
+
+
+func links_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.links
+        case Err(_):
+            return -1

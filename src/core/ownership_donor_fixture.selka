@@ -1,0 +1,38 @@
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+func donated_element(index: int) -> str[]:
+    const rows = [["first-" + str(index)], ["second-" + str(index)], ["last-" + str(index)]]
+    return copy(rows[index])
+
+
+func borrowed_element(rows: str[][], index: int) -> str[]:
+    return copy(rows[index])
+
+
+func choose_text(index: int) -> str?:
+    if index == 0:
+        return None
+    return Some("match-" + str(index))
+
+
+func donated_match(index: int) -> str:
+    const selected = choose_text(index)
+    match selected:
+        case Some(text):
+            return copy(text)
+        case None:
+            return "empty"
+
+
+func main(out: Stream) -> int:
+    const first = donated_element(0)
+    const middle = donated_element(1)
+    const last = donated_element(2)
+    mut live = [["live-" + str(3)], ["kept-" + str(4)]]
+    const independent = copy(live[0])
+    const borrowed = borrowed_element(live, 1)
+    live[0][0] = "changed"
+    live[1][0] = "replaced"
+    print(out, first[0] == "first-0" and middle[0] == "second-1" and last[0] == "last-2")
+    print(out, independent[0] == "live-3" and borrowed[0] == "kept-4")
+    print(out, donated_match(0) == "empty" and donated_match(7) == "match-7")
+    return 0

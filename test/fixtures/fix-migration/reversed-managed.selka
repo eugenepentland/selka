@@ -1,0 +1,16 @@
+import strings
+
+func hex(h: u64) -> str:
+    const digits = "0123456789abcdef"
+    mut out: str[] = []
+    mut remaining = h
+    for _ in range(16):
+        const digit = int(bit_and(remaining, 15u64))
+        append(mut out, digits[digit:digit + 1])
+        remaining = shift_right(remaining, 4u64)
+    return strings.join(reversed(out), "")
+
+
+func main(out: Stream) -> int:
+    print(out, hex(0u64), hex(171u64), hex(18446744073709551615u64))
+    return 0

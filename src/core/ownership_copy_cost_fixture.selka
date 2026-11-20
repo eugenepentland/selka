@@ -1,0 +1,151 @@
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+import dicts
+import lists
+import strings
+
+record Row:
+    name: str
+    numbers: int[]
+    labels: FixedArray[str, 2]
+    optional: str?
+
+
+func score(row: Row) -> int:
+    mut value = strings.char_count(row.name) + row.numbers[0] + strings.char_count(row.labels[0]) + strings.char_count(row.labels[1])
+    match row.optional:
+        case Some(text):
+            value += strings.char_count(text)
+        case None:
+            value += 1
+    return value
+
+
+public func test_generated_copies_preserve_nested_live_storage() -> bool:
+    mut rows = [Row(name="row-" + str(1), numbers=[17, 23], labels=FixedArray[str, 2](["first", "second"]), optional=Some("optional")), Row(name="second", numbers=[31], labels=FixedArray[str, 2](["a", "bc"]), optional=None)]
+    const copied = copy(rows)
+    rows[0].numbers[0] = 900
+    rows[0].name = "changed"
+    return score(copied[0]) == 41 and score(copied[1]) == 41 and rows[0].numbers[0] == 900
+
+
+public func test_generated_dictionary_copies_preserve_live_storage() -> bool:
+    mut source: dict[str, int[][]] = {"key-" + str(1): [[3, 5], [7, 11]]}
+    const copied = copy(source)
+    source["key-1"][0][0] = 90
+    dicts.clear(mut source)
+    return copied["key-1"][0][0] == 3 and copied["key-1"][1][1] == 11
+
+
+func main(out: Stream) -> int:
+    print(out, test_generated_copies_preserve_nested_live_storage())
+    print(out, test_generated_dictionary_copies_preserve_live_storage())
+    print(out, test_empty_list_growth_keeps_independent_headers())
+    print(out, test_empty_loops_grow_without_changing_static_headers())
+    print(out, test_full_slice_moves_dead_donors_and_copies_live_sources())
+    print(out, test_dead_record_field_moves_and_drops_unused_sibling())
+    print(out, test_dictionary_updates_copy_only_missing_keys())
+    print(out, test_dictionary_key_copy_precedes_source_mutation())
+    print(out, test_sibling_mut_arguments_write_back_each_owner_once())
+    print(out, test_sibling_callback_arguments_write_back_each_owner_once())
+    print(out, test_nested_sibling_arguments_share_their_transfer_prefix())
+    return 0
+
+
+func empty_words() -> str[]:
+    return []
+
+
+public func test_empty_list_growth_keeps_independent_headers() -> bool:
+    mut first = empty_words()
+    mut second = empty_words()
+    lists.reverse(mut first)
+    append(mut first, "first-" + str(1))
+    const copied = copy(second)
+    append(mut second, "second-" + str(2))
+    lists.clear(mut first)
+    append(mut first, "again-" + str(3))
+    return len(copied) == 0 and first[0] == "again-3" and second[0] == "second-2"
+
+
+func loop_words(count: int) -> str[]:
+    mut result: str[] = []
+    for i in range(count):
+        append(mut result, "loop-" + str(i))
+    return result
+
+
+public func test_empty_loops_grow_without_changing_static_headers() -> bool:
+    const zero = loop_words(0)
+    const grown = loop_words(17)
+    const still_zero = loop_words(0)
+    return len(zero) == 0 and len(still_zero) == 0 and len(grown) == 17 and grown[16] == "loop-16"
+
+
+func donated_slice(index: int) -> str[]:
+    const source = ["slice-" + str(index)]
+    return source[:]
+
+
+public func test_full_slice_moves_dead_donors_and_copies_live_sources() -> bool:
+    mut source = ["old-" + str(4)]
+    const copied = source[:]
+    source[0] = "changed"
+    const moved = donated_slice(9)
+    return copied[0] == "old-4" and source[0] == "changed" and moved[0] == "slice-9"
+
+
+record Pair:
+    selected: str[]
+    unused: str[]
+
+
+func donated_field(index: int) -> str[]:
+    const pair = Pair(selected=["selected-" + str(index)], unused=["unused-" + str(index)])
+    return copy(pair.selected)
+
+
+public func test_dead_record_field_moves_and_drops_unused_sibling() -> bool:
+    const selected = donated_field(7)
+    return selected[0] == "selected-7"
+
+
+public func test_dictionary_updates_copy_only_missing_keys() -> bool:
+    const keys = ["word-" + str(8)]
+    mut counts: dict[str, int] = {}
+    for i in range(30):
+        const key = copy(keys[0])
+        counts[own key] = dicts.get(counts, key, 0) + 1
+    return counts["word-8"] == 30 and keys[0] == "word-8"
+
+
+public func test_dictionary_key_copy_precedes_source_mutation() -> bool:
+    mut keys = ["old-" + str(9)]
+    mut counts: dict[str, int] = {}
+    const key = copy(keys[0])
+    keys[0] = "new-" + str(9)
+    counts[own key] = 7
+    return counts["old-9"] == 7 and keys[0] == "new-9" and "new-9" not in counts
+
+
+func transfer_words(mut left: str[], mut right: str[]) -> Unit:
+    append(mut right, copy(left[0]))
+    lists.clear(mut left)
+
+
+public func test_sibling_mut_arguments_write_back_each_owner_once() -> bool:
+    mut rows = [["left-" + str(1)], ["right-" + str(2)]]
+    transfer_words(mut rows[0], mut rows[1])
+    return len(rows[0]) == 0 and len(rows[1]) == 2 and rows[1][0] == "right-2" and rows[1][1] == "left-1"
+
+
+public func test_sibling_callback_arguments_write_back_each_owner_once() -> bool:
+    const callback: func(mut str[], mut str[]) -> Unit = transfer_words
+    mut rows = [["left-" + str(1)], ["right-" + str(2)]]
+    callback(mut rows[0], mut rows[1])
+    return len(rows[0]) == 0 and len(rows[1]) == 2 and rows[1][0] == "right-2" and rows[1][1] == "left-1"
+
+
+public func test_nested_sibling_arguments_share_their_transfer_prefix() -> bool:
+    mut rows = [[["left-" + str(1)], ["right-" + str(2)]], [["untouched"]]]
+    transfer_words(mut rows[0][0], mut rows[0][1])
+    return len(rows[0][0]) == 0 and len(rows[0][1]) == 2 and rows[0][1][1] == "left-1" and rows[1][0][0] == "untouched"

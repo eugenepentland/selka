@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "default_action": "deny",
+  "rules": [
+    {
+      "from": "main",
+      "to": "inputs",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "main",
+      "to": "decoder",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "main",
+      "to": "model",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    },
+    {
+      "from": "decoder",
+      "to": "model",
+      "action": "allow",
+      "reason": "Keep the application dependency boundary explicit."
+    }
+  ]
+}

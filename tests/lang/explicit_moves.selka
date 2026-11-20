@@ -1,0 +1,127 @@
+# O4 makes every named transfer explicit and every unmarked const place a borrow.
+import testing
+
+record Box:
+    items: int[]
+
+
+func made(value: int) -> int[]:
+    const values = [value, value + 1]
+    return values
+
+
+func consume(own values: int[]) -> int:
+    return values[0] + values[1]
+
+
+func read_owned(own values: int[]) -> int:
+    const alias = values
+    const independent = made(90)
+    assert consume(own independent) == 181
+    return alias[0] + values[1]
+
+
+public func test_const_reads_borrow_fresh_and_owned_parameter_storage() -> bool:
+    const fresh = [3, 4]
+    const alias = fresh
+    assert alias[0] == 3 and fresh[1] == 4
+    const transferred = made(8)
+    return read_owned(own transferred) == 17
+
+
+public func test_a_const_borrow_ends_at_its_last_use_before_owner_mutation() -> bool:
+    mut values = [5, 6]
+    const alias = values
+    const before = alias[0] + alias[1]
+    values[0] = 9
+    append(mut values, 7)
+    return before == 11 and values[0] == 9 and values[2] == 7
+
+
+public func test_explicit_bindings_and_stores_transfer_named_values() -> bool:
+    const source = [1, 2]
+    const owner = own source
+    mut destination = own owner
+    assert destination[0] == 1 and destination[1] == 2
+    const replacement = [3, 4]
+    destination = own replacement
+    mut box = Box(items=[])
+    const field = [5, 6]
+    box.items = own field
+    mut rows: int[][] = [[]]
+    const row = [7, 8]
+    rows[0] = own row
+    mut mapping: dict[str, int[]] = {}
+    const value = [9, 10]
+    mapping["kept"] = own value
+    return destination[0] == 3 and box.items[1] == 6 and rows[0][0] == 7 and mapping["kept"][1] == 10
+
+
+public func test_record_optional_list_and_call_transfers_preserve_values() -> bool:
+    const field = [11, 12]
+    const box = Box(items=own field)
+    const payload = [13, 14]
+    const optional: int[]? = Some(own payload)
+    const first = [15, 16]
+    const second = [17, 18]
+    const rows = [own first, own second]
+    const argument = [19, 20]
+    const taken = consume(own argument)
+    mut appended: int[][] = []
+    const tail = [21, 22]
+    append(mut appended, own tail)
+    match optional:
+        case Some(values):
+            return box.items[0] == 11 and values[1] == 14 and rows[0][1] == 16 and rows[1][0] == 17 and taken == 39 and appended[0][1] == 22
+        case None:
+            return False
+
+
+func through_const(values: int[]) -> int[] from values:
+    const alias = values
+    return alias
+
+
+public func test_bare_local_returns_own_and_declared_returns_borrow_through_const() -> bool:
+    mut owner = made(30)
+    const alias = through_const(owner)
+    const before = alias[0] + alias[1]
+    owner[0] = 40
+    return before == 61 and owner[0] == 40 and owner[1] == 31
+
+
+public func test_a_borrow_survives_other_owner_consumption_and_allocation_pressure() -> bool:
+    const source = made(70)
+    const alias = source
+    const independent = made(90)
+    assert consume(own independent) == 181
+    mut total = 0
+    for index in range(512):
+        total += consume(made(index))
+    return total == 262144 and alias[0] == 70 and alias[1] == 71
+
+
+func borrow_iterations(count: int) -> int:
+    mut total = 0
+    for index in range(count):
+        mut source = [index, index + 1]
+        const alias = source
+        total += alias[0]
+        source[0] += 2
+        total += source[0]
+    return total
+
+
+func copy_iterations(count: int) -> int:
+    mut total = 0
+    for index in range(count):
+        mut source = [index, index + 1]
+        const independent = copy(source)
+        source[0] += 2
+        total += independent[0] + source[0]
+    return total
+
+
+public func test_const_borrowing_has_no_implicit_copy_and_the_control_counts_copies() -> bool:
+    assert borrow_iterations(64) == 4160 and copy_iterations(64) == 4160
+    return testing.allocations(borrow_iterations, 64) == 64 and testing.allocations(copy_iterations, 64) == 128

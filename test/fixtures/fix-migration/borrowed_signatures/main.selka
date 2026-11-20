@@ -1,0 +1,22 @@
+import accessors
+
+
+func main() -> int:
+    const selected = accessors.choose(["left"], ["right"], True)
+    const part = accessors.view(b"abcd")
+    const result = accessors.checked("okay", False)
+    match result:
+        case Ok(value):
+            assert value == "ok"
+        case Err(message):
+            _ = message
+            return 1
+    mut values = ["mutable"]
+    const borrowed = accessors.through(mut values)
+    const managed = accessors.generic(["generic"])
+    const scalar = accessors.generic(7)
+    assert selected[0] == "left" and part == b"bc"
+    assert borrowed[0] == "mutable" and managed[0] == "generic" and scalar == 7
+    return 42
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

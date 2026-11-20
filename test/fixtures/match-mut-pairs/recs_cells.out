@@ -1,0 +1,707 @@
+cell_assign_assign_none
+  at
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_assign_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_assign_after
+  at
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_append_none
+  at
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_assign_append_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_assign_append_after
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_assign_fn_none
+  at
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_fn_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_fn_after
+  at
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_builtin_none
+  at
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_builtin_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_builtin_after
+  at
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_assign_take_none
+  at
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_assign_take_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_assign_take_after
+  at
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text=''), RT(text='c')]
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_assign_pop_none
+  at
+  w2 RT(text='c')
+  after [RT(text='w1'), RT(text='b')]
+cell_assign_pop_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='c')
+  after [RT(text='w1'), RT(text='b')]
+cell_assign_pop_after
+  at
+  w2 RT(text='c')
+  read [RT(text='w1'), RT(text='b')]
+  after [RT(text='w1'), RT(text='b')]
+cell_assign_field_none
+  at
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_assign_field_between
+  at
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_assign_field_after
+  at
+  read [RT(text='w1'), RT(text='f2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_append_assign_none
+  at
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_assign_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_assign_after
+  at
+  read [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_append_none
+  at
+  after [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1'), RT(text='w2')]
+cell_append_append_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1'), RT(text='w2')]
+cell_append_append_after
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1'), RT(text='w2')]
+  after [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1'), RT(text='w2')]
+cell_append_fn_none
+  at
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_fn_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_fn_after
+  at
+  w2 RT(text='b')
+  read [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_builtin_none
+  at
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_builtin_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_builtin_after
+  at
+  w2 RT(text='b')
+  read [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='w2'), RT(text='c'), RT(text='w1')]
+cell_append_take_none
+  at
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text=''), RT(text='c'), RT(text='w1')]
+cell_append_take_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text=''), RT(text='c'), RT(text='w1')]
+cell_append_take_after
+  at
+  w2 RT(text='b')
+  read [RT(text='a'), RT(text=''), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text=''), RT(text='c'), RT(text='w1')]
+cell_append_pop_none
+  at
+  w2 RT(text='w1')
+  after [RT(text='a'), RT(text='b'), RT(text='c')]
+cell_append_pop_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  w2 RT(text='w1')
+  after [RT(text='a'), RT(text='b'), RT(text='c')]
+cell_append_pop_after
+  at
+  w2 RT(text='w1')
+  read [RT(text='a'), RT(text='b'), RT(text='c')]
+  after [RT(text='a'), RT(text='b'), RT(text='c')]
+cell_append_field_none
+  at
+  after [RT(text='a'), RT(text='f2'), RT(text='c'), RT(text='w1')]
+cell_append_field_between
+  at
+  read [RT(text='a'), RT(text='b'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='f2'), RT(text='c'), RT(text='w1')]
+cell_append_field_after
+  at
+  read [RT(text='a'), RT(text='f2'), RT(text='c'), RT(text='w1')]
+  after [RT(text='a'), RT(text='f2'), RT(text='c'), RT(text='w1')]
+cell_fn_assign_none
+  at
+  w1 RT(text='a')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_assign_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_assign_after
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_append_none
+  at
+  w1 RT(text='a')
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_fn_append_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_fn_append_after
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_fn_fn_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_fn_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_fn_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_builtin_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_builtin_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_builtin_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_fn_take_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_fn_take_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_fn_take_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text=''), RT(text='c')]
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_fn_pop_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='c')
+  after [RT(text='w1'), RT(text='b')]
+cell_fn_pop_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='c')
+  after [RT(text='w1'), RT(text='b')]
+cell_fn_pop_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='c')
+  read [RT(text='w1'), RT(text='b')]
+  after [RT(text='w1'), RT(text='b')]
+cell_fn_field_none
+  at
+  w1 RT(text='a')
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_fn_field_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_fn_field_after
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='f2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_builtin_assign_none
+  at
+  w1 RT(text='a')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_assign_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_assign_after
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_append_none
+  at
+  w1 RT(text='a')
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_builtin_append_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_builtin_append_after
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+  after [RT(text='w1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_builtin_fn_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_fn_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_fn_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_builtin_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_builtin_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_builtin_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='w2'), RT(text='c')]
+cell_builtin_take_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_builtin_take_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_builtin_take_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text='w1'), RT(text=''), RT(text='c')]
+  after [RT(text='w1'), RT(text=''), RT(text='c')]
+cell_builtin_pop_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='c')
+  after [RT(text='w1'), RT(text='b')]
+cell_builtin_pop_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='c')
+  after [RT(text='w1'), RT(text='b')]
+cell_builtin_pop_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='c')
+  read [RT(text='w1'), RT(text='b')]
+  after [RT(text='w1'), RT(text='b')]
+cell_builtin_field_none
+  at
+  w1 RT(text='a')
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_builtin_field_between
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='b'), RT(text='c')]
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_builtin_field_after
+  at
+  w1 RT(text='a')
+  read [RT(text='w1'), RT(text='f2'), RT(text='c')]
+  after [RT(text='w1'), RT(text='f2'), RT(text='c')]
+cell_take_assign_none
+  at
+  w1 RT(text='a')
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_assign_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_assign_after
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='w2'), RT(text='c')]
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_append_none
+  at
+  w1 RT(text='a')
+  after [RT(text=''), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_take_append_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  after [RT(text=''), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_take_append_after
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c'), RT(text='w2')]
+  after [RT(text=''), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_take_fn_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_fn_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_fn_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text=''), RT(text='w2'), RT(text='c')]
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_builtin_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_builtin_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_builtin_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text=''), RT(text='w2'), RT(text='c')]
+  after [RT(text=''), RT(text='w2'), RT(text='c')]
+cell_take_take_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  after [RT(text=''), RT(text=''), RT(text='c')]
+cell_take_take_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text=''), RT(text=''), RT(text='c')]
+cell_take_take_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='b')
+  read [RT(text=''), RT(text=''), RT(text='c')]
+  after [RT(text=''), RT(text=''), RT(text='c')]
+cell_take_pop_none
+  at
+  w1 RT(text='a')
+  w2 RT(text='c')
+  after [RT(text=''), RT(text='b')]
+cell_take_pop_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  w2 RT(text='c')
+  after [RT(text=''), RT(text='b')]
+cell_take_pop_after
+  at
+  w1 RT(text='a')
+  w2 RT(text='c')
+  read [RT(text=''), RT(text='b')]
+  after [RT(text=''), RT(text='b')]
+cell_take_field_none
+  at
+  w1 RT(text='a')
+  after [RT(text=''), RT(text='f2'), RT(text='c')]
+cell_take_field_between
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='b'), RT(text='c')]
+  after [RT(text=''), RT(text='f2'), RT(text='c')]
+cell_take_field_after
+  at
+  w1 RT(text='a')
+  read [RT(text=''), RT(text='f2'), RT(text='c')]
+  after [RT(text=''), RT(text='f2'), RT(text='c')]
+cell_pop_assign_none
+  at
+  w1 RT(text='c')
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_assign_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_assign_after
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='w2')]
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_append_none
+  at
+  w1 RT(text='c')
+  after [RT(text='a'), RT(text='b'), RT(text='w2')]
+cell_pop_append_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  after [RT(text='a'), RT(text='b'), RT(text='w2')]
+cell_pop_append_after
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b'), RT(text='w2')]
+  after [RT(text='a'), RT(text='b'), RT(text='w2')]
+cell_pop_fn_none
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_fn_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_fn_after
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  read [RT(text='a'), RT(text='w2')]
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_builtin_none
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_builtin_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_builtin_after
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  read [RT(text='a'), RT(text='w2')]
+  after [RT(text='a'), RT(text='w2')]
+cell_pop_take_none
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='')]
+cell_pop_take_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  w2 RT(text='b')
+  after [RT(text='a'), RT(text='')]
+cell_pop_take_after
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  read [RT(text='a'), RT(text='')]
+  after [RT(text='a'), RT(text='')]
+cell_pop_pop_none
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  after [RT(text='a')]
+cell_pop_pop_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  w2 RT(text='b')
+  after [RT(text='a')]
+cell_pop_pop_after
+  at
+  w1 RT(text='c')
+  w2 RT(text='b')
+  read [RT(text='a')]
+  after [RT(text='a')]
+cell_pop_field_none
+  at
+  w1 RT(text='c')
+  after [RT(text='a'), RT(text='f2')]
+cell_pop_field_between
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='b')]
+  after [RT(text='a'), RT(text='f2')]
+cell_pop_field_after
+  at
+  w1 RT(text='c')
+  read [RT(text='a'), RT(text='f2')]
+  after [RT(text='a'), RT(text='f2')]
+cell_field_assign_none
+  at
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_assign_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_assign_after
+  at
+  read [RT(text='f1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_append_none
+  at
+  after [RT(text='f1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_field_append_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  after [RT(text='f1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_field_append_after
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+  after [RT(text='f1'), RT(text='b'), RT(text='c'), RT(text='w2')]
+cell_field_fn_none
+  at
+  w2 RT(text='b')
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_fn_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_fn_after
+  at
+  w2 RT(text='b')
+  read [RT(text='f1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_builtin_none
+  at
+  w2 RT(text='b')
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_builtin_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_builtin_after
+  at
+  w2 RT(text='b')
+  read [RT(text='f1'), RT(text='w2'), RT(text='c')]
+  after [RT(text='f1'), RT(text='w2'), RT(text='c')]
+cell_field_take_none
+  at
+  w2 RT(text='b')
+  after [RT(text='f1'), RT(text=''), RT(text='c')]
+cell_field_take_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='b')
+  after [RT(text='f1'), RT(text=''), RT(text='c')]
+cell_field_take_after
+  at
+  w2 RT(text='b')
+  read [RT(text='f1'), RT(text=''), RT(text='c')]
+  after [RT(text='f1'), RT(text=''), RT(text='c')]
+cell_field_pop_none
+  at
+  w2 RT(text='c')
+  after [RT(text='f1'), RT(text='b')]
+cell_field_pop_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  w2 RT(text='c')
+  after [RT(text='f1'), RT(text='b')]
+cell_field_pop_after
+  at
+  w2 RT(text='c')
+  read [RT(text='f1'), RT(text='b')]
+  after [RT(text='f1'), RT(text='b')]
+cell_field_field_none
+  at
+  after [RT(text='f1'), RT(text='f2'), RT(text='c')]
+cell_field_field_between
+  at
+  read [RT(text='f1'), RT(text='b'), RT(text='c')]
+  after [RT(text='f1'), RT(text='f2'), RT(text='c')]
+cell_field_field_after
+  at
+  read [RT(text='f1'), RT(text='f2'), RT(text='c')]
+  after [RT(text='f1'), RT(text='f2'), RT(text='c')]

@@ -1,0 +1,7 @@
+import lib
+import good
+import broken
+
+
+func main() -> int:
+    return lib.twice(1) + good.use_good(2) + broken.use_broken(3)

@@ -1,0 +1,151 @@
+import dicts
+import lists
+import strings
+
+@noalloc
+func total(values: int[]) -> int:
+    mut result = 0
+    for value in values:
+        result += value
+    return result
+
+
+@noalloc
+func paired_total(items: DictItem[str, int][]) -> int:
+    mut result = 0
+    for key, value in items:
+        result += strings.char_count(key) + value
+    return result
+
+
+func generic_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
+    mut view = list(dicts.values(mapping))
+    return view
+
+
+func generic_live_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
+    return list(dicts.values(mapping))
+
+
+func generic_items[T: copy + storable](mapping: dict[str, T]) -> DictItem[str, T][]:
+    return list(dicts.items(mapping))
+
+
+@noalloc
+func generic_first[T: copy + storable](mapping: dict[str, T], fallback: T) -> T from mapping, fallback:
+    for key, value in dicts.items(mapping):
+        return value
+    return fallback
+
+
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+# spec-case: DICT-VIEWS-1
+public func test_bound_snapshots_stay_independent() -> bool:
+    mut mapping = {"a": 10, "b": 20}
+    mut values = list(dicts.values(mapping))
+    mut keys = list(dicts.keys(mapping))
+    mut items = list(dicts.items(mapping))
+    mut snapshot = list(values)
+    mapping["b"] = 30
+    mapping["c"] = 2
+    if total(values) != 30 or paired_total(items) != 32:
+        return False
+    return len(keys) == 2 and snapshot == [10, 20] and list(keys) == ["a", "b"]
+
+
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+# spec-case: DICT-VIEWS-1
+public func test_items_have_key_value_fields_in_every_context() -> bool:
+    mut mapping = {"a": 10, "b": 20}
+    mut entries = list(dicts.items(mapping))
+    if entries[0].key != "a" or entries[0].value != 10:
+        return False
+    mut result = 0
+    for key, value in entries:
+        result += strings.char_count(key) + value
+    for entry in dicts.items(mapping):
+        result += entry.value
+    for index, entry in enumerate(dicts.items(mapping)):
+        result += index + entry.value
+    return result == 93
+
+
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+# spec-case: DICT-VIEWS-1
+public func test_views_support_comprehensions_and_generic_helpers() -> bool:
+    mut mapping = {"a": 10, "b": 20}
+    mut gather_result: int[] = []
+    for value in dicts.values(mapping):
+        const gather_value: int = value + 1
+        append(mut gather_result, gather_value)
+    if gather_result != [11, 21]:
+        return False
+    mut gather_result_next: str[] = []
+    for item in dicts.items(mapping):
+        const gather_value_next: str = copy(item.key)
+        append(mut gather_result_next, own gather_value_next)
+    if gather_result_next != ["a", "b"]:
+        return False
+    if generic_values(mapping) != [10, 20]:
+        return False
+    if list(generic_live_values(mapping)) != [10, 20]:
+        return False
+    if generic_items(mapping)[1].value != 20:
+        return False
+    return generic_first(mapping, 0) == 10
+
+
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+# spec-case: DICT-VIEWS-1
+public func test_views_keep_mapping_alive_and_empty_views_work() -> bool:
+    mut items = list(dicts.items({"alive": 42}))
+    for value in range(2000):
+        mut garbage = [value, value + 1]
+        if len(garbage) != 2:
+            return False
+    mut empty: dict[str, int] = {}
+    if len(dicts.items(empty)) != 0 or len(list(dicts.values(empty))) != 0:
+        return False
+    return list(items)[0].value == 42
+
+
+# spec-case: DICT-VIEWS-1
+public func test_view_reads_observe_value_replacement_and_loop_control() -> bool:
+    mut mapping = {"a": 10, "b": 20, "c": 30}
+    mut result = 0
+    for key in list(dicts.keys(mapping)):
+        const value = mapping[key]
+        if key == "a":
+            mapping["b"] = 2
+            continue
+        result += value
+        break
+    return result == 2 and mapping["a"] == 10
+
+
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+# spec-case: DICT-VIEWS-1
+# spec-case: D2-VIEW-STORAGE-1
+public func test_direct_projection_membership_and_snapshots() -> bool:
+    mut mapping = {1: [7, 8], 2: [9]}
+    if 1 not in dicts.keys(mapping) or 3 in dicts.keys(mapping):
+        return False
+    if not lists.contains(list(dicts.values(mapping)), [7, 8]) or lists.contains(list(dicts.values(mapping)), [8]):
+        return False
+    for item in dicts.items(mapping):
+        if item not in dicts.items(mapping):
+            return False
+    mut other = {2: [8]}
+    for item in dicts.items(other):
+        if item in dicts.items(mapping):
+            return False
+    mut empty: dict[int, int[]] = {}
+    if lists.contains(list(dicts.values(empty)), [9]):
+        return False
+    for item in dicts.items(mapping):
+        if item in dicts.items(empty):
+            return False
+    mut values = list(dicts.values(mapping))
+    append(mut mapping[1], 11)
+    append(mut values[1], 13)
+    return values == [[7, 8], [9, 13]] and mapping[1] == [7, 8, 11] and mapping[2] == [9]

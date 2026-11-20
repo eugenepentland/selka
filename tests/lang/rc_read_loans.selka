@@ -1,0 +1,92 @@
+import lists
+import strings
+
+func total(values: int[]) -> int:
+    mut result = 0
+    for index in range(len(values)):
+        result += values[index]
+    return result
+
+
+public func test_scalar_receivers_read_both_index_directions_and_empty_loops() -> bool:
+    mut values = [2, 3, 5, 7]
+    mut octets = b"abc"
+    return total(values) == 17 and total([]) == 0 and values[len(values) - 1] == 7 and values[len(values) - 4] == 2 and octets[len(octets) - 1] == 99 and strings.char_count("hello") == 5
+
+
+func change_index(mut values: int[]) -> int:
+    lists.clear(mut values)
+    append(mut values, 91)
+    return 0
+
+
+public func test_index_callback_keeps_an_explicit_receiver_snapshot() -> bool:
+    mut values = [7, 8]
+    mut snapshot = copy(values)
+    const receiver_snapshot = copy(values)
+    mut selected = receiver_snapshot[change_index(mut values)]
+    return selected == 7 and values == [91] and snapshot == [7, 8]
+
+
+public func test_scalar_loan_roots_survive_loop_reassignment_and_branches() -> bool:
+    mut values = [1, 2]
+    mut result = 0
+    for index in range(20):
+        values = [index, index + 1]
+        if index % 2 == 0:
+            result += values[0]
+        else:
+            result += values[len(values) - 1]
+    return result == 200 and values == [19, 20]
+
+
+public func test_scalar_reads_keep_pending_pins_and_named_snapshots() -> bool:
+    mut rows = [[7]]
+    mut snapshot = copy(rows)
+    append(mut rows[0], rows[0][0])
+    return rows == [[7, 7]] and snapshot == [[7]]
+
+
+func main() -> int:
+    assert test_scalar_receivers_read_both_index_directions_and_empty_loops()
+    assert test_index_callback_keeps_an_explicit_receiver_snapshot()
+    assert test_scalar_loan_roots_survive_loop_reassignment_and_branches()
+    assert test_scalar_reads_keep_pending_pins_and_named_snapshots()
+    assert test_plain_record_read_survives_source_clear()
+    assert test_plain_record_callback_preserves_evaluation_snapshot()
+    assert test_plain_array_read_preserves_bytes_after_mutation()
+    return 0
+
+
+record Point:
+    x: int
+    y: int
+
+
+func change_points(mut rows: Point[]) -> int:
+    lists.clear(mut rows)
+    append(mut rows, Point(x=91, y=92))
+    return 0
+
+
+public func test_plain_record_read_survives_source_clear() -> bool:
+    mut rows = [Point(x=3, y=7), Point(x=11, y=13)]
+    mut first = rows[0]
+    mut last = rows[len(rows) - 1]
+    lists.clear(mut rows)
+    return first == Point(x=3, y=7) and last == Point(x=11, y=13) and len(rows) == 0
+
+
+public func test_plain_record_callback_preserves_evaluation_snapshot() -> bool:
+    mut rows = [Point(x=3, y=7)]
+    const receiver_snapshot = copy(rows)
+    mut selected = receiver_snapshot[change_points(mut rows)]
+    return selected == Point(x=3, y=7) and rows == [Point(x=91, y=92)]
+
+
+public func test_plain_array_read_preserves_bytes_after_mutation() -> bool:
+    mut rows: FixedArray[int, 2][] = [FixedArray[int, 2]([3, 7]), FixedArray[int, 2]([11, 13])]
+    mut selected = rows[len(rows) - 1]
+    rows[1] = FixedArray[int, 2]([91, 92])
+    lists.clear(mut rows)
+    return selected == FixedArray[int, 2]([11, 13])

@@ -1,0 +1,19 @@
+# Re-exports of supplied standard-library functions that builtin_functions.selka calls through this module: a re-export
+# names the `builtin func` itself, so each call here is the compiler's operation, as the module's own spelling is.
+import dicts
+import lists
+import parallel
+import sets
+import simd
+import strings
+export strings.upper
+export simd.sum
+export lists.pop
+export lists.reverse
+export dicts.keys
+export sets.union
+export parallel.map
+
+# A module's own function named like a supplied one is its own: `builtin_functions_support.lower(text)` runs this body.
+public func lower(text: str) -> str:
+    return "own " + text

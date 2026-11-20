@@ -1,0 +1,168 @@
+# `try` as an operand (TRY-2, docs/results-and-options.md, "`try` in an operand"): `try` binds to the call after it, the
+# operands of an expression run left to right as they do without `try`, the values to the left of a `try` are made before
+# its call, and nothing to its right runs when it fails. Under `and` and `or` a `try` on the side that does not run does not
+# run; in a `while` condition it runs on every test. Each test notes every call in a log, so the order shows; the suite
+# runs with the leak check on, so what the program made before a failing `try` is destroyed once. The refusals (a `try` over
+# an operator, in a module constant or a default, a `@linear` owner, an armed `on fail:`, a `detach` loop) are in
+# src/advice_messages_test.zig and src/loop_detach_test.zig.
+record Row:
+    size: int
+    name: str
+
+
+# Fails when `n` is `at`, after noting `n` in the log.
+func step(mut log: int[], n: int, at: int) -> int fails str:
+    append(mut log, n)
+    if n == at:
+        fail "step"
+    return n
+
+
+func flag(mut log: int[], n: int, at: int) -> bool fails str:
+    const k = try step(mut log, n, at)
+    return k > 0
+
+
+func note(mut log: int[], n: int) -> int:
+    append(mut log, n)
+    return n
+
+
+func list_of(mut log: int[], n: int, at: int) -> int[] fails str:
+    const k = try step(mut log, n, at)
+    return [k, k]
+
+
+func text_of(mut log: int[], n: int, at: int) -> str fails str:
+    const k = try step(mut log, n, at)
+    return f"t{k}"
+
+
+func outcome(result: Result[int, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func value_of(result: Result[int, str]) -> int:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return -1
+
+
+# One statement for each position a value is computed at; the plain calls (`note`, 101 and up) show what runs around each
+# `try` (1 to 20).
+func positions(mut log: int[], at: int) -> int fails str:
+    const a = note(mut log, 101) + try step(mut log, 1, at) * note(mut log, 102)
+    const b = try step(mut log, 2, at) == note(mut log, 2)
+    const c = note(mut log, 103) > 1000 and try flag(mut log, 3, at)
+    const d = note(mut log, 104) < 1000 or try flag(mut log, 4, at)
+    const e = True and not try flag(mut log, 5, at)
+    const xs = [note(mut log, 105), try step(mut log, 6, at), note(mut log, 106)]
+    const i = xs[try step(mut log, 7, at) - 7]
+    const s = xs[0:try step(mut log, 8, at) - 6]
+    const m = {"k": try step(mut log, 9, at)}
+    const f = f"{note(mut log, 107)}-{try step(mut log, 10, at)}"
+    const r = Row(size=note(mut log, 108) + try step(mut log, 11, at), name=try text_of(mut log, 12, at))
+    if try flag(mut log, 13, at) and note(mut log, 109) > 0:
+        append(mut log, 110)
+    mut count = 0
+    while try step(mut log, 14, at) > count and count < 2:
+        count += 1
+    assert try step(mut log, 15, at) == 15, f"{try step(mut log, 16, at)}"
+    match try step(mut log, 17, at):
+        case 17:
+            append(mut log, 111)
+        case _:
+            append(mut log, 112)
+    for x in try list_of(mut log, 18, at):
+        append(mut log, x + 1000)
+    const g = max(1 + try step(mut log, 19, at), 0)
+    const total = a + i + len(s) + len(m) + len(f) + r.size + g + count
+    if b and not c and d and not e:
+        return total + try step(mut log, 20, at) * 0
+    return 0
+
+
+# Every call `positions` makes when no `try` fails, in order.
+func every_call() -> int[]:
+    return [101, 1, 102, 2, 2, 103, 104, 5, 105, 6, 106, 7, 8, 9, 107, 10, 108, 11, 12, 13, 109, 110, 14, 14, 14, 15, 17, 111, 18, 1018, 1018, 19, 20]
+
+
+public func test_every_operand_runs_left_to_right_and_once() -> bool:
+    mut log: int[] = []
+    const result = positions(mut log, 0)
+    # 101 + 1 * 102, index 0 of xs, two elements, one key, "107-10", 108 + 11, 1 + 19, two loop turns.
+    return value_of(result) == 203 + 105 + 2 + 1 + 6 + 119 + 20 + 2 and log == every_call()
+
+
+public func test_a_failing_try_leaves_where_it_stands_and_nothing_to_its_right_runs() -> bool:
+    const calls = every_call()
+    mut all_left = True
+    for at in [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 17, 18, 19, 20]:
+        mut log: int[] = []
+        const verdict = outcome(positions(mut log, at))
+        # The log is the full one cut after the first call that failed.
+        mut cut = 0
+        while calls[cut] != at:
+            cut += 1
+        all_left = all_left and verdict == "step" and log == calls[0:cut + 1]
+    return all_left
+
+
+public func test_a_try_on_the_side_of_and_or_that_does_not_run_does_not_run() -> bool:
+    mut first: int[] = []
+    const skipped_and = outcome(positions(mut first, 3))
+    mut second: int[] = []
+    const skipped_or = outcome(positions(mut second, 4))
+    mut third: int[] = []
+    const assert_message = outcome(positions(mut third, 16))
+    return skipped_and == "ok" and skipped_or == "ok" and assert_message == "ok" and first == every_call() and second == every_call() and third == every_call()
+
+
+public func test_a_try_in_a_while_condition_runs_on_every_test() -> bool:
+    mut log: int[] = []
+    const verdict = outcome(positions(mut log, 14))
+    return verdict == "step" and log[len(log) - 1] == 14 and len(log) == 23
+
+
+# What the left operands made is held while the call under `try` runs, and destroyed once when it fails.
+func joined(mut log: int[], at: int) -> str fails str:
+    const words = [try step(mut log, 1, at)] + try list_of(mut log, 2, at) + [note(mut log, 3)]
+    const text = "a" + try text_of(mut log, 4, at) + f"{len(words)}" + try text_of(mut log, 5, at)
+    return text + try text_of(mut log, 6, at)
+
+
+func joined_or(mut log: int[], at: int) -> str:
+    match joined(mut log, at):
+        case Ok(text):
+            return text
+        case Err(message):
+            return message
+
+
+public func test_text_and_lists_made_before_a_failing_try_are_destroyed_once() -> bool:
+    mut ok_log: int[] = []
+    const whole = joined_or(mut ok_log, 0)
+    mut all_failed = True
+    for at in [1, 2, 4, 5, 6]:
+        mut log: int[] = []
+        all_failed = all_failed and joined_or(mut log, at) == "step" and log[len(log) - 1] == at
+    return whole == "at44t5t6" and ok_log == [1, 2, 3, 4, 5, 6] and all_failed
+
+
+# `fail` and `return` take an operand with `try` too; a failing `try` in a `fail` value leaves with its own error.
+func failing(mut log: int[], at: int) -> int fails str:
+    if note(mut log, 7) > 0:
+        fail "e" + try text_of(mut log, 1, at)
+    return 0
+
+
+public func test_a_fail_value_with_a_try_fails_with_the_try_error_when_the_try_fails() -> bool:
+    mut log: int[] = []
+    mut failed_log: int[] = []
+    return outcome(failing(mut log, 0)) == "et1" and outcome(failing(mut failed_log, 1)) == "step" and log == [7, 1] and failed_log == [7, 1]

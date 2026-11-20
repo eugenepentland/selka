@@ -1,0 +1,138 @@
+# Spans into a `Sources` table: the text of each file is kept once, for as long as the table lives, and a `Span` (a file, a start and a
+# length) names a piece of it. A span is three integers, so it is copied, stored in records and lists and compared like any value;
+# the text is read through the table. The tests pin the table (files only ever added, moved in, never copied), reading and bounds,
+# the comparisons between spans of one or two files, the hashes (FNV-1a, equal for equal text), spans inside records and
+# dictionaries, and a tokenizer that keeps spans where it would have kept a copy of every word.
+import spans
+
+# A table of two files: a list of nets and a list of pins that name them.
+func two_files() -> spans.Sources:
+    mut sources = spans.create()
+    mut first = b"(net GND) (net VCC)"
+    mut second = b"(pin 1 GND)"
+    _ = spans.add(mut sources, "nets.sexp", own first)
+    _ = spans.add(mut sources, "pins.sexp", own second)
+    return sources
+
+
+public func test_files_are_numbered_in_the_order_they_are_added_and_keep_their_names() -> bool:
+    const sources = two_files()
+    if spans.count(sources) != 2 or not spans.has_file(sources, 1) or spans.has_file(sources, 2) or spans.has_file(sources, -1):
+        return False
+    return spans.file_name(sources, 0) == "nets.sexp" and spans.file_name(sources, 1) == "pins.sexp" and spans.file_text(sources, 1) == b"(pin 1 GND)"
+
+
+public func test_text_reads_the_octets_a_span_names() -> bool:
+    const sources = two_files()
+    return spans.text(sources, spans.of(0, 5, 3)) == b"GND" and spans.text(sources, spans.between(0, 15, 18)) == b"VCC" and spans.text(sources, spans.of(1, 1, 3)) == b"pin"
+
+
+public func test_a_whole_file_and_an_empty_span_read_as_themselves() -> bool:
+    const sources = two_files()
+    const everything = spans.whole(sources, 1)
+    return spans.text(sources, everything) == b"(pin 1 GND)" and spans.end_of(everything) == 11 and spans.text(sources, spans.empty_at(1, 4)) == b"" and spans.is_empty(spans.empty_at(0, 3)) and not spans.is_empty(everything)
+
+
+public func test_fits_is_exact_at_the_edges_of_a_file() -> bool:
+    const sources = two_files()
+    if not spans.fits(sources, spans.of(1, 11, 0)) or not spans.fits(sources, spans.of(1, 0, 11)) or not spans.fits(sources, spans.of(0, 18, 1)):
+        return False
+    return not spans.fits(sources, spans.of(1, 11, 1)) and not spans.fits(sources, spans.of(1, 12, 0)) and not spans.fits(sources, spans.of(2, 0, 0)) and not spans.fits(sources, spans.of(-1, 0, 0)) and not spans.fits(sources, spans.of(0, 19, 1))
+
+
+public func test_spans_of_one_text_in_two_files_are_the_same_text_and_different_places() -> bool:
+    const sources = two_files()
+    const net = spans.of(0, 5, 3)
+    const pin = spans.of(1, 7, 3)
+    return net != pin and spans.same(sources, net, pin) and spans.equals(sources, net, b"GND") and not spans.equals(sources, net, b"VCC") and spans.same(sources, net, net)
+
+
+public func test_starts_with_and_compare_read_the_text_in_place() -> bool:
+    const sources = two_files()
+    const gnd = spans.of(0, 5, 3)
+    const vcc = spans.of(0, 15, 3)
+    if not spans.starts_with(sources, gnd, b"GN") or spans.starts_with(sources, gnd, b"GNDX") or not spans.starts_with(sources, gnd, b""):
+        return False
+    return spans.compare(sources, gnd, vcc) == -1 and spans.compare(sources, vcc, gnd) == 1 and spans.compare(sources, gnd, spans.of(1, 7, 3)) == 0
+
+
+public func test_sub_and_join_build_spans_from_spans() -> bool:
+    const word = spans.of(0, 5, 3)
+    const inner = spans.sub(word, 1, 2)
+    if inner.file != 0 or inner.start != 6 or inner.length != 2:
+        return False
+    const both = spans.join(spans.of(0, 15, 3), spans.of(0, 5, 3))
+    return both == spans.of(0, 5, 13) and spans.join(word, word) == word and spans.end_of(both) == 18
+
+
+public func test_hash_bytes_is_fnv_1a_and_equal_text_hashes_equal_in_any_file() -> bool:
+    if spans.hash_bytes(b"") != 2166136261 or spans.hash_bytes(b"a") != 3826002220 or spans.hash_bytes(b"foobar") != 3214735720:
+        return False
+    const sources = two_files()
+    const net = spans.of(0, 5, 3)
+    const pin = spans.of(1, 7, 3)
+    return spans.hash(sources, net) == spans.hash(sources, pin) and spans.hash(sources, net) == spans.hash_bytes(b"GND") and spans.hash(sources, spans.empty_at(0, 0)) == 2166136261 and spans.hash(sources, net) != spans.hash(sources, spans.of(0, 15, 3))
+
+
+# A token that keeps where its text is, where a copy would keep the text.
+record Token:
+    word: spans.Span
+    line: int
+
+
+# Split a file on spaces into spans, the way a tokenizer keeps the places of its words.
+func words(sources: spans.Sources, file: int) -> Token[]:
+    const data = spans.file_text(sources, file)
+    mut found: Token[] = []
+    mut start = -1
+    for position in range(len(data) + 1):
+        mut octet = 32
+        if position < len(data):
+            octet = int(data[position])
+        if octet == 32:
+            if start >= 0:
+                append(mut found, Token(word=spans.between(file, start, position), line=1))
+            start = -1
+        elif start < 0:
+            start = position
+    return found
+
+
+public func test_a_tokenizer_keeps_spans_and_reads_each_word_back() -> bool:
+    mut sources = spans.create()
+    mut text = b"let alpha = beta + alpha"
+    const file = spans.add(mut sources, "design.sexp", own text)
+    const found = words(sources, file)
+    if len(found) != 6:
+        return False
+    return spans.equals(sources, found[0].word, b"let") and spans.equals(sources, found[1].word, b"alpha") and spans.equals(sources, found[3].word, b"beta") and spans.same(sources, found[1].word, found[5].word) and found[1].word != found[5].word
+
+
+public func test_spans_in_records_and_lists_are_independent_values() -> bool:
+    mut sources = spans.create()
+    mut text = b"one two"
+    const file = spans.add(mut sources, "f", own text)
+    mut tokens = words(sources, file)
+    mut copied = copy(tokens)
+    copied[0] = Token(word=spans.of(file, 4, 3), line=2)
+    return spans.equals(sources, tokens[0].word, b"one") and spans.equals(sources, copied[0].word, b"two") and tokens[0].line == 1 and copied[0].line == 2
+
+
+public func test_a_dictionary_keyed_by_span_keys_by_position_not_by_text() -> bool:
+    const sources = two_files()
+    mut seen: dict[spans.Span, int] = {}
+    seen[spans.of(0, 5, 3)] = 1
+    seen[spans.of(1, 7, 3)] = 2
+    seen[spans.of(0, 5, 3)] = 3
+    return len(seen) == 2 and seen[spans.of(0, 5, 3)] == 3 and spans.same(sources, spans.of(0, 5, 3), spans.of(1, 7, 3))
+
+
+public func test_a_table_grows_to_many_files_without_moving_the_text_of_the_first() -> bool:
+    mut sources = spans.create()
+    mut first = b"the first file"
+    const zero = spans.add(mut sources, "0", own first)
+    const span = spans.of(zero, 4, 5)
+    for index in range(300):
+        mut data = b"another file"
+        _ = spans.add(mut sources, str(index), own data)
+    return spans.count(sources) == 301 and spans.equals(sources, span, b"first") and spans.file_name(sources, 300) == "299"

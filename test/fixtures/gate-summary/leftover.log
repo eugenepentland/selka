@@ -1,0 +1,14 @@
+build-slot: gate slot 1, FIFO ticket 3138 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 42e5838afdb0)
+guardian: diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1: 0/1298 source file(s) in scope for the 50 per-file check(s); 36 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 37 finding(s), none in scope — report-only (--verbose for detail)
+guardian: repeated-string-literal: 272 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 86 checks — 0 blocking, 1 report-only — diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1, 0 file(s) in scope
+----------------------------------------------------------------------
+Ran 46 tests in 4.991s
+
+OK (skipped=2)
+Build Summary: 49/49 steps succeeded; 2670/30900 tests passed (28230 skipped)
+
+supervisor: 1 descendant(s) outlived the closeout
+supervisor: leftover pid=2117000 ppid=2111435 sid=2117000 state=S started=09:12:53Z age=194.0s cwd=/home/u/tree cmd=sleep 1500

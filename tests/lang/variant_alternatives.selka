@@ -1,0 +1,178 @@
+import http
+
+enum Node:
+    text(value: str)
+    code(value: str)
+    number(value: int)
+    pair(left: int, right: int)
+    wide(a: int, b: int, c: int, d: int)
+    leaf
+    blank
+
+
+# Alternatives that bind the same name share one body; payload-free cases list as bare names.
+func weight(node: Node) -> int:
+    match node:
+        case text(value) | code(value):
+            return len(value)
+        case number(value):
+            return value
+        case pair(left, right):
+            return left * 10 + right
+        case wide(..):
+            return 4
+        case leaf | blank:
+            return 0
+
+
+public func test_alternatives_that_bind_one_name_share_a_body() -> bool:
+    return weight(Node.text(value="abc")) == 3 and weight(Node.code(value="de")) == 2 and weight(Node.number(value=7)) == 7 and weight(Node.pair(left=1, right=2)) == 12
+
+
+public func test_payload_free_cases_list_as_alternatives() -> bool:
+    return weight(Node.leaf) == 0 and weight(Node.blank) == 0 and weight(Node.wide(a=1, b=2, c=3, d=4)) == 4
+
+
+# An alternative may name its field in full; the names bound must still agree.
+func labelled(node: Node) -> int:
+    match node:
+        case text(value=value) | code(value=value):
+            return len(value)
+        case _:
+            return -1
+
+
+public func test_labelled_and_bare_bindings_of_one_name_agree() -> bool:
+    return labelled(Node.code(value="xyz")) == 3 and labelled(Node.leaf) == -1
+
+
+# The rest marker ignores every field the pattern does not name.
+func first(node: Node) -> int:
+    match node:
+        case pair(left, ..):
+            return left
+        case wide(a, ..):
+            return a
+        case number(..) | text(..) | code(..):
+            return 100
+        case leaf | blank:
+            return 0
+
+
+public func test_the_rest_marker_ignores_the_remaining_fields() -> bool:
+    return first(Node.pair(left=5, right=6)) == 5 and first(Node.wide(a=7, b=1, c=1, d=1)) == 7 and first(Node.number(value=1)) == 100 and first(Node.text(value="q")) == 100
+
+
+func has_value(option: int?) -> bool:
+    match option:
+        case Some(..):
+            return True
+        case None:
+            return False
+
+
+public func test_the_rest_marker_discards_a_single_payload() -> bool:
+    return has_value(Some(1)) and not has_value(None)
+
+
+func kind(result: Result[int, http.Error]) -> int:
+    match result:
+        case Ok(_):
+            return 0
+        case Err(Incomplete):
+            return 1
+        case Err(Malformed(..)):
+            return 2
+        case Err(Unsupported(..)):
+            return 3
+        case Err(HeaderTooLarge(..)):
+            return 4
+        case Err(BodyTooLarge(..)):
+            return 5
+        case Err(UnsupportedVersion(..)):
+            return 6
+
+
+public func test_the_rest_marker_ends_a_nested_pattern() -> bool:
+    return kind(Ok(1)) == 0 and kind(Err(http.Error.Incomplete)) == 1 and kind(Err(http.Error.Malformed(value="x"))) == 2 and kind(Err(http.Error.BodyTooLarge(value="y"))) == 5
+
+
+enum Counter:
+    up(n: int)
+    down(n: int)
+    other(m: int)
+    idle
+    stop
+
+
+# Under `match mut` the alternatives bind the same field name, and each writes its own payload.
+func bump(mut counter: Counter):
+    match mut counter:
+        case up(n) | down(n):
+            n += 1
+        case other(m):
+            m += 10
+        case idle | stop:
+            pass
+
+
+func read(counter: Counter) -> int:
+    match counter:
+        case up(n) | down(n):
+            return n
+        case other(m):
+            return m
+        case idle | stop:
+            return 0
+
+
+public func test_alternatives_write_through_under_match_mut() -> bool:
+    mut a = Counter.up(n=1)
+    mut b = Counter.down(n=5)
+    mut c = Counter.other(m=7)
+    mut d = Counter.idle
+    bump(mut a)
+    bump(mut b)
+    bump(mut c)
+    bump(mut d)
+    return read(a) == 2 and read(b) == 6 and read(c) == 17 and read(d) == 0
+
+
+enum Slot[T]:
+    single(item: T)
+    other(item: T)
+    pair(left: T, right: T, label: str = "p")
+    none
+    empty
+
+
+func count[T](slot: Slot[T]) -> int:
+    match slot:
+        case single(item) | other(item):
+            return 1
+        case pair(..):
+            return 2
+        case none | empty:
+            return 0
+
+
+public func test_alternatives_and_the_rest_marker_work_in_a_generic_function() -> bool:
+    const a: Slot[int] = Slot.other(item=3)
+    const b: Slot[int] = Slot.pair(left=1, right=2)
+    const c: Slot[int] = Slot.empty
+    return count(a) == 1 and count(b) == 2 and count(c) == 0
+
+
+# A body with a local is checked once per alternative, each with its own copy.
+func shout(node: Node) -> str:
+    match node:
+        case text(value) | code(value):
+            mut out = copy(value)
+            out = out + "!"
+            return out
+        case _:
+            return ""
+
+
+public func test_a_body_with_locals_runs_for_every_alternative() -> bool:
+    return shout(Node.text(value="a")) == "a!" and shout(Node.code(value="b")) == "b!" and shout(Node.leaf) == ""

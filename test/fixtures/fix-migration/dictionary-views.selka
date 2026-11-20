@@ -1,0 +1,11 @@
+module main
+
+def main() -> int:
+    mapping = {1: 7, 2: 9}
+    keys = mapping.keys()
+    values = mapping.values()
+    items = mapping.items()
+    nested = [mapping.values()]
+    rows = [mapping]
+    interior = rows[0].values()
+    return len(keys) + len(values) + len(items) + len(nested[0]) + len(interior)

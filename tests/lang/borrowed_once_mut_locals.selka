@@ -1,0 +1,87 @@
+# A `mut` local stored once from a place borrows it, as a `const` does and as a `mut` local assigned more than once already did
+# (D4, lane OC's H1, plan Part B stage O3). A bare name lends: no `copy(...)` is written and nothing is copied while the local
+# is only read. A write through it is refused at the write (src/core/borrowed_once_mut_test.zig and
+# test/fixtures/fix-migration/written-through.selka).
+record Item:
+    name: str
+    count: int
+
+
+record Shelf:
+    item: Item
+    counts: int[]
+    label: str
+
+
+func make_shelf(n: int) -> Shelf:
+    return Shelf(item=Item(name=f"item{n}", count=n), counts=[n, n + 1], label=f"shelf{n}")
+
+
+func of_field(shelf: Shelf) -> int:
+    mut label = shelf.label
+    return len(label)
+
+
+func of_record_field(shelf: Shelf) -> int:
+    mut item = shelf.item
+    return item.count + len(item.name)
+
+
+func of_list_parameter(values: int[]) -> int:
+    mut held = values
+    return len(held)
+
+
+func of_owner(n: int) -> int:
+    const shelf = make_shelf(n)
+    mut counts = shelf.counts
+    return len(counts) + counts[1]
+
+
+func returned(shelf: Shelf) -> str from shelf:
+    mut label = shelf.label
+    return label
+
+
+func after_the_borrow(n: int) -> int:
+    mut shelf = make_shelf(n)
+    mut label = shelf.label
+    const before = len(label)
+    # The borrow ended at its last use: the owner may change, and then be given away.
+    shelf.label = "x"
+    return before * 10 + take_label(own shelf)
+
+
+func take_label(own shelf: Shelf) -> int:
+    return len(shelf.label)
+
+
+func owned_and_copied(shelf: Shelf) -> int:
+    mut copied = copy(shelf.counts)
+    append(mut copied, 7)
+    mut fresh = [1]
+    append(mut fresh, 2)
+    const owner = [3]
+    mut given = own owner
+    append(mut given, 4)
+    return len(copied) * 100 + len(fresh) * 10 + len(given)
+
+
+public func test_a_mut_local_stored_once_from_a_field_borrows_it() -> bool:
+    return of_field(make_shelf(3)) == 6 and of_record_field(make_shelf(4)) == 9
+
+
+public func test_a_mut_local_stored_once_from_a_parameter_or_an_owner_borrows_it() -> bool:
+    return of_list_parameter([1, 2, 3]) == 3 and of_owner(5) == 8
+
+
+public func test_a_mut_local_stored_once_returns_under_from() -> bool:
+    return returned(make_shelf(2)) == "shelf2"
+
+
+public func test_the_owner_changes_and_moves_after_the_borrows_last_use() -> bool:
+    return after_the_borrow(2) == 61
+
+
+public func test_own_copy_and_fresh_mut_locals_are_written_as_before() -> bool:
+    return owned_and_copied(make_shelf(1)) == 322

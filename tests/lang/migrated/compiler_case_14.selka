@@ -1,0 +1,9 @@
+public func program() -> i64:
+    mut result = 0
+    if True:
+        const x = 2
+        result = x
+    if True:
+        const x = 3
+        result = result + x
+    return result

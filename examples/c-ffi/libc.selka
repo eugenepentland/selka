@@ -1,0 +1,7 @@
+# The C library functions this example calls. An `extern func` takes its C symbol from its name, so `abs` and `floor`
+# keep their prelude names here, in a module that never calls them bare; `main.selka` calls them as `libc.abs(...)` and
+# `libc.floor(...)`.
+public extern func abs(host: Host, value: i32) -> i32
+
+
+public extern func floor(host: Host, value: float) -> float

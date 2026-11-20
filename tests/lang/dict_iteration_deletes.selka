@@ -1,0 +1,77 @@
+# Iterating a dictionary after deletes: a loop, a copy and an equality test visit the live entries in
+# insertion order, whole dead words included, and agree with a list model after growth.
+import dicts
+
+# Keys 0 to 299 with some deleted: words of 64 consecutive dead entries, the first and last entries,
+# and a sparse run in the last word. Returns the table, which keeps 165 entries.
+func sparse_table() -> dict[int, int]:
+    mut table: dict[int, int] = {}
+    for key in range(300):
+        table[key] = key * 10
+    for key in range(64, 192):
+        _ = dicts.pop(mut table, key)
+    _ = dicts.pop(mut table, 0)
+    _ = dicts.pop(mut table, 250)
+    _ = dicts.pop(mut table, 299)
+    for key in range(200, 210, 3):
+        _ = dicts.pop(mut table, key)
+    return table
+
+
+public func test_iteration_after_deletes_visits_live_entries_in_order() -> bool:
+    const table = sparse_table()
+    if len(table) != 165:
+        return False
+    mut seen = 0
+    mut last = -1
+    for key in table:
+        if key <= last or table[key] != key * 10:
+            return False
+        last = key
+        seen += 1
+    return seen == 165 and last == 298
+
+
+public func test_reinserted_keys_iterate_after_the_survivors() -> bool:
+    mut table = sparse_table()
+    table[100] = 1
+    table[0] = 2
+    mut count = 0
+    mut tail: int[] = []
+    for key in table:
+        count += 1
+        if count > 165:
+            append(mut tail, key)
+    return count == 167 and len(tail) == 2 and tail[0] == 100 and tail[1] == 0
+
+
+# Keys 0 to 39, 10 to 29 deleted, then 40 to 1199 inserted: the survivors in insertion order are
+# 0 to 9, 30 to 39 and 40 to 1199, so the i-th entry is key i below ten and key i + 20 from there on.
+public func test_iteration_after_deletes_and_growth_matches_a_list_model() -> bool:
+    mut table: dict[int, int] = {}
+    for key in range(40):
+        table[key] = key
+    for key in range(10, 30):
+        _ = dicts.pop(mut table, key)
+    for key in range(40, 1200):
+        table[key] = key
+    if len(table) != 1180:
+        return False
+    mut at = 0
+    for key in table:
+        mut expected = at
+        if at >= 10:
+            expected = at + 20
+        if key != expected or table[key] != key:
+            return False
+        at += 1
+    return at == 1180
+
+
+public func test_copy_and_equality_after_deletes() -> bool:
+    const table = sparse_table()
+    const duplicate = copy(table)
+    mut rebuilt: dict[int, int] = {}
+    for key in table:
+        rebuilt[key] = table[key]
+    return duplicate == table and rebuilt == table and len(duplicate) == 165

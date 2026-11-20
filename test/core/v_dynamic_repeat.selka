@@ -1,0 +1,48 @@
+import lists
+
+# spec-case: PY-REPEAT-2
+public func test_dynamic_repeat_list_context_and_cow() -> bool:
+    mut width = 3
+    mut a = lists.filled(width, 0)
+    mut b = repeat_sequence(width, [0])
+    mut octets: u8[] = lists.filled(width, 0)
+    mut empty = lists.filled(-width, 0)
+    mut small = filled(width)
+    mut large = filled(4097)
+    mut negative = filled(-width)
+    mut rows = repeat_sequence_next([copy(a)], width)
+    mut saved = copy(rows)
+    rows[1][2] = 7
+    return len(negative) == 0 and small == [0, 1, 2] and len(large) == 4097 and large[4096] == 4096 and a == b and len(octets) == 3 and len(empty) == 0 and rows[0][2] == 0 and rows[1][2] == 7 and rows[2][2] == 0 and saved[1][2] == 0
+
+
+func filled(count: int) -> int[]:
+    mut gather_result: int[] = []
+    for j in range(0, count):
+        const gather_value: int = j
+        append(mut gather_result, gather_value)
+    return gather_result
+
+
+func main() -> int:
+    return 0
+
+
+func repeat_sequence[RepeatType: copy + storable](repeat_times: int, repeat_source: RepeatType[]) -> RepeatType[]:
+    mut repeat_output: RepeatType[] = []
+    if len(repeat_source) == 0:
+        return repeat_output
+    for _ in range(repeat_times):
+        for repeat_element in repeat_source:
+            append(mut repeat_output, copy(repeat_element))
+    return repeat_output
+
+
+func repeat_sequence_next[RepeatType: copy + storable](repeat_source: RepeatType[], repeat_times: int) -> RepeatType[]:
+    mut repeat_output: RepeatType[] = []
+    if len(repeat_source) == 0:
+        return repeat_output
+    for _ in range(repeat_times):
+        for repeat_element in repeat_source:
+            append(mut repeat_output, copy(repeat_element))
+    return repeat_output

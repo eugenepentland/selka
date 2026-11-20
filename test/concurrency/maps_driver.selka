@@ -1,0 +1,82 @@
+# parallel.map under threads: managed trailing arguments (a record, a text, a dictionary and a list element's callback),
+# scalar arguments, a fallible map whose failure is the lowest-index one, and reductions over the mapped results.
+# The output is the same at every thread count; `test/concurrency/maps_driver` is run by tests/test_concurrency.py.
+import dicts
+import parallel
+
+record Ledger:
+    names: str[]
+    weights: int[]
+
+
+func load(value: int, ledger: Ledger) -> int:
+    return value + len(ledger.weights) + len(ledger.names)
+
+
+func lookup(value: int, table: dict[str, int], key: str) -> int:
+    return value + dicts.get(table, key, 0)
+
+
+func tag(value: int, scale: int, label: str) -> str:
+    return label + str(value * scale)
+
+
+func row_total(row: int[], bias: int) -> int:
+    mut total = bias
+    for cell in row:
+        total += cell
+    return total
+
+
+func churn(value: int, scale: int) -> int:
+    mut total = value
+    for i in range(3000):
+        total = (total * scale + i) % 1000003
+    return total
+
+
+func check(value: int) -> int fails str:
+    if value == 4999:
+        fail "stop"
+    return value
+
+
+func checked_all(values: int[]) -> int[] fails str:
+    return try parallel.map(values, check)
+
+
+func main(out: Stream) -> int:
+    mut weights: int[] = []
+    for i in range(50000):
+        append(mut weights, i)
+    const ledger = Ledger(names=["a", "b"], weights=own weights)
+    mut items: int[] = []
+    for i in range(5000):
+        append(mut items, i)
+    const loaded = parallel.map(items, load, ledger)
+    print(out, "load", loaded[0], loaded[4999])
+    mut table: dict[str, int] = {}
+    table["x"] = 7
+    const found = parallel.map(items, lookup, table, "x")
+    print(out, "lookup", found[10])
+    const labels = parallel.map(items, tag, 2, "n")
+    print(out, "tag", labels[3])
+    mut rows: int[][] = []
+    for r in range(64):
+        mut row: int[] = []
+        for c in range(40):
+            append(mut row, r + c)
+        append(mut rows, own row)
+    const totals = parallel.map(rows, row_total, 100)
+    print(out, "rows", totals[0], totals[63])
+    const churned = parallel.map(items, churn, 31)
+    mut sum = 0
+    for v in churned:
+        sum += v
+    print(out, "churn", sum)
+    match checked_all(items):
+        case Ok(values):
+            print(out, "fallible", len(values))
+        case Err(text):
+            print(out, "fallible", text)
+    return 0

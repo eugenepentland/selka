@@ -1,0 +1,19 @@
+record A:
+    value: i64
+
+
+record B:
+    tag: bool
+    value: i64
+
+
+func get[T: copy + field(value: i64)](v: T) -> i64:
+    return v.value
+
+
+func forward[U: copy + field(value: i64)](v: U) -> i64:
+    return get[U](v)
+
+
+public func program() -> i64:
+    return get[A](A(value=2)) + forward[B](B(tag=True, value=3))

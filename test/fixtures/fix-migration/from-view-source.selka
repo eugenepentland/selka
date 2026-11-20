@@ -1,0 +1,36 @@
+# A `from` clause whose every source is a plain text or bytes parameter that cannot lend the result (lane CB, defect 4):
+# such a parameter arrives as a view, which lends only a text or bytes result of its own kind. `selka fix` removes the clause.
+record Inst:
+    ref_des: bytes
+
+
+func none_of(name: bytes) -> Inst? from name:
+    if len(name) > 100:
+        return None
+    return None
+
+
+func label(code: bytes) -> str from code:
+    if len(code) == 0:
+        return "none"
+    return "some"
+
+
+# A clause with a source that lends keeps its other sources: lowering drops the text one (lane SK).
+func find(xs: Inst[], name: bytes) -> Inst? from xs, name:
+    for x in xs:
+        if x.ref_des == name:
+            return Some(x)
+    return None
+
+
+func main() -> int:
+    const xs = [Inst(ref_des=b"U1")]
+    mut n = 0
+    if none_of(b"U1") is None:
+        n += 1
+    if label(b"") == "none":
+        n += 1
+    if find(xs, b"U1") is not None:
+        n += 1
+    return n

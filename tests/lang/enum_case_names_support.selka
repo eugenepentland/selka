@@ -1,0 +1,5 @@
+# The enum that enum_case_names.selka names through an import: the case-name calls take an imported enum's qualified name.
+public enum Level:
+    low
+    mid
+    high

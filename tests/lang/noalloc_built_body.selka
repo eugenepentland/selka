@@ -1,0 +1,154 @@
+# A `@noalloc` promise is judged on the body the build emits (F19): the function lowered as the callee it is, over
+# borrowed views of its text, bytes and list parameters. These promises were refused when the check judged an
+# owned-`str` root instead (`s[i]`, a slice passed on, a byte loop); each is accepted now and allocates nothing per
+# call in the program that is built. F20 adds the text predicates and `ord`: their runtime helpers take a span, where
+# they took a block and the build copied the borrowed text twice per call, so a promise over each is accepted too.
+import bytes
+import strings
+import testing
+
+@noalloc
+func text_index(text: str, index: int) -> int:
+    return text[index]
+
+
+@noalloc
+func text_length(text: str) -> int:
+    return len(text)
+
+
+@noalloc
+func tail_length(text: str) -> int:
+    return text_length(text[1:])
+
+
+@noalloc
+func text_sum(text: str) -> int:
+    mut total = 0
+    for index in range(len(text)):
+        total += text[index]
+    return total
+
+
+@noalloc
+func byte_sum(data: bytes) -> int:
+    mut total = 0
+    for index in range(len(data)):
+        total += data[index]
+    return total
+
+
+@noalloc
+func byte_position(data: bytes, needle: bytes) -> int:
+    return bytes.find(data, needle)
+
+
+@noalloc
+func byte_count(data: bytes, needle: bytes) -> int:
+    return bytes.count(data, needle)
+
+
+@noalloc
+func list_length(items: int[]) -> int:
+    return len(items)
+
+
+@noalloc
+func list_tail_length(items: int[]) -> int:
+    return list_length(items[1:])
+
+
+@noalloc
+func all_digits(text: str) -> bool:
+    return strings.is_digit(text)
+
+
+@noalloc
+func all_letters(text: str) -> bool:
+    return strings.is_alpha(text)
+
+
+@noalloc
+func all_spaces(text: str) -> bool:
+    return strings.is_space(text)
+
+
+@noalloc
+func scalar_of(text: str) -> int:
+    return ord(text)
+
+
+@noalloc
+func tail_is_digits(text: str) -> bool:
+    return all_digits(text[1:])
+
+
+func predicate_rounds(rounds: int) -> int:
+    mut total = 0
+    for i in range(rounds):
+        if all_digits("123") and all_letters("abc") and all_spaces(" \t") and tail_is_digits("a45"):
+            total += scalar_of("a")
+    return total
+
+
+func rounds_of(rounds: int) -> int:
+    mut items: int[] = [4, 5, 6]
+    mut total = 0
+    for i in range(rounds):
+        total += text_index("abc", 1) + tail_length("abc") + text_sum("abc")
+        total += byte_sum(b"abc") + byte_position(b"abc", b"c") + byte_count(b"abca", b"a")
+        total += list_tail_length(items)
+    return total
+
+
+public func test_noalloc_text_index_of_a_text_parameter() -> bool:
+    return text_index("abc", 1) == 98
+
+
+public func test_noalloc_slice_passed_on_to_a_noalloc_callee() -> bool:
+    return tail_length("abc") == 2
+
+
+public func test_noalloc_slice_of_a_list_parameter_passed_on() -> bool:
+    mut items: int[] = [4, 5, 6]
+    return list_tail_length(items) == 2
+
+
+public func test_noalloc_loop_over_the_bytes_of_a_text_parameter() -> bool:
+    return text_sum("abc") == 294
+
+
+public func test_noalloc_loop_over_the_bytes_of_a_bytes_parameter() -> bool:
+    return byte_sum(b"abc") == 294
+
+
+public func test_noalloc_search_of_a_bytes_parameter() -> bool:
+    return byte_position(b"abc", b"c") == 2 and byte_count(b"abca", b"a") == 2
+
+
+public func test_the_promised_bodies_allocate_nothing_per_call() -> bool:
+    return rounds_of(2) == 2 * (98 + 2 + 294 + 294 + 2 + 2 + 2) and testing.allocations(rounds_of, 200) - testing.allocations(rounds_of, 100) == 0
+
+
+func predicate_answers() -> bool:
+    if not (all_digits("123") and not all_digits("12a") and not all_digits("")):
+        return False
+    if not (all_letters("abc") and not all_letters("ab1")):
+        return False
+    return all_spaces(" \t\n") and not all_spaces(" x") and not all_spaces("")
+
+
+public func test_noalloc_text_predicates_of_a_text_parameter() -> bool:
+    return predicate_answers()
+
+
+public func test_noalloc_predicates_on_a_slice_passed_on() -> bool:
+    return tail_is_digits("a45") and not tail_is_digits("45a")
+
+
+public func test_noalloc_ord_of_a_text_parameter() -> bool:
+    return scalar_of("a") == 97 and scalar_of("é") == 233 and scalar_of("€") == 8364
+
+
+public func test_the_promised_predicates_allocate_nothing_per_call() -> bool:
+    return predicate_rounds(2) == 2 * 97 and testing.allocations(predicate_rounds, 200) - testing.allocations(predicate_rounds, 100) == 0

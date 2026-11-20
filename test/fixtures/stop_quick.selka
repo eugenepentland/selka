@@ -1,0 +1,19 @@
+# A program with a short goodbye (FR5b, STOP-1): it sleeps until it hears a stop (each sleep 20 s, at most 3), then
+# sleeps 0.3 s and says goodbye, so a test can run it many times to meet the race between two deliveries of one stop.
+import filesystem
+import process
+import time
+
+func main(fs: Filesystem, clock: Clock, err: Stream, stop: Stop) -> int:
+    match filesystem.realpath(fs, "/proc/self"):
+        case Ok(path):
+            print(err, "guest " + path)
+        case Err(_):
+            return 1
+    mut sleeps = 0
+    while not process.stop_requested(stop) and sleeps < 3:
+        time.sleep(clock, 20000000000)
+        sleeps += 1
+    time.sleep(clock, 300000000)
+    print(err, "goodbye")
+    return 0

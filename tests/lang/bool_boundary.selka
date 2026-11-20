@@ -1,0 +1,122 @@
+# A `bool` that crosses between emitted code and the C runtime (FX4). Before FX4 a runtime helper's `bool` argument
+# carried no `zeroext`, so an unoptimised caller (the default `selka test` build, `--debug-o0`, and `--unoptimized`)
+# left the register's upper bits undefined and the runtime read them: `selka test` passed a test whose value was
+# False, and `str`, a template and printing could render False as True. Each test computes its values through
+# `not` and `and`/`or`, the shapes that left those bits set, and returns True: the false counterparts of the first
+# three are the test runner's own test (`src/core/bool_boundary_test.zig`).
+import parallel
+
+func yes() -> bool:
+    return True
+
+
+func no() -> bool:
+    return False
+
+
+# False, through `not` and `and`: the value of F-23.
+func falsy() -> bool:
+    return not yes() and yes()
+
+
+# True, the same shape.
+func truthy() -> bool:
+    return not no() and yes()
+
+
+func positive(n: int) -> bool:
+    return not (n <= 0) and n > 0
+
+
+public func test_returns_not_a_and_b() -> bool:
+    return not no() and yes()
+
+
+public func test_returns_a_call_of_the_shape() -> bool:
+    return truthy()
+
+
+public func test_branches_on_the_shape() -> bool:
+    if truthy():
+        return True
+    return False
+
+
+public func test_returns_the_negation_of_a_false_shape() -> bool:
+    return not falsy()
+
+
+public func test_returns_not_of_an_or() -> bool:
+    return not (no() or falsy())
+
+
+public func test_str_renders_each_shape() -> bool:
+    return str(falsy()) == "False" and str(truthy()) == "True"
+
+
+public func test_a_template_renders_each_shape() -> bool:
+    return f"{falsy()}" == "False" and f"{truthy()}|{falsy()}" == "True|False"
+
+
+public func test_a_list_holds_each_shape() -> bool:
+    const xs = [falsy(), truthy(), positive(0), positive(3)]
+    return xs == [False, True, False, True] and not xs[0] and xs[1]
+
+
+public func test_a_dictionary_is_keyed_by_each_shape() -> bool:
+    mut counts: dict[bool, int] = {}
+    counts[falsy()] = 1
+    counts[truthy()] = 2
+    counts[positive(-1)] = counts[positive(-1)] + 10
+    return len(counts) == 2 and counts[False] == 11 and counts[True] == 2
+
+
+record Flagged:
+    flag: bool
+    id: int
+
+
+public func test_a_record_field_holds_each_shape() -> bool:
+    const a = Flagged(flag=falsy(), id=1)
+    const b = Flagged(flag=truthy(), id=2)
+    return not a.flag and b.flag and a != b and a == Flagged(flag=False, id=1)
+
+
+func flag_of(f: Flagged) -> bool:
+    return not (f.id <= 2) and f.id > 2
+
+
+public func test_a_sort_key_of_the_shape_orders_false_first() -> bool:
+    const values = [Flagged(flag=False, id=3), Flagged(flag=False, id=1), Flagged(flag=False, id=4), Flagged(flag=False, id=2)]
+    const ordered = sorted(values, key=flag_of)
+    return ordered[0].id == 1 and ordered[1].id == 2 and ordered[2].id == 3 and ordered[3].id == 4
+
+
+public func test_a_parallel_task_returns_each_shape() -> bool:
+    const flags = parallel.map([-2, 5, 0, 7], positive)
+    return flags == [False, True, False, True]
+
+
+func same[T: copy](value: T) -> T:
+    return copy(value)
+
+
+public func test_a_generic_returns_each_shape() -> bool:
+    return same(truthy()) and not same(falsy())
+
+
+func checked(n: int) -> bool fails str:
+    if n < 0:
+        fail "negative"
+    return not (n == 0) and n > 0
+
+
+public func test_a_fallible_test_returns_the_shape() -> bool fails str:
+    const a = try checked(3)
+    const b = try checked(0)
+    return a and not b
+
+
+public func test_a_property_of_a_generated_bool(b: bool) -> bool:
+    const negated = not b and True
+    return str(negated) == str(not b) and (negated or b)

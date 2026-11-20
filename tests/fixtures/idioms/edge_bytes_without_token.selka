@@ -1,0 +1,5 @@
+import strings
+
+func main() -> int:
+    mut raw = strings.encode("hi")
+    return len(raw)

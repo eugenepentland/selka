@@ -1,0 +1,48 @@
+# Every certain repair of the file is reported by one check, so `selka fix` settles it in one round: five `own` markers
+# in two functions and three copies in two others.
+record Triple:
+    a: bytes
+    b: bytes
+    c: bytes
+
+
+record Spec:
+    base: bytes
+    net_base: bytes?
+
+
+record Batch:
+    items: int[]
+    more: int[]
+
+
+func make(name: bytes) -> Triple:
+    const a = name + b"-a"
+    const b = name + b"-b"
+    const c = name + b"-c"
+    return Triple(a=a, b=b, c=c)
+
+
+func spec(base: bytes, nb: bytes) -> Spec:
+    const b = copy(base)
+    const n = copy(nb)
+    return Spec(base=b, net_base=Some(n))
+
+
+func keep(batch: Batch) -> int:
+    mut kept = batch.items
+    append(mut kept, 1)
+    mut other = batch.more
+    append(mut other, 2)
+    return len(kept) + len(other)
+
+
+func keep_row(rows: int[][], index: int) -> int[]:
+    mut kept = rows[index]
+    append(mut kept, 1)
+    return kept
+
+
+func main() -> int:
+    const batch = Batch(items=[1], more=[2])
+    return len(make(b"x").a) + len(spec(b"A", b"B").base) + keep(batch) + len(keep_row([[1]], 0))

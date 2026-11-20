@@ -1,0 +1,20 @@
+record D:
+    value: int
+
+
+func make(n: int) -> D:
+    return D(value=n)
+
+
+func render(p: D, extra: D[]) -> int:
+    _ = p
+    return len(extra)
+
+
+func count[P: copy](p: P, extra: P[], named render_operation: func(P, P[]) -> int) -> int:
+    return render_operation(p, extra)
+
+
+public func program() -> int:
+    mut d = make(1)
+    return count[D](d, [d, d], render_operation=render) + 1

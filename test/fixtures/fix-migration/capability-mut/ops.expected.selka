@@ -1,0 +1,23 @@
+import filesystem
+import random
+
+# Written before 5C, when a capability parameter was spelled `mut` whenever the caller's binding was `mut`.
+public func has_file(fs: Filesystem, path: str) -> bool:
+    return fs.exists(path)
+
+
+public func draw(entropy: Entropy, bound: int) -> int:
+    match random.from_entropy(entropy):
+        case Ok(drawn):
+            mut generator = own drawn
+            return int(random.next_word(mut generator) % u64(bound))
+        case Err(_):
+            return -1
+
+
+# Assigned: a rebinding reaches the caller, so this `mut` stays.
+public func replace_fs(mut fs: Filesystem) -> bool:
+    fs = filesystem.memory()
+    return fs.exists("fresh")
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

@@ -1,0 +1,91 @@
+# A literal default is a static constant (4c): `r.name.unwrap_or(b"")` and `dicts.get(d, k, "none")` borrow only their
+# option or dictionary, so a `from` accessor can return them and a `const` of them holds only that owner.
+# `options.take_or(own opt, own default)` consumes both and returns the payload or the default without a copy.
+# Refused neighbours are in src/core/static_default_test.zig.
+import dicts
+import options
+
+record Pin:
+    name: bytes?
+    title: str?
+    labels: dict[str, str]
+    pins: int[]
+
+
+func pin(name: bytes?, title: str?) -> Pin:
+    return Pin(name=copy(name), title=copy(title), labels={"net": "VCC"}, pins=[1, 2, 3])
+
+
+func name_of(p: Pin) -> bytes from p:
+    return p.name.unwrap_or(b"")
+
+
+func title_of(p: Pin) -> str from p:
+    return p.title.unwrap_or("untitled")
+
+
+func label_of(p: Pin, key: str) -> str from p:
+    return dicts.get(p.labels, key, "none")
+
+
+func name_length(p: Pin) -> int:
+    const name = p.name.unwrap_or(b"?")
+    return len(name)
+
+
+func first_pins(own found: int[]?) -> int[]:
+    return options.take_or(own found, [0])
+
+
+public func test_a_literal_default_returns_under_from() -> bool:
+    const named = pin(Some(b"U1"), Some("reg"))
+    const blank = pin(None, None)
+    return name_of(named) == b"U1" and name_of(blank) == b"" and title_of(named) == "reg" and title_of(blank) == "untitled"
+
+
+public func test_a_literal_dictionary_default_returns_under_from() -> bool:
+    const p = pin(None, None)
+    return label_of(p, "net") == "VCC" and label_of(p, "other") == "none"
+
+
+public func test_a_const_of_a_literal_default_reads_in_place() -> bool:
+    return name_length(pin(Some(b"R10"), None)) == 3 and name_length(pin(None, None)) == 1
+
+
+public func test_take_or_returns_the_payload_or_the_default() -> bool:
+    const some = first_pins(Some([4, 5]))
+    const none = first_pins(None)
+    return len(some) == 2 and some[1] == 5 and len(none) == 1 and none[0] == 0
+
+
+public func test_take_or_moves_a_record_payload() -> bool:
+    const found: Pin? = Some(pin(Some(b"J1"), None))
+    const kept = options.take_or(own found, pin(None, None))
+    return name_of(kept) == b"J1" and len(kept.pins) == 3
+
+
+public func test_take_or_of_scalars_needs_no_own() -> bool:
+    const missing: int? = None
+    const present: int? = Some(4)
+    return options.take_or(missing, 7) == 7 and options.take_or(present, 7) == 4
+
+
+# 4e with 4c: an empty list default is the runtime's static empty list, so an accessor returns it under `from`, and a copy
+# of it grows on its own.
+record Shelf:
+    labels: str[]?
+
+
+func labels_of(shelf: Shelf) -> str[] from shelf:
+    return shelf.labels.unwrap_or([])
+
+
+func row_of(rows: dict[str, int[]], key: str) -> int[] from rows:
+    return dicts.get(rows, key, [])
+
+
+public func test_an_empty_list_default_returns_under_from() -> bool:
+    const rows = {"a": [1, 2]}
+    mut grown = copy(labels_of(Shelf(labels=None)))
+    append(mut grown, "x")
+    return len(labels_of(Shelf(labels=Some(["p"])))) == 1 and len(labels_of(Shelf(labels=None))) == 0 and len(row_of(rows, "a")) == 2 and len(row_of(rows, "b")) == 0 and grown == ["x"]

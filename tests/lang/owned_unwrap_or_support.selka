@@ -1,0 +1,5 @@
+# Options that owned_unwrap_or.selka takes the value of, from another module (F-71).
+public func label(present: bool) -> str?:
+    if present:
+        return Some("far" + "away")
+    return None

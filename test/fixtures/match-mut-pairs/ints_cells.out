@@ -1,0 +1,365 @@
+cell_assign_assign_none
+  at
+  after [11, 12, 3]
+cell_assign_assign_between
+  at
+  read [11, 2, 3]
+  after [11, 12, 3]
+cell_assign_assign_after
+  at
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_assign_append_none
+  at
+  after [11, 2, 3, 12]
+cell_assign_append_between
+  at
+  read [11, 2, 3]
+  after [11, 2, 3, 12]
+cell_assign_append_after
+  at
+  read [11, 2, 3, 12]
+  after [11, 2, 3, 12]
+cell_assign_fn_none
+  at
+  w2 2
+  after [11, 12, 3]
+cell_assign_fn_between
+  at
+  read [11, 2, 3]
+  w2 2
+  after [11, 12, 3]
+cell_assign_fn_after
+  at
+  w2 2
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_assign_builtin_none
+  at
+  w2 2
+  after [11, 12, 3]
+cell_assign_builtin_between
+  at
+  read [11, 2, 3]
+  w2 2
+  after [11, 12, 3]
+cell_assign_builtin_after
+  at
+  w2 2
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_assign_pop_none
+  at
+  w2 3
+  after [11, 2]
+cell_assign_pop_between
+  at
+  read [11, 2, 3]
+  w2 3
+  after [11, 2]
+cell_assign_pop_after
+  at
+  w2 3
+  read [11, 2]
+  after [11, 2]
+cell_append_assign_none
+  at
+  after [1, 12, 3, 11]
+cell_append_assign_between
+  at
+  read [1, 2, 3, 11]
+  after [1, 12, 3, 11]
+cell_append_assign_after
+  at
+  read [1, 12, 3, 11]
+  after [1, 12, 3, 11]
+cell_append_append_none
+  at
+  after [1, 2, 3, 11, 12]
+cell_append_append_between
+  at
+  read [1, 2, 3, 11]
+  after [1, 2, 3, 11, 12]
+cell_append_append_after
+  at
+  read [1, 2, 3, 11, 12]
+  after [1, 2, 3, 11, 12]
+cell_append_fn_none
+  at
+  w2 2
+  after [1, 12, 3, 11]
+cell_append_fn_between
+  at
+  read [1, 2, 3, 11]
+  w2 2
+  after [1, 12, 3, 11]
+cell_append_fn_after
+  at
+  w2 2
+  read [1, 12, 3, 11]
+  after [1, 12, 3, 11]
+cell_append_builtin_none
+  at
+  w2 2
+  after [1, 12, 3, 11]
+cell_append_builtin_between
+  at
+  read [1, 2, 3, 11]
+  w2 2
+  after [1, 12, 3, 11]
+cell_append_builtin_after
+  at
+  w2 2
+  read [1, 12, 3, 11]
+  after [1, 12, 3, 11]
+cell_append_pop_none
+  at
+  w2 11
+  after [1, 2, 3]
+cell_append_pop_between
+  at
+  read [1, 2, 3, 11]
+  w2 11
+  after [1, 2, 3]
+cell_append_pop_after
+  at
+  w2 11
+  read [1, 2, 3]
+  after [1, 2, 3]
+cell_fn_assign_none
+  at
+  w1 1
+  after [11, 12, 3]
+cell_fn_assign_between
+  at
+  w1 1
+  read [11, 2, 3]
+  after [11, 12, 3]
+cell_fn_assign_after
+  at
+  w1 1
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_fn_append_none
+  at
+  w1 1
+  after [11, 2, 3, 12]
+cell_fn_append_between
+  at
+  w1 1
+  read [11, 2, 3]
+  after [11, 2, 3, 12]
+cell_fn_append_after
+  at
+  w1 1
+  read [11, 2, 3, 12]
+  after [11, 2, 3, 12]
+cell_fn_fn_none
+  at
+  w1 1
+  w2 2
+  after [11, 12, 3]
+cell_fn_fn_between
+  at
+  w1 1
+  read [11, 2, 3]
+  w2 2
+  after [11, 12, 3]
+cell_fn_fn_after
+  at
+  w1 1
+  w2 2
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_fn_builtin_none
+  at
+  w1 1
+  w2 2
+  after [11, 12, 3]
+cell_fn_builtin_between
+  at
+  w1 1
+  read [11, 2, 3]
+  w2 2
+  after [11, 12, 3]
+cell_fn_builtin_after
+  at
+  w1 1
+  w2 2
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_fn_pop_none
+  at
+  w1 1
+  w2 3
+  after [11, 2]
+cell_fn_pop_between
+  at
+  w1 1
+  read [11, 2, 3]
+  w2 3
+  after [11, 2]
+cell_fn_pop_after
+  at
+  w1 1
+  w2 3
+  read [11, 2]
+  after [11, 2]
+cell_builtin_assign_none
+  at
+  w1 1
+  after [11, 12, 3]
+cell_builtin_assign_between
+  at
+  w1 1
+  read [11, 2, 3]
+  after [11, 12, 3]
+cell_builtin_assign_after
+  at
+  w1 1
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_builtin_append_none
+  at
+  w1 1
+  after [11, 2, 3, 12]
+cell_builtin_append_between
+  at
+  w1 1
+  read [11, 2, 3]
+  after [11, 2, 3, 12]
+cell_builtin_append_after
+  at
+  w1 1
+  read [11, 2, 3, 12]
+  after [11, 2, 3, 12]
+cell_builtin_fn_none
+  at
+  w1 1
+  w2 2
+  after [11, 12, 3]
+cell_builtin_fn_between
+  at
+  w1 1
+  read [11, 2, 3]
+  w2 2
+  after [11, 12, 3]
+cell_builtin_fn_after
+  at
+  w1 1
+  w2 2
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_builtin_builtin_none
+  at
+  w1 1
+  w2 2
+  after [11, 12, 3]
+cell_builtin_builtin_between
+  at
+  w1 1
+  read [11, 2, 3]
+  w2 2
+  after [11, 12, 3]
+cell_builtin_builtin_after
+  at
+  w1 1
+  w2 2
+  read [11, 12, 3]
+  after [11, 12, 3]
+cell_builtin_pop_none
+  at
+  w1 1
+  w2 3
+  after [11, 2]
+cell_builtin_pop_between
+  at
+  w1 1
+  read [11, 2, 3]
+  w2 3
+  after [11, 2]
+cell_builtin_pop_after
+  at
+  w1 1
+  w2 3
+  read [11, 2]
+  after [11, 2]
+cell_pop_assign_none
+  at
+  w1 3
+  after [1, 12]
+cell_pop_assign_between
+  at
+  w1 3
+  read [1, 2]
+  after [1, 12]
+cell_pop_assign_after
+  at
+  w1 3
+  read [1, 12]
+  after [1, 12]
+cell_pop_append_none
+  at
+  w1 3
+  after [1, 2, 12]
+cell_pop_append_between
+  at
+  w1 3
+  read [1, 2]
+  after [1, 2, 12]
+cell_pop_append_after
+  at
+  w1 3
+  read [1, 2, 12]
+  after [1, 2, 12]
+cell_pop_fn_none
+  at
+  w1 3
+  w2 2
+  after [1, 12]
+cell_pop_fn_between
+  at
+  w1 3
+  read [1, 2]
+  w2 2
+  after [1, 12]
+cell_pop_fn_after
+  at
+  w1 3
+  w2 2
+  read [1, 12]
+  after [1, 12]
+cell_pop_builtin_none
+  at
+  w1 3
+  w2 2
+  after [1, 12]
+cell_pop_builtin_between
+  at
+  w1 3
+  read [1, 2]
+  w2 2
+  after [1, 12]
+cell_pop_builtin_after
+  at
+  w1 3
+  w2 2
+  read [1, 12]
+  after [1, 12]
+cell_pop_pop_none
+  at
+  w1 3
+  w2 2
+  after [1]
+cell_pop_pop_between
+  at
+  w1 3
+  read [1, 2]
+  w2 2
+  after [1]
+cell_pop_pop_after
+  at
+  w1 3
+  w2 2
+  read [1]
+  after [1]

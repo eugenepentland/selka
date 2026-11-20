@@ -1,0 +1,8 @@
+func f(x: bool, y: i64) -> bool:
+    return x and y > 0
+
+
+public func program() -> i64:
+    if f(True, 2):
+        return 8
+    return 0

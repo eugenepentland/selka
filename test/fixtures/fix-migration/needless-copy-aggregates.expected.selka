@@ -1,0 +1,97 @@
+# W_NEEDLESS_COPY on aggregates: the last use of a record declared in the same `match` arm moves it (case v), and a `const` bound to
+# a copy of a list element, of a `mut` parameter's dictionary value or of a taken dictionary's value borrows the place (case iii).
+# The copies that must stay are beside them: a record used again, a place written while the binding is live, a stored binding.
+record Block:
+    name: str
+    subs: Block[]
+
+
+record Span:
+    low: int
+    why: str
+
+
+record Sink:
+    by_root: dict[str, Span]
+
+
+enum Form:
+    sub_block
+    other
+
+
+func build(name: str) -> Block:
+    return Block(name=copy(name), subs=[])
+
+
+func into_arm(form: Form, name: str, mut out: Block[]) -> int:
+    mut seen = 0
+    match form:
+        case sub_block:
+            const sb = build(name)
+            seen += len(sb.name)
+            append(mut out, own sb)
+        case other:
+            pass
+    return seen
+
+
+func keeps_used_again(name: str, mut out: Block[]) -> int:
+    const sb = build(name)
+    append(mut out, copy(sb))
+    return len(sb.name)
+
+
+func from_list(items: Span[]) -> int:
+    mut total = 0
+    for i in range(len(items)):
+        const span = items[i]
+        total += span.low + len(span.why)
+    return total
+
+
+func from_mut_param(keys: str[], mut by_root: dict[str, Span]) -> int:
+    mut total = 0
+    for key in keys:
+        if key not in by_root:
+            continue
+        const span = by_root[key]
+        total += span.low + len(span.why)
+    return total
+
+
+func from_taken(keys: str[], mut sink: Sink) -> int:
+    mut by_root: dict[str, Span] = take(mut sink.by_root)
+    mut total = 0
+    for key in keys:
+        if key not in by_root:
+            continue
+        const span = by_root[key]
+        total += span.low + len(span.why)
+    return total
+
+
+func keeps_written(mut items: Span[]) -> int:
+    const span = copy(items[0])
+    items[0] = Span(low=3, why="y")
+    return span.low
+
+
+func keeps_stored(items: Span[], mut out: Span[]):
+    const span = copy(items[0])
+    append(mut out, own span)
+
+
+func main(out: Stream) -> int:
+    mut blocks: Block[] = []
+    mut sink = Sink(by_root={})
+    sink.by_root["a"] = Span(low=1, why="w")
+    mut by_root: dict[str, Span] = {}
+    by_root["a"] = Span(low=2, why="v")
+    mut items: Span[] = [Span(low=5, why="u")]
+    mut kept: Span[] = []
+    keeps_stored(items, mut kept)
+    print(out, into_arm(Form.sub_block, "b", mut blocks), keeps_used_again("c", mut blocks), len(blocks))
+    print(out, from_list(items), from_mut_param(["a"], mut by_root), from_taken(["a"], mut sink))
+    print(out, keeps_written(mut items), len(kept))
+    return 0

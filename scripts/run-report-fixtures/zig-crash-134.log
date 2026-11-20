@@ -1,0 +1,33 @@
+test-units
++- verification action unit member 0 2 pass, 3457 skip, 1 crash (3460 total)
+test: 3 test(s) selected by filter: "says why"
+test: test wall 0.00s
+test: PASS — 0 passed
+test: RESULT {"passed":0,"failed":0,"skipped":0}
+error: 'compiler_test.test.E_UNREACHABLE says why the earlier statement leaves, and repairs only a trailing return or fail' exited with code 134 with stderr:
+       test: 3 test(s) selected by filter: "says why"
+       thread 3320523 panic: index out of bounds: index 49, len 48
+       /home/u/ai/canopy/mylang-checkbuild/src/compiler_test.zig:204:70: 0x39fa73f in expectUnreachable (root_test.zig)
+           try testing.expectEqualStrings(removed orelse "(no repair)", text[fix.edit.span.start..fix.edit.span.end]);
+                                                                            ^
+       /home/u/ai/canopy/mylang-checkbuild/src/compiler_test.zig:356:45: 0x39fad41 in test.E_UNREACHABLE says why the earlier statement leaves, and repairs only a trailing return or fail (root_test.zig)
+           for (cases) |case| try expectUnreachable(case.text, case.message, case.removed);
+                                                   ^
+       /home/u/ai/canopy/guardian-zig/src/test_runner.zig:911:39: 0x16b0403 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/u/ai/canopy/guardian-zig/src/test_runner.zig:836:42: 0x16b0c59 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/u/ai/canopy/guardian-zig/src/test_runner.zig:473:39: 0x16b1725 in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x16ac7ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x16ac1d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 0 --root-id src/root_...
+
+Build Summary: 17/19 steps succeeded (1 failed); 2/3460 tests passed (3457 skipped, 1 crashed)

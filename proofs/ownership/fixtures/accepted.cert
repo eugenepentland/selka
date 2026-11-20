@@ -1,0 +1,820 @@
+ownership-certificate-v2
+class box_make Construct
+class call Call
+class call_indirect Call
+class cmp Pure
+class dict_entry_value Project
+class dict_find Inspect
+class dict_insert Update
+class dict_new Fresh
+class dict_remove Update
+class drop Drop
+class group_end Call
+class group_open Call
+class iconst Constant
+class list_get Project
+class list_new Fresh
+class list_pop Update
+class list_push Update
+class list_set Update
+class list_view_of View
+class param Parameter
+class print Output
+class record_get Project
+class record_make Construct
+class record_new Fresh
+class record_set Update
+class set_add Update
+class set_new Fresh
+class submit Call
+class undef Constant
+class union_payload Project
+class union_take Take
+function ok_alloc_drop result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_view result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst - print Output reads %1 consumes - state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_owned_return result owned from - unchecked -
+param 0 %0 owned
+inst %0 param Parameter reads - consumes - state owned parents -
+block b0 preds -
+term ret %0
+end
+function ok_borrowed_return result borrowed from 0 unchecked -
+param 0 %0 borrowed
+inst %0 param Parameter reads - consumes - state borrowed parents ^0
+block b0 preds -
+inst %1 record_get Project reads %0 consumes - state borrowed parents %0
+term ret %1
+end
+function ok_loop result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term jump b1
+block b1 preds b0,b2
+phi %1 owned parents - edges b0:%0,b2:%2
+term branch %9 b2 b3
+block b2 preds b1
+inst %2 list_push Update reads %9 consumes %1 state owned parents -
+term jump b1
+block b3 preds b1
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_join result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b3 preds b1,b2
+term ret -
+end
+function ok_trap_join result scalar from - unchecked -
+callee 0 call runtime read scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %0
+inst - call Call reads %9 consumes - state none parents - from - callee 0
+term unreachable
+end
+function ok_trap_meet result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %1 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %1
+inst - print Output reads %0 consumes - state none parents -
+term unreachable
+end
+function ok_trap_consume result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %1 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %1
+inst - drop Drop reads - consumes %0 state none parents -
+term unreachable
+end
+function ok_trap_chain result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %0
+term jump b4
+block b4 preds b3
+term unreachable
+end
+function ok_emptied_construct result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes %0 state emptied parents - slots f1
+inst %3 record_get Project reads %2 consumes - state borrowed parents %2,%4
+inst %4 record_get Project reads %2 consumes - state owned parents - slot f1
+inst - print Output reads %3 consumes - state none parents -
+inst - drop Drop reads - consumes %4 state none parents -
+term ret -
+end
+function ok_repeated_test result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b4
+block b1 preds b0
+term jump b2
+block b2 preds b1
+term branch %9 b3 b5
+block b3 preds b2
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+block b4 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+block b5 preds b2
+term ret -
+end
+function ok_cursor result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %5 list_view_of View reads %0 consumes - state borrowed parents %0
+term jump b1
+block b1 preds b0,b2
+phi %1 borrowed parents %0,%1 edges b0:%5,b2:%2
+term branch %9 b2 b3
+block b2 preds b1
+inst %2 list_get Project reads %1 consumes - state borrowed parents %1
+term jump b1
+block b3 preds b1
+inst - print Output reads %1 consumes - state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_stack result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state stack parents -
+inst %1 list_push Update reads - consumes %0 state stack parents -
+term ret -
+end
+function ok_stack_scalar result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state stack parents -
+inst %1 list_push Update reads - consumes %0,%9 state stack parents -
+term ret -
+end
+function ok_stack_phi result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+term branch %9 b1 b2
+block b1 preds b0
+inst %0 list_new Fresh reads - consumes - state stack parents -
+term jump b3
+block b2 preds b0
+inst %1 list_new Fresh reads - consumes - state stack parents -
+term jump b3
+block b3 preds b1,b2
+phi %2 stack parents - edges b1:%0,b2:%1
+term ret -
+end
+function ok_undef_phi result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+inst %7 undef Constant reads - consumes - state immortal parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b3 preds b1,b2
+phi %3 owned parents - edges b1:%0,b2:%7
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function ok_void_call result scalar from - unchecked -
+callee 0 call runtime - scalar -
+callee 1 call runtime read scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst - call Call reads - consumes - state none parents - from - callee 0
+inst - call Call reads %9 consumes - state none parents - from - callee 1
+term ret -
+end
+function ok_void_undef result scalar from - unchecked -
+inst - undef Constant reads - consumes - state none parents -
+block b0 preds -
+inst %0 set_new Fresh reads - consumes - state owned parents -
+inst %1 set_add Update reads - consumes %0,%7 state owned parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_scalar_results result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_push Update reads - consumes %0 state owned parents -
+inst %2 union_take Take reads - consumes %1 state scalar parents -
+term ret -
+end
+function ok_call_projection result scalar from - unchecked -
+callee 0 call runtime read scalar -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 call Call reads %1 consumes - state owned parents %1 from - callee 0
+inst %3 record_get Project reads %2 consumes - state borrowed parents %1
+inst - print Output reads %3 consumes - state none parents -
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_selection_phi result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %2 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+phi %3 borrowed parents %0,%2 edges b1:%1,b2:%2
+inst - print Output reads %3 consumes - state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function ok_dead_phi result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+phi %4 none parents - edges b1:%5
+term ret -
+end
+function ok_owner_through_phi result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+term jump b1
+block b1 preds b0
+phi %2 owned parents - edges b0:%0
+inst - print Output reads %1 consumes - state none parents -
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function ok_construct_loan result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes %0 state owned parents %1
+inst - print Output reads %1 consumes - state none parents -
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function ok_construct_read_slot result scalar from - unchecked -
+block b0 preds -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 record_make Construct reads - consumes %1 state owned parents -
+inst %3 record_get Project reads %2 consumes - state borrowed parents %2 slot f0
+inst %4 record_make Construct reads %3 consumes %2 state emptied parents - slots f0
+inst %5 record_get Project reads %4 consumes - state owned parents - slot f0
+inst - drop Drop reads - consumes %5 state none parents -
+term ret -
+end
+function ok_construct_read_listed result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_record_take result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state owned parents - slot f1
+inst %2 list_push Update reads - consumes %1 state owned parents -
+inst %3 record_set Update reads - consumes %0,%2 state owned parents - slot f1
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function ok_two_slots result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state owned parents - slot f1
+inst %2 record_get Project reads %0 consumes - state owned parents - slot f2
+inst %3 record_set Update reads - consumes %0,%2 state owned parents - slot f2
+inst %4 record_set Update reads - consumes %3,%1 state owned parents - slot f1
+inst - drop Drop reads - consumes %4 state none parents -
+term ret -
+end
+function ok_list_set_released_none result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+inst %2 list_set Update reads %9 consumes %0,%1 state owned parents - slot e#0 released -
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function ok_list_set_released_old result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 list_set Update reads %9 consumes %0,%1 state owned parents - slot e#0 released old
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function ok_list_pop result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+inst %2 list_pop Update reads - consumes %0 state owned parents - slot e#0
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_list_pop_tail result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_pop Update reads - consumes %0 state owned parents - slot tail
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_dict_remove result scalar from - unchecked -
+inst %7 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 dict_new Fresh reads - consumes - state owned parents -
+inst %1 dict_entry_value Project reads %0,%7 consumes - state owned parents - slot v%7
+inst %2 dict_remove Update reads %7 consumes %0 state owned parents - released key
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_emptied result scalar from - unchecked -
+callee 0 call runtime take scalar -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 call Call reads - consumes %0 state emptied parents - slots f1 from - callee 0
+inst %2 record_get Project reads %1 consumes - state borrowed parents %3
+inst %3 record_get Project reads %1 consumes - state owned parents - slot f1
+inst %4 union_payload Project reads %2 consumes - state borrowed parents %3
+inst - print Output reads %4 consumes - state none parents -
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function ok_guarded_take result scalar from - unchecked -
+inst %8 iconst Constant reads - consumes - state scalar parents - imm 0
+inst %15 iconst Constant reads - consumes - state scalar parents - imm 0
+block b0 preds -
+inst %1 dict_new Fresh reads - consumes - state owned parents -
+inst %7 dict_find Inspect reads %1 consumes - state scalar parents -
+inst %9 cmp Pure reads %7,%8 consumes - state scalar parents - imm 5
+term branch %9 b1 b2
+block b1 preds b0
+inst %11 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %11 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+inst %16 cmp Pure reads %7,%15 consumes - state scalar parents - imm 5
+term branch %16 b4 b5
+block b4 preds b3
+inst %18 dict_remove Update reads %7 consumes %1 state owned parents - released key
+term jump b5
+block b5 preds b3,b4
+phi %19 owned parents - edges b3:%1,b4:%18
+inst - drop Drop reads - consumes %19 state none parents -
+term ret -
+end
+function ok_guarded_value result scalar from - unchecked -
+param 0 %9 scalar
+inst %9 param Parameter reads - consumes - state scalar parents -
+block b0 preds -
+inst %1 dict_new Fresh reads - consumes - state owned parents -
+inst %7 dict_find Inspect reads %1 consumes - state scalar parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst %11 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %11 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+term branch %9 b4 b5
+block b4 preds b3
+inst %18 dict_remove Update reads %7 consumes %1 state owned parents - released key
+term jump b5
+block b5 preds b3,b4
+phi %19 owned parents - edges b3:%1,b4:%18
+inst - drop Drop reads - consumes %19 state none parents -
+term ret -
+end
+function ok_pruned_edge result scalar from - unchecked -
+param 0 %9 scalar
+inst %9 param Parameter reads - consumes - state scalar parents -
+block b0 preds -
+inst %1 dict_new Fresh reads - consumes - state owned parents -
+inst %7 dict_find Inspect reads %1 consumes - state scalar parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst %11 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %11 state none parents -
+term branch %9 b3 b4
+block b2 preds b0
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+block b3 preds b1
+inst %18 dict_remove Update reads %7 consumes %1 state owned parents - released key
+inst - drop Drop reads - consumes %18 state none parents -
+term ret -
+block b4 preds b1
+term unreachable
+end
+function ok_slot_view result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state borrowed parents %0 slot f1
+inst - print Output reads %1 consumes - state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_slot_view_other_slot result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state borrowed parents %0 slot f1
+inst %2 record_get Project reads %0 consumes - state owned parents - slot f2
+inst - print Output reads %1 consumes - state none parents -
+term unreachable
+end
+function ok_loan_holder result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state borrowed parents %0 slot f1
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_loan_holder_other_slot result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state borrowed parents %0 slot f1
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 record_get Project reads %0 consumes - state owned parents - slot f2
+term unreachable
+end
+function ok_named_unit result scalar from - unchecked -
+block b0 preds -
+inst %0 dict_new Fresh reads - consumes - state owned parents -
+inst %3 undef Constant reads - consumes - state none parents -
+inst %1 dict_insert Update reads - consumes %0,%3 state owned parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_dict_remove_taken result scalar from - unchecked -
+inst %7 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 dict_new Fresh reads - consumes - state owned parents -
+inst %1 dict_entry_value Project reads %0,%7 consumes - state owned parents - slot v%7
+inst %2 dict_remove Update reads %7 consumes %0 state owned parents - slot v%7 released key taken value
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_group result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+inst %3 record_make Construct reads - consumes %2 state owned parents -
+inst %4 submit Call reads %0 consumes %3 state scalar parents - from - callee 1
+inst - group_end Call reads - consumes %0 state none parents - from - callee 2
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_group_borrowed result scalar from - unchecked -
+param 0 %5 borrowed
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+inst %5 param Parameter reads - consumes - state borrowed parents ^0
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %2 box_make Construct reads %5,%0 consumes - state owned parents - lent %0
+inst %3 record_make Construct reads - consumes %2 state owned parents -
+inst %4 submit Call reads %0 consumes %3 state scalar parents - from - callee 1
+inst - group_end Call reads - consumes %0 state none parents - from - callee 2
+term ret -
+end
+function ok_group_slot result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 record_new Fresh reads - consumes - state owned parents -
+inst %2 record_get Project reads %1 consumes - state borrowed parents %1 slot f1
+inst %3 box_make Construct reads %2,%0 consumes - state owned parents - lent %0
+inst %4 record_make Construct reads - consumes %3 state owned parents -
+inst %5 submit Call reads %0 consumes %4 state scalar parents - from - callee 1
+inst - group_end Call reads - consumes %0 state none parents - from - callee 2
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_group_two_lends result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 list_new Fresh reads - consumes - state owned parents -
+inst %3 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+inst %4 box_make Construct reads %2,%0 consumes - state owned parents - lent %0
+inst %5 record_make Construct reads - consumes %3,%4 state owned parents -
+inst %6 submit Call reads %0 consumes %5 state scalar parents - from - callee 1
+inst - group_end Call reads - consumes %0 state none parents - from - callee 2
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_group_branch result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+callee 3 group_end runtime take scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+inst %3 record_make Construct reads - consumes %2 state owned parents -
+inst %4 submit Call reads %0 consumes %3 state scalar parents - from - callee 1
+term branch %9 b1 b2
+block b1 preds b0
+inst - group_end Call reads - consumes %0 state none parents - from - callee 2
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+block b2 preds b0
+inst - group_end Call reads - consumes %0 state none parents - from - callee 3
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_group_branch_trap result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+inst %3 record_make Construct reads - consumes %2 state owned parents -
+inst %4 submit Call reads %0 consumes %3 state scalar parents - from - callee 1
+term branch %9 b1 b2
+block b1 preds b0
+inst - group_end Call reads - consumes %0 state none parents - from - callee 2
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+block b2 preds b0
+term unreachable
+end
+function ok_group_phi result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 group_end runtime take scalar -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+inst %3 record_make Construct reads - consumes %2 state owned parents -
+inst %4 submit Call reads %0 consumes %3 state scalar parents - from - callee 1
+term jump b1
+block b1 preds b0
+phi %5 owned parents - edges b0:%0
+inst - group_end Call reads - consumes %5 state none parents - from - callee 2
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function ok_trap_group result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+callee 1 submit runtime take,read scalar -
+callee 2 call runtime read scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+inst %3 record_make Construct reads - consumes %2 state owned parents -
+inst %4 submit Call reads %0 consumes %3 state scalar parents - from - callee 1
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+inst - call Call reads %9 consumes - state none parents - from - callee 2
+term unreachable
+end
+function ok_lend_before_trap result scalar from - unchecked -
+callee 0 group_open runtime - scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 group_open Call reads - consumes - state owned parents - from - callee 0
+inst %1 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+inst %2 box_make Construct reads %1,%0 consumes - state owned parents - lent %0
+term unreachable
+end
+function ok_trap_param result scalar from - unchecked -
+param 0 %0 owned
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %0
+inst %0 param Parameter reads - consumes - state owned parents -
+term unreachable
+end
+function ok_trap_take_abandoned result scalar from - unchecked -
+callee 0 call runtime read scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst %1 list_get Project reads %0 consumes - state owned parents - slot e#0
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b1 %0,%1
+abandon b2 %0
+inst - call Call reads %9 consumes - state none parents - from - callee 0
+term unreachable
+end
+function ok_trap_holder_abandoned result scalar from - unchecked -
+callee 0 call runtime read scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst - drop Drop reads - consumes %2 state none parents -
+term jump b3
+block b3 preds b1,b2
+abandon b1 %2
+inst - call Call reads %9 consumes - state none parents - from - callee 0
+term unreachable
+end
+function ok_trap_root_dropped_after result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst - drop Drop reads - consumes %2 state none parents -
+term jump b3
+block b3 preds b1,b2
+abandon b1 %2
+inst - drop Drop reads - consumes %0 state none parents -
+term unreachable
+end
+function ok_abandon_branch_chain result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %0
+term branch %9 b4 b5
+block b4 preds b3
+term unreachable
+block b5 preds b3
+term unreachable
+end
+function ok_program_call result scalar from - unchecked -
+callee 0 g program take,read owned -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 call Call reads %1 consumes %0 state owned parents - from - callee 0
+inst - drop Drop reads - consumes %1 state none parents -
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function ok_call_take_scalar result scalar from - unchecked -
+callee 0 g program take-scalar scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst - call Call reads - consumes %9 state none parents - from - callee 0
+term ret -
+end
+function ok_call_void result scalar from - unchecked -
+callee 0 g program - scalar -
+block b0 preds -
+inst - call Call reads - consumes - state none parents - from - callee 0
+term ret -
+end
+function ok_call_from result scalar from - unchecked -
+callee 0 g program read borrowed 0
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 call Call reads %0 consumes - state borrowed parents %0 from %0 callee 0
+inst - print Output reads %1 consumes - state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function ok_indirect_call result scalar from - unchecked -
+callee 0 - indirect take scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst - call_indirect Call reads %9 consumes %0 state none parents - from - callee 0
+term ret -
+end

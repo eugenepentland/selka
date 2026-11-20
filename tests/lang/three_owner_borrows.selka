@@ -1,0 +1,84 @@
+# A managed result can borrow three parameters: a dictionary read of a dictionary read, with its default, names the
+# outer mapping, the middle mapping and the fallback. A read, a plain argument and a copy consume that result within
+# its expression, so all three owners are accepted; a `const` binding and a return take a copy of it.
+import dicts
+
+func width(values: dict[str, int]) -> int:
+    return len(values)
+
+
+func read_len(outer: dict[str, dict[str, dict[str, int]]], middle: dict[str, dict[str, int]], fallback: dict[str, int]) -> int:
+    return len(dicts.get(dicts.get(outer, "a", middle), "b", fallback))
+
+
+func passed_len(outer: dict[str, dict[str, dict[str, int]]], middle: dict[str, dict[str, int]], fallback: dict[str, int]) -> int:
+    return width(dicts.get(dicts.get(outer, "a", middle), "b", fallback))
+
+
+func copied_len(outer: dict[str, dict[str, dict[str, int]]], middle: dict[str, dict[str, int]], fallback: dict[str, int]) -> int:
+    return len(copy(dicts.get(dicts.get(outer, "a", middle), "b", fallback)))
+
+
+func bound_len(outer: dict[str, dict[str, dict[str, int]]], middle: dict[str, dict[str, int]], fallback: dict[str, int]) -> int:
+    const inner = copy(dicts.get(dicts.get(outer, "a", middle), "b", fallback))
+    return len(inner)
+
+
+func returned_value(outer: dict[str, dict[str, dict[str, int]]], middle: dict[str, dict[str, int]], fallback: dict[str, int]) -> dict[str, int]:
+    return copy(dicts.get(dicts.get(outer, "a", middle), "b", fallback))
+
+
+# The outer mapping holds no "a", so the middle mapping answers; its "b" is the selected value.
+public func test_a_three_owner_read_answers_the_middle_entry() -> bool:
+    mut outer: dict[str, dict[str, dict[str, int]]] = {}
+    mut middle: dict[str, dict[str, int]] = {}
+    mut fallback: dict[str, int] = {}
+    middle["b"] = {"x": 1, "y": 2}
+    fallback["x"] = 3
+    return read_len(outer, middle, fallback) == 2
+
+
+public func test_a_three_owner_argument_answers_the_middle_entry() -> bool:
+    mut outer: dict[str, dict[str, dict[str, int]]] = {}
+    mut middle: dict[str, dict[str, int]] = {}
+    mut fallback: dict[str, int] = {}
+    middle["b"] = {"x": 1, "y": 2}
+    fallback["x"] = 3
+    return passed_len(outer, middle, fallback) == 2
+
+
+public func test_a_three_owner_copy_answers_the_middle_entry() -> bool:
+    mut outer: dict[str, dict[str, dict[str, int]]] = {}
+    mut middle: dict[str, dict[str, int]] = {}
+    mut fallback: dict[str, int] = {}
+    middle["b"] = {"x": 1, "y": 2}
+    fallback["x"] = 3
+    return copied_len(outer, middle, fallback) == 2
+
+
+public func test_a_three_owner_binding_takes_a_copy() -> bool:
+    mut outer: dict[str, dict[str, dict[str, int]]] = {}
+    mut middle: dict[str, dict[str, int]] = {}
+    mut fallback: dict[str, int] = {}
+    middle["b"] = {"x": 1, "y": 2}
+    fallback["x"] = 3
+    return bound_len(outer, middle, fallback) == 2
+
+
+public func test_a_three_owner_return_takes_a_copy() -> bool:
+    mut outer: dict[str, dict[str, dict[str, int]]] = {}
+    mut middle: dict[str, dict[str, int]] = {}
+    mut fallback: dict[str, int] = {}
+    middle["b"] = {"x": 1, "y": 2}
+    fallback["x"] = 3
+    return len(returned_value(outer, middle, fallback)) == 2
+
+
+# The outer mapping holds "a" with no "b", so the fallback answers.
+public func test_a_three_owner_read_answers_the_fallback() -> bool:
+    mut outer: dict[str, dict[str, dict[str, int]]] = {}
+    mut middle: dict[str, dict[str, int]] = {}
+    mut fallback: dict[str, int] = {}
+    outer["a"] = copy(middle)
+    fallback["x"] = 3
+    return read_len(outer, middle, fallback) == 1 and passed_len(outer, middle, fallback) == 1 and copied_len(outer, middle, fallback) == 1

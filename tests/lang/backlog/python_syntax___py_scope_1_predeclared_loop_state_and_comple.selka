@@ -1,0 +1,12 @@
+func main() -> int:
+    mut total = 0
+    mut last = 0
+    for row in [[1, 2], [3, 9]]:
+        last = row[1]
+        total = total + last
+    return total + last
+
+
+# spec: PY-SCOPE-1
+public func test_py_scope_1_predeclared_loop_state_and_comple_1() -> bool:
+    return main() == 20

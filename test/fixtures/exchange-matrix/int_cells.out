@@ -1,0 +1,450 @@
+fn_cell_local_fresh_bound
+  at
+  was 1
+  after [9, 2]
+fn_cell_local_fresh_dropped
+  at
+  after [9, 2]
+fn_cell_local_fresh_returned
+  at
+  got 1
+fn_cell_local_fresh_passed
+  at
+  passed 1
+  after [9, 2]
+fn_cell_local_fresh_passed_own
+  at
+  sunk 1
+  after [9, 2]
+fn_cell_local_own_bound
+  at
+  was 1
+  after [9, 2]
+fn_cell_local_own_dropped
+  at
+  after [9, 2]
+fn_cell_local_own_returned
+  at
+  got 1
+fn_cell_local_own_passed
+  at
+  passed 1
+  after [9, 2]
+fn_cell_local_own_passed_own
+  at
+  sunk 1
+  after [9, 2]
+fn_cell_local_call_bound
+  at
+  was 1
+  after [9, 2]
+fn_cell_local_call_dropped
+  at
+  after [9, 2]
+fn_cell_local_call_returned
+  at
+  got 1
+fn_cell_local_call_passed
+  at
+  passed 1
+  after [9, 2]
+fn_cell_local_call_passed_own
+  at
+  sunk 1
+  after [9, 2]
+fn_cell_param_fresh_bound
+  at
+  was 1
+  after [9, 2]
+fn_cell_param_fresh_dropped
+  at
+  after [9, 2]
+fn_cell_param_fresh_returned
+  at
+  got 1
+  after [9, 2]
+fn_cell_param_fresh_passed
+  at
+  passed 1
+  after [9, 2]
+fn_cell_param_fresh_passed_own
+  at
+  sunk 1
+  after [9, 2]
+fn_cell_param_own_bound
+  at
+  was 1
+  after [9, 2]
+fn_cell_param_own_dropped
+  at
+  after [9, 2]
+fn_cell_param_own_returned
+  at
+  got 1
+  after [9, 2]
+fn_cell_param_own_passed
+  at
+  passed 1
+  after [9, 2]
+fn_cell_param_own_passed_own
+  at
+  sunk 1
+  after [9, 2]
+fn_cell_param_call_bound
+  at
+  was 1
+  after [9, 2]
+fn_cell_param_call_dropped
+  at
+  after [9, 2]
+fn_cell_param_call_returned
+  at
+  got 1
+  after [9, 2]
+fn_cell_param_call_passed
+  at
+  passed 1
+  after [9, 2]
+fn_cell_param_call_passed_own
+  at
+  sunk 1
+  after [9, 2]
+fn_cell_field_fresh_bound
+  at
+  was 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_fresh_dropped
+  at
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_fresh_returned
+  at
+  got 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_fresh_passed
+  at
+  passed 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_fresh_passed_own
+  at
+  sunk 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_own_bound
+  at
+  was 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_own_dropped
+  at
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_own_returned
+  at
+  got 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_own_passed
+  at
+  passed 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_own_passed_own
+  at
+  sunk 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_call_bound
+  at
+  was 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_call_dropped
+  at
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_call_returned
+  at
+  got 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_call_passed
+  at
+  passed 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_field_call_passed_own
+  at
+  sunk 1
+  after Holder(items=[9, 2], tag=0)
+fn_cell_matchmut_fresh_bound
+  at
+  was 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_fresh_returned
+  at
+  got 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_fresh_passed
+  at
+  passed 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_fresh_passed_own
+  at
+  sunk 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_own_bound
+  at
+  was 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_own_dropped
+  at
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_own_returned
+  at
+  got 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_own_passed
+  at
+  passed 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_own_passed_own
+  at
+  sunk 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_call_bound
+  at
+  was 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_call_dropped
+  at
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_call_returned
+  at
+  got 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_call_passed
+  at
+  passed 1
+  after Box.full(items=[9, 2])
+fn_cell_matchmut_call_passed_own
+  at
+  sunk 1
+  after Box.full(items=[9, 2])
+builtin_cell_local_fresh_bound
+  at
+  was 1
+  after [9, 2]
+builtin_cell_local_fresh_dropped
+  at
+  after [9, 2]
+builtin_cell_local_fresh_returned
+  at
+  got 1
+builtin_cell_local_fresh_passed
+  at
+  passed 1
+  after [9, 2]
+builtin_cell_local_fresh_passed_own
+  at
+  sunk 1
+  after [9, 2]
+builtin_cell_local_own_bound
+  at
+  was 1
+  after [9, 2]
+builtin_cell_local_own_dropped
+  at
+  after [9, 2]
+builtin_cell_local_own_returned
+  at
+  got 1
+builtin_cell_local_own_passed
+  at
+  passed 1
+  after [9, 2]
+builtin_cell_local_own_passed_own
+  at
+  sunk 1
+  after [9, 2]
+builtin_cell_local_call_bound
+  at
+  was 1
+  after [9, 2]
+builtin_cell_local_call_dropped
+  at
+  after [9, 2]
+builtin_cell_local_call_returned
+  at
+  got 1
+builtin_cell_local_call_passed
+  at
+  passed 1
+  after [9, 2]
+builtin_cell_local_call_passed_own
+  at
+  sunk 1
+  after [9, 2]
+builtin_cell_param_fresh_bound
+  at
+  was 1
+  after [9, 2]
+builtin_cell_param_fresh_dropped
+  at
+  after [9, 2]
+builtin_cell_param_fresh_returned
+  at
+  got 1
+  after [9, 2]
+builtin_cell_param_fresh_passed
+  at
+  passed 1
+  after [9, 2]
+builtin_cell_param_fresh_passed_own
+  at
+  sunk 1
+  after [9, 2]
+builtin_cell_param_own_bound
+  at
+  was 1
+  after [9, 2]
+builtin_cell_param_own_dropped
+  at
+  after [9, 2]
+builtin_cell_param_own_returned
+  at
+  got 1
+  after [9, 2]
+builtin_cell_param_own_passed
+  at
+  passed 1
+  after [9, 2]
+builtin_cell_param_own_passed_own
+  at
+  sunk 1
+  after [9, 2]
+builtin_cell_param_call_bound
+  at
+  was 1
+  after [9, 2]
+builtin_cell_param_call_dropped
+  at
+  after [9, 2]
+builtin_cell_param_call_returned
+  at
+  got 1
+  after [9, 2]
+builtin_cell_param_call_passed
+  at
+  passed 1
+  after [9, 2]
+builtin_cell_param_call_passed_own
+  at
+  sunk 1
+  after [9, 2]
+builtin_cell_field_fresh_bound
+  at
+  was 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_fresh_dropped
+  at
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_fresh_returned
+  at
+  got 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_fresh_passed
+  at
+  passed 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_fresh_passed_own
+  at
+  sunk 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_own_bound
+  at
+  was 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_own_dropped
+  at
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_own_returned
+  at
+  got 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_own_passed
+  at
+  passed 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_own_passed_own
+  at
+  sunk 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_call_bound
+  at
+  was 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_call_dropped
+  at
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_call_returned
+  at
+  got 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_call_passed
+  at
+  passed 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_field_call_passed_own
+  at
+  sunk 1
+  after Holder(items=[9, 2], tag=0)
+builtin_cell_matchmut_fresh_bound
+  at
+  was 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_fresh_returned
+  at
+  got 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_fresh_passed
+  at
+  passed 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_fresh_passed_own
+  at
+  sunk 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_own_bound
+  at
+  was 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_own_dropped
+  at
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_own_returned
+  at
+  got 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_own_passed
+  at
+  passed 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_own_passed_own
+  at
+  sunk 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_call_bound
+  at
+  was 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_call_dropped
+  at
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_call_returned
+  at
+  got 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_call_passed
+  at
+  passed 1
+  after Box.full(items=[9, 2])
+builtin_cell_matchmut_call_passed_own
+  at
+  sunk 1
+  after Box.full(items=[9, 2])

@@ -1,0 +1,22 @@
+# A `@freestanding` function calling C on a device (MCU-NOC2C), as the flash routines call the boot ROM: by name, and
+# through an address C hands over. Neither call records a place or calls the runtime: the `Host` token is compared
+# inline. weigh_named(4, 1) is 41 and weigh(1, 1) through the address is 11, so `main` answers 52.
+# bare-status: 52
+# bare-link: freestanding_extern.c
+extern func weigh_named(host: Host, a: i32, b: i32) -> i32
+
+
+extern func weigh_address(host: Host) -> u32
+
+
+@address
+extern func weigh_at(host: Host, target: u32, a: i32, b: i32) -> i32
+
+
+@freestanding
+func flash_like(host: Host, target: u32) -> i32:
+    return weigh_named(host, i32(4), i32(1)) + weigh_at(host, target, i32(1), i32(1))
+
+
+func main(host: Host) -> int:
+    return int(flash_like(host, weigh_address(host)))

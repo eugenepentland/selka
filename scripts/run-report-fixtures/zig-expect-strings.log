@@ -1,0 +1,35 @@
+test-cli
++- verification action cli member 0 0 pass, 975 skip, 1 fail (976 total)
+test: test wall 0.89s; slowest over 50ms:
+test:   0.89s  fix_cli_test.test.CLI fix deletes a trailing return or fail that follows a statement that always leaves, and the program prints the same (FIXUNREACH)
+test: FAIL — 1 failed of 1
+test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'fix_cli_test.test.CLI fix deletes a trailing return or fail that follows a statement that always leaves, and the program prints the same (FIXUNREACH)' failed:
+       ====== expected this output: =========
+       fixed main.selka: 3 edits (E_UNREACHABLE)
+       fix: 3 edits in 1 file over 1 round
+       ␃
+       
+       ======== instead found this: =========
+       fixed main.selka: 3 edits (E_UNREACHABLE)
+       fix: 3 edits in 1 file over 1 round
+       fix: left 1 warning with a repair alone; `selka fix /home/u/ai/canopy/mylang-checkbuild/.zig-cache/tmp/RG2JQ16wNUGP3eiv/main.selka --warnings` repairs it too
+       ␃
+       
+       ======================================
+       First difference occurs on line 3:
+       expected:
+       
+       ^ (end of string)
+       found:
+       fix: left 1 warning with a repair alone; `selka fix /home/u/ai/canopy/mylang-checkbuild/.zig-cache/tmp/RG2JQ16wNUGP3eiv/main.selka --warnings` repairs it too
+       ^ ('\x66')
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x132bb45 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/u/ai/canopy/mylang-checkbuild/test/fix_cli_test.zig:6117:5: 0x14913cc in test.CLI fix deletes a trailing return or fail that follows a statement that always leaves, and the program prints the same (FIXUNREACH) (integration.zig)
+           try testing.expectEqualStrings("fixed main.selka: 3 edits (E_UNREACHABLE)\nfix: 3 edits in 1 file over 1 round\n", fixed.stdout);
+           ^
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 0 --root-id test/integ...
+
+Build Summary: 17/19 steps succeeded (1 failed); 0/976 tests passed (975 skipped, 1 failed)

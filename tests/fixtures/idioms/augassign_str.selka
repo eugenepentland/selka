@@ -1,0 +1,6 @@
+import strings
+
+func main() -> int:
+    mut s = "a"
+    s += "b"
+    return strings.char_count(s)

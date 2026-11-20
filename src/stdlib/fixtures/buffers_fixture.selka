@@ -1,0 +1,28 @@
+import buffers
+
+func main() -> int:
+    mut data = buffers.empty()
+    if len(data) != 0:
+        return 1
+    _ = buffers.append_byte(mut data, 65)
+    buffers.append(mut data, b"BC")
+    if bytes(data) != b"ABC":
+        return 2
+    buffers.append_int(mut data, 1)
+    buffers.append_utf8(mut data, "é")
+    _ = buffers.append_range(mut data, b"0123", 1, 3)
+    # The integer and float appends write decimal text, not binary encodings.
+    if bytes(data) != b"ABC1\xc3\xa912":
+        return 3
+    _ = buffers.reserve(mut data, 4096)
+    if len(data) != 8:
+        return 4
+    const store = copy(data)
+    _ = buffers.append_byte(mut data, 90)
+    if len(data) != 9 or len(store) != 8 or bytes(store) != b"ABC1\xc3\xa912":
+        return 5
+    mut floats = buffers.empty()
+    buffers.append_float(mut floats, 1.5)
+    if bytes(floats) != b"1.5":
+        return 6
+    return 42

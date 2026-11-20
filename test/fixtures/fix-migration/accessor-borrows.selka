@@ -1,0 +1,56 @@
+import json
+
+
+func name_of(document: json.Json) -> str:
+    match json.get(document, "name"):
+        case Some(member):
+            match json.as_str(member):
+                case Some(text):
+                    return text
+                case None:
+                    return "none"
+        case None:
+            return "missing"
+
+
+func tags_of(document: json.Json) -> str[]:
+    mut tags: str[] = []
+    match json.get(document, "tags"):
+        case Some(member):
+            match json.as_list(member):
+                case Some(items):
+                    for item in items:
+                        match json.as_str(item):
+                            case Some(body):
+                                append(mut tags, own body)
+                            case None:
+                                append(mut tags, "?")
+                case None:
+                    append(mut tags, "none")
+        case None:
+            append(mut tags, "missing")
+    return tags
+
+
+func kept_name(document: json.Json) -> str:
+    mut kept = json.get(document, "name")
+    match kept:
+        case Some(member):
+            match json.as_str(member):
+                case Some(body):
+                    return body
+                case None:
+                    return "none"
+        case None:
+            return "missing"
+
+
+func main(out: Stream) -> int:
+    mut fields: dict[str, json.Json] = {}
+    fields["name"] = json.text("widget")
+    fields["tags"] = json.array([json.text("a"), json.text("b")])
+    const document = json.object(fields)
+    print(out, name_of(document), len(tags_of(document)), kept_name(document))
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

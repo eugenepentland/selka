@@ -1,0 +1,197 @@
+# `replace_file`, `replace_file_mode` and their `_synced` pair on the in-memory Filesystem a test receives: the publication
+# that is atomic but not durable, the way Zig's `AtomicFile` publishes. A reader sees the old file or the new one whole, the
+# mode is 0600 unless the mode form says otherwise, and the refusals read as `atomic_write_file`'s do under the verb
+# "replace". What the calls do not do, force the directory to disk (`replace_file_synced` forces the file, `replace_file`
+# neither), has no meaning on a stand-in; the native counterpart (the temporary and the rename, which syncs happen,
+# nothing left behind) is pinned in src/core/durable_fixture.c and src/io_replace_test.zig.
+import filesystem
+
+const READ_ONLY: str = "denied: this Filesystem was narrowed by fs.read_only() and does not write"
+
+
+const MISSING: str = "the path does not exist"
+
+
+const NO_FOLDER: str = "a folder on the way does not exist"
+
+
+# "ok" for a success, else the failure text.
+func note(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func contents(fs: Filesystem, path: str) -> str:
+    match fs.read_text(path):
+        case Ok(text):
+            return copy(text)
+        case Err(message):
+            return "error: " + message
+
+
+func mode_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.mode
+        case Err(_):
+            return -1
+
+
+func inode_of(fs: Filesystem, path: str) -> u64:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.inode
+        case Err(_):
+            return 0u64
+
+
+public func test_replace_file_publishes_a_new_file_with_mode_0600() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file("data", b"value")) != "ok":
+        return False
+    return contents(fs, "data") == "value" and mode_of(fs, "data") == 0o600
+
+
+public func test_replace_file_replaces_a_file_whole_with_a_new_inode() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.replace_file("data", b"first version")
+    const before = inode_of(fs, "data")
+    if note(fs.replace_file("data", b"second")) != "ok":
+        return False
+    return contents(fs, "data") == "second" and inode_of(fs, "data") != before
+
+
+public func test_replace_file_mode_stores_the_mode_exactly() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file_mode("a", b"x", 0o666)) != "ok" or mode_of(fs, "a") != 0o666:
+        return False
+    if note(fs.replace_file_mode("b", b"x", 0o4755)) != "ok" or mode_of(fs, "b") != 0o4755:
+        return False
+    if note(fs.replace_file_mode("c", b"x", 0o10000)) != "replace 'c': the mode must be between 0 and 0o7777":
+        return False
+    return not fs.exists("c") and note(fs.replace_file_mode("d", b"x", -1)) == "replace 'd': the mode must be between 0 and 0o7777"
+
+
+public func test_replace_file_has_a_free_and_a_method_spelling() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file("free", b"1")) != "ok" or note(fs.replace_file_mode("free_mode", b"2", 0o640)) != "ok":
+        return False
+    return contents(fs, "free") == "1" and contents(fs, "free_mode") == "2" and mode_of(fs, "free_mode") == 0o640
+
+
+public func test_replace_file_refusals_use_the_real_wording() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_text("file", "text")
+    if note(fs.replace_file("no/such", b"a")) != "replace 'no/such': " + NO_FOLDER:
+        return False
+    if note(fs.replace_file("dir", b"a")) != "replace 'dir': is a directory":
+        return False
+    if note(fs.replace_file("file/inside", b"a")) != "replace 'file/inside': a parent of the path is not a directory":
+        return False
+    return note(fs.replace_file("", b"a")) == "replace '': " + MISSING
+
+
+public func test_replace_file_obeys_the_grant_of_its_filesystem() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("keep", "old")
+    const readonly = fs.read_only()
+    if note(readonly.replace_file("keep", b"new")) != "replace 'keep': " + READ_ONLY:
+        return False
+    if note(readonly.replace_file_mode("keep", b"new", 0o644)) != "replace 'keep': " + READ_ONLY:
+        return False
+    const narrow = fs.dir("sub")
+    _ = fs.mkdir("sub")
+    if note(narrow.replace_file("inner", b"in")) != "ok":
+        return False
+    return contents(fs, "sub/inner") == "in" and contents(fs, "keep") == "old"
+
+
+public func test_a_replaced_file_is_visible_to_the_ordinary_calls() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.replace_file("d/one", b"1")
+    _ = fs.write_text("d/two", "22")
+    match fs.listdir("d"):
+        case Ok(names):
+            if names != ["one", "two"]:
+                return False
+        case Err(_):
+            return False
+    return contents(fs, "d/one") == "1" and fs.exists("d/one")
+
+
+public func test_replace_file_synced_publishes_a_new_file_with_mode_0600() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file_synced("data", b"value")) != "ok":
+        return False
+    return contents(fs, "data") == "value" and mode_of(fs, "data") == 0o600
+
+
+public func test_replace_file_synced_replaces_a_file_whole_with_a_new_inode() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.replace_file_synced("data", b"first version")
+    const before = inode_of(fs, "data")
+    if note(fs.replace_file_synced("data", b"second")) != "ok":
+        return False
+    return contents(fs, "data") == "second" and inode_of(fs, "data") != before
+
+
+public func test_replace_file_synced_mode_stores_the_mode_exactly() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file_synced_mode("a", b"x", 0o666)) != "ok" or mode_of(fs, "a") != 0o666:
+        return False
+    if note(fs.replace_file_synced_mode("b", b"x", 0o4755)) != "ok" or mode_of(fs, "b") != 0o4755:
+        return False
+    if note(fs.replace_file_synced_mode("c", b"x", 0o10000)) != "replace 'c': the mode must be between 0 and 0o7777":
+        return False
+    return not fs.exists("c") and note(fs.replace_file_synced_mode("d", b"x", -1)) == "replace 'd': the mode must be between 0 and 0o7777"
+
+
+public func test_replace_file_synced_has_a_free_and_a_method_spelling() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file_synced("free", b"1")) != "ok" or note(fs.replace_file_synced_mode("free_mode", b"2", 0o640)) != "ok":
+        return False
+    if note(fs.replace_file_synced("method", b"3")) != "ok" or note(fs.replace_file_synced_mode("method_mode", b"4", 0o600)) != "ok":
+        return False
+    return contents(fs, "free") == "1" and contents(fs, "free_mode") == "2" and mode_of(fs, "free_mode") == 0o640 and contents(fs, "method") == "3" and contents(fs, "method_mode") == "4"
+
+
+public func test_replace_file_synced_refusals_use_the_real_wording() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_text("file", "text")
+    if note(fs.replace_file_synced("no/such", b"a")) != "replace 'no/such': " + NO_FOLDER:
+        return False
+    if note(fs.replace_file_synced("dir", b"a")) != "replace 'dir': is a directory":
+        return False
+    if note(fs.replace_file_synced("file/inside", b"a")) != "replace 'file/inside': a parent of the path is not a directory":
+        return False
+    return note(fs.replace_file_synced("", b"a")) == "replace '': " + MISSING
+
+
+public func test_replace_file_synced_obeys_the_grant_of_its_filesystem() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("keep", "old")
+    const readonly = fs.read_only()
+    if note(readonly.replace_file_synced("keep", b"new")) != "replace 'keep': " + READ_ONLY:
+        return False
+    if note(readonly.replace_file_synced_mode("keep", b"new", 0o644)) != "replace 'keep': " + READ_ONLY:
+        return False
+    const narrow = fs.dir("sub")
+    _ = fs.mkdir("sub")
+    if note(narrow.replace_file_synced("inner", b"in")) != "ok":
+        return False
+    return contents(fs, "sub/inner") == "in" and contents(fs, "keep") == "old"
+
+
+public func test_the_three_replacements_answer_alike_on_one_path() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.replace_file("data", b"a")) != "ok" or note(fs.replace_file_synced("data", b"b")) != "ok":
+        return False
+    if contents(fs, "data") != "b" or note(fs.atomic_write_file("data", b"c")) != "ok":
+        return False
+    return contents(fs, "data") == "c" and note(fs.replace_file_synced("data", b"d")) == "ok" and contents(fs, "data") == "d"

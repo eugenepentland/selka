@@ -1,0 +1,205 @@
+# One call lends a scalar field and a managed field of one record `mut` (M5: different fields are disjoint places), with or
+# without a read of a third field beside them. `check` accepted these and `build` refused them with E_CORE_UNSUPPORTED
+# (rule Z3) until lane FR62: the scalar field was stored back first and the managed field's path then rebuilt the record
+# read before the call, so the store took that record twice.
+record Options:
+    url: str
+    port: int
+    path: str
+
+
+record Inner:
+    x: int
+    name: str
+
+
+record Outer:
+    b: Inner
+    c: str
+    url: str
+
+
+func split_url(url: str, mut port_out: int, mut path_out: str) -> bool:
+    if len(url) < 3:
+        return False
+    port_out = 80
+    path_out = copy(url[2:])
+    return True
+
+
+func set_both(mut port_out: int, mut path_out: str) -> bool:
+    port_out = 80
+    path_out = "cdef"
+    return True
+
+
+func set_both_managed_first(mut path_out: str, mut port_out: int) -> bool:
+    path_out = "cdef"
+    port_out = 80
+    return True
+
+
+func set_port(url: str, mut port_out: int) -> bool:
+    port_out = len(url) + 74
+    return True
+
+
+func parse(own url: str) -> Options:
+    mut options = Options(url=own url, port=0, path="/")
+    if not split_url(options.url, mut options.port, mut options.path):
+        options.port = -1
+    return options
+
+
+func fill(mut options: Options):
+    if not split_url(options.url, mut options.port, mut options.path):
+        options.port = -1
+
+
+func parse_nested(own url: str) -> Outer:
+    mut a = Outer(b=Inner(x=0, name="n"), c="/", url=own url)
+    if not split_url(a.url, mut a.b.x, mut a.c):
+        a.b.x = -1
+    return a
+
+
+public func test_a_read_and_two_mut_fields_of_a_local_record() -> bool:
+    const o = parse("abcdef")
+    return o.port == 80 and o.path == "cdef" and o.url == "abcdef"
+
+
+public func test_the_callee_declines_and_the_caller_writes_a_field() -> bool:
+    const o = parse("ab")
+    return o.port == -1 and o.path == "/"
+
+
+public func test_a_scalar_and_a_managed_mut_field_with_no_read() -> bool:
+    mut options = Options(url="u", port=0, path="/")
+    _ = set_both(mut options.port, mut options.path)
+    return options.port == 80 and options.path == "cdef"
+
+
+public func test_a_managed_then_a_scalar_mut_field() -> bool:
+    mut options = Options(url="u", port=0, path="/")
+    _ = set_both_managed_first(mut options.path, mut options.port)
+    return options.port == 80 and options.path == "cdef"
+
+
+public func test_one_mut_field_beside_a_read() -> bool:
+    mut options = Options(url="abcdef", port=0, path="/")
+    _ = set_port(options.url, mut options.port)
+    return options.port == 80 and options.path == "/"
+
+
+public func test_two_mut_fields_of_a_mut_parameter() -> bool:
+    mut options = Options(url="abcdef", port=0, path="/")
+    fill(mut options)
+    return options.port == 80 and options.path == "cdef"
+
+
+public func test_a_nested_scalar_field_and_a_managed_field() -> bool:
+    const o = parse_nested("abcdef")
+    return o.b.x == 80 and o.c == "cdef" and o.b.name == "n"
+
+
+public func test_two_mut_fields_of_a_dictionary_entry() -> bool:
+    mut d: dict[int, Options] = {}
+    d[1] = Options(url="abcdef", port=0, path="/")
+    _ = set_both(mut d[1].port, mut d[1].path)
+    return d[1].port == 80 and d[1].path == "cdef" and d[1].url == "abcdef"
+
+
+# A list element at a run-time index lent `mut` beside a managed `mut` field of the same record, through `try`, a plain call
+# or a `match`. `check` accepted these and `build` failed ownership validation (J8) until lane FR94: the field was stored
+# back into the record first, and the element's list, read from the record before the call, was then only a borrow.
+record Conn:
+    id: int
+    buf: u8[]
+
+
+record Hub:
+    conns: Conn[]
+    names: str[]
+    others: Conn[]
+
+
+func serve(mut names: str[], mut c: Conn, late: bool) -> Unit fails str:
+    if late:
+        fail "late"
+    append(mut c.buf, 1u8)
+    append(mut names, "n")
+    c.id += 10
+    return
+
+
+func serve_two(mut names: str[], mut c: Conn, mut d: Conn) -> Unit fails str:
+    append(mut names, "t")
+    append(mut c.buf, 2u8)
+    d.id += c.id
+    return
+
+
+func serve_buf(mut names: str[], mut buf: u8[]) -> Unit fails str:
+    append(mut names, "b")
+    append(mut buf, 3u8)
+    return
+
+
+func poll(mut hub: Hub, index: int, late: bool) -> Unit fails str:
+    try serve(mut hub.names, mut hub.conns[index], late)
+
+
+func poll_match(mut hub: Hub, index: int) -> bool:
+    match serve(mut hub.names, mut hub.conns[index], False):
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+func poll_two(mut hub: Hub, index: int) -> Unit fails str:
+    try serve_two(mut hub.names, mut hub.conns[index], mut hub.others[index])
+
+
+func poll_nested(mut hub: Hub, index: int) -> Unit fails str:
+    try serve_buf(mut hub.names, mut hub.conns[index].buf)
+
+
+func make_hub() -> Hub:
+    return Hub(conns=[Conn(id=1, buf=[]), Conn(id=2, buf=[])], names=[], others=[Conn(id=3, buf=[]), Conn(id=4, buf=[])])
+
+
+public func test_try_lends_an_element_at_a_run_time_index_beside_a_managed_field() -> bool:
+    mut hub = make_hub()
+    const done = poll(mut hub, 1, False)
+    const late = poll(mut hub, 1, True)
+    const done_ok = done is Ok(_)
+    const late_failed = late is Err(_)
+    return done_ok and late_failed and hub.conns[1].id == 12 and len(hub.conns[1].buf) == 1 and len(hub.names) == 1
+
+
+public func test_a_plain_call_lends_an_element_of_a_local_record_beside_a_managed_field() -> bool:
+    mut hub = make_hub()
+    const index = len(hub.others) - 1
+    _ = serve(mut hub.names, mut hub.conns[index], False) else Err(_):
+        return False
+    return hub.conns[1].id == 12 and len(hub.conns[1].buf) == 1 and hub.names[0] == "n" and hub.conns[0].id == 1
+
+
+public func test_a_match_on_a_call_that_lends_an_element_beside_a_managed_field() -> bool:
+    mut hub = make_hub()
+    return poll_match(mut hub, 0) and hub.conns[0].id == 11 and len(hub.names) == 1
+
+
+public func test_elements_of_two_lists_beside_a_managed_field() -> bool:
+    mut hub = make_hub()
+    const done = poll_two(mut hub, 1)
+    const done_ok = done is Ok(_)
+    return done_ok and hub.others[1].id == 6 and len(hub.conns[1].buf) == 1 and hub.names[0] == "t"
+
+
+public func test_a_field_of_an_element_beside_a_managed_field() -> bool:
+    mut hub = make_hub()
+    const done = poll_nested(mut hub, 1)
+    const done_ok = done is Ok(_)
+    return done_ok and len(hub.conns[1].buf) == 1 and len(hub.conns[0].buf) == 0 and hub.names[0] == "b"

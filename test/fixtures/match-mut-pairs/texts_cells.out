@@ -1,0 +1,540 @@
+cell_assign_assign_none
+  at
+  after ['w1', 'w2', 'c']
+cell_assign_assign_between
+  at
+  read ['w1', 'b', 'c']
+  after ['w1', 'w2', 'c']
+cell_assign_assign_after
+  at
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_assign_append_none
+  at
+  after ['w1', 'b', 'c', 'w2']
+cell_assign_append_between
+  at
+  read ['w1', 'b', 'c']
+  after ['w1', 'b', 'c', 'w2']
+cell_assign_append_after
+  at
+  read ['w1', 'b', 'c', 'w2']
+  after ['w1', 'b', 'c', 'w2']
+cell_assign_fn_none
+  at
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_assign_fn_between
+  at
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_assign_fn_after
+  at
+  w2 b
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_assign_builtin_none
+  at
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_assign_builtin_between
+  at
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_assign_builtin_after
+  at
+  w2 b
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_assign_take_none
+  at
+  w2 b
+  after ['w1', '', 'c']
+cell_assign_take_between
+  at
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', '', 'c']
+cell_assign_take_after
+  at
+  w2 b
+  read ['w1', '', 'c']
+  after ['w1', '', 'c']
+cell_assign_pop_none
+  at
+  w2 c
+  after ['w1', 'b']
+cell_assign_pop_between
+  at
+  read ['w1', 'b', 'c']
+  w2 c
+  after ['w1', 'b']
+cell_assign_pop_after
+  at
+  w2 c
+  read ['w1', 'b']
+  after ['w1', 'b']
+cell_append_assign_none
+  at
+  after ['a', 'w2', 'c', 'w1']
+cell_append_assign_between
+  at
+  read ['a', 'b', 'c', 'w1']
+  after ['a', 'w2', 'c', 'w1']
+cell_append_assign_after
+  at
+  read ['a', 'w2', 'c', 'w1']
+  after ['a', 'w2', 'c', 'w1']
+cell_append_append_none
+  at
+  after ['a', 'b', 'c', 'w1', 'w2']
+cell_append_append_between
+  at
+  read ['a', 'b', 'c', 'w1']
+  after ['a', 'b', 'c', 'w1', 'w2']
+cell_append_append_after
+  at
+  read ['a', 'b', 'c', 'w1', 'w2']
+  after ['a', 'b', 'c', 'w1', 'w2']
+cell_append_fn_none
+  at
+  w2 b
+  after ['a', 'w2', 'c', 'w1']
+cell_append_fn_between
+  at
+  read ['a', 'b', 'c', 'w1']
+  w2 b
+  after ['a', 'w2', 'c', 'w1']
+cell_append_fn_after
+  at
+  w2 b
+  read ['a', 'w2', 'c', 'w1']
+  after ['a', 'w2', 'c', 'w1']
+cell_append_builtin_none
+  at
+  w2 b
+  after ['a', 'w2', 'c', 'w1']
+cell_append_builtin_between
+  at
+  read ['a', 'b', 'c', 'w1']
+  w2 b
+  after ['a', 'w2', 'c', 'w1']
+cell_append_builtin_after
+  at
+  w2 b
+  read ['a', 'w2', 'c', 'w1']
+  after ['a', 'w2', 'c', 'w1']
+cell_append_take_none
+  at
+  w2 b
+  after ['a', '', 'c', 'w1']
+cell_append_take_between
+  at
+  read ['a', 'b', 'c', 'w1']
+  w2 b
+  after ['a', '', 'c', 'w1']
+cell_append_take_after
+  at
+  w2 b
+  read ['a', '', 'c', 'w1']
+  after ['a', '', 'c', 'w1']
+cell_append_pop_none
+  at
+  w2 w1
+  after ['a', 'b', 'c']
+cell_append_pop_between
+  at
+  read ['a', 'b', 'c', 'w1']
+  w2 w1
+  after ['a', 'b', 'c']
+cell_append_pop_after
+  at
+  w2 w1
+  read ['a', 'b', 'c']
+  after ['a', 'b', 'c']
+cell_fn_assign_none
+  at
+  w1 a
+  after ['w1', 'w2', 'c']
+cell_fn_assign_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  after ['w1', 'w2', 'c']
+cell_fn_assign_after
+  at
+  w1 a
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_fn_append_none
+  at
+  w1 a
+  after ['w1', 'b', 'c', 'w2']
+cell_fn_append_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  after ['w1', 'b', 'c', 'w2']
+cell_fn_append_after
+  at
+  w1 a
+  read ['w1', 'b', 'c', 'w2']
+  after ['w1', 'b', 'c', 'w2']
+cell_fn_fn_none
+  at
+  w1 a
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_fn_fn_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_fn_fn_after
+  at
+  w1 a
+  w2 b
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_fn_builtin_none
+  at
+  w1 a
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_fn_builtin_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_fn_builtin_after
+  at
+  w1 a
+  w2 b
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_fn_take_none
+  at
+  w1 a
+  w2 b
+  after ['w1', '', 'c']
+cell_fn_take_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', '', 'c']
+cell_fn_take_after
+  at
+  w1 a
+  w2 b
+  read ['w1', '', 'c']
+  after ['w1', '', 'c']
+cell_fn_pop_none
+  at
+  w1 a
+  w2 c
+  after ['w1', 'b']
+cell_fn_pop_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 c
+  after ['w1', 'b']
+cell_fn_pop_after
+  at
+  w1 a
+  w2 c
+  read ['w1', 'b']
+  after ['w1', 'b']
+cell_builtin_assign_none
+  at
+  w1 a
+  after ['w1', 'w2', 'c']
+cell_builtin_assign_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  after ['w1', 'w2', 'c']
+cell_builtin_assign_after
+  at
+  w1 a
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_builtin_append_none
+  at
+  w1 a
+  after ['w1', 'b', 'c', 'w2']
+cell_builtin_append_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  after ['w1', 'b', 'c', 'w2']
+cell_builtin_append_after
+  at
+  w1 a
+  read ['w1', 'b', 'c', 'w2']
+  after ['w1', 'b', 'c', 'w2']
+cell_builtin_fn_none
+  at
+  w1 a
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_builtin_fn_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_builtin_fn_after
+  at
+  w1 a
+  w2 b
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_builtin_builtin_none
+  at
+  w1 a
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_builtin_builtin_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', 'w2', 'c']
+cell_builtin_builtin_after
+  at
+  w1 a
+  w2 b
+  read ['w1', 'w2', 'c']
+  after ['w1', 'w2', 'c']
+cell_builtin_take_none
+  at
+  w1 a
+  w2 b
+  after ['w1', '', 'c']
+cell_builtin_take_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 b
+  after ['w1', '', 'c']
+cell_builtin_take_after
+  at
+  w1 a
+  w2 b
+  read ['w1', '', 'c']
+  after ['w1', '', 'c']
+cell_builtin_pop_none
+  at
+  w1 a
+  w2 c
+  after ['w1', 'b']
+cell_builtin_pop_between
+  at
+  w1 a
+  read ['w1', 'b', 'c']
+  w2 c
+  after ['w1', 'b']
+cell_builtin_pop_after
+  at
+  w1 a
+  w2 c
+  read ['w1', 'b']
+  after ['w1', 'b']
+cell_take_assign_none
+  at
+  w1 a
+  after ['', 'w2', 'c']
+cell_take_assign_between
+  at
+  w1 a
+  read ['', 'b', 'c']
+  after ['', 'w2', 'c']
+cell_take_assign_after
+  at
+  w1 a
+  read ['', 'w2', 'c']
+  after ['', 'w2', 'c']
+cell_take_append_none
+  at
+  w1 a
+  after ['', 'b', 'c', 'w2']
+cell_take_append_between
+  at
+  w1 a
+  read ['', 'b', 'c']
+  after ['', 'b', 'c', 'w2']
+cell_take_append_after
+  at
+  w1 a
+  read ['', 'b', 'c', 'w2']
+  after ['', 'b', 'c', 'w2']
+cell_take_fn_none
+  at
+  w1 a
+  w2 b
+  after ['', 'w2', 'c']
+cell_take_fn_between
+  at
+  w1 a
+  read ['', 'b', 'c']
+  w2 b
+  after ['', 'w2', 'c']
+cell_take_fn_after
+  at
+  w1 a
+  w2 b
+  read ['', 'w2', 'c']
+  after ['', 'w2', 'c']
+cell_take_builtin_none
+  at
+  w1 a
+  w2 b
+  after ['', 'w2', 'c']
+cell_take_builtin_between
+  at
+  w1 a
+  read ['', 'b', 'c']
+  w2 b
+  after ['', 'w2', 'c']
+cell_take_builtin_after
+  at
+  w1 a
+  w2 b
+  read ['', 'w2', 'c']
+  after ['', 'w2', 'c']
+cell_take_take_none
+  at
+  w1 a
+  w2 b
+  after ['', '', 'c']
+cell_take_take_between
+  at
+  w1 a
+  read ['', 'b', 'c']
+  w2 b
+  after ['', '', 'c']
+cell_take_take_after
+  at
+  w1 a
+  w2 b
+  read ['', '', 'c']
+  after ['', '', 'c']
+cell_take_pop_none
+  at
+  w1 a
+  w2 c
+  after ['', 'b']
+cell_take_pop_between
+  at
+  w1 a
+  read ['', 'b', 'c']
+  w2 c
+  after ['', 'b']
+cell_take_pop_after
+  at
+  w1 a
+  w2 c
+  read ['', 'b']
+  after ['', 'b']
+cell_pop_assign_none
+  at
+  w1 c
+  after ['a', 'w2']
+cell_pop_assign_between
+  at
+  w1 c
+  read ['a', 'b']
+  after ['a', 'w2']
+cell_pop_assign_after
+  at
+  w1 c
+  read ['a', 'w2']
+  after ['a', 'w2']
+cell_pop_append_none
+  at
+  w1 c
+  after ['a', 'b', 'w2']
+cell_pop_append_between
+  at
+  w1 c
+  read ['a', 'b']
+  after ['a', 'b', 'w2']
+cell_pop_append_after
+  at
+  w1 c
+  read ['a', 'b', 'w2']
+  after ['a', 'b', 'w2']
+cell_pop_fn_none
+  at
+  w1 c
+  w2 b
+  after ['a', 'w2']
+cell_pop_fn_between
+  at
+  w1 c
+  read ['a', 'b']
+  w2 b
+  after ['a', 'w2']
+cell_pop_fn_after
+  at
+  w1 c
+  w2 b
+  read ['a', 'w2']
+  after ['a', 'w2']
+cell_pop_builtin_none
+  at
+  w1 c
+  w2 b
+  after ['a', 'w2']
+cell_pop_builtin_between
+  at
+  w1 c
+  read ['a', 'b']
+  w2 b
+  after ['a', 'w2']
+cell_pop_builtin_after
+  at
+  w1 c
+  w2 b
+  read ['a', 'w2']
+  after ['a', 'w2']
+cell_pop_take_none
+  at
+  w1 c
+  w2 b
+  after ['a', '']
+cell_pop_take_between
+  at
+  w1 c
+  read ['a', 'b']
+  w2 b
+  after ['a', '']
+cell_pop_take_after
+  at
+  w1 c
+  w2 b
+  read ['a', '']
+  after ['a', '']
+cell_pop_pop_none
+  at
+  w1 c
+  w2 b
+  after ['a']
+cell_pop_pop_between
+  at
+  w1 c
+  read ['a', 'b']
+  w2 b
+  after ['a']
+cell_pop_pop_after
+  at
+  w1 c
+  w2 b
+  read ['a']
+  after ['a']

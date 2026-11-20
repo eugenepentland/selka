@@ -1,0 +1,46 @@
+# The fixed-width reads of `bytes`: every width and byte order, signs, floats, views (a `bytes` parameter
+# and a slice) and the last octets of each. Out-of-range reads trap; test/integration.zig pins that.
+import bytes
+import strings
+
+# A view parameter: its offsets count from its own first octet, not from the owner's.
+func window(data: bytes) -> u32:
+    return bytes.read_u32_be(data, 1)
+
+
+public func test_every_width_and_byte_order_at_the_start() -> bool:
+    const data = strings.encode("ABCDEFGH")
+    return bytes.read_u16_be(data, 0) == 16706u16 and bytes.read_u16_le(data, 0) == 16961u16 and bytes.read_u32_be(data, 0) == 1094861636u32 and bytes.read_u32_le(data, 0) == 1145258561u32 and bytes.read_u64_be(data, 0) == 4702394921427289928u64 and bytes.read_u64_le(data, 0) == 5208208757389214273u64
+
+
+public func test_reads_at_an_offset_and_at_the_last_octets() -> bool:
+    const data = strings.encode("ABCDEFGH")
+    return bytes.read_u16_be(data, 2) == 17220u16 and bytes.read_u16_le(data, 2) == 17475u16 and bytes.read_u16_be(data, 6) == 18248u16 and bytes.read_u16_le(data, 6) == 18503u16 and bytes.read_u32_be(data, 4) == 1162233672u32
+
+
+public func test_signed_reads_keep_the_sign() -> bool:
+    const values: int[] = [255, 255, 255, 254]
+    const data = bytes(values)
+    return bytes.read_i16_be(data, 0) == i16(-1) and bytes.read_i16_be(data, 2) == i16(-2) and bytes.read_i16_le(data, 2) == i16(-257) and bytes.read_i32_be(data, 0) == i32(-2)
+
+
+public func test_float_reads_are_little_endian() -> bool:
+    const half: int[] = [0, 0, 192, 63]
+    const wide: int[] = [0, 0, 0, 0, 0, 0, 248, 63]
+    return bytes.read_f32_le(bytes(half), 0) == 1.5 and bytes.read_f64_le(bytes(wide), 0) == 1.5
+
+
+public func test_a_view_parameter_reads_from_its_own_first_octet() -> bool:
+    const data = strings.encode("ABCDEFGH")
+    return window(data) == 1111704645u32 and window(data[1:6]) == 1128547654u32
+
+
+public func test_a_slice_reads_from_its_own_first_octet() -> bool:
+    const data = strings.encode("ABCDEFGH")
+    const middle = data[2:6]
+    return bytes.read_u32_be(middle, 0) == 1128547654u32 and bytes.read_u16_le(middle, 2) == 17989u16 and bytes.read_u16_be(middle, 2) == 17734u16
+
+
+public func test_single_octet_reads_are_inline_and_signed_or_unsigned() -> bool:
+    const data = bytes([0, 127, 128, 255])
+    return bytes.read_u8(data, 0) == 0u8 and bytes.read_u8(data, 2) == 128u8 and bytes.read_u8(data, 3) == 255u8 and bytes.read_i8(data, 1) == i8(127) and bytes.read_i8(data, 2) == i8(-128) and bytes.read_i8(data, 3) == i8(-1) and bytes.read_u8(data[1:], 0) == 127u8

@@ -1,0 +1,467 @@
+import byte_builder
+import hex
+import http
+import strings
+
+# The HTTP codec reads its header section as octets. These cases pin its observable behavior:
+# every `expected` text was produced by the line-by-line text implementation this scanner
+# replaced, including the order in which a message's problems are reported.
+record Case:
+    wire: bytes
+    expected: str
+
+
+record WriteCase:
+    a: str
+    b: str
+    c: str
+    status: int
+    names: str[]
+    values: str[]
+    body: bytes
+    expected: str
+
+
+func fmt_str(text: str) -> str:
+    return str(strings.char_count(text)) + ":" + text
+
+
+func fmt_error(error: http.Error) -> str:
+    match error:
+        case Incomplete:
+            return "Incomplete"
+        case Malformed(value=detail):
+            return "Malformed:" + fmt_str(detail)
+        case Unsupported(value=detail):
+            return "Unsupported:" + fmt_str(detail)
+        case HeaderTooLarge(value=detail):
+            return "HeaderTooLarge:" + fmt_str(detail)
+        case BodyTooLarge(value=detail):
+            return "BodyTooLarge:" + fmt_str(detail)
+        case UnsupportedVersion(value=detail):
+            return "UnsupportedVersion:" + fmt_str(detail)
+
+
+func fmt_fields(fields: http.Header[]) -> str:
+    mut out = ""
+    for item in fields:
+        out = out + "[" + fmt_str(item.name) + "=" + fmt_str(item.value) + "]"
+    return out
+
+
+func request_text(data: bytes) -> str:
+    match http.parse_request(data):
+        case Ok(parsed):
+            return "OK " + fmt_str(parsed.method) + fmt_str(parsed.target) + fmt_str(parsed.version) + fmt_fields(parsed.headers) + "body=" + hex.encode(parsed.body)
+        case Err(error):
+            return "ERR " + fmt_error(error)
+
+
+func response_text(data: bytes, closed: bool) -> str:
+    match http.parse_response(data, closed):
+        case Ok(parsed):
+            return "OK " + fmt_str(parsed.version) + str(parsed.status) + fmt_str(parsed.reason) + fmt_fields(parsed.headers) + "body=" + hex.encode(parsed.body)
+        case Err(error):
+            return "ERR " + fmt_error(error)
+
+
+func probe_names() -> str[]:
+    return ["z9", "Z9", "x_1", "X_1", "az", "AZ", "host", "HOST", "Host", "Content-Length", "content-length", "transfer-encoding", "Transfer-Encoding", "X-Empty", "x-empty", "A", "a", "", "héllo", "HÉLLO", "connection", "Connection", "user-agent", "hos", "hosts", "café"]
+
+
+# Both lookups of every probe name over a parsed request's fields, then the derived text accessors.
+func lookup_text(data: bytes) -> str:
+    match http.parse_request(data):
+        case Ok(parsed):
+            mut out = ""
+            for name in probe_names():
+                match http.header(parsed.headers, name):
+                    case Some(value):
+                        out = out + "H" + fmt_str(value)
+                    case None:
+                        out = out + "H-"
+                out = out + "L"
+                for value in http.headers(parsed.headers, name):
+                    out = out + fmt_str(value)
+            return out + "|" + http.method(parsed) + "|" + http.path(parsed) + "|" + http.query(parsed) + "|" + http.target(parsed)
+        case Err(_):
+            return "-"
+
+
+func fields_of(names: str[], values: str[]) -> http.Header[]:
+    mut fields: http.Header[] = []
+    mut index = 0
+    while index < len(names):
+        append(mut fields, http.Header(name=copy(names[index]), value=copy(values[index])))
+        index += 1
+    return fields
+
+
+func request_wire_text(item: WriteCase) -> str:
+    mut built = http.Request(method=copy(item.a), target=copy(item.b), version=copy(item.c), headers=fields_of(item.names, item.values), body=copy(item.body))
+    match http.write_request(built):
+        case Ok(wire):
+            return "OK " + hex.encode(wire)
+        case Err(error):
+            return "ERR " + fmt_error(error)
+
+
+func response_wire_text(item: WriteCase) -> str:
+    mut made = http.Response(version=copy(item.a), status=item.status, reason=copy(item.b), headers=fields_of(item.names, item.values), body=copy(item.body))
+    match http.write_response(made):
+        case Ok(wire):
+            return "OK " + hex.encode(wire)
+        case Err(error):
+            return "ERR " + fmt_error(error)
+
+
+func many_fields(first: bytes, count: int, last: bytes) -> bytes:
+    mut out = byte_builder.create()
+    byte_builder.append(mut out, first)
+    for index in range(count):
+        byte_builder.append(mut out, b"\r\nH")
+        byte_builder.append_int(mut out, index)
+        byte_builder.append(mut out, b": v")
+    byte_builder.append(mut out, last)
+    return byte_builder.finish(out)
+
+
+func big_head(first: bytes, size: int) -> bytes:
+    return first + byte_builder.repeat(b"y", size) + b"\r\n\r\n"
+
+
+func request_cases() -> Case[]:
+    return [Case(wire=b"GET / HTTP/1.1\r\nH0: v0\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1[2:H0=2:v0]body="), Case(wire=b"GET / HTTP/1.1\r\nHost: example.test\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1[4:Host=12:example.test]body="), Case(wire=b"GET /hello?x=1 HTTP/1.1\r\nHost: example.test\r\nContent-Length: 5\r\n\r\nhello", expected="OK 3:GET10:/hello?x=18:HTTP/1.1[4:Host=12:example.test][14:Content-Length=1:5]body=68656c6c6f"), Case(wire=b"POST /kv/a HTTP/1.1\r\nHost: h\r\nContent-Length: 3\r\nContent-Type: application/json\r\n\r\n[1]", expected="OK 4:POST5:/kv/a8:HTTP/1.1[4:Host=1:h][14:Content-Length=1:3][12:Content-Type=16:application/json]body=5b315d"), Case(wire=b"PUT /kv/key HTTP/1.0\r\nhost:   spaced value \t \r\nX-Empty:\r\nConnection: keep-alive\r\n\r\nbody bytes", expected="OK 3:PUT7:/kv/key8:HTTP/1.0[4:host=12:spaced value][7:X-Empty=0:][10:Connection=10:keep-alive]body="), Case(wire=b"GET http://example.test/a/b?c=d#frag HTTP/1.1\r\nHOST: example.test\r\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nCookie: a=b; c=d\r\n\r\n", expected="ERR Malformed:34:request target contains a fragment"), Case(wire=b"DELETE /x HTTP/1.1\r\nHost: a\r\nHost: b\r\nTransfer-Encoding: chunked\r\n\r\n", expected="ERR Unsupported:40:chunked request bodies are not supported"), Case(wire=b"GET /\xc3\xa9t\xc3\xa9 HTTP/1.1\r\nHost: caf\xc3\xa9.test\r\nX-Note: na\xc3\xafve \xc2\xa0 value\xc2\xa0\r\n\r\n", expected="OK 3:GET4:/été8:HTTP/1.1[4:Host=9:café.test][6:X-Note=14:naïve   value ]body="), Case(wire=b"BREW /pot HTTP/1.1\r\nHost: a\r\nContent-Length: 0\r\nContent-Length: 0\r\n\r\n", expected="OK 4:BREW4:/pot8:HTTP/1.1[4:Host=1:a][14:Content-Length=1:0][14:Content-Length=1:0]body="), Case(wire=b"GET / HTTP/1.1\r\nContent-Length: 4\r\nCONTENT-LENGTH: 4\r\nHost: x\r\n\r\nabcdEXTRA", expected="OK 3:GET1:/8:HTTP/1.1[14:Content-Length=1:4][14:CONTENT-LENGTH=1:4][4:Host=1:x]body=61626364"), Case(wire=b"GET / HTTP/2.0\r\nHost: x\r\n\r\n", expected="ERR UnsupportedVersion:40:only HTTP/1.0 and HTTP/1.1 are supported"), Case(wire=b"GET /a b HTTP/1.1\r\nHost: x\r\n\r\n", expected="ERR Malformed:49:request line must have method, target and version"), Case(wire=b"GET / HTTP/1.1\r\n Host: x\r\n\r\n", expected="ERR Malformed:45:obsolete header line folding is not supported"), Case(wire=b"GET / HTTP/1.1\r\nHost: x\r\n\r\n\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1[4:Host=1:x]body="), Case(wire=b"\r\n\r\n", expected="ERR Malformed:21:request line is empty"), Case(wire=b"GET / HTTP/1.1\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1body="), Case(wire=b"GET / HTTP/1.1\r\nBad Name: v\r\n\r\n", expected="ERR Malformed:41:header name contains an invalid character"), Case(wire=b"GET / HTTP/1.1\r\nHost: v\x01w\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET / HTTP/1.1\r\nNoColon\r\n\r\n", expected="ERR Malformed:24:header field has no name"), Case(wire=b"GET / HTTP/1.1\r\n:novalue\r\n\r\n", expected="ERR Malformed:24:header field has no name"), Case(wire=b"GET / HTTP/1.1\r\nA: 1\r\nB: 2\r\nC: 3\r\nD: 4\r\nE: 5\r\nF: 6\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1[1:A=1:1][1:B=1:2][1:C=1:3][1:D=1:4][1:E=1:5][1:F=1:6]body="), Case(wire=b"OPTIONS * HTTP/1.1\r\nHost: x\r\nContent-Length:  12 \r\n\r\nhello world!", expected="OK 7:OPTIONS1:*8:HTTP/1.1[4:Host=1:x][14:Content-Length=2:12]body=68656c6c6f20776f726c6421"), Case(wire=b"POST / HTTP/1.1\r\nContent-Length: -1\r\n\r\n", expected="ERR Malformed:26:Content-Length is negative"), Case(wire=b"POST / HTTP/1.1\r\nContent-Length: abc\r\n\r\n", expected="ERR Malformed:39:Content-Length is not a decimal integer"), Case(wire=b"POST / HTTP/1.1\r\nContent-Length: 99\r\n\r\nshort", expected="ERR Incomplete"), Case(wire=b"GET /\x00 HTTP/1.1\r\nHost: x\r\n\r\n", expected="ERR Malformed:43:request target contains a control character"), Case(wire=b"G(T / HTTP/1.1\r\nHost: x\r\n\r\n", expected="ERR Malformed:35:request method is not a valid token"), Case(wire=b"GET / HTTP/1.1\r\nHost: x\x0b\r\nY:\x0c z \x1f\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET / HTTP/1.1\r\nX: \x1cvalue\x1d\r\nHost: \x1e a \x1f\r\nZ: \x1c\x1d\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET / HTTP/1.1\r\nAZ: 1\r\nz9: 2\r\nX_1: 3\r\nHost: h\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1[2:AZ=1:1][2:z9=1:2][3:X_1=1:3][4:Host=1:h]body="), Case(wire=b"GET /\x7f HTTP/1.1\r\nHost: h\r\n\r\n", expected="ERR Malformed:43:request target contains a control character"), Case(wire=b"GET / HTTP/1.1\r\n\tHost: x\r\n\r\n", expected="ERR Malformed:45:obsolete header line folding is not supported"), Case(wire=b"GET / HTTP/1.1\r\nA@B: v\r\n\r\n", expected="ERR Malformed:41:header name contains an invalid character"), Case(wire=b"GET / HTTP/1.1\r\nX: \xe2\x80\x83v\xe2\x80\x83\r\nY: \xc2\x85z\xc2\xa0\r\nW: \xe3\x80\x80 q\r\n\r\n", expected="OK 3:GET1:/8:HTTP/1.1[1:X=3: v ][1:Y=3:z ][1:W=3:　 q]body="), Case(wire=b"X-Y * HTTP/1.0\r\nAccpt:\x1fchunked\x1f\r\nCONTENT-length:5\x0c\r\nAZ: \xff\xfe  \r\nho\xfest:\x1fexample.test\x0c\r\nX-Custom-Header:\x1ccaf\xc3\xa9\r\nCont..nt-Leagth:\x0cclose\r\nContent-Length:\x1f\xc2\x85nel\x1c\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET /a\x01 HTTP/1.0\r\nCONTENT-length:\t5  \r\nCONTENT-length:\x1f-1 \r\nAccept:\x0cKeep-Alive, Upgrade \t \r\nAccept:\xff\xfe\x1c\r\n\r\n", expected="ERR Malformed:43:request target contains a control character"), Case(wire=b"get * HTTP/1.1\r\nX\xc2\xc21:\x0bcaf\xc3\xa9\r\nZ9:\x1d \x1e5\t\r\nCookie:\xc2\xa0nbsp\xc2\xa0\x1c\r\nhost:x\x0b\r\nZ9:\x0ba=b; c=d\r\nX-Custom-Header:\x1fchunked\x0c\r\nUser-Agent: \t Keep-Alive, Upgrade\t\r\nAccept:\x1ctwo  words \t \r\n\r\npayload-bytes-of-some", expected="ERR Malformed:30:header name is not valid UTF-8"), Case(wire=b"GET /a%20b HTTP/1.1\r\n\r\npayload", expected="OK 3:GET6:/a%20b8:HTTP/1.1body="), Case(wire=b"get /a%T0b HTTP/1.0\rconnection:close\x0b\r\nUser-Agent: \t keep-alive\x1d \x1e\r\nUser-Agent: \t close\x1d \x1e\r\nX_1:\x0bgzip, deflate \t \r\nconnection:  1_0 \t \r\nUser-Agent: 0\x0b\r\nTransfer-Encoding:\x0c007 \r\n\r\n", expected="ERR Malformed:44:request version contains a control character"), Case(wire=b"BR EW / HTTP/1.1\r\ntransfer-encoding: keep-alive \r\n\r\npayload", expected="ERR Malformed:49:request line must have method, target and version"), Case(wire=b" http://h/p?q#f HTTP/1.0\r\nHOST:\x0btwo  words\x1c\r\n\r\npayload-bytes-", expected="ERR Malformed:35:request method is not a valid token"), Case(wire=b"X- /caf\xc3\xa9 HTTP/1.1\r\ncontent-length:\t5\x0c\r\naz:\x0b3 \t \r\nhost:\x1fx\x1d \x1e\r\nZ9:\tchunkAAd \t \r\ntransfer-encoding: \t \xff\xfe\x1f\r\nconnection:\x1c5\x0b\r\nX_1:\x0btext/html; charset=utf-8 \t \r\n\r\x1cpayload-bytes-oes-of-some", expected="ERR Incomplete"), Case(wire=b"PUT / HTTP/1.0\r\nZ9:\t1_0\x1d \x1e\r\nZ9:  Keep-Alive, Upgrade\x1f\r\nCONTENT-length: 1_0\x0c\r\ncontent-length:\x0ctwo  words\x1d \x1e\r\nHOST: gzip, deflate\x1f\r\nContent-Length:\x1f\xe3\x80\x80ideographic \r\nZ9:\x1fkeep-alive \r\n\r\npayload-bytes-", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"X-Y /a/b?c=d HTTP/1.0\r\nCONTENT-length:\x1ctext/html; charset=utf-8 \t \r\nHOST: \t 5\x0b\r\nZ9:12  \r\na:\ttab\tinside\x1f\r\nTransfer-Encoding:two  words\x1d \x1e\r\nTransfer-Encoding: \t 12\x1c\r\nCONTENT-length:5\x1f\r\nX-Custom-Header:\t3\x0b\r\n\r\npayload-bytes-of-some", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET http://h/p?#f HTTP\xd9/1.0\r\na:\x1c3\x0b\r\nX-Custom-Header: \xc2\x85nel \t \r\nAZ:\x0c007\x0b\r\nconnection:\t0  \r\n\r\npayload-bytes-of-some", expected="ERR Malformed:31:request line is not valid UTF-8"), Case(wire=b"get /caf\xc3\xa9 HTTP/1.0\r\na:\t5 \t \r\nhost: gzip, deflate\r\nHOST:\x0btext/html; charset=utf-8\x1d \x1e\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GGET / HTTP/1.1\r\nHost:\x1c5 \x1e\r\n\r\npayload-bytes-", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"PUT * HTTP/1.0\r\n\r\npayload", expected="OK 3:PUT1:*8:HTTP/1.0body="), Case(wire=b"HEAD / HTTP/1.1\r\ncontent-length:  a=b; c=d\r\nAZ: \t abc\x1d \x1e\r\nContent-Length:\texample.test\x0c\r\na:\x1f007  \r\nTransfer-Encoding:\x1d \x1eabc\x1c\r\nX-Custom-Header:3\t\r\nHost:caf\xc3\xa9 \t \x1e\x1e\nHost: \t two  words\x1f\r\n\r\npayload-bytes-of-some", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET * HTTP/1.1\r\ncon\xe2t\r\ncontent-lnt-length:\tca\x83f\xc3\xa9\x1f\r\n\r\n", expected="ERR Malformed:24:header field has no name"), Case(wire=b"POST /a/b?c=d HTTP/1.1\r\nCONTENT-length:  12\r\na:\x1cx\x1f\r\ncontent-\ncontent-length:\x1f-1\t\r\nx-y:\x0c\xc2\x85nel\x1f\r\n\r\npayload", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"get /a%20b HTTP/1.1\r\nContent-Length:\x1d \x1e0\x1d \x1e\r\naz:x\x1d \x1e\r\nX_1:\tgzip, deflate\x1d \x1e\r\nAccept:\xe3\x80\x80ideographic\x1c\r\nHOST: abc\x1c\r\nX-Custom-Header:chunked\r\nContent-Length:\x0c12  \r\nconnection:\x1cKeep-Alive, Upgrade \r\n\r\npayload-bytes-", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"GET /a%20b HTTP/1.0\r\nAZ:two  words\x1f\r\ncontent-length:\x1c-1\x1f\r\ncontent-length: \t text/html; charset=utf-8\x1c\r\nUser-Agent:\tgzip, deflate \t \r\nHOST: 5\x1d \x1e\r\nconnection:\x0cgzip, deflate\r\nCookie:  a=b; c=d \t \r\nAZ:\x0b0\t\r\n\r\npayload-bytes-", expected="ERR Malformed:42:header value contains an invalid character")]
+
+
+func lookup_cases() -> Case[]:
+    return [Case(wire=b"GET / HTTP/1.1\r\nH0: v0\r\n\r\n", expected="H-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|get|/||/"), Case(wire=b"GET / HTTP/1.1\r\nHost: example.test\r\n\r\n", expected="H-LH-LH-LH-LH-LH-LH12:example.testL12:example.testH12:example.testL12:example.testH12:example.testL12:example.testH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|get|/||/"), Case(wire=b"GET /hello?x=1 HTTP/1.1\r\nHost: example.test\r\nContent-Length: 5\r\n\r\nhello", expected="H-LH-LH-LH-LH-LH-LH12:example.testL12:example.testH12:example.testL12:example.testH12:example.testL12:example.testH1:5L1:5H1:5L1:5H-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|get|/hello|x=1|/hello?x=1"), Case(wire=b"POST /kv/a HTTP/1.1\r\nHost: h\r\nContent-Length: 3\r\nContent-Type: application/json\r\n\r\n[1]", expected="H-LH-LH-LH-LH-LH-LH1:hL1:hH1:hL1:hH1:hL1:hH1:3L1:3H1:3L1:3H-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|post|/kv/a||/kv/a"), Case(wire=b"PUT /kv/key HTTP/1.0\r\nhost:   spaced value \t \r\nX-Empty:\r\nConnection: keep-alive\r\n\r\nbody bytes", expected="H-LH-LH-LH-LH-LH-LH12:spaced valueL12:spaced valueH12:spaced valueL12:spaced valueH12:spaced valueL12:spaced valueH-LH-LH-LH-LH0:L0:H0:L0:H-LH-LH-LH-LH-LH10:keep-aliveL10:keep-aliveH10:keep-aliveL10:keep-aliveH-LH-LH-LH-L|put|/kv/key||/kv/key"), Case(wire=b"GET http://example.test/a/b?c=d#frag HTTP/1.1\r\nHOST: example.test\r\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\r\nAccept: */*\r\nAccept-Encoding: gzip, deflate\r\nCookie: a=b; c=d\r\n\r\n", expected="-"), Case(wire=b"DELETE /x HTTP/1.1\r\nHost: a\r\nHost: b\r\nTransfer-Encoding: chunked\r\n\r\n", expected="-"), Case(wire=b"GET /\xc3\xa9t\xc3\xa9 HTTP/1.1\r\nHost: caf\xc3\xa9.test\r\nX-Note: na\xc3\xafve \xc2\xa0 value\xc2\xa0\r\n\r\n", expected="H-LH-LH-LH-LH-LH-LH9:café.testL9:café.testH9:café.testL9:café.testH9:café.testL9:café.testH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|get|/été||/été"), Case(wire=b"BREW /pot HTTP/1.1\r\nHost: a\r\nContent-Length: 0\r\nContent-Length: 0\r\n\r\n", expected="H-LH-LH-LH-LH-LH-LH1:aL1:aH1:aL1:aH1:aL1:aH1:0L1:01:0H1:0L1:01:0H-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|brew|/pot||/pot"), Case(wire=b"GET / HTTP/1.1\r\nContent-Length: 4\r\nCONTENT-LENGTH: 4\r\nHost: x\r\n\r\nabcdEXTRA", expected="H-LH-LH-LH-LH-LH-LH1:xL1:xH1:xL1:xH1:xL1:xH1:4L1:41:4H1:4L1:41:4H-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|get|/||/"), Case(wire=b"GET / HTTP/2.0\r\nHost: x\r\n\r\n", expected="-"), Case(wire=b"GET /a b HTTP/1.1\r\nHost: x\r\n\r\n", expected="-"), Case(wire=b"GET / HTTP/1.1\r\nAZ: 1\r\nz9: 2\r\nX_1: 3\r\nHost: h\r\n\r\n", expected="H1:2L1:2H1:2L1:2H1:3L1:3H1:3L1:3H1:1L1:1H1:1L1:1H1:hL1:hH1:hL1:hH1:hL1:hH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-LH-L|get|/||/")]
+
+
+func response_cases_open() -> Case[]:
+    return [Case(wire=b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type: text/plain\r\n\r\nhello", expected="OK 8:HTTP/1.12002:OK[14:Content-Length=1:5][12:Content-Type=10:text/plain]body=68656c6c6f"), Case(wire=b"HTTP/1.1 204 No Content\r\nServer: x\r\n\r\n", expected="OK 8:HTTP/1.120410:No Content[6:Server=1:x]body="), Case(wire=b"HTTP/1.1 404 Not Found\r\nContent-Length: 10\r\nConnection: close\r\n\r\nnot found\n", expected="OK 8:HTTP/1.14049:Not Found[14:Content-Length=2:10][10:Connection=5:close]body=6e6f7420666f756e640a"), Case(wire=b"HTTP/1.0 200 OK\r\nServer: test\r\n\r\nplain", expected="ERR Incomplete"), Case(wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n6\r\n world\r\n0\r\nX-Trailer: yes\r\n\r\n", expected="OK 8:HTTP/1.12002:OK[17:Transfer-Encoding=7:chunked]body=68656c6c6f20776f726c64"), Case(wire=b"HTTP/1.1 200\r\nContent-Length: 0\r\n\r\n", expected="OK 8:HTTP/1.12000:[14:Content-Length=1:0]body="), Case(wire=b"HTTP/1.1 301 Moved Permanently\r\nLocation: /dir/\r\nContent-Length: 0\r\n\r\n", expected="OK 8:HTTP/1.130117:Moved Permanently[8:Location=5:/dir/][14:Content-Length=1:0]body="), Case(wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Length: 5\r\n\r\n0\r\n\r\n", expected="ERR Malformed:40:chunked response also has Content-Length"), Case(wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: gzip, chunked\r\n\r\n0\r\n\r\n", expected="ERR Unsupported:52:only a single chunked transfer encoding is supported"), Case(wire=b"HTTP/1.1 200 OK\r\ntransfer-encoding: CHUNKED\r\n\r\nA;ext=1\r\n0123456789\r\n0\r\n\r\n", expected="OK 8:HTTP/1.12002:OK[17:transfer-encoding=7:CHUNKED]body=30313233343536373839"), Case(wire=b"HTTP/1.1 99 Low\r\n\r\n", expected="ERR Malformed:40:status code must be exactly three digits"), Case(wire=b"HTTP/1.1 abc Bad\r\n\r\n", expected="ERR Malformed:36:status code is not a decimal integer"), Case(wire=b"HTTP/1.1  200  Spaced  Reason \r\nA: b\r\n\r\n", expected="ERR Incomplete"), Case(wire=b"HTTP/2 200 OK\r\n\r\n", expected="ERR Unsupported:40:only HTTP/1.0 and HTTP/1.1 are supported"), Case(wire=b"HTTP/1.1 200 OK\xc3\xa9\r\nX: \xe2\x80\x83v\xe2\x80\x83\r\nContent-Length: 2\r\n\r\nhi", expected="OK 8:HTTP/1.12003:OKé[1:X=3: v ][14:Content-Length=1:2]body=6869"), Case(wire=b"HTTP/1.1 200 R\x01\r\n\r\n", expected="ERR Malformed:43:status reason contains an invalid character"), Case(wire=b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nab", expected="ERR Incomplete"), Case(wire=b'HTTP/1.1 304 Not Modified\r\nETag: "x"\r\n\r\n', expected='OK 8:HTTP/1.130412:Not Modified[4:ETag=3:"x"]body='), Case(wire=b"HTTP/1.1 100 Continue\r\n\r\n", expected="OK 8:HTTP/1.11008:Continuebody="), Case(wire=b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\nContent-Length: 4\r\n\r\nabc", expected="ERR Malformed:33:conflicting Content-Length values"), Case(wire=b"HTTP/1.1 200 OK\r\nA: b\r\n\r\nrest of the stream until close", expected="ERR Incomplete"), Case(wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nzz\r\n", expected="ERR Malformed:29:chunk size is not hexadecimal"), Case(wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n3\r\nabc\r\n0\r\nBad Trailer: x\r\n\r\n", expected="ERR Malformed:42:trailer name contains an invalid character"), Case(wire=b"HTTP/3 200 OK\r\nAZ:\t5\x0b \r\naz:\x1c5\x1c\r\nCONTENT-length: \t 1_0\t\r\n\r\npayload-bytes-of-som", expected="ERR Unsupported:40:only HTTP/1.0 and HTTP/1.1 are supported"), Case(wire=b"HTTP/1.1 200 OK\r\nX_1:\x0cchunked \t \r\nX_1:\x0babc \t \r\nCookie:5\x0c\r\nCONTENT-length:\x1d \x1e5 \t \r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 100 Continue\r\nAZ:\x0c0\x1c\r\ncontent-length:  3\x0b\r\nx-y: \t abc\x0c\r\nX_1:007\x1d \x1e\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 100 Continue\r\nconnection:\x0b007\x0b\r\nX_1: \t \xe2\x80\x83em\xe2\x80\x83\x1c\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nTransfer-Encoding:\x1fx\x0c\r\nAccept:\x1d \x1e1_0\x1f\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 200 OK\r\nX-Custom-Header:  example.test\t\r\nHOST: \t +7\t\r\nAccept\x7f \t \xe3\x80\x80ideographic\x0b\r\nx-y:\t\x1f\r\nTransfer-Encodin\x1dg:\ttext/html; ch[rset=utf-8\t\r\nHost: \xe2\x80\x83em\xe2\x80\x83\x0c\r\n\r\npayload-bytes-o", expected="ERR Malformed:24:header field has no name"), Case(wire=b"HTTP/1.1 2x0 Bad\r\n\r\n", expected="ERR Malformed:36:status code is not a decimal integer"), Case(wire=b"HTTP/1.0 404 Not Foun404 Not Found\r\nHost: \t close \t \r\na:\x0c\r\nx-y:\x0bexample.test\x0b\r\nCookie:\x1fkeep-alive \x80\r\n\r\npayload-bytes-o", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 200 caf\xc3\xa9\r\nAcce((t:12\r\nhost:\tgzip, deflate\t\r\nhost:\x1cexample.test\r\nContent-Legth:12\x1c\r\na:\x0cexample.test\x0c\r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="ERR Malformed:41:header name contains an invalid character"), Case(wire=b"HTTP/1.1 100 Continue\r\nContent-Length:\x0b-1\x1c\r\nConnection:\x0ctext/html; charset=utf-8\x1f\r\nCONTENT-length:\x1cchunked  \r\nhost:\x1f+7\x1c\r\na:\x0btext/html; charset=utf-8\x0c\r\nConnection:\t1_0\x1d \x1e\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 204\r\na:\t3\x1f\r\nContent-Length:\tclose \r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 204\r\ncontent-length:\tabc \t \r\nConnection:\x1cgzip, deflate\x1c\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1  200  OK\r\nconnection:\tkeep-alive\r\nCONTENT-length:\x0ckeep-alive\r\nX-Custom-Header: text/html; charseharset=utf-8\x1f\r\nUser-Agent:\xc2\x85nel\x0b\r\nConnection:\x1d \x1etwo  words\x1d \x1e\r\nX-Custom-Header: \t +7\r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1  200  OK\r\nZ9:\x1f1_0\x1f\r\nCookie::\x0c-1 \r\nZ9:\x0btwo  words\x0c\r\nx-y: \t 0\x1c\r\ntransfer-encoding:\x1d \x1eKeep-Alive, Upgrade\x0c\r\nCONTENT-length:\x0c-1\x1d \x1e\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 200 OK\r\ncontent-length:\x1f-1 \r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 301 Mov\xd9ed\r\nX-Custom-Header:\x1d \x1e+7 \t \r\n\r\npayload-bytes-of-som", expected="ERR Malformed:30:status line is not valid UTF-8"), Case(wire=b"HTTP/1.1 304 Not Modified\r\nCONTENT-length:\x1f3\x1d \x1e\r\na:3\x1f\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 204\r\nX-Custom-Header:\x0b3\x1d \x1e\r\n-y:\xe2\x80\x83em\xe2\x80\x83\x1d \x1e\r\n\r\npayload-bytes-o", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 100 Continue\r\nAccept: gzip, deflate\x1c\r\nHOST:\x1d \x1e\x0c\r\nAccept:pt:keep-alive\x1d \x1e\r\nAccept: \t 12\x0c\r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 301 Moved\r\nx-y:\x1c\xe3\x80\x80ideographic \r\na:\x1d \x1e-1\x1c\r\ncontent-length:\x1f0\x1c\r\nAZ:\x1d \x1ex \r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 200 caf\xc3\xa9\r\naz:\x0ctwo  words\x0b\r\nAcc\xff\xffpt:\x0btext/html; charset=utf-8\x1d \x1e\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 200 OK\rAccept:\t\xc2\x85nel\x0c\r\n\r\npayload-by", expected="ERR Malformed:43:status reason contains an invalid character"), Case(wire=b"HTTP/1.1 100 Continue\r\na:  007  \r\nhost: \x1f\r\nAccept:\x1d \x1e\xe3\x80\x80ideographic\t\r\nAZ:\x0bgzip, deflate\x1c\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 204\r\nCzNTENT-length: \t \xc2\x85nel \t \r\nUser-Agent:\x1c\xc2\x85nel\x1d \x1e\r\nhost: example.test \t \r\nZ9:\x0b\xe2\x80\x83em\xe2\x80\x83\r\na:\x0b0 \r\nAccept:\x0bcaf\xc3\xa9\x0c\r\n\r\npayload-bytes-o", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 204\r\naz:\x1cKeep-Alive, Upgrade\x1c\r\ncontent-length: \t gzip, deflate\r\n\r\n5\r\nhello\r\nlo\r\n0\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 304 Not Modified\r\nX-Custom-Header:\x1d \x1eexample.test\x1d \x1e\r\nCookie:  0\x1f\r\nCONTENT-length: \t a=b; c=d \t \r\nX_1:1_0\x1c\r\nAZ:\x1f3 \r\nTransfer-Encoding: \t chunked\t\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nAccept:\x0bgzip, deflae\x1f\r\nAZ:\x1cchunked  \r\nCONTENT-length:\x1d \x1e0\x0b\r\nHost:\ttext/html; charset=utf-8\x1f\r\n\r\npayload-", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 304 Not Modified\r\nHOST:\x0b-1\x1c\r\nconnection:  -1\x1c\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 304 Not Modified\r\nconnection:\xe2\x80\x83em\xe2\x80\x83 \r\nZ9:\x1f+7\t\r\nhost:\x1fexample.test\t\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 304 Not Modified\r\nX_1:gzip, deflate \t \r\nX_1:\x1ftext/html; charset=utf-8 \t \r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nContent-Length:007  \r\n\r\n5\r\nhello\r\n0\r\n\r\n", expected="OK 8:HTTP/1.04049:Not Found[14:Content-Length=3:007]body=350d0a68656c6c"), Case(wire=b"HTTP/1.1 10 Continue\r\nAccept:  1_0 \r\n\r\npayload-by", expected="ERR Malformed:40:status code must be exactly three digits"), Case(wire=b"HTTP/1.1 200 caf\xc3\xa9\r\ncntentntent-length:\x1fchunked  \r\nCONTENT-length:\t007 \r\nCONTENT-length: 5\t\r\nAZ: \t 3\x1c\r\n\r\n", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nContent-Length:\x1d \x1e0\x1d \x1e\r\nx-y:  5\x1d \x1e\r\nCookie:\x0c\xe2\x80\x83em\xe2\x80\x83\x0c\r\nX_1:  007\x1c\r\nhost:\x0btab\tinside\x1f\r\nHOST:\x1d \x1eabc \r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nHOST:\xe3\x80\x80ideographic\t\r\nhost:0\r\nContent-Length:  0\t\r\nAZ: \xc2\xa0nbsp\xc2\xa0 \r\nAZ:\x1f3\t\r\n\r\npayloa-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nHost: 0  \r\nHOST:\x1cchunked\x1d \x1e\r\nContent-Length:007\x1d \x1e\r\nZ9: \t 007\t\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 204\r\ncontent-length: \t 3 \t \r\nAccept: \t \xe3\x80\x80ideographic\x1d \x1e\r\n onnection:\x0b007\x0b\r\ntransfer-en=coding:\x1f_0\x1c\r\na: \t tab\tinside \r\n\r\npayload-b\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1  200  OK\r\nhost:\x1d \x1eexample.test  \r\nTransfer-Encoding:\x1d \x1echunked\t\r\nAZ:\tkeep-alive\x1d \x1e\r\n\r\npaylo\x1e\r\n\r\npayload-bytes-of-som", expected="ERR Malformed:42:header value contains an invalid character")]
+
+
+func response_cases_closed() -> Case[]:
+    return [Case(wire=b"HTTP/1.0 200 OK\r\nServer: test\r\n\r\nplain", expected="OK 8:HTTP/1.02002:OK[6:Server=4:test]body=706c61696e"), Case(wire=b"HTTP/1.1  200  Spaced  Reason \r\nA: b\r\n\r\n", expected="OK 8:HTTP/1.120015: Spaced  Reason[1:A=1:b]body="), Case(wire=b"HTTP/1.1 200 OK\r\nA: b\r\n\r\nrest of the stream until close", expected="OK 8:HTTP/1.12002:OK[1:A=1:b]body=72657374206f66207468652073747265616d20756e74696c20636c6f7365"), Case(wire=b"HTTP/1.0 404 Not Found\r\nx-y:\x0bchunked\x0c\r\nHOST:\x0cclose\x1f\r\nAZ: \t keepeep-alive\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 200 caf\xc3\xa9\r\n\r\npayload-bytes-of-som", expected="OK 8:HTTP/1.12004:cafébody=7061796c6f61642d62797465732d6f662d736f6d"), Case(wire=b"HTTP/1.1 200 OK\r\naz: 007\x1d \x1e\r\nConnection:\x0b5 \t \r\nx-y:\x1d \x1e1_0\x1d \x1e\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.0 404 Not Found\r\nx-y: \t abc\x0b\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1 301 Moved\r\nAccept:\x1fkeep-alive \t \r\n\r\npayload-bytes-o", expected="ERR Malformed:42:header value contains an invalid character"), Case(wire=b"HTTP/1.1  200  OK\r\n\r\npayload-bytes-o", expected="OK 8:HTTP/1.12003: OKbody=7061796c6f61642d62797465732d6f"), Case(wire=b"HTTP/1.0 404 Not Found\r\na:\x1c5\x1c\r\nZ9:\x0c\xc2\xa0nbsp\xc2\xa0\x1d \x1e\r\n\r\npayload-by", expected="ERR Malformed:42:header value contains an invalid character")]
+
+
+func request_writes() -> WriteCase[]:
+    return [WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["Host"], values=["example.test"], body=b"", expected="OK 474554202f20485454502f312e310d0a486f73743a206578616d706c652e746573740d0a0d0a"), WriteCase(a="POST", b="/submit", c="HTTP/1.1", status=0, names=["Host"], values=["example.test"], body=b"hello", expected="OK 504f5354202f7375626d697420485454502f312e310d0a486f73743a206578616d706c652e746573740d0a436f6e74656e742d4c656e6774683a20350d0a0d0a68656c6c6f"), WriteCase(a="POST", b="/submit", c="HTTP/1.1", status=0, names=["Content-Length", "Host"], values=["5", "h"], body=b"hello", expected="OK 504f5354202f7375626d697420485454502f312e310d0a436f6e74656e742d4c656e6774683a20350d0a486f73743a20680d0a0d0a68656c6c6f"), WriteCase(a="POST", b="/submit", c="HTTP/1.1", status=0, names=["content-length"], values=["4"], body=b"hello", expected="ERR Malformed:46:Content-Length does not match the request body"), WriteCase(a="POST", b="/submit", c="HTTP/1.1", status=0, names=["Content-Length"], values=["x"], body=b"hello", expected="ERR Malformed:39:Content-Length is not a decimal integer"), WriteCase(a="POST", b="/submit", c="HTTP/1.1", status=0, names=["Content-Length", "CONTENT-LENGTH"], values=["1", "2"], body=b"", expected="ERR Malformed:33:conflicting Content-Length values"), WriteCase(a="PUT", b="/a b", c="HTTP/1.1", status=0, names=[], values=[], body=b"", expected="ERR Malformed:25:request target is invalid"), WriteCase(a="PUT", b="", c="HTTP/1.1", status=0, names=[], values=[], body=b"", expected="ERR Malformed:25:request target is invalid"), WriteCase(a="", b="/", c="HTTP/1.1", status=0, names=[], values=[], body=b"", expected="ERR Malformed:25:request method is invalid"), WriteCase(a="G ET", b="/", c="HTTP/1.1", status=0, names=[], values=[], body=b"", expected="ERR Malformed:25:request method is invalid"), WriteCase(a="GET", b="/\x01", c="HTTP/1.1", status=0, names=[], values=[], body=b"", expected="ERR Malformed:25:request target is invalid"), WriteCase(a="GET", b="/été", c="HTTP/1.1", status=0, names=["X-Note"], values=["café"], body=b"", expected="OK 474554202fc3a974c3a920485454502f312e310d0a582d4e6f74653a20636166c3a90d0a0d0a"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["Bad Name"], values=["v"], body=b"", expected="ERR Malformed:41:header name contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=[""], values=["v"], body=b"", expected="ERR Malformed:41:header name contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["A:B"], values=["v"], body=b"", expected="ERR Malformed:41:header name contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["naïve"], values=["v"], body=b"", expected="ERR Malformed:41:header name contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["X"], values=["line\nbreak"], body=b"", expected="ERR Malformed:42:header value contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["X", "Y"], values=["a\tb", " padded "], body=b"", expected="OK 474554202f20485454502f312e310d0a583a206109620d0a593a2020706164646564200d0a0d0a"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["X"], values=["del\x7f"], body=b"", expected="ERR Malformed:42:header value contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["Bad Name"], values=["v\x01"], body=b"", expected="ERR Malformed:41:header name contains an invalid character"), WriteCase(a="GET", b="/", c="HTTP/1.1", status=0, names=["Content-Length", "Bad Name"], values=["x", "v"], body=b"", expected="ERR Malformed:39:Content-Length is not a decimal integer"), WriteCase(a="GET", b="/", c="HTTP/2.0", status=0, names=["Host"], values=["h"], body=b"", expected="ERR UnsupportedVersion:40:only HTTP/1.0 and HTTP/1.1 are supported")]
+
+
+func response_writes() -> WriteCase[]:
+    return [WriteCase(a="HTTP/1.1", b="OK", c="", status=200, names=["Content-Type"], values=["text/plain"], body=b"ok", expected="OK 485454502f312e3120323030204f4b0d0a436f6e74656e742d547970653a20746578742f706c61696e0d0a436f6e74656e742d4c656e6774683a20320d0a0d0a6f6b"), WriteCase(a="HTTP/1.1", b="", c="", status=204, names=[], values=[], body=b"", expected="OK 485454502f312e31203230340d0a0d0a"), WriteCase(a="HTTP/1.1", b="Not Found", c="", status=404, names=["Content-Length"], values=["3"], body=b"abc", expected="OK 485454502f312e3120343034204e6f7420466f756e640d0a436f6e74656e742d4c656e6774683a20330d0a0d0a616263"), WriteCase(a="HTTP/1.1", b="Not Found", c="", status=404, names=["Content-Length"], values=["4"], body=b"abc", expected="ERR Malformed:47:Content-Length does not match the response body"), WriteCase(a="HTTP/1.1", b="OK", c="", status=200, names=["content-length"], values=["-1"], body=b"", expected="ERR Malformed:26:Content-Length is negative"), WriteCase(a="HTTP/1.1", b="OK", c="", status=200, names=["Content-Length", "content-length"], values=["3", "4"], body=b"abc", expected="ERR Malformed:33:conflicting Content-Length values"), WriteCase(a="HTTP/1.0", b="OK", c="", status=200, names=["Server", "Date"], values=["x", "d"], body=b"body", expected="OK 485454502f312e3020323030204f4b0d0a5365727665723a20780d0a446174653a20640d0a436f6e74656e742d4c656e6774683a20340d0a0d0a626f6479"), WriteCase(a="HTTP/2.0", b="OK", c="", status=200, names=[], values=[], body=b"", expected="ERR UnsupportedVersion:40:only HTTP/1.0 and HTTP/1.1 are supported"), WriteCase(a="HTTP/1.1", b="Low", c="", status=99, names=[], values=[], body=b"", expected="ERR Malformed:31:status code is outside 100..999"), WriteCase(a="HTTP/1.1", b="High", c="", status=1000, names=[], values=[], body=b"", expected="ERR Malformed:31:status code is outside 100..999"), WriteCase(a="HTTP/1.1", b="R\x01", c="", status=200, names=[], values=[], body=b"", expected="ERR Malformed:43:status reason contains an invalid character"), WriteCase(a="HTTP/1.1", b="café", c="", status=200, names=["X"], values=["é"], body=b"", expected="OK 485454502f312e312032303020636166c3a90d0a583a20c3a90d0a436f6e74656e742d4c656e6774683a20300d0a0d0a"), WriteCase(a="HTTP/1.1", b="a\tb", c="", status=200, names=[], values=[], body=b"", expected="OK 485454502f312e3120323030206109620d0a436f6e74656e742d4c656e6774683a20300d0a0d0a"), WriteCase(a="HTTP/1.1", b="line\nbreak", c="", status=200, names=[], values=[], body=b"", expected="ERR Malformed:43:status reason contains an invalid character"), WriteCase(a="HTTP/1.1", b="OK", c="", status=200, names=["Bad Name"], values=["v"], body=b"", expected="ERR Malformed:41:header name contains an invalid character"), WriteCase(a="HTTP/1.1", b="OK", c="", status=200, names=["X"], values=["v\x7f"], body=b"", expected="ERR Malformed:42:header value contains an invalid character"), WriteCase(a="HTTP/1.1", b="R\x01", c="", status=200, names=["Bad Name"], values=["v"], body=b"abc", expected="ERR Malformed:43:status reason contains an invalid character"), WriteCase(a="HTTP/1.1", b="Moved", c="", status=301, names=["Location", "Connection"], values=["/dir/", "close"], body=b"", expected="OK 485454502f312e3120333031204d6f7665640d0a4c6f636174696f6e3a202f6469722f0d0a436f6e6e656374696f6e3a20636c6f73650d0a436f6e74656e742d4c656e6774683a20300d0a0d0a")]
+
+
+# Requests, parsed or refused, come out exactly as the reference implementation produced them.
+# spec: STANDARD-HTTP-2
+public func test_requests_parse_and_refuse_as_the_reference_codec_did() -> bool:
+    for item in request_cases():
+        if request_text(item.wire) != item.expected:
+            return False
+    return True
+
+
+# Responses likewise, with the peer still open and with the connection already closed.
+# spec-case: STANDARD-HTTP-2
+public func test_responses_parse_and_refuse_as_the_reference_codec_did() -> bool:
+    for item in response_cases_open():
+        if response_text(item.wire, False) != item.expected:
+            return False
+    for item in response_cases_closed():
+        if response_text(item.wire, True) != item.expected:
+            return False
+    return True
+
+
+# Case-insensitive lookup, repeated fields and the derived accessors answer as before.
+# spec-case: STANDARD-HTTP-2
+public func test_header_lookup_is_case_insensitive_as_before() -> bool:
+    for item in lookup_cases():
+        if lookup_text(item.wire) != item.expected:
+            return False
+    return True
+
+
+# Serialization validates names, values, reasons and Content-Length in the same order.
+# spec-case: STANDARD-HTTP-2
+public func test_serialization_validates_and_renders_as_before() -> bool:
+    for item in request_writes():
+        if request_wire_text(item) != item.expected:
+            return False
+    for item in response_writes():
+        if response_wire_text(item) != item.expected:
+            return False
+    return True
+
+
+# 100 header fields are accepted and a 101st is refused; a header section of exactly 65,536 octets
+# is accepted and one more is refused (the status line of a response is one octet longer than the
+# request line used here, so its largest field is one octet shorter).
+# spec-case: STANDARD-HTTP-2
+public func test_field_count_and_section_size_limits_hold() -> bool:
+    if not strings.starts_with(request_text(many_fields(b"GET / HTTP/1.1", 99, b"\r\n\r\n")), "OK"):
+        return False
+    if not strings.starts_with(request_text(many_fields(b"GET / HTTP/1.1", 100, b"\r\n\r\n")), "OK"):
+        return False
+    if request_text(many_fields(b"GET / HTTP/1.1", 101, b"\r\n\r\n")) != "ERR HeaderTooLarge:22:too many header fields":
+        return False
+    if response_text(many_fields(b"HTTP/1.1 200 OK", 100, b"\r\nContent-Length: 0\r\n\r\n"), False) != "ERR HeaderTooLarge:22:too many header fields":
+        return False
+    if not strings.starts_with(request_text(big_head(b"GET / HTTP/1.1\r\nX: ", 65517)), "OK"):
+        return False
+    if request_text(big_head(b"GET / HTTP/1.1\r\nX: ", 65518)) != "ERR HeaderTooLarge:27:header section is too large":
+        return False
+    return response_text(big_head(b"HTTP/1.1 200 OK\r\nX: ", 65517), True) == "ERR HeaderTooLarge:27:header section is too large"
+
+
+# A name, a value, a target or a method with one ASCII octet in it is accepted exactly when the octet
+# belongs to the alphabet that field allows (RFC 9110 token characters, visible characters and
+# horizontal tab, no `#` in a target, and so on); only a space and a horizontal tab are trimmed at the
+# ends of a value, so a control octet there is refused like one inside it (lane FR13, F-63).
+# spec-case: STANDARD-HTTP-2
+public func test_every_ascii_octet_is_classified_per_field() -> bool:
+    mut tokens = b"!#$%&'*+-.^_`|~0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    for octet in range(128):
+        mut one = byte_builder.create()
+        _ = byte_builder.append_byte(mut one, octet)
+        mut single = byte_builder.finish(one)
+        mut in_tokens = octet in tokens
+        mut in_name = in_tokens or octet == 58
+        mut in_value = octet == 9 or (32 <= octet <= 126)
+        mut at_edge = octet == 9 or (32 <= octet <= 126)
+        mut in_target = octet > 32 and octet != 127 and octet != 35
+        if strings.starts_with(request_text(b"GET / HTTP/1.1\r\nX" + single + b"Y: v\r\n\r\n"), "OK") != in_name:
+            return False
+        if strings.starts_with(request_text(b"GET / HTTP/1.1\r\nX: a" + single + b"b\r\n\r\n"), "OK") != in_value:
+            return False
+        if strings.starts_with(request_text(b"GET / HTTP/1.1\r\nX:" + single + b"b\r\n\r\n"), "OK") != at_edge:
+            return False
+        if strings.starts_with(request_text(b"GET / HTTP/1.1\r\nX: a" + single + b"\r\n\r\n"), "OK") != at_edge:
+            return False
+        if strings.starts_with(request_text(b"GET /a" + single + b"b HTTP/1.1\r\n\r\n"), "OK") != in_target:
+            return False
+        if strings.starts_with(request_text(single + b"ET / HTTP/1.1\r\n\r\n"), "OK") != in_tokens:
+            return False
+        if strings.starts_with(response_text(b"HTTP/1.1 200 R" + single + b"\r\n\r\n", True), "OK") != at_edge:
+            return False
+    return True
+
+
+# The kind of a refusal is a value, not text: a server answers 431 for a header section or field count past the limits,
+# 413 for a body past them, 505 for another HTTP version, 501 for a feature the codec lacks and 400 for everything else.
+func request_status(data: bytes) -> int:
+    match http.parse_request(data):
+        case Ok(_):
+            return 200
+        case Err(error):
+            return http.status(error)
+
+
+func response_status(data: bytes, closed: bool) -> int:
+    match http.parse_response(data, closed):
+        case Ok(_):
+            return 200
+        case Err(error):
+            return http.status(error)
+
+
+func chunked_response(size_line: bytes) -> bytes:
+    return b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n" + size_line + b"\r\n"
+
+
+# spec-case: STANDARD-HTTP-2
+public func test_a_header_section_or_field_count_past_the_limits_is_a_header_too_large_error_with_status_431() -> bool:
+    const fields = many_fields(b"GET / HTTP/1.1", 101, b"\r\n\r\n")
+    if request_status(fields) != 431:
+        return False
+    if request_status(big_head(b"GET / HTTP/1.1\r\nX: ", 65518)) != 431:
+        return False
+    if response_status(many_fields(b"HTTP/1.1 200 OK", 100, b"\r\nContent-Length: 0\r\n\r\n"), False) != 431:
+        return False
+    if response_status(big_head(b"HTTP/1.1 200 OK\r\nX: ", 65518), True) != 431:
+        return False
+    return request_text(fields) == "ERR HeaderTooLarge:22:too many header fields"
+
+
+# spec-case: STANDARD-HTTP-2
+public func test_a_body_past_the_limit_is_a_body_too_large_error_with_status_413() -> bool:
+    if request_status(b"POST / HTTP/1.1\r\nContent-Length: 1048576\r\n\r\n") != 400:
+        return False
+    if request_status(b"POST / HTTP/1.1\r\nContent-Length: 1048577\r\n\r\n") != 413:
+        return False
+    if response_status(b"HTTP/1.1 200 OK\r\nContent-Length: 1048577\r\n\r\n", False) != 413:
+        return False
+    const long = byte_builder.repeat(b"z", 1048577)
+    if response_status(b"HTTP/1.1 200 OK\r\n\r\n" + long, True) != 413:
+        return False
+    if response_status(chunked_response(b"100001"), False) != 413:
+        return False
+    if response_status(chunked_response(b"100000000"), False) != 413:
+        return False
+    return request_text(b"POST / HTTP/1.1\r\nContent-Length: 1048577\r\n\r\n") == "ERR BodyTooLarge:42:body length is outside the supported limit"
+
+
+# spec-case: STANDARD-HTTP-2
+public func test_another_http_version_is_an_unsupported_version_error_with_status_505() -> bool:
+    if request_status(b"GET / HTTP/2.0\r\nHost: x\r\n\r\n") != 505:
+        return False
+    if response_status(b"HTTP/2.0 200 OK\r\nContent-Length: 0\r\n\r\n", False) != 505:
+        return False
+    if request_text(b"GET / HTTP/9.9\r\n\r\n") != "ERR UnsupportedVersion:40:only HTTP/1.0 and HTTP/1.1 are supported":
+        return False
+    if request_text(b"GET / HTTP/2\r\n\r\n") != "ERR Unsupported:40:only HTTP/1.0 and HTTP/1.1 are supported":
+        return False
+    if request_status(b"GET / HTTPS/1.1\r\n\r\n") != 501:
+        return False
+    match http.write_response(http.Response(version="HTTP/2.0", status=200, reason="OK", headers=[], body=b"")):
+        case Err(error):
+            return http.status(error) == 505 and http.message(error) == "only HTTP/1.0 and HTTP/1.1 are supported"
+        case Ok(_):
+            return False
+
+
+# spec-case: STANDARD-HTTP-2
+public func test_the_other_refusals_keep_their_kind_and_map_to_400_or_501() -> bool:
+    if request_status(b"GET /a b HTTP/1.1\r\nHost: x\r\n\r\n") != 400:
+        return False
+    if request_status(b"POST / HTTP/1.1\r\nContent-Length: 99\r\n\r\nshort") != 400:
+        return False
+    if request_status(b"DELETE /x HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n") != 501:
+        return False
+    if response_status(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: gzip\r\n\r\n", False) != 501:
+        return False
+    if http.status(http.Error.Incomplete) != 400 or http.status(http.Error.Malformed(value="m")) != 400:
+        return False
+    if http.status(http.Error.Unsupported(value="u")) != 501:
+        return False
+    return http.message(http.Error.UnsupportedVersion(value="v")) == "v" and http.message(http.Error.BodyTooLarge(value="b")) == "b" and http.message(http.Error.HeaderTooLarge(value="h")) == "h"
+
+
+# FR1 (F-7): the answer to a HEAD request is the GET answer's header section and nothing else.
+func head_bytes(response: http.Response) -> bytes:
+    match http.write_response_head(response):
+        case Ok(data):
+            return data
+        case Err(error):
+            return strings.encode(("ERR " + http.message(error)))
+
+
+# The repro's shape: the GET answer's Content-Length over an empty body is written as declared.
+public func test_write_response_head_writes_a_declared_length_over_an_empty_body() -> bool:
+    const fields = [http.Header(name="Content-Length", value="5")]
+    const head = http.Response(version="HTTP/1.1", status=200, reason="OK", headers=fields, body=b"")
+    const get = http.Response(version="HTTP/1.1", status=200, reason="OK", headers=copy(fields), body=b"hello")
+    match http.write_response(get):
+        case Ok(whole):
+            return head_bytes(head) == b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n" and whole == head_bytes(head) + b"hello"
+        case Err(_):
+            return False
+
+
+# Given the GET answer itself, body and all, the head is its header section with the body's length, and no body.
+public func test_write_response_head_of_the_get_answer_is_its_header_section() -> bool:
+    const fields = [http.Header(name="Content-Type", value="text/plain")]
+    const get = http.Response(version="HTTP/1.1", status=404, reason="Not Found", headers=fields, body=b"missing")
+    match http.write_response(get):
+        case Ok(whole):
+            const head = head_bytes(get)
+            return head == b"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 7\r\n\r\n" and whole == head + b"missing"
+        case Err(_):
+            return False
+
+
+# The checks of `write_response` still hold: a nonempty body must match its declared length, a declared length must be a
+# number, and an empty body with no length gets no field; `write_response` itself still refuses the HEAD shape.
+public func test_write_response_head_keeps_the_writer_checks() -> bool:
+    const wrong = http.Response(version="HTTP/1.1", status=200, reason="OK", headers=[http.Header(name="Content-Length", value="5")], body=b"hey")
+    const garbled = http.Response(version="HTTP/1.1", status=200, reason="OK", headers=[http.Header(name="Content-Length", value="five")], body=b"")
+    const bare = http.Response(version="HTTP/1.1", status=204, reason="No Content", headers=[], body=b"")
+    const declared = http.Response(version="HTTP/1.1", status=200, reason="OK", headers=[http.Header(name="Content-Length", value="5")], body=b"")
+    const refused = head_bytes(wrong) == b"ERR Content-Length does not match the response body" and head_bytes(garbled) == b"ERR Content-Length is not a decimal integer"
+    match http.write_response(declared):
+        case Ok(_):
+            return False
+        case Err(error):
+            return refused and head_bytes(bare) == b"HTTP/1.1 204 No Content\r\n\r\n" and http.message(error) == "Content-Length does not match the response body"
+
+
+# FR1 (F-9): a caller's limits. The repro's shape at 5 MiB: a body at the limit parses, one byte over it is `BodyTooLarge`.
+func upload(size: int) -> bytes:
+    const head = "PUT /f HTTP/1.1\r\nHost: x\r\nContent-Length: " + str(size) + "\r\n\r\n"
+    return strings.encode(head) + byte_builder.repeat(b"x", size)
+
+
+func within_text(data: bytes, limits: http.Limits) -> str:
+    match http.parse_request_within(data, limits):
+        case Ok(request):
+            return "OK " + str(len(request.body))
+        case Err(error):
+            return "ERR " + fmt_error(error) + " " + str(http.status(error))
+
+
+public func test_parse_request_within_takes_a_body_up_to_the_callers_limit() -> bool:
+    const limits = http.Limits(body_bytes=5 * 1048576)
+    const two = within_text(upload(2097152), limits) == "OK 2097152"
+    const five = within_text(upload(5 * 1048576), limits) == "OK 5242880"
+    const over = within_text(upload(5 * 1048576 + 1), limits) == "ERR BodyTooLarge:42:body length is outside the supported limit 413"
+    return two and five and over and request_status(upload(2097152)) == 413
+
+
+# A declared length over the limit is refused before the body arrives, and a smaller limit than the default holds too.
+public func test_parse_request_within_refuses_a_declared_length_over_the_limit_as_too_large_not_malformed() -> bool:
+    const small = http.Limits(body_bytes=10)
+    const declared = within_text(b"POST / HTTP/1.1\r\nContent-Length: 11\r\n\r\n", small) == "ERR BodyTooLarge:42:body length is outside the supported limit 413"
+    const fits = within_text(b"POST / HTTP/1.1\r\nContent-Length: 10\r\n\r\n0123456789", small) == "OK 10"
+    const garbled = within_text(b"POST / HTTP/1.1\r\nContent-Length: ten\r\n\r\n", small) == "ERR Malformed:39:Content-Length is not a decimal integer 400"
+    return declared and fits and garbled
+
+
+# The header section's limits are the caller's too, and `Limits()` is `parse_request`'s.
+public func test_parse_request_within_holds_the_header_limits() -> bool:
+    const defaults = http.Limits()
+    const tight = http.Limits(header_bytes=64, header_fields=2)
+    const three = within_text(many_fields(b"GET / HTTP/1.1", 3, b"\r\n\r\n"), tight) == "ERR HeaderTooLarge:22:too many header fields 431"
+    const two = strings.starts_with(within_text(many_fields(b"GET / HTTP/1.1", 2, b"\r\n\r\n"), tight), "OK")
+    const wide = within_text(big_head(b"GET / HTTP/1.1\r\nX: ", 60), tight) == "ERR HeaderTooLarge:27:header section is too large 431"
+    const same = within_text(many_fields(b"GET / HTTP/1.1", 101, b"\r\n\r\n"), defaults) == "ERR " + request_text(many_fields(b"GET / HTTP/1.1", 101, b"\r\n\r\n"))[4:] + " 431"
+    return defaults.header_bytes == 65536 and defaults.header_fields == 100 and defaults.body_bytes == 1048576 and three and two and wide and same
+
+
+# The path, query and fragment-free target of a request whose target is `text`, joined by `|`.
+func target_parts(text: str) -> str:
+    const request = http.Request(method="GET", target=copy(text), version="HTTP/1.1", headers=[], body=b"")
+    return http.path(request) + "|" + http.query(request) + "|" + http.target(request)
+
+
+# F-59: a `://` in the query is query text, so it never moves the path.
+public func test_a_url_in_the_query_does_not_move_the_path() -> bool:
+    const viewer = target_parts("/p/lab/plot/?file=https://evil.example/x.html") == "/p/lab/plot/|file=https://evil.example/x.html|/p/lab/plot/?file=https://evil.example/x.html"
+    const next = target_parts("/?next=http://a/p/other/page/") == "/|next=http://a/p/other/page/|/?next=http://a/p/other/page/"
+    const plain = target_parts("/p/lab/plot/?file=index.html") == "/p/lab/plot/|file=index.html|/p/lab/plot/?file=index.html"
+    const in_path = target_parts("/public/x://h/admin/delete") == "/public/x://h/admin/delete||/public/x://h/admin/delete"
+    const no_slash = target_parts("admin?x=http://h/y") == "/admin|x=http://h/y|admin?x=http://h/y"
+    return viewer and next and plain and in_path and no_slash
+
+
+# An absolute-form target answers the path after its authority, with or without a query, as before.
+public func test_an_absolute_form_target_answers_its_path_and_query() -> bool:
+    const bare = target_parts("http://example.test/a/b") == "/a/b||http://example.test/a/b"
+    const queried = target_parts("http://example.test/a/b?c=d&e=http://x/y") == "/a/b|c=d&e=http://x/y|http://example.test/a/b?c=d&e=http://x/y"
+    const no_path = target_parts("http://example.test") == "/||http://example.test"
+    const no_path_query = target_parts("http://example.test?u=/x/y") == "/|u=/x/y|http://example.test?u=/x/y"
+    return bare and queried and no_path and no_path_query
+
+
+# The asterisk and authority forms have no path (the empty string, which no route table holds), and no query; a request
+# a program builds by hand with an empty target, a second `?` or a fragment answers as before (lane FR13, F-66).
+public func test_asterisk_and_authority_targets_have_no_path_and_the_other_forms_keep_their_answers() -> bool:
+    const star = target_parts("*") == "||*"
+    const authority = target_parts("example.test:443") == "||example.test:443"
+    const literal = target_parts("[::1]:8080") == "||[::1]:8080"
+    const empty = target_parts("") == "/||"
+    const second = target_parts("/a?b=1?c=2") == "/a|b=1?c=2|/a?b=1?c=2"
+    const fragment = target_parts("/a?b=1#c?d=2") == "/a|b=1|/a?b=1"
+    const fragment_first = target_parts("/a#b?c=1") == "/a||/a"
+    return star and authority and literal and empty and second and fragment and fragment_first

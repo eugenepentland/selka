@@ -1,0 +1,19 @@
+# strings.split, strings.join and other calls that give text and lists of text.
+import strings
+
+func main() -> int:
+    const line = "alpha,beta,gamma,delta,epsilon"
+    const parts = strings.split(line, ",")
+    const joined = strings.join(parts, " + ")
+    const upper = strings.upper(parts[2])
+    mut total = len(parts) * 10 + len(joined) + len(upper)
+    if strings.starts_with(joined, "alpha"):
+        total += 7
+    const trimmed = strings.strip("   padded   ")
+    total += len(trimmed)
+    # Lists the runtime grows past its first capacity: a split, the words and the lines of a text.
+    const many = strings.split("a,bb,c,dd,e,ff,g,hh,i,jj,k,ll", ",")
+    const words = strings.words("  one two  three four five six seven eight nine ten  ")
+    const lines = strings.lines("l1\nl22\nl333\nl4\nl5\nl6\nl7\nl8\nl9\nl10\n")
+    total += len(many) + len(words) * 3 + len(lines) * 5 + len(many[11]) + len(words[9]) + len(lines[9])
+    return total % 256

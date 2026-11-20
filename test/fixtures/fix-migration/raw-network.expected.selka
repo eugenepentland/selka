@@ -1,0 +1,32 @@
+# FR5a: `acquire_resource` on a Network belongs to the standard library. A request of one octet with the library's own
+# result is exactly `network.connect`, `network.listen` or `network.open_poller`, which `selka fix` writes in its place.
+import network
+
+
+func main(out: Stream) -> int:
+    mut net = network.memory()
+    with net.host("memory:1") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match network.connect(scoped):
+                    case ok(made):
+                        _ = network.close(own made)
+                        print(out, "connected")
+                    case err(code):
+                        print(out, "connect failed", code)
+                match accept_resource[network.Accepted](listener):
+                    case Ok(accepted):
+                        _ = network.close(own accepted)
+                        print(out, "accepted")
+                    case Err(code):
+                        print(out, "accept failed", code)
+            case err(code):
+                print(out, "listen failed", code)
+        match network.open_poller(scoped):
+            case ok(poller):
+                _ = own poller
+                print(out, "poller")
+            case err(code):
+                print(out, "no poller", code)
+    return 0

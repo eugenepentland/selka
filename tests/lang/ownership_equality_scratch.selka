@@ -1,0 +1,11 @@
+# spec: EQUALITY-SCRATCH-1
+public func test_owned_nested_lists_preserve_ieee_leaves_as_equality_scratch_grows() -> bool:
+    mut negative: float[][] = []
+    mut positive: float[][] = []
+    for _ in range(1024):
+        append(mut negative, [-0.0])
+        append(mut positive, [0.0])
+    if negative != positive:
+        return False
+    negative[1023][0] = 0.0 / 0.0
+    return negative != negative and negative != positive

@@ -1,0 +1,25 @@
+import lists
+import strings
+
+# scan_replace: str.replace over LIB.md's 4 MB text.
+func shared_text() -> str:
+    mut block_parts: str[] = []
+    for i in range(2000):
+        append(mut block_parts, f"item{i},{(i * 7919) % 100003},{strings.char_slice('xxxxxx', None, i % 7)}\n")
+    mut block = strings.join(block_parts, "")
+    return strings.join(lists.filled[str](110, block), "")
+
+
+func main(out: Stream) -> int:
+    mut text = shared_text()
+    mut total = 0
+    mut a = 0
+    mut b = 0
+    mut c = 0
+    for _ in range(4):
+        a = strings.char_count(strings.replace(text, "item", "it"))
+        b = strings.char_count(strings.replace(text, ",", ";;"))
+        c = strings.char_count(strings.replace(text, "x\nitem1", "|"))
+        total += a + b + c
+    print(out, f"{a} {b} {c} {total}")
+    return 0

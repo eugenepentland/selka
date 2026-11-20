@@ -1,0 +1,31 @@
+public enum Color:
+    red
+    green
+    blue
+
+
+public record Inner:
+    x: int
+    y: int
+    z: int = 0
+
+
+public record Holder:
+    items: Inner[]
+    index: dict[str, Inner]
+    maybe: Inner?
+    tint: Color
+
+
+public enum Event:
+    moved(to: Inner, steps: int)
+    tagged(value: Inner)
+    idle
+
+
+record Hidden:
+    secret: int
+
+
+public func origin() -> Inner:
+    return Inner(x=0, y=0)

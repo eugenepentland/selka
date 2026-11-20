@@ -1,0 +1,129 @@
+import streams
+
+# `str(x)` and `repr(x)` of a record, a result and a fixed array on their own (F-38b, the user's decision of 14 November 2026,
+# docs/text.md#the-text-of-a-collection): the text is the text `print` writes, as it is for a list, a set, a dictionary and an
+# option (`tests/lang/text_of_collections.selka`). Every test writes the value with `print` to a capturing stream and compares that
+# line with `str(x)` and `repr(x)` and a format string's hole, and pins the text itself. An enum keeps `case_name` and bytes
+# keep `repr`, so neither is here.
+record Point:
+    x: int
+    y: int
+
+
+record Line:
+    from_point: Point
+    to_point: Point
+    name: str
+
+
+record Basket:
+    label: str
+    items: int[]
+    note: str?
+
+
+record Pair[T]:
+    first: T
+    second: T
+
+
+enum Kind:
+    alpha
+    beta
+
+
+func parse(text: str) -> int fails str:
+    if text == "":
+        fail "empty"
+    return 7
+
+
+func parse_point(x: int) -> Point fails str:
+    if x < 0:
+        fail "negative"
+    return Point(x=x, y=x + 1)
+
+
+# The one line `print` writes, with its line end removed.
+func line_of_print(capture: Stream) -> str:
+    const written = streams.text(capture)
+    return copy(written[0:len(written) - 1])
+
+
+func pair_text[T](pair: Pair[T]) -> str:
+    return str(pair) + repr(pair)
+
+
+public func test_str_of_a_record_is_the_line_print_writes() -> bool:
+    const p = Point(x=1, y=2)
+    const capture = streams.memory()
+    print(capture, p)
+    return line_of_print(capture) == str(p) and str(p) == "Point(x=1, y=2)" and repr(p) == str(p) and f"{p}" == str(p)
+
+
+public func test_str_of_a_record_with_a_record_a_text_a_list_and_an_option() -> bool:
+    const line = Line(from_point=Point(x=1, y=2), to_point=Point(x=3, y=4), name="a'b")
+    const basket = Basket(label="fruit", items=[1, 2], note=Some("ripe"))
+    const bare = Basket(label="", items=[], note=None)
+    const capture = streams.memory()
+    print(capture, line, basket, bare)
+    const joined = str(line) + " " + str(basket) + " " + str(bare)
+    return line_of_print(capture) == joined and str(line) == "Line(from_point=Point(x=1, y=2), to_point=Point(x=3, y=4), name=\"a'b\")"
+
+
+public func test_str_of_a_result_is_the_line_print_writes() -> bool:
+    const capture = streams.memory()
+    print(capture, parse("x"), parse(""))
+    const same = line_of_print(capture) == str(parse("x")) + " " + str(parse(""))
+    return same and str(parse("x")) == "Ok(7)" and str(parse("")) == "Err('empty')" and repr(parse("x")) == "Ok(7)" and repr(parse("")) == "Err('empty')"
+
+
+public func test_str_of_a_result_that_holds_a_record() -> bool:
+    const capture = streams.memory()
+    print(capture, parse_point(2), parse_point(-1))
+    return line_of_print(capture) == str(parse_point(2)) + " " + str(parse_point(-1)) and str(parse_point(2)) == "Ok(Point(x=2, y=3))" and str(parse_point(-1)) == "Err('negative')"
+
+
+public func test_str_of_a_fixed_array_is_the_line_print_writes() -> bool:
+    const numbers: FixedArray[int, 3] = FixedArray[int, 3]([1, 2, 3])
+    const words: FixedArray[str, 2] = FixedArray[str, 2](["a", "it's"])
+    const grid: FixedArray[FixedArray[int, 2], 2] = FixedArray[FixedArray[int, 2], 2]([FixedArray[int, 2]([1, 2]), FixedArray[int, 2]([3, 4])])
+    const capture = streams.memory()
+    print(capture, numbers, words, grid)
+    const joined = str(numbers) + " " + str(words) + " " + str(grid)
+    return line_of_print(capture) == joined and str(numbers) == "[1, 2, 3]" and str(words) == "['a', \"it's\"]" and str(grid) == "[[1, 2], [3, 4]]" and repr(numbers) == str(numbers)
+
+
+public func test_a_fixed_array_of_records_and_a_record_of_a_fixed_array() -> bool:
+    const points: FixedArray[Point, 2] = FixedArray[Point, 2]([Point(x=1, y=2), Point(x=3, y=4)])
+    const capture = streams.memory()
+    print(capture, points)
+    return line_of_print(capture) == str(points) and str(points) == "[Point(x=1, y=2), Point(x=3, y=4)]"
+
+
+public func test_a_value_inside_a_collection_and_alone_agree() -> bool:
+    const p = Point(x=1, y=2)
+    const found: Point? = Some(copy(p))
+    return str([p]) == "[" + str(p) + "]" and str(found) == "Some(" + str(p) + ")"
+
+
+public func test_str_of_a_record_in_a_generic_function() -> bool:
+    const numbers = Pair[int](first=1, second=2)
+    const words = Pair[str](first="a", second="b")
+    const capture = streams.memory()
+    print(capture, numbers, words)
+    return line_of_print(capture) == str(numbers) + " " + repr(words) and pair_text(numbers) == str(numbers) + repr(numbers)
+
+
+public func test_str_of_a_borrowed_owned_and_fresh_record() -> bool:
+    mut p = Point(x=5, y=6)
+    const before = str(p)
+    p.x = 9
+    return before == "Point(x=5, y=6)" and str(p) == "Point(x=9, y=6)" and str(Point(x=0, y=0)) == "Point(x=0, y=0)" and str(copy(p)) == str(p)
+
+
+public func test_an_enum_keeps_case_name_and_is_part_of_a_record_text() -> bool:
+    const holder = Pair[Kind](first=Kind.alpha, second=Kind.beta)
+    const capture = streams.memory()
+    print(capture, holder)
+    return case_name(Kind.alpha) == "alpha" and line_of_print(capture) == str(holder)

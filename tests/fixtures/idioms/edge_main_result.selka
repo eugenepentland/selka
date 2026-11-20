@@ -1,0 +1,2 @@
+func main(_fs: Filesystem) -> Result[Unit, str]:
+    return Err("bad")

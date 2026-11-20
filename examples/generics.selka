@@ -1,0 +1,16 @@
+func identity[T](value: T) -> T from value:
+    return value
+
+
+func generics_sum[T: integer](value: T) -> T:
+    if value == T(0):
+        return value
+    return value + generics_sum[T](value - T(1))
+
+
+func main() -> int:
+    mut small = generics_sum[u8](4u8)
+    mut large = generics_sum[int](5)
+    if identity[bool](True):
+        return int(small) + large
+    return 0

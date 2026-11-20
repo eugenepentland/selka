@@ -1,0 +1,145 @@
+import dicts
+
+record Holder:
+    items: int[]
+    marker: int
+
+
+record Nested:
+    inner: Holder
+
+
+func push(mut items: int[], value: int):
+    append(mut items, value)
+
+
+func change(mut holder: Holder, value: int):
+    mut work = copy(holder.items)
+    push(mut work, value)
+    holder.items = own work
+
+
+func twice(mut holder: Holder):
+    mut first = copy(holder.items)
+    push(mut first, 2)
+    holder.items = own first
+    mut second = copy(holder.items)
+    push(mut second, 3)
+    holder.items = own second
+
+
+func observe(mut holder: Holder):
+    mut work = copy(holder.items)
+    push(mut work, 2)
+    assert holder.items == [1]
+    holder.items = own work
+
+
+func optional(mut holder: Holder, stop: bool):
+    mut work = copy(holder.items)
+    push(mut work, 2)
+    if stop:
+        return
+    holder.items = own work
+
+
+func alias_argument(mut holder: Holder, other: Holder):
+    mut work = copy(holder.items)
+    push(mut work, 2)
+    assert other.items == [1]
+    holder.items = own work
+
+
+func nested(mut holder: Nested):
+    mut work = copy(holder.inner.items)
+    push(mut work, 2)
+    holder.inner.items = own work
+
+
+public func test_closed_field_restores_empty_and_nonempty_source() -> bool:
+    mut empty = Holder(items=[], marker=7)
+    change(mut empty, 4)
+    mut full = Holder(items=[1], marker=9)
+    change(mut full, 2)
+    return empty.items == [4] and empty.marker == 7 and full.items == [1, 2] and full.marker == 9
+
+
+public func test_closed_field_repeated_extractions_return_each_owner() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    twice(mut holder)
+    change(mut holder, 4)
+    return holder.items == [1, 2, 3, 4] and holder.marker == 7
+
+
+public func test_closed_field_preserves_caller_snapshot() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    mut saved = copy(holder)
+    twice(mut holder)
+    append(mut saved.items, 9)
+    return holder.items == [1, 2, 3] and saved.items == [1, 9]
+
+
+public func test_observed_field_keeps_an_independent_local_value() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    observe(mut holder)
+    return holder.items == [1, 2]
+
+
+public func test_closed_field_refuses_early_exit_and_alias_argument() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    optional(mut holder, True)
+    assert holder.items == [1]
+    const snapshot = copy(holder)
+    alias_argument(mut holder, snapshot)
+    return holder.items == [1, 2]
+
+
+public func test_nested_field_uses_existing_path_behavior() -> bool:
+    mut holder = Nested(inner=Holder(items=[1], marker=7))
+    mut saved = copy(holder)
+    nested(mut holder)
+    return holder.inner.items == [1, 2] and saved.inner.items == [1]
+
+
+func initialized(mut holder: Holder):
+    mut work = [8, 9]
+    work = copy(holder.items)
+    push(mut work, 2)
+    holder.items = own work
+
+
+public func test_closed_field_releases_the_previous_target_once() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    initialized(mut holder)
+    return holder.items == [1, 2]
+
+
+record ObservedHolder:
+    items: int[]
+    view: int[]
+
+
+func observed_root(mut holder: ObservedHolder):
+    mut work = copy(holder.items)
+    push(mut work, 2)
+    holder.items = own work
+
+
+public func test_snapshot_root_keeps_existing_transfer_rules() -> bool:
+    mut mapping = {0: 7}
+    mut holder = ObservedHolder(items=[1], view=list(dicts.values(mapping)))
+    observed_root(mut holder)
+    mapping[0] = 9
+    return holder.items == [1, 2] and list(holder.view) == [7]
+
+
+func main(out: Stream) -> int:
+    print(out, test_closed_field_restores_empty_and_nonempty_source())
+    print(out, test_closed_field_repeated_extractions_return_each_owner())
+    print(out, test_closed_field_preserves_caller_snapshot())
+    print(out, test_observed_field_keeps_an_independent_local_value())
+    print(out, test_closed_field_refuses_early_exit_and_alias_argument())
+    print(out, test_nested_field_uses_existing_path_behavior())
+    print(out, test_closed_field_releases_the_previous_target_once())
+    print(out, test_snapshot_root_keeps_existing_transfer_rules())
+    return 0

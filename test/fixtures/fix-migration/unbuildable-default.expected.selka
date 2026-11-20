@@ -1,0 +1,18 @@
+# Before 7 November 2026 a field default that built a record without one of its required fields was accepted at the
+# declaration and refused only where something built the outer record with the field left out. This program never leaves
+# `inner` out, so it checked and ran.
+record Inner:
+    net: bytes
+    gain: int = 1
+
+
+record Outer:
+    inner: Inner
+    z: int = 1
+    fence: Inner
+
+
+func main(out: Stream) -> int:
+    const outer = Outer(inner=Inner(net=b"GND"), fence=Inner(net=b"VCC", gain=3))
+    print(out, len(outer.inner.net) + outer.z + outer.fence.gain)
+    return 0

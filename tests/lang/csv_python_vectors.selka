@@ -1,0 +1,982 @@
+# The csv module against the system's Python `csv` module on 200 generated rows (seed 20261117, Python 3.14.4).
+# `vector_rows` is what Python's csv.reader reads from both documents below. `python_text` is what Python's csv.writer writes
+# for them (QUOTE_MINIMAL, lineterminator "\n"); `mixed_text` quotes about a third of the fields that need no quote, ends the
+# rows with LF or CRLF at random and leaves the last row without an ending, and csv.reader reads it to the same rows. The
+# strings of `python_quoted` and `mixed_quoted` hold, row by row, "1" for a field the document wrote in quotes. The rows
+# include blank rows, a lone empty field, fields with commas, quotes, LF, CRLF, a bare CR and non-ASCII text. Each function
+# holds at most 40 lines of data; the whole is put together by the function without a number.
+import csv
+import lists
+import strings
+
+func vector_rows_1() -> str[][]:
+    return [
+        ["a,b"],
+        ['a"', "λcrlf\r\nbreak", "x y"],
+        [",", "0NULL", "0", '""', "-1", "a,b"],
+        ["ada41", "\n\n,"],
+        ["-1", "cr\rhere", "ada", " both ", "λ"],
+        [" both ", "\n\n", ",,", "-1"],
+        ["é"],
+        ["semi;colon", "", "crlf\r\nbreak", ","],
+        ["NULL", "line\nbreak,", "\r\n", "b", ",,", "\n\n"],
+        [],
+        ['say "hi"', ",,"],
+        [""],
+        ["ada", "\n"],
+        ["two\nlines\n", "a", "tab	here", "a,b"],
+        ["", "cr\rhere", 'a"', "", '""', "'single'"],
+        ["日本語", "semi;colon", "a,b-1", "x y", "null,", "line\nbreak"],
+        ["", "tab	here'single'"],
+        [""],
+        [",,"],
+        ["a,b", "b", "é", ",", "crlf\r\nbreak"],
+        ["\n\n", "\n\n", "41"],
+        [""],
+        ["a", "null", "3.5", '"', "'single'"],
+        ["line\nbreak", "é", "\r\n", "\n"],
+        ["\n", "two\nlines\n", "back\\slash"],
+        ["\n"],
+        [],
+        ["NULL", "semi;colon"],
+        ["3.5", '"', "semi;colon", ",,", " lead", "3.5"],
+        [],
+        ["éline\nbreak", "\r\n", ",,", '""'],
+        ["two\nlines\n", "0", "line\nbreak", 'say "hi" both ', ""],
+        ['say "hi"', "a,b", "back\\slash", "é", "λ"],
+        [],
+        ["back\\slash"],
+        ["b", "line\nbreak", ",,", "line\nbreakNULL", '""'],
+        ['""', 'a"', "NULL", "41", "ada", '"b'],
+        ["semi;colon日本語"],
+        ["b", 'a"', "b", "3.5", "\n\n", "\n\n"],
+        ["\n\n", "b,", ",", 'say "hi"'],
+    ]
+
+
+func vector_rows_2() -> str[][]:
+    return [
+        ["3.5", "\n\nada", " both ", "b"],
+        ["NULL", ",", " lead", "-1line\nbreak", "cr\rhere", " both "],
+        ["λ", "", "b", " lead"],
+        ["ada", "two\nlines\n", "0", "cr\rhere", "\n\n", "\n\n"],
+        ["b"],
+        [" lead", "\n", " ", "crlf\r\nbreak", "\n"],
+        ['"b', "cr\rhere", "back\\slashλ", "41", "日本語"],
+        [""],
+        ["λ"],
+        ["41", "é", "NULL'single'", 'say "hi"'],
+        ["back\\slash", "semi;colon", 'a"', "\n"],
+        ["0", "", "é", "3.5"],
+        ["null", ",,", "日本語"],
+        ["'single'", '""'],
+        [],
+        ["null"],
+        ["line\nbreakλ", "\r\n"],
+        [],
+        ["\n", "-1", "back\\slash", "null"],
+        [" lead"],
+        ["line\nbreak", "41", "cr\rheretwo\nlines\n", ",", "line\nbreak", "\r\nline\nbreak"],
+        ["semi;colon", "a", "", "41", " lead", "trail "],
+        [" "],
+        ['"'],
+        ['a" lead', "-1\r\n", "0", 'say "hi"', '""'],
+        ["", "two\nlines\né", 'say "hi",', " both ", "ada", "\n\ntab	here"],
+        ["日本語", "x y", "null"],
+        [" "],
+        ["a,b", "x yx y", "\r\n", "a"],
+        ["tab	here", "ada", "two\nlines\n", 'line\nbreaksay "hi"', '""'],
+        ["tab	here", "null", "crlf\r\nbreak", "cr\rhere"],
+        ["", "line\nbreak", '""cr\rhere', "cr\rhere", '"b', "'single'"],
+        ["b3.5", "two\nlines\n", ",,", "null", "b"],
+        [],
+        ['a,bsay "hi"', "3.5", "41", 'a"b'],
+        [",", "a", "\n\n", 'ada""', "λ", "cr\rhere"],
+        [",-1", 'say "hi"', 'a"', " both "],
+        ["trail "],
+        ["0", "crlf\r\nbreak"],
+        ['"b', "b", " both ", '""x y', "a,b", "b"],
+    ]
+
+
+func vector_rows_3() -> str[][]:
+    return [
+        [],
+        [""],
+        ["crlf\r\nbreaktrail ", "\n\n", "x y", "\r\n", "ada", "tab	herecrlf\r\nbreak"],
+        ["ada", '"trail ', "\r\n"],
+        ["0", "é日本語"],
+        [],
+        ["日本語", "", "41semi;colon", "41", "a,b"],
+        [" both ", 'line\nbreak""'],
+        [",,", "two\nlines\n", ",-1"],
+        ["'single'", "a,b", "crlf\r\nbreak", "a"],
+        ["tab	here", "b", "a,b", "\r\n", "41", "\r\n"],
+        ["two\nlines\n"],
+        [" ", "b", " lead", ",", "nulla,b"],
+        ["line\nbreak", "日本語", "41"],
+        [""],
+        ["null", "λ", "a", "line\nbreak"],
+        ["NULL", "a,b0", "\n"],
+        ["a,b", " lead", "ada"],
+        ["tab	here", " both line\nbreak"],
+        [",,", "a,b", "\r\n", ""],
+        [" \n", "b", " ,", "tab	here", "41", "0"],
+        ["line\nbreak", "日本語back\\slash", "\r\n"],
+        [" lead", "ada-1", '"', "back\\slash"],
+        ["a,b"],
+        ["ada", "NULL", "3.5", "a", "cr\rhere", ""],
+        [""],
+        [" both ", '"', "semi;colon", " lead", "日本語"],
+        ['say "hi"say "hi"', 'say "hi"日本語', "3.5", " ", '"', '日本語a"'],
+        ["semi;colon", 'say "hi"', "\r\n", " both ", ' both say "hi"'],
+        ["0", "line\nbreak", ",,"],
+        ["", "3.5", "-1", "back\\slash", "3.5", "3.5,"],
+        ["semi;colon", "3.5", "crlf\r\nbreak", "crlf\r\nbreak", ","],
+        ["semi;colon", "41,", "", "\n\n"],
+        ["crlf\r\nbreak", "é", "0", "3.5"],
+        ["tab	here", " "],
+        ['say "hi"'],
+        ["a"],
+        ["3.5", "x yada", "trail ", ",,", "", "two\nlines\n"],
+        ['a"', "é\r\n", "'single'"],
+        ["\r\n"],
+    ]
+
+
+func vector_rows_4() -> str[][]:
+    return [
+        ["\n\n", '""', "3.5", "crlf\r\nbreak", "é", "日本語x y"],
+        ["", 'semi;colonsay "hi"', "ada", "é"],
+        ["b", " both ", "crlf\r\nbreak", " ", ",,", "crlf\r\nbreak"],
+        ["NULL"],
+        [",", "cr\rhere", "écrlf\r\nbreak", " ", " both "],
+        [],
+        ["0a,b", " both ", "a,b", "é"],
+        [""],
+        ["\r\nback\\slash"],
+        [],
+        ['ada"', 'a",', ""],
+        ["3.5", "ada", "日本語", '"', "b", "line\nbreak"],
+        ['a"', "null", "null", "é", " lead lead", "éx y"],
+        [",,", "trail ", 'a"', "\n"],
+        ['a"', "two\nlines\n", "", '"'],
+        ["3.5", ' ""'],
+        ["\r\n41"],
+        ["trail ", "cr\rhere", "a", "\r\n", " both "],
+        [],
+        ["line\nbreaktab	here", "line\nbreak", "\r\n41", "-1x y"],
+        ["a", "a,b", "é"],
+        ['say "hi"', "trail "],
+        ["a,b"],
+        ["3.5", "trail ", "3.5NULL", "cr\rhere", "cr\rhere"],
+        ["-1", "two\nlines\n", '3.5"b', ",,"],
+        ["b", "-1", "41", "λ", "b"],
+        ["λ", "ada"],
+        ["semi;colon", "\n\n", "", "NULL\n\n"],
+        ["-1", "back\\slash", "crlf\r\nbreak", 'λa"', "'single'"],
+        ["3.5", "null", "", " both ", "a,b'single'"],
+        ["41", "x y", "NULL,", "\r\n", "back\\slash", "é"],
+        [" ", "3.5"],
+        [" lead", "a,ba", "tab	here"],
+        ['line\nbreak"b'],
+        [" both "],
+        ["\n\n", "", "a", "line\nbreak", ",,", '"'],
+        [" lead", '",,', '"b'],
+        [" both ", '"b'],
+        ["41", "a", "back\\slashnull"],
+        [",", "日本語", "λ", "\n\n"],
+    ]
+
+
+func vector_rows_5() -> str[][]:
+    return [
+        ["crlf\r\nbreak", "", "b", "two\nlines\n", "b"],
+        ["a,b", "\n", "é", "trail "],
+        ['a"cr\rhere', "back\\slash", "line\nbreak", ","],
+        ["line\nbreak"],
+        ['"', '""', "trail cr\rhere"],
+        ['"b', "a", " both ", ","],
+        ["tab	here"],
+        [""],
+        ["日本語", "cr\rhere", "two\nlines\nada", "é", "ada"],
+        ["trail ", "3.5", 'a"', "b", '"-1', "a,b"],
+        ["\n", 'a"', '"', "two\nlines\n"],
+        ["\r\n", "", "semi;colon", "\n", "3.5"],
+        ["", " lead", "cr\rhereback\\slash", "41", "line\nbreak", "crlf\r\nbreak"],
+        ["\r\n", "é", " both ", " ", "a", "\n"],
+        ["日本語"],
+        ["trail ", "", "", '"b', "a,b", ""],
+        ["x y"],
+        ["'single'", "41x y", "trail two\nlines\n"],
+        ["trail ", "'single'", 'say "hi"'],
+        ["back\\slash", "λ", ",,", "3.5", 'say "hi"'],
+        ['""', '""'],
+        ["x y lead", "NULL both ", "\r\nline\nbreak"],
+        [",,", "a", "'single'", "0", "back\\slash"],
+        ['a"', 'say "hi"', "tab	here", "null"],
+        ["é", "-1", '"b'],
+        [",", " ", "cr\rhere", "a,b", 'a"', ""],
+        ["3.5", "ada", "back\\slash"],
+        ["x y", "x ycrlf\r\nbreak", '""'],
+        ["b", "two\nlines\ncrlf\r\nbreak", " both ", "\nada", " "],
+        ["", "back\\slash", ",two\nlines\n", "trail ", 'trail "', "日本語"],
+        ["NULL"],
+        ['say "hi"', " both ", "\r\n", "null", "line\nbreak", ","],
+        ["\r\n", '"b', "日本語"],
+        [""],
+        ['"b', 'a"\n'],
+        ['say "hi"', "two\nlines\n", "ada"],
+        ["\n\n", 'a"', "a,b", "NULL", '"'],
+        [" both ", "\n", "semi;colon", "null", "\r\n", "b"],
+        [" both ", "tab	here", "adatrail ", '"b', "0,,", '"b'],
+        ['""', "back\\slash", "\n\n", "\n\n", " "],
+    ]
+
+
+func vector_rows() -> str[][]:
+    mut all: str[][] = []
+    lists.extend(mut all, vector_rows_1())
+    lists.extend(mut all, vector_rows_2())
+    lists.extend(mut all, vector_rows_3())
+    lists.extend(mut all, vector_rows_4())
+    lists.extend(mut all, vector_rows_5())
+    return all
+
+
+func python_quoted_1() -> str[]:
+    return [
+        "1",
+        "110",
+        "100101",
+        "01",
+        "01000",
+        "0110",
+        "0",
+        "0011",
+        "011011",
+        "",
+        "11",
+        "1",
+        "01",
+        "1001",
+        "011010",
+        "001011",
+        "00",
+        "1",
+        "1",
+        "10011",
+        "110",
+        "1",
+        "00010",
+        "1011",
+        "110",
+        "1",
+        "",
+        "00",
+        "010100",
+        "",
+        "1111",
+        "10110",
+        "11000",
+        "",
+        "0",
+        "01111",
+        "110001",
+        "0",
+        "010011",
+        "1111",
+    ]
+
+
+func python_quoted_2() -> str[]:
+    return [
+        "0100",
+        "010110",
+        "0000",
+        "010111",
+        "0",
+        "01011",
+        "11000",
+        "1",
+        "0",
+        "0001",
+        "0011",
+        "0000",
+        "010",
+        "01",
+        "",
+        "0",
+        "11",
+        "",
+        "1000",
+        "0",
+        "101111",
+        "000000",
+        "0",
+        "1",
+        "11011",
+        "011001",
+        "000",
+        "0",
+        "1010",
+        "00111",
+        "0011",
+        "011110",
+        "01100",
+        "",
+        "1001",
+        "101101",
+        "1110",
+        "0",
+        "01",
+        "100110",
+    ]
+
+
+func python_quoted_3() -> str[]:
+    return [
+        "",
+        "1",
+        "110101",
+        "011",
+        "00",
+        "",
+        "00001",
+        "01",
+        "111",
+        "0110",
+        "001101",
+        "1",
+        "00011",
+        "100",
+        "1",
+        "0001",
+        "011",
+        "100",
+        "01",
+        "1110",
+        "101000",
+        "101",
+        "0010",
+        "1",
+        "000010",
+        "1",
+        "01000",
+        "110011",
+        "01101",
+        "011",
+        "000001",
+        "00111",
+        "0101",
+        "1000",
+        "00",
+        "1",
+        "0",
+        "000101",
+        "110",
+        "1",
+    ]
+
+
+func python_quoted_4() -> str[]:
+    return [
+        "110100",
+        "0100",
+        "001011",
+        "0",
+        "11100",
+        "",
+        "1010",
+        "1",
+        "1",
+        "",
+        "110",
+        "000101",
+        "100000",
+        "1011",
+        "1101",
+        "01",
+        "1",
+        "01010",
+        "",
+        "1110",
+        "010",
+        "10",
+        "1",
+        "00011",
+        "0111",
+        "00000",
+        "00",
+        "0101",
+        "00110",
+        "00001",
+        "001100",
+        "00",
+        "010",
+        "1",
+        "0",
+        "100111",
+        "011",
+        "01",
+        "000",
+        "1001",
+    ]
+
+
+func python_quoted_5() -> str[]:
+    return [
+        "10010",
+        "1100",
+        "1011",
+        "1",
+        "111",
+        "1001",
+        "0",
+        "1",
+        "01100",
+        "001011",
+        "1111",
+        "10010",
+        "001011",
+        "100001",
+        "0",
+        "000110",
+        "0",
+        "001",
+        "001",
+        "00101",
+        "11",
+        "001",
+        "10000",
+        "1100",
+        "001",
+        "101110",
+        "000",
+        "011",
+        "01010",
+        "001010",
+        "0",
+        "101011",
+        "110",
+        "1",
+        "11",
+        "110",
+        "11101",
+        "010010",
+        "000111",
+        "10110",
+    ]
+
+
+func python_quoted() -> str[]:
+    mut all: str[] = []
+    lists.extend(mut all, python_quoted_1())
+    lists.extend(mut all, python_quoted_2())
+    lists.extend(mut all, python_quoted_3())
+    lists.extend(mut all, python_quoted_4())
+    lists.extend(mut all, python_quoted_5())
+    return all
+
+
+func mixed_quoted_1() -> str[]:
+    return [
+        "1",
+        "111",
+        "110111",
+        "01",
+        "01110",
+        "0110",
+        "0",
+        "0111",
+        "011111",
+        "",
+        "11",
+        "1",
+        "01",
+        "1101",
+        "011010",
+        "001111",
+        "01",
+        "1",
+        "1",
+        "10111",
+        "111",
+        "1",
+        "00010",
+        "1011",
+        "110",
+        "1",
+        "",
+        "01",
+        "010101",
+        "",
+        "1111",
+        "11110",
+        "11011",
+        "",
+        "0",
+        "01111",
+        "110001",
+        "0",
+        "010011",
+        "1111",
+    ]
+
+
+func mixed_quoted_2() -> str[]:
+    return [
+        "1110",
+        "110110",
+        "0100",
+        "111111",
+        "0",
+        "01011",
+        "11000",
+        "1",
+        "0",
+        "0001",
+        "0011",
+        "0000",
+        "010",
+        "01",
+        "",
+        "1",
+        "11",
+        "",
+        "1001",
+        "0",
+        "111111",
+        "100000",
+        "0",
+        "1",
+        "11011",
+        "011001",
+        "000",
+        "1",
+        "1011",
+        "00111",
+        "0011",
+        "011111",
+        "01110",
+        "",
+        "1001",
+        "101111",
+        "1111",
+        "1",
+        "01",
+        "111110",
+    ]
+
+
+func mixed_quoted_3() -> str[]:
+    return [
+        "",
+        "1",
+        "110111",
+        "111",
+        "00",
+        "",
+        "00001",
+        "01",
+        "111",
+        "1110",
+        "001101",
+        "1",
+        "01011",
+        "100",
+        "1",
+        "0001",
+        "011",
+        "111",
+        "11",
+        "1111",
+        "111000",
+        "101",
+        "0010",
+        "1",
+        "110010",
+        "1",
+        "01000",
+        "111011",
+        "11111",
+        "011",
+        "000101",
+        "10111",
+        "1101",
+        "1000",
+        "00",
+        "1",
+        "1",
+        "000111",
+        "110",
+        "1",
+    ]
+
+
+func mixed_quoted_4() -> str[]:
+    return [
+        "110100",
+        "0110",
+        "101011",
+        "0",
+        "11111",
+        "",
+        "1010",
+        "1",
+        "1",
+        "",
+        "110",
+        "100101",
+        "111000",
+        "1011",
+        "1101",
+        "01",
+        "1",
+        "11010",
+        "",
+        "1110",
+        "110",
+        "10",
+        "1",
+        "01011",
+        "0111",
+        "10000",
+        "00",
+        "0101",
+        "00110",
+        "10101",
+        "001110",
+        "01",
+        "010",
+        "1",
+        "1",
+        "100111",
+        "011",
+        "11",
+        "111",
+        "1001",
+    ]
+
+
+func mixed_quoted_5() -> str[]:
+    return [
+        "10011",
+        "1100",
+        "1011",
+        "1",
+        "111",
+        "1001",
+        "1",
+        "1",
+        "01101",
+        "111011",
+        "1111",
+        "10010",
+        "101111",
+        "100001",
+        "1",
+        "000110",
+        "0",
+        "011",
+        "101",
+        "10101",
+        "11",
+        "101",
+        "10001",
+        "1110",
+        "011",
+        "111110",
+        "111",
+        "011",
+        "01111",
+        "111010",
+        "0",
+        "101011",
+        "111",
+        "1",
+        "11",
+        "110",
+        "11101",
+        "011110",
+        "000111",
+        "11111",
+    ]
+
+
+func mixed_quoted() -> str[]:
+    mut all: str[] = []
+    lists.extend(mut all, mixed_quoted_1())
+    lists.extend(mut all, mixed_quoted_2())
+    lists.extend(mut all, mixed_quoted_3())
+    lists.extend(mut all, mixed_quoted_4())
+    lists.extend(mut all, mixed_quoted_5())
+    return all
+
+
+func python_text_1() -> str:
+    return strings.join(
+        [
+            '"a,b"\n"a""","λcrlf\r\nbreak",x y\n",",0NULL,0,"""""",-1,"a,b"\nada41,"\n\n,"',
+            '\n-1,"cr\rhere",ada, both ,λ\n both ,"\n\n",",,",-1\né\nsemi;colon,,"crlf\r\nbr',
+            'eak",","\nNULL,"line\nbreak,","\r\n",b,",,","\n\n"\n\n"say ""hi""",",,"\n""\nada',
+            ",\"\n\"\n\"two\nlines\n\",a,tab	here,\"a,b\"\n,\"cr\rhere\",\"a\"\"\",,\"\"\"\"\"\",'single'\n日",
+            "本語,semi;colon,\"a,b-1\",x y,\"null,\",\"line\nbreak\"\n,tab	here'single'\n\"\"\n\",",
+            ",\"\n\"a,b\",b,é,\",\",\"crlf\r\nbreak\"\n\"\n\n\",\"\n\n\",41\n\"\"\na,null,3.5,\"\"\"\",'single",
+            "'\n\"line\nbreak\",é,\"\r\n\",\"\n\"\n\"\n\",\"two\nlines\n\",back\\slash\n\"\n\"\n\nNULL,semi;c",
+            'olon\n3.5,"""",semi;colon,",,", lead,3.5\n\n"éline\nbreak","\r\n",",,","""""',
+            '"\n"two\nlines\n",0,"line\nbreak","say ""hi"" both ",\n"say ""hi""","a,b",b',
+            'ack\\slash,é,λ\n\nback\\slash\nb,"line\nbreak",",,","line\nbreakNULL",""""""\n',
+            '"""""","a""",NULL,41,ada,"""b"\nsemi;colon日本語\nb,"a""",b,3.5,"\n\n","\n\n"\n"',
+            '\n\n","b,",",","say ""hi"""\n3.5,"\n\nada", both ,b\nNULL,",", lead,"-1line\n',
+            'break","cr\rhere", both \nλ,,b, lead\nada,"two\nlines\n",0,"cr\rhere","\n\n","',
+            '\n\n"\nb\n lead,"\n", ,"crlf\r\nbreak","\n"\n"""b","cr\rhere",back\\slashλ,41,日本語',
+            "\n\"\"\nλ\n41,é,NULL'single',\"say \"\"hi\"\"\"\nback\\slash,semi;colon,\"a\"\"\",\"\n\"\n0",
+            ",,é,3.5\nnull,\",,\",日本語\n'single',\"\"\"\"\"\"\n\nnull\n\"line\nbreakλ\",\"\r\n\"\n\n\"\n\",-1",
+            ',back\\slash,null\n lead\n"line\nbreak",41,"cr\rheretwo\nlines\n",",","line\nb',
+            'reak","\r\nline\nbreak"\nsemi;colon,a,,41, lead,trail \n \n""""\n"a"" lead","',
+            '-1\r\n",0,"say ""hi""",""""""\n,"two\nlines\né","say ""hi"",", both ,ada,"\n',
+            '\ntab	here"\n日本語,x y,null\n \n"a,b",x yx y,"\r\n",a\ntab	here,ada,"two\nlines\n',
+            '","line\nbreaksay ""hi""",""""""\ntab	here,null,"crlf\r\nbreak","cr\rhere"\n',
+            ",\"line\nbreak\",\"\"\"\"\"cr\rhere\",\"cr\rhere\",\"\"\"b\",'single'\nb3.5,\"two\nlines\n\"",
+            ',",,",null,b\n\n"a,bsay ""hi""",3.5,41,"a""b"\n",",a,"\n\n","ada""""",λ,"cr',
+            '\rhere"\n",-1","say ""hi""","a""", both \ntrail \n0,"crlf\r\nbreak"\n"""b",b,',
+            ' both ,"""""x y","a,b",b\n\n""\n"crlf\r\nbreaktrail ","\n\n",x y,"\r\n",ada,"ta',
+            'b	herecrlf\r\nbreak"\nada,"""trail ","\r\n"\n0,é日本語\n\n日本語,,41semi;colon,41,"a',
+            ",b\"\n both ,\"line\nbreak\"\"\"\"\"\n\",,\",\"two\nlines\n\",\",-1\"\n'single',\"a,b\",\"cr",
+            'lf\r\nbreak",a\ntab	here,b,"a,b","\r\n",41,"\r\n"\n"two\nlines\n"\n ,b, lead,",",',
+            '"nulla,b"\n"line\nbreak",日本語,41\n""\nnull,λ,a,"line\nbreak"\nNULL,"a,b0","\n"',
+            '\n"a,b", lead,ada\ntab	here," both line\nbreak"\n",,","a,b","\r\n",\n" \n",b,"',
+            ' ,",tab	here,41,0\n"line\nbreak",日本語back\\slash,"\r\n"\n lead,ada-1,"""",bac',
+            'k\\slash\n"a,b"\nada,NULL,3.5,a,"cr\rhere",\n""\n both ,"""",semi;colon, lea',
+            'd,日本語\n"say ""hi""say ""hi""","say ""hi""日本語",3.5, ,"""","日本語a"""\nsemi;',
+            'colon,"say ""hi""","\r\n", both ," both say ""hi"""\n0,"line\nbreak",",,"\n',
+            ',3.5,-1,back\\slash,3.5,"3.5,"\nsemi;colon,3.5,"crlf\r\nbreak","crlf\r\nbrea',
+            'k",","\nsemi;colon,"41,",,"\n\n"\n"crlf\r\nbreak",é,0,3.5\ntab	here, \n"say ""',
+            "hi\"\"\"\na\n3.5,x yada,trail ,\",,\",,\"two\nlines\n\"\n\"a\"\"\",\"é\r\n\",'single'\n\"\r\n\"",
+            '\n"\n\n","""""",3.5,"crlf\r\nbreak",é,日本語x y\n,"semi;colonsay ""hi""",ada,é\n',
+            'b, both ,"crlf\r\nbreak", ,",,","crlf\r\nbreak"\nNULL\n",","cr\rhere","écrlf\r',
+            '\nbreak", , both \n\n"0a,b", both ,"a,b",é\n""\n"\r\nback\\slash"\n\n"ada""","a"',
+        ],
+        "",
+    )
+
+
+func python_text_2() -> str:
+    return strings.join(
+        [
+            '",",\n3.5,ada,日本語,"""",b,"line\nbreak"\n"a""",null,null,é, lead lead,éx y',
+            '\n",,",trail ,"a""","\n"\n"a""","two\nlines\n",,""""\n3.5," """""\n"\r\n41"\ntra',
+            'il ,"cr\rhere",a,"\r\n", both \n\n"line\nbreaktab	here","line\nbreak","\r\n41",',
+            '-1x y\na,"a,b",é\n"say ""hi""",trail \n"a,b"\n3.5,trail ,3.5NULL,"cr\rhere"',
+            ',"cr\rhere"\n-1,"two\nlines\n","3.5""b",",,"\nb,-1,41,λ,b\nλ,ada\nsemi;colon,',
+            "\"\n\n\",,\"NULL\n\n\"\n-1,back\\slash,\"crlf\r\nbreak\",\"λa\"\"\",'single'\n3.5,null,, ",
+            "both ,\"a,b'single'\"\n41,x y,\"NULL,\",\"\r\n\",back\\slash,é\n ,3.5\n lead,\"a,ba",
+            '",tab	here\n"line\nbreak""b"\n both \n"\n\n",,a,"line\nbreak",",,",""""\n lead',
+            ',""",,","""b"\n both ,"""b"\n41,a,back\\slashnull\n",",日本語,λ,"\n\n"\n"crlf\r\nb',
+            'reak",,b,"two\nlines\n",b\n"a,b","\n",é,trail \n"a""cr\rhere",back\\slash,"li',
+            'ne\nbreak",","\n"line\nbreak"\n"""","""""","trail cr\rhere"\n"""b",a, both ,',
+            '","\ntab	here\n""\n日本語,"cr\rhere","two\nlines\nada",é,ada\ntrail ,3.5,"a""",b',
+            ',"""-1","a,b"\n"\n","a""","""","two\nlines\n"\n"\r\n",,semi;colon,"\n",3.5\n, l',
+            'ead,"cr\rhereback\\slash",41,"line\nbreak","crlf\r\nbreak"\n"\r\n",é, both , ,',
+            "a,\"\n\"\n日本語\ntrail ,,,\"\"\"b\",\"a,b\",\nx y\n'single',41x y,\"trail two\nlines\n\"\n",
+            "trail ,'single',\"say \"\"hi\"\"\"\nback\\slash,λ,\",,\",3.5,\"say \"\"hi\"\"\"\n\"\"\"\"\"\"",
+            ",\"\"\"\"\"\"\nx y lead,NULL both ,\"\r\nline\nbreak\"\n\",,\",a,'single',0,back\\slas",
+            'h\n"a""","say ""hi""",tab	here,null\né,-1,"""b"\n",", ,"cr\rhere","a,b","a',
+            '""",\n3.5,ada,back\\slash\nx y,"x ycrlf\r\nbreak",""""""\nb,"two\nlines\ncrlf\r',
+            '\nbreak", both ,"\nada", \n,back\\slash,",two\nlines\n",trail ,"trail """,日本',
+            '語\nNULL\n"say ""hi""", both ,"\r\n",null,"line\nbreak",","\n"\r\n","""b",日本語\n"',
+            '"\n"""b","a""\n"\n"say ""hi""","two\nlines\n",ada\n"\n\n","a""","a,b",NULL,"""',
+            '"\n both ,"\n",semi;colon,null,"\r\n",b\n both ,tab	here,adatrail ,"""b","0',
+            ',,","""b"\n"""""",back\\slash,"\n\n","\n\n", \n',
+        ],
+        "",
+    )
+
+
+func python_text() -> str:
+    return python_text_1() + python_text_2()
+
+
+func mixed_text_1() -> str:
+    return strings.join(
+        [
+            '"a,b"\n"a""","λcrlf\r\nbreak","x y"\n",","0NULL",0,"""""","-1","a,b"\r\nada4',
+            '1,"\n\n,"\r\n-1,"cr\rhere","ada"," both ",λ\r\n both ,"\n\n",",,",-1\r\né\nsemi;co',
+            'lon,"","crlf\r\nbreak",","\nNULL,"line\nbreak,","\r\n","b",",,","\n\n"\n\n"say "',
+            '"hi""",",,"\r\n""\nada,"\n"\r\n"two\nlines\n","a",tab	here,"a,b"\n,"cr\rhere","a',
+            "\"\"\",,\"\"\"\"\"\",'single'\r\n日本語,semi;colon,\"a,b-1\",\"x y\",\"null,\",\"line\nbreak",
+            "\"\n,\"tab	here'single'\"\r\n\"\"\n\",,\"\n\"a,b\",b,\"é\",\",\",\"crlf\r\nbreak\"\r\n\"\n\n\",\"\n\n",
+            "\",\"41\"\r\n\"\"\r\na,null,3.5,\"\"\"\",'single'\r\n\"line\nbreak\",é,\"\r\n\",\"\n\"\n\"\n\",\"two",
+            '\nlines\n",back\\slash\n"\n"\n\r\nNULL,"semi;colon"\n3.5,"""",semi;colon,",,", ',
+            'lead,"3.5"\n\n"éline\nbreak","\r\n",",,",""""""\r\n"two\nlines\n","0","line\nbre',
+            'ak","say ""hi"" both ",\r\n"say ""hi""","a,b",back\\slash,"é","λ"\n\r\nback\\',
+            'slash\nb,"line\nbreak",",,","line\nbreakNULL",""""""\r\n"""""","a""",NULL,4',
+            '1,ada,"""b"\r\nsemi;colon日本語\nb,"a""",b,3.5,"\n\n","\n\n"\r\n"\n\n","b,",",","say',
+            ' ""hi"""\n"3.5","\n\nada"," both ",b\r\n"NULL",",", lead,"-1line\nbreak","cr',
+            '\rhere", both \r\nλ,"",b, lead\r\n"ada","two\nlines\n","0","cr\rhere","\n\n","\n\n',
+            '"\nb\r\n lead,"\n", ,"crlf\r\nbreak","\n"\r\n"""b","cr\rhere",back\\slashλ,41,日本語',
+            "\r\n\"\"\nλ\r\n41,é,NULL'single',\"say \"\"hi\"\"\"\nback\\slash,semi;colon,\"a\"\"\",\"\n\"",
+            "\r\n0,,é,3.5\nnull,\",,\",日本語\n'single',\"\"\"\"\"\"\r\n\n\"null\"\n\"line\nbreakλ\",\"\r\n\"\r\n",
+            '\n"\n",-1,back\\slash,"null"\n lead\r\n"line\nbreak","41","cr\rheretwo\nlines\n"',
+            ',",","line\nbreak","\r\nline\nbreak"\r\n"semi;colon",a,,41, lead,trail \r\n \n"',
+            '"""\n"a"" lead","-1\r\n",0,"say ""hi""",""""""\n,"two\nlines\né","say ""hi""',
+            ',", both ,ada,"\n\ntab	here"\r\n日本語,x y,null\r\n" "\n"a,b",x yx y,"\r\n","a"\nta',
+            'b	here,ada,"two\nlines\n","line\nbreaksay ""hi""",""""""\r\ntab	here,null,"',
+            "crlf\r\nbreak\",\"cr\rhere\"\n,\"line\nbreak\",\"\"\"\"\"cr\rhere\",\"cr\rhere\",\"\"\"b\",\"'s",
+            "ingle'\"\r\nb3.5,\"two\nlines\n\",\",,\",\"null\",b\r\n\r\n\"a,bsay \"\"hi\"\"\",3.5,41,\"a\"",
+            '"b"\n",",a,"\n\n","ada""""","λ","cr\rhere"\n",-1","say ""hi""","a"""," both',
+            ' "\n"trail "\n0,"crlf\r\nbreak"\r\n"""b","b"," both ","""""x y","a,b",b\r\n\n""',
+            '\r\n"crlf\r\nbreaktrail ","\n\n",x y,"\r\n","ada","tab	herecrlf\r\nbreak"\r\n"ada"',
+            ',"""trail ","\r\n"\r\n0,é日本語\r\n\r\n日本語,,41semi;colon,41,"a,b"\n both ,"line\nbr',
+            "eak\"\"\"\"\"\r\n\",,\",\"two\nlines\n\",\",-1\"\r\n\"'single'\",\"a,b\",\"crlf\r\nbreak\",a\nta",
+            'b	here,b,"a,b","\r\n",41,"\r\n"\n"two\nlines\n"\n ,"b", lead,",","nulla,b"\r\n"l',
+            'ine\nbreak",日本語,41\n""\nnull,λ,a,"line\nbreak"\nNULL,"a,b0","\n"\n"a,b"," lea',
+            'd","ada"\r\n"tab	here"," both line\nbreak"\n",,","a,b","\r\n",""\r\n" \n","b","',
+            ' ,",tab	here,41,0\n"line\nbreak",日本語back\\slash,"\r\n"\n lead,ada-1,"""",bac',
+            'k\\slash\n"a,b"\r\n"ada","NULL",3.5,a,"cr\rhere",\r\n""\n both ,"""",semi;colo',
+            'n, lead,日本語\n"say ""hi""say ""hi""","say ""hi""日本語","3.5", ,"""","日本語a"',
+            '""\r\n"semi;colon","say ""hi""","\r\n"," both "," both say ""hi"""\r\n0,"lin',
+            'e\nbreak",",,"\n,3.5,-1,"back\\slash",3.5,"3.5,"\r\n"semi;colon",3.5,"crlf\r',
+            '\nbreak","crlf\r\nbreak",","\n"semi;colon","41,",,"\n\n"\r\n"crlf\r\nbreak",é,0,',
+            '3.5\ntab	here, \n"say ""hi"""\r\n"a"\r\n3.5,x yada,trail ,",,","","two\nlines',
+            "\n\"\r\n\"a\"\"\",\"é\r\n\",'single'\r\n\"\r\n\"\r\n\"\n\n\",\"\"\"\"\"\",3.5,\"crlf\r\nbreak\",é,日本語x y",
+        ],
+        "",
+    )
+
+
+func mixed_text_2() -> str:
+    return strings.join(
+        [
+            '\n,"semi;colonsay ""hi""","ada",é\n"b", both ,"crlf\r\nbreak", ,",,","crlf',
+            '\r\nbreak"\r\nNULL\n",","cr\rhere","écrlf\r\nbreak"," "," both "\r\n\n"0a,b", bot',
+            'h ,"a,b",é\r\n""\r\n"\r\nback\\slash"\r\n\r\n"ada""","a"",",\n"3.5",ada,日本語,"""",b',
+            ',"line\nbreak"\n"a""","null","null",é, lead lead,éx y\n",,",trail ,"a""",',
+            '"\n"\n"a""","two\nlines\n",,""""\n3.5," """""\n"\r\n41"\n"trail ","cr\rhere",a,"',
+            '\r\n", both \n\n"line\nbreaktab	here","line\nbreak","\r\n41",-1x y\r\n"a","a,b",',
+            'é\r\n"say ""hi""",trail \n"a,b"\r\n3.5,"trail ",3.5NULL,"cr\rhere","cr\rhere"',
+            '\r\n-1,"two\nlines\n","3.5""b",",,"\r\n"b",-1,41,λ,b\nλ,ada\r\nsemi;colon,"\n\n",',
+            ",\"NULL\n\n\"\r\n-1,back\\slash,\"crlf\r\nbreak\",\"λa\"\"\",'single'\n\"3.5\",null,\"\", ",
+            "both ,\"a,b'single'\"\r\n41,x y,\"NULL,\",\"\r\n\",\"back\\slash\",é\n ,\"3.5\"\r\n lead",
+            ',"a,ba",tab	here\r\n"line\nbreak""b"\r\n" both "\n"\n\n",,a,"line\nbreak",",,",',
+            '""""\n lead,""",,","""b"\r\n" both ","""b"\r\n"41","a","back\\slashnull"\n","',
+            ',日本語,λ,"\n\n"\n"crlf\r\nbreak",,b,"two\nlines\n","b"\n"a,b","\n",é,trail \r\n"a""',
+            'cr\rhere",back\\slash,"line\nbreak",","\r\n"line\nbreak"\r\n"""","""""","trail',
+            ' cr\rhere"\r\n"""b",a, both ,","\n"tab	here"\n""\r\n日本語,"cr\rhere","two\nlines\n',
+            'ada",é,"ada"\n"trail ","3.5","a""",b,"""-1","a,b"\n"\n","a""","""","two\nl',
+            'ines\n"\n"\r\n",,semi;colon,"\n",3.5\n"", lead,"cr\rhereback\\slash","41","lin',
+            'e\nbreak","crlf\r\nbreak"\n"\r\n",é, both , ,a,"\n"\n"日本語"\r\ntrail ,,,"""b","a,',
+            "b\",\nx y\r\n'single',\"41x y\",\"trail two\nlines\n\"\n\"trail \",'single',\"say \"\"",
+            'hi"""\r\n"back\\slash",λ,",,",3.5,"say ""hi"""\n"""""",""""""\n"x y lead",N',
+            "ULL both ,\"\r\nline\nbreak\"\n\",,\",a,'single',0,\"back\\slash\"\r\n\"a\"\"\",\"say \"\"",
+            'hi""","tab	here",null\né,"-1","""b"\r\n","," ","cr\rhere","a,b","a""",\r\n"3',
+            '.5","ada","back\\slash"\nx y,"x ycrlf\r\nbreak",""""""\nb,"two\nlines\ncrlf\r\n',
+            'break"," both ","\nada"," "\n"","back\\slash",",two\nlines\n",trail ,"trail',
+            ' """,日本語\nNULL\n"say ""hi""", both ,"\r\n",null,"line\nbreak",","\r\n"\r\n","""',
+            'b","日本語"\r\n""\n"""b","a""\n"\n"say ""hi""","two\nlines\n",ada\n"\n\n","a""","a,',
+            'b",NULL,""""\n both ,"\n","semi;colon","null","\r\n",b\n both ,tab	here,ada',
+            'trail ,"""b","0,,","""b"\n"""""","back\\slash","\n\n","\n\n"," "',
+        ],
+        "",
+    )
+
+
+func mixed_text() -> str:
+    return mixed_text_1() + mixed_text_2()
+
+
+func parsed_rows(text: str) -> str[][]:
+    match csv.parse(text):
+        case Ok(rows):
+            return rows
+        case Err(error):
+            return [["parse refused: " + csv.message(error)]]
+
+
+func field_texts(text: str) -> str[][]:
+    mut out: str[][] = []
+    match csv.parse_fields(text):
+        case Ok(rows):
+            for row in rows:
+                mut texts: str[] = []
+                for field in row:
+                    append(mut texts, copy(field.text))
+                append(mut out, own texts)
+        case Err(error):
+            append(mut out, ["parse_fields refused: " + csv.message(error)])
+    return out
+
+
+func field_flags(text: str) -> str[]:
+    mut out: str[] = []
+    match csv.parse_fields(text):
+        case Ok(rows):
+            for row in rows:
+                mut line = ""
+                for field in row:
+                    if field.quoted:
+                        line += "1"
+                    else:
+                        line += "0"
+                append(mut out, own line)
+        case Err(error):
+            append(mut out, "parse_fields refused: " + csv.message(error))
+    return out
+
+
+public func test_parse_reads_the_text_python_writes() -> bool:
+    return parsed_rows(python_text()) == vector_rows()
+
+
+public func test_write_renders_what_python_writes() -> bool:
+    return csv.write(vector_rows()) == python_text()
+
+
+public func test_parse_reads_mixed_quoting_and_line_endings() -> bool:
+    return parsed_rows(mixed_text()) == vector_rows()
+
+
+public func test_parse_fields_keeps_the_texts_of_both_documents() -> bool:
+    return field_texts(python_text()) == vector_rows() and field_texts(mixed_text()) == vector_rows()
+
+
+public func test_parse_fields_marks_the_fields_python_quotes() -> bool:
+    return field_flags(python_text()) == python_quoted()
+
+
+public func test_parse_fields_marks_the_fields_of_mixed_quoting() -> bool:
+    return field_flags(mixed_text()) == mixed_quoted()
+
+
+func count_blank(rows: str[][]) -> int:
+    mut count = 0
+    for row in rows:
+        if len(row) == 0:
+            count += 1
+    return count
+
+
+func count_lone_empty(rows: str[][]) -> int:
+    mut count = 0
+    for row in rows:
+        if len(row) == 1 and row[0] == "":
+            count += 1
+    return count
+
+
+func count_multiline(rows: str[][]) -> int:
+    mut count = 0
+    for row in rows:
+        for field in row:
+            if "\n" in field:
+                count += 1
+    return count
+
+
+# The 200 rows are not all alike: some are blank, some a lone empty field, some hold a line break, and the two
+# documents differ in which fields are quoted.
+public func test_the_vectors_cover_the_cases() -> bool:
+    const rows = vector_rows()
+    const mixed = count_blank(rows) > 0 and count_lone_empty(rows) > 0 and count_multiline(rows) > 0
+    return len(rows) == 200 and mixed and python_quoted() != mixed_quoted()

@@ -1,0 +1,56 @@
+import bytes
+
+@noalloc
+func parse_ranges(raw: bytes) -> bool:
+    match bytes.parse_int_range(raw, 2, 4):
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match bytes.parse_float_range(raw, 5, 8):
+        case Some(value):
+            if value != 2.5:
+                return False
+        case None:
+            return False
+    match bytes.parse_int_range(raw, 8, 2):
+        case Some(_):
+            return False
+        case None:
+            pass
+    return True
+
+
+func main() -> int:
+    if not parse_ranges(b"xx42=2.5abc"):
+        return 1
+    match bytes.parse_int_range(b"x-9223372036854775808y", 1, 21):
+        case Some(value):
+            if value != -9223372036854775808:
+                return 6
+        case None:
+            return 7
+    match bytes.parse_int_range(b"x9223372036854775808y", 1, 20):
+        case Some(_):
+            return 8
+        case None:
+            pass
+    match bytes.scalar_count_range(b"a\xce\xbbb\xf0\x9f\x98\x80c", 1, 8):
+        case Ok(width):
+            if width != 3:
+                return 2
+        case Err(_):
+            return 3
+    match bytes.scalar_count_range(b"a\xffb", 1, 2):
+        case Ok(_):
+            return 4
+        case Err(message):
+            if message != "invalid UTF-8 in byte string":
+                return 5
+    return 0
+
+
+# spec-case: PY-BYTES-RANGE-1
+public func test_native_byte_range_boundaries_and_scalar_counts() -> bool:
+    return main() == 0

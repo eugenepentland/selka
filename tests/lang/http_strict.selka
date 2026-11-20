@@ -1,0 +1,419 @@
+import byte_builder
+import hex
+import http
+import strings
+
+# The HTTP codec's strict reading and checked writing (lane FR13, 14 November 2026: F-62 to F-66 of the site's friction log,
+# from a security review). A message that is well formed by RFC 9110 and RFC 9112 is read and written as before; a malformed
+# one is refused where the codec used to guess. The adversarial table is `http_adversarial.selka`.
+func message_of(error: http.Error) -> str:
+    return http.message(error)
+
+
+# What parsing a request says: the body's length, the path and the query, or the refusal's text.
+func request_says(wire: bytes) -> str:
+    match http.parse_request(wire):
+        case Ok(request):
+            return "OK " + str(len(request.body)) + " " + http.path(request) + " " + http.query(request)
+        case Err(error):
+            return "ERR " + message_of(error)
+
+
+func response_says(wire: bytes, closed: bool) -> str:
+    match http.parse_response(wire, closed):
+        case Ok(response):
+            return "OK " + str(response.status) + " " + str(len(response.body))
+        case Err(error):
+            return "ERR " + message_of(error)
+
+
+func length_request(value: str) -> str:
+    const raw = "POST / HTTP/1.1\r\nHost: x\r\nContent-Length: " + value + "\r\n\r\nBODYBODYBODY"
+    return request_says(strings.encode(raw))
+
+
+# F-62: Content-Length is one to 18 ASCII digits; a sign, an underscore, a space inside and a digit of another script are not.
+public func test_content_length_is_digits_and_nothing_else() -> bool:
+    const plus = length_request("+4") == "ERR Content-Length is not a decimal integer"
+    const underscore = length_request("0_4") == "ERR Content-Length is not a decimal integer"
+    const minus_zero = length_request("-0") == "ERR Content-Length is negative"
+    const inside = length_request("1_0") == "ERR Content-Length is not a decimal integer"
+    const spaced = length_request("1 0") == "ERR Content-Length is not a decimal integer"
+    const plain = length_request("4") == "OK 4 / "
+    const zeros = length_request("0004") == "OK 4 / "
+    const padded = length_request("\t4 ") == "OK 4 / "
+    const longest = length_request("000000000000000004") == "OK 4 / "
+    const too_long = length_request("0000000000000000004") == "ERR Content-Length has more than 18 digits"
+    return plus and underscore and minus_zero and inside and spaced and plain and zeros and padded and longest and too_long
+
+
+func status_of_line(code: str) -> str:
+    const raw = "HTTP/1.1 " + code + " OK\r\nContent-Length: 0\r\n\r\n"
+    return response_says(strings.encode(raw), False)
+
+
+# F-62: a status code is exactly three digits.
+public func test_a_status_code_is_exactly_three_digits() -> bool:
+    const underscore = status_of_line("2_00") == "ERR status code is not a decimal integer"
+    const plus = status_of_line("+200") == "ERR status code is not a decimal integer"
+    const zero = status_of_line("0200") == "ERR status code must be exactly three digits"
+    const low = status_of_line("99") == "ERR status code must be exactly three digits"
+    const lowest = status_of_line("099") == "ERR status code is outside 100..999"
+    const high = status_of_line("1000") == "ERR status code must be exactly three digits"
+    const huge = status_of_line("99999999999999999999") == "ERR status code must be exactly three digits"
+    const good = status_of_line("200") == "OK 200 0" and status_of_line("100") == "OK 100 0" and status_of_line("999") == "OK 999 0"
+    return underscore and plus and zero and low and lowest and high and huge and good
+
+
+# F-62: two Content-Length fields that say the same are one length, and two that differ are refused, in either order.
+public func test_two_content_length_fields_must_agree() -> bool:
+    const same = request_says(b"POST / HTTP/1.1\r\nContent-Length: 4\r\ncontent-length: 4\r\n\r\nabcd") == "OK 4 / "
+    const differ = request_says(b"POST / HTTP/1.1\r\nContent-Length: 4\r\ncontent-length: 5\r\n\r\nabcde") == "ERR conflicting Content-Length values"
+    const reversed = request_says(b"POST / HTTP/1.1\r\nContent-Length: 5\r\ncontent-length: 4\r\n\r\nabcde") == "ERR conflicting Content-Length values"
+    const zeros = request_says(b"POST / HTTP/1.1\r\nContent-Length: 4\r\ncontent-length: 04\r\n\r\nabcd") == "OK 4 / "
+    return same and differ and reversed and zeros
+
+
+# F-62: Content-Length beside Transfer-Encoding is refused in a request (501, a coding the codec does not read) and in a
+# response (a chunked body with a length is malformed, 400).
+public func test_content_length_beside_transfer_encoding_is_refused() -> bool:
+    const request = request_says(b"POST / HTTP/1.1\r\nTransfer-Encoding: chunked\r\nContent-Length: 4\r\n\r\nabcd") == "ERR chunked request bodies are not supported"
+    const response = response_says(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Length: 0\r\n\r\n0\r\n\r\n", False) == "ERR chunked response also has Content-Length"
+    return request and response
+
+
+func fields_of_request(hex_text: str) -> str:
+    const data = bytes.fromhex(hex_text) else Err(_):
+        return "bad hex"
+    match http.parse_request(data):
+        case Ok(request):
+            mut found = ""
+            for item in request.headers:
+                found = found + " [" + item.name + "=" + item.value + "]"
+            return "accepted," + found
+        case Err(error):
+            return "refused, " + message_of(error)
+
+
+# F-63: a control octet at either end of a field value is refused, not trimmed; a space and a tab are trimmed.
+public func test_a_control_octet_at_the_end_of_a_value_is_refused_not_trimmed() -> bool:
+    const lf = fields_of_request("474554202f20485454502f312e310d0a413a20620a0d0a433a20640d0a0d0a") == "refused, header value contains an invalid character"
+    const cr = fields_of_request("474554202f20485454502f312e310d0a413a20620d0d0a433a20640d0a0d0a") == "refused, header value contains an invalid character"
+    const unit_separator = fields_of_request("474554202f20485454502f312e310d0a413a201f621c0d0a0d0a") == "refused, header value contains an invalid character"
+    const inside = fields_of_request("474554202f20485454502f312e310d0a413a20620a630d0a0d0a") == "refused, header value contains an invalid character"
+    const blanks = fields_of_request("474554202f20485454502f312e310d0a413a2009620920200d0a0d0a") == "accepted, [A=b]"
+    return lf and cr and unit_separator and inside and blanks
+
+
+# F-63: a line ends at CRLF only. A bare LF line end never completes the header section (the codec waits for the CRLF CRLF),
+# and a bare LF anywhere inside the section is refused.
+public func test_a_bare_lf_never_ends_a_line() -> bool:
+    const only_lf = request_says(b"GET / HTTP/1.1\nHost: x\n\n") == "ERR incomplete message"
+    const mixed = request_says(b"GET / HTTP/1.1\r\nHost: x\nOther: y\r\n\r\n") == "ERR header value contains an invalid character"
+    const in_request_line = request_says(b"GET / HTTP/1.1\nHost:x\r\n\r\n") == "ERR request version contains a control character"
+    const in_status_line = response_says(b"HTTP/1.1 200 OK\nContent-Length: 0\r\n\r\n", False) == "ERR status reason contains an invalid character"
+    return only_lf and mixed and in_request_line and in_status_line
+
+
+# F-63: the Unicode spaces that `strip` removes are part of a value, as RFC 9110 reads it (octets 0x80 to 0xff); only a space and
+# a horizontal tab are optional whitespace.
+public func test_only_a_space_and_a_tab_are_trimmed_in_a_non_ascii_section_too() -> bool:
+    match http.parse_request(strings.encode("GET / HTTP/1.1\r\nA: \u2003 b\u00a0\t\r\n\r\n")):
+        case Ok(request):
+            return http.header(request.headers, "a") == Some("\u2003 b\u00a0")
+        case Err(_):
+            return False
+
+
+# F-64: the request writer takes a token for the method and one of the two versions, and a target of one of the four forms.
+public func test_write_request_checks_the_method_the_version_and_the_target() -> bool:
+    const wired = http.Request(method="GET", target="/", version="HTTP/1.1\r\nX-Injected: yes", headers=[http.Header(name="Host", value="h")], body=b"")
+    const method = http.Request(method="GET\r\nX-Injected:yes\r\nA:", target="/", version="HTTP/1.1", headers=[], body=b"")
+    const newer = http.Request(method="GET", target="/", version="HTTP/2.0", headers=[], body=b"")
+    const bare = http.Request(method="GET", target="admin", version="HTTP/1.1", headers=[], body=b"")
+    const fragment = http.Request(method="GET", target="/a#b", version="HTTP/1.1", headers=[], body=b"")
+    const options = http.Request(method="OPTIONS", target="*", version="HTTP/1.1", headers=[], body=b"")
+    const connect = http.Request(method="CONNECT", target="example.test:443", version="HTTP/1.0", headers=[], body=b"")
+    match http.write_request(wired):
+        case Ok(_):
+            return False
+        case Err(error):
+            if http.status(error) != 501:
+                return False
+    match http.write_request(method):
+        case Ok(_):
+            return False
+        case Err(error):
+            if message_of(error) != "request method is invalid":
+                return False
+    match http.write_request(newer):
+        case Ok(_):
+            return False
+        case Err(error):
+            if http.status(error) != 505:
+                return False
+    match http.write_request(bare):
+        case Ok(_):
+            return False
+        case Err(error):
+            if message_of(error) != "request target is invalid":
+                return False
+    match http.write_request(fragment):
+        case Ok(_):
+            return False
+        case Err(error):
+            if message_of(error) != "request target is invalid":
+                return False
+    const star = http.write_request(options) else Err(_):
+        return False
+    const tunnel = http.write_request(connect) else Err(_):
+        return False
+    return star == b"OPTIONS * HTTP/1.1\r\n\r\n" and tunnel == b"CONNECT example.test:443 HTTP/1.0\r\n\r\n"
+
+
+# What writing a response gives: the bytes as text with CR and LF spelled out, or the refusal's text.
+func wrote_response(code: int, fields: http.Header[], body: bytes) -> str:
+    const response = http.Response(version="HTTP/1.1", status=code, reason="R", headers=copy(fields), body=copy(body))
+    match http.write_response(response):
+        case Ok(data):
+            const text = strings.decode(data) else Err(_):
+                return "not text"
+            return strings.replace(strings.replace(text, "\r", "<CR>"), "\n", "<LF>")
+        case Err(error):
+            return "ERR " + message_of(error)
+
+
+func wrote_head(code: int, fields: http.Header[], body: bytes) -> str:
+    const response = http.Response(version="HTTP/1.1", status=code, reason="R", headers=copy(fields), body=copy(body))
+    match http.write_response_head(response):
+        case Ok(data):
+            const text = strings.decode(data) else Err(_):
+                return "not text"
+            return strings.replace(strings.replace(text, "\r", "<CR>"), "\n", "<LF>")
+        case Err(error):
+            return "ERR " + message_of(error)
+
+
+func field(name: str, value: str) -> http.Header[]:
+    return [http.Header(name=copy(name), value=copy(value))]
+
+
+# F-64: a response with no body states a length of 0, except a 1xx, 204 or 304 answer, which has none.
+public func test_write_response_gives_an_empty_body_a_length() -> bool:
+    const redirect = wrote_response(302, field("Location", "/x"), b"") == "HTTP/1.1 302 R<CR><LF>Location: /x<CR><LF>Content-Length: 0<CR><LF><CR><LF>"
+    const empty = wrote_response(200, [], b"") == "HTTP/1.1 200 R<CR><LF>Content-Length: 0<CR><LF><CR><LF>"
+    const no_content = wrote_response(204, [], b"") == "HTTP/1.1 204 R<CR><LF><CR><LF>"
+    const not_modified = wrote_response(304, [], b"") == "HTTP/1.1 304 R<CR><LF><CR><LF>"
+    const informational = wrote_response(100, [], b"") == "HTTP/1.1 100 R<CR><LF><CR><LF>"
+    const switching = wrote_response(101, field("Upgrade", "x"), b"") == "HTTP/1.1 101 R<CR><LF>Upgrade: x<CR><LF><CR><LF>"
+    const with_body = wrote_response(200, [], b"ab") == "HTTP/1.1 200 R<CR><LF>Content-Length: 2<CR><LF><CR><LF>ab"
+    const declared = wrote_response(200, field("content-length", "0"), b"") == "HTTP/1.1 200 R<CR><LF>content-length: 0<CR><LF><CR><LF>"
+    const chunked = wrote_response(200, field("Transfer-Encoding", "chunked"), b"") == "HTTP/1.1 200 R<CR><LF>Transfer-Encoding: chunked<CR><LF><CR><LF>"
+    return redirect and empty and no_content and not_modified and informational and switching and with_body and declared and chunked
+
+
+# F-64: a Transfer-Encoding beside the Content-Length the writer would add, or beside one the caller wrote, is refused, and so is
+# a body on a 1xx, 204 or 304 answer.
+public func test_write_response_refuses_framing_that_says_two_things() -> bool:
+    const beside_body = wrote_response(200, field("Transfer-Encoding", "chunked"), b"5\r\nhello\r\n0\r\n\r\n") == "ERR Transfer-Encoding cannot be written beside a body, which gets a Content-Length"
+    const beside_length = wrote_response(200, [http.Header(name="Transfer-Encoding", value="chunked"), http.Header(name="Content-Length", value="0")], b"") == "ERR Content-Length and Transfer-Encoding together say two things about the response body"
+    const no_content = wrote_response(204, [], b"x") == "ERR a response with this status has no body"
+    const not_modified = wrote_response(304, [], b"x") == "ERR a response with this status has no body"
+    const informational = wrote_response(100, [], b"x") == "ERR a response with this status has no body"
+    return beside_body and beside_length and no_content and not_modified and informational
+
+
+# F-64: the HEAD answer's writer adds no length for an empty body (it cannot tell the GET answer's empty body from an omitted one),
+# writes a declared length as before, and refuses what `write_response` refuses.
+public func test_write_response_head_keeps_its_answers_and_the_new_refusals() -> bool:
+    const empty = wrote_head(200, [], b"") == "HTTP/1.1 200 R<CR><LF><CR><LF>"
+    const declared = wrote_head(200, field("Content-Length", "5"), b"") == "HTTP/1.1 200 R<CR><LF>Content-Length: 5<CR><LF><CR><LF>"
+    const whole = wrote_head(200, [], b"hello") == "HTTP/1.1 200 R<CR><LF>Content-Length: 5<CR><LF><CR><LF>"
+    const chunked = wrote_head(200, field("Transfer-Encoding", "chunked"), b"") == "HTTP/1.1 200 R<CR><LF>Transfer-Encoding: chunked<CR><LF><CR><LF>"
+    const with_both = wrote_head(200, [http.Header(name="Transfer-Encoding", value="chunked"), http.Header(name="Content-Length", value="5")], b"") == "ERR Content-Length and Transfer-Encoding together say two things about the response body"
+    const body = wrote_head(204, [], b"x") == "ERR a response with this status has no body"
+    return empty and declared and whole and chunked and with_both and body
+
+
+func request_with_framing(fields: http.Header[], body: bytes) -> str:
+    const request = http.Request(method="POST", target="/", version="HTTP/1.1", headers=copy(fields), body=copy(body))
+    match http.write_request(request):
+        case Ok(data):
+            const text = strings.decode(data) else Err(_):
+                return "not text"
+            return strings.replace(strings.replace(text, "\r", "<CR>"), "\n", "<LF>")
+        case Err(error):
+            return "ERR " + message_of(error)
+
+
+# F-64: the request writer keeps its length and gets the same Transfer-Encoding refusals.
+public func test_write_request_frames_its_body_and_refuses_two_framings() -> bool:
+    const body = request_with_framing([], b"ab") == "POST / HTTP/1.1<CR><LF>Content-Length: 2<CR><LF><CR><LF>ab"
+    const empty = request_with_framing([], b"") == "POST / HTTP/1.1<CR><LF><CR><LF>"
+    const chunked_body = request_with_framing(field("Transfer-Encoding", "chunked"), b"2\r\nab\r\n0\r\n\r\n") == "ERR Transfer-Encoding cannot be written beside a body, which gets a Content-Length"
+    const both = request_with_framing([http.Header(name="Transfer-Encoding", value="chunked"), http.Header(name="Content-Length", value="2")], b"ab") == "ERR Content-Length and Transfer-Encoding together say two things about the request body"
+    return body and empty and chunked_body and both
+
+
+# A chunked response of `count` chunks of the octets `piece`, whose size line spells that many octets in hexadecimal.
+func chunked_of(count: int, size_line: bytes, piece: bytes) -> bytes:
+    mut text = byte_builder.create()
+    byte_builder.append(mut text, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+    for _ in range(count):
+        byte_builder.append(mut text, size_line)
+        byte_builder.append(mut text, b"\r\n")
+        byte_builder.append(mut text, piece)
+        byte_builder.append(mut text, b"\r\n")
+    byte_builder.append(mut text, b"0\r\n\r\n")
+    return byte_builder.finish(text)
+
+
+# F-65: many small chunks are gathered in order (the time is linear: the chunks go into one builder).
+public func test_a_chunked_body_of_many_small_chunks_is_gathered_in_order() -> bool:
+    mut expected = byte_builder.create()
+    mut pieces = byte_builder.create()
+    byte_builder.append(mut pieces, b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+    for index in range(3000):
+        byte_builder.append(mut pieces, b"1\r\n")
+        _ = byte_builder.append_byte(mut pieces, 97 + index % 26)
+        _ = byte_builder.append_byte(mut expected, 97 + index % 26)
+        byte_builder.append(mut pieces, b"\r\n")
+    byte_builder.append(mut pieces, b"0\r\n\r\n")
+    match http.parse_response(byte_builder.finish(pieces), False):
+        case Ok(response):
+            return response.body == byte_builder.finish(expected)
+        case Err(_):
+            return False
+
+
+# F-65: the body limit holds across chunks: sixteen chunks of 64 KiB fill it exactly and a seventeenth is refused.
+public func test_a_chunked_body_past_the_limit_is_refused_across_chunks() -> bool:
+    const piece = byte_builder.repeat(b"z", 65536)
+    const fits = response_says(chunked_of(16, b"10000", piece), False) == "OK 200 1048576"
+    const more = response_says(chunked_of(17, b"10000", piece), False) == "ERR chunked body is too large"
+    return fits and more
+
+
+# F-66, first half: the four forms of a request target are read and each has a path and a query; anything else is refused.
+public func test_a_request_target_is_one_of_four_forms() -> bool:
+    const origin = request_says(b"GET /a/b?c=d HTTP/1.1\r\n\r\n") == "OK 0 /a/b c=d"
+    const in_path = request_says(b"GET /public/x://h/admin/delete HTTP/1.1\r\n\r\n") == "OK 0 /public/x://h/admin/delete "
+    const absolute = request_says(b"GET http://h.test:8080/a/b?c=d HTTP/1.1\r\n\r\n") == "OK 0 /a/b c=d"
+    const no_path = request_says(b"GET https://h.test HTTP/1.1\r\n\r\n") == "OK 0 / "
+    const star = request_says(b"OPTIONS * HTTP/1.1\r\n\r\n") == "OK 0  "
+    const authority = request_says(b"CONNECT h.test:443 HTTP/1.1\r\n\r\n") == "OK 0  "
+    const literal = request_says(b"CONNECT [2001:db8::1]:443 HTTP/1.1\r\n\r\n") == "OK 0  "
+    return origin and in_path and absolute and no_path and star and authority and literal
+
+
+func refused_target(target: str) -> bool:
+    const raw = "GET " + target + " HTTP/1.1\r\nHost: x\r\n\r\n"
+    match http.parse_request(strings.encode(raw)):
+        case Ok(_):
+            return False
+        case Err(error):
+            return http.status(error) == 400
+
+
+public func test_a_request_target_of_no_form_or_with_a_fragment_is_refused() -> bool:
+    const fragment = refused_target("/admin#x") and refused_target("/a#b?c=1") and refused_target("/a#") and refused_target("http://h/p#f")
+    const no_slash = refused_target("admin/x") and refused_target("admin") and refused_target("?a=b") and refused_target("x://")
+    const odd = refused_target("http:/h/x") and refused_target("1http://h/") and refused_target("h:") and refused_target(":80") and refused_target("h:65536")
+    const octets = refused_target("/a\tb") and refused_target("/a\x00b") and refused_target("/a\x7fb")
+    return fragment and no_slash and odd and octets
+
+
+func request_wire(count: int) -> bytes:
+    mut text = byte_builder.create()
+    for index in range(count):
+        byte_builder.append(mut text, b"POST /n")
+        byte_builder.append_int(mut text, index)
+        byte_builder.append(mut text, b" HTTP/1.1\r\nHost: x\r\nContent-Length: 3\r\n\r\nab")
+        byte_builder.append_int(mut text, index % 10)
+    return byte_builder.finish(text)
+
+
+# F-66, second half: a server loop reads every request in a buffer by moving on by the length each one took.
+public func test_a_loop_reads_every_request_of_a_buffer_by_its_length() -> bool:
+    const buffer = request_wire(5)
+    mut offset = 0
+    mut seen = ""
+    mut count = 0
+    while offset < len(buffer):
+        match http.parse_request_prefix(buffer[offset:], http.Limits()):
+            case Ok(parsed):
+                seen = seen + parsed.request.target + ":" + hex.encode(parsed.request.body) + ";"
+                offset += parsed.length
+                count += 1
+            case Err(_):
+                return False
+    return count == 5 and offset == len(buffer) and seen == "/n0:616230;/n1:616231;/n2:616232;/n3:616233;/n4:616234;"
+
+
+# F-66: of the friction's two requests in 66 octets the first took 45: 20 for the request line, 19 for the field, 2 for the
+# blank line and 4 for the body (the friction program's own text said 43).
+public func test_the_length_of_a_request_is_its_header_section_and_its_body() -> bool:
+    const two = b"POST /one HTTP/1.1\r\nContent-Length: 4\r\n\r\nBODYGET /two HTTP/1.1\r\n\r\n"
+    match http.parse_request_prefix(two, http.Limits()):
+        case Ok(parsed):
+            return parsed.length == 45 and parsed.request.target == "/one" and len(parsed.request.body) == 4 and len(two) == 66
+        case Err(_):
+            return False
+
+
+# F-66: a request that is not complete yet is `Incomplete`, with or without the length: the parse of the prefix says the same.
+public func test_an_incomplete_request_is_incomplete_for_both_functions() -> bool:
+    const head_only = request_says(b"POST / HTTP/1.1\r\nContent-Length: 4\r\n\r\nab") == "ERR incomplete message"
+    match http.parse_request_prefix(b"POST / HTTP/1.1\r\nContent-Length: 4\r\n\r\nab", http.Limits()):
+        case Ok(_):
+            return False
+        case Err(error):
+            return head_only and http.message(error) == "incomplete message"
+
+
+func response_length(wire: bytes, closed: bool) -> int:
+    match http.parse_response_prefix(wire, closed):
+        case Ok(parsed):
+            return parsed.length
+        case Err(_):
+            return 0 - 1
+
+
+# F-66: a response's length covers its header section and its body: a Content-Length body, a chunked body with its trailers,
+# no body for a 1xx, 204 or 304 answer, and all of the data for a body that the close of the connection ended.
+public func test_the_length_of_a_response_covers_its_body_and_its_trailers() -> bool:
+    const counted = response_length(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nhiHTTP/1.1 204 No Content\r\n\r\n", False) == 40
+    const chunked = response_length(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n0\r\nX: y\r\n\r\nNEXT", False) == 65
+    const none = response_length(b"HTTP/1.1 204 No Content\r\n\r\nNEXT", False) == 27
+    const closed = response_length(b"HTTP/1.1 200 OK\r\n\r\nrest", True) == 23
+    const waiting = response_length(b"HTTP/1.1 200 OK\r\n\r\nrest", False) == 0 - 1
+    return counted and chunked and none and closed and waiting
+
+
+# The two parse functions and their prefix versions agree on what they parse.
+public func test_the_prefix_functions_parse_what_the_others_parse() -> bool:
+    const wire = b"POST /p?q=1 HTTP/1.1\r\nHost: x\r\nContent-Length: 2\r\n\r\nhi"
+    match http.parse_request(wire):
+        case Ok(plain):
+            match http.parse_request_prefix(wire, http.Limits()):
+                case Ok(parsed):
+                    return plain == parsed.request and parsed.length == len(wire)
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+# A parsed message written again and parsed again is the message (what is written reads back).
+public func test_a_written_message_reads_back_as_it_was_written() -> bool:
+    const request = http.Request(method="PUT", target="/a?b=c", version="HTTP/1.1", headers=[http.Header(name="Host", value="h"), http.Header(name="X", value="a b")], body=b"payload")
+    const wire = http.write_request(request) else Err(_):
+        return False
+    const back = http.parse_request(wire) else Err(_):
+        return False
+    const response = http.Response(version="HTTP/1.1", status=302, reason="Found", headers=field("Location", "/x"), body=b"")
+    const answer = http.write_response(response) else Err(_):
+        return False
+    const read = http.parse_response(answer, False) else Err(_):
+        return False
+    return back.method == "PUT" and back.target == "/a?b=c" and len(back.body) == 7 and read.status == 302 and len(read.body) == 0 and len(read.headers) == 2

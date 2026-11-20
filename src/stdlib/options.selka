@@ -1,0 +1,8 @@
+# The payload of an owned option, or the owned default when it is None. The option is consumed (`match own`), so its
+# payload is the result without a copy; the default is dropped when the option holds a value.
+public func take_or[T](own value: T?, own default: T) -> T:
+    match own value:
+        case Some(payload):
+            return payload
+        case None:
+            return default

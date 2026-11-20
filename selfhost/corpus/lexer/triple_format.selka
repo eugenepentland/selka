@@ -1,0 +1,20 @@
+x = f"""one line {x}"""
+y = f'''two
+lines {y + 1}
+
+and a blank line'''
+z = f"""has "quotes" and 'quotes' {d["k"]} {d['k']} {{braces}}"""
+w = f"""ends with an escaped quote \""""
+v = f""""""
+u = f'''{x:>8.2f}'''
+t = f"""line one
+	tab-indented line two
+line three {a +
+    b}"""
+if a:
+    s = f"""indented
+  body {x}
+
+"""
+    r = f'''{{}}'''
+q = f"""a""" + f'''b''' + """c"""

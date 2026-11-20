@@ -1,0 +1,13 @@
+public enum Status:
+    ready
+    failed
+
+
+public record Header:
+    sequence: u64
+    status: Status
+
+
+public enum Message:
+    heartbeat
+    reading(value: Header)

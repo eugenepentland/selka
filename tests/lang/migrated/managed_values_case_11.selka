@@ -1,0 +1,9 @@
+import strings
+
+public func program() -> i64:
+    mut value: str = b"hé🙂"
+    mut suffix: str = b"!"
+    mut all = value + suffix
+    if strings.char_at(all, 3) == suffix:
+        return strings.char_count(all)
+    return 0

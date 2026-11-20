@@ -1,0 +1,9 @@
+import strings
+
+func main(out: Stream) -> int:
+    print(out, "before")
+    for part in strings.split("é😀", ""):
+        print(out, part)
+        break
+    print(out, "after")
+    return 0

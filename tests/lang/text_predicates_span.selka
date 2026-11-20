@@ -1,0 +1,168 @@
+# `strings.is_digit`, `strings.is_alpha`, `strings.is_space` and the builtin `ord` read a borrowed text in place (F20).
+# Their runtime helpers take a span, so a text parameter (a view of its caller's text) and a slice are read where they
+# lie: no copy is made, and every answer is the one the owned text gave. The oracle below recomputes each predicate
+# from the octets of the text, so a change in any result fails here, empty and non-ASCII text included.
+import strings
+import testing
+
+const DIGITS: int = 0
+
+
+const LETTERS: int = 1
+
+
+const SPACES: int = 2
+
+
+func digit_view(text: str) -> bool:
+    return strings.is_digit(text)
+
+
+func alpha_view(text: str) -> bool:
+    return strings.is_alpha(text)
+
+
+func space_view(text: str) -> bool:
+    return strings.is_space(text)
+
+
+func code_view(text: str) -> int:
+    return ord(text)
+
+
+# The predicate `property` from the octets of `text`: nonempty and every octet in the class. Only ASCII octets are in a
+# class, so a multi-octet scalar is outside all three.
+func oracle(text: str, property: int) -> bool:
+    if len(text) == 0:
+        return False
+    for index in range(len(text)):
+        const octet: int = text[index]
+        const good: bool
+        if property == DIGITS:
+            good = 48 <= octet <= 57
+        elif property == LETTERS:
+            good = 65 <= octet <= 90 or 97 <= octet <= 122
+        else:
+            good = octet == 32 or 9 <= octet <= 13
+        if not good:
+            return False
+    return True
+
+
+# Whether the three predicates, on a view parameter, equal the oracle.
+func agrees(text: str) -> bool:
+    if digit_view(text) != oracle(text, DIGITS) or alpha_view(text) != oracle(text, LETTERS):
+        return False
+    return space_view(text) == oracle(text, SPACES)
+
+
+# Whether the three predicates, called on a list element where it lies, equal the oracle.
+func element_agrees(sample: str) -> bool:
+    if strings.is_digit(sample) != oracle(sample, DIGITS) or strings.is_alpha(sample) != oracle(sample, LETTERS):
+        return False
+    return strings.is_space(sample) == oracle(sample, SPACES)
+
+
+# Whether the checks above hold for every sample: the empty text, each class boundary, control and non-ASCII scalars, and mixes.
+func every_sample_agrees() -> bool:
+    const samples: str[] = ["", "0", "7", "123", "a", "Z", "abc", "ab1", "1a", "-", "@", "[", "z", "9", " ", "\t\n\r", "\u000b\u000c", "\u001c", "\u001f", "\u007f", "é", "٣", "\u0085", " ", " ", "４", "1é", "  ", "x y", "日本", "a😀"]
+    for sample in samples:
+        if not agrees(sample) or not element_agrees(sample):
+            return False
+    return True
+
+
+public func test_predicates_equal_the_octet_oracle_on_every_sample() -> bool:
+    return every_sample_agrees()
+
+
+public func test_digits_on_a_view() -> bool:
+    return digit_view("0123456789") and digit_view("7") and not digit_view("") and not digit_view("12a") and not digit_view("-1") and not digit_view("٣")
+
+
+public func test_letters_on_a_view() -> bool:
+    return alpha_view("abcXYZ") and alpha_view("q") and not alpha_view("") and not alpha_view("ab1") and not alpha_view("é") and not alpha_view("@[")
+
+
+public func test_spaces_on_a_view() -> bool:
+    return space_view(" \t\n\r\u000b\u000c") and space_view(" ") and not space_view("") and not space_view(" a") and not space_view(" ") and not space_view("\u001c")
+
+
+public func test_predicates_of_a_slice() -> bool:
+    const text = "x12 \tab"
+    return digit_view(text[1:3]) and not digit_view(text[0:3]) and space_view(text[3:5]) and alpha_view(text[5:7]) and not alpha_view(text[2:7]) and not digit_view(text[3:3])
+
+
+public func test_predicates_of_a_slice_of_non_ascii_text() -> bool:
+    const text = "5é7"
+    return digit_view(text[0:1]) and not digit_view(text[0:3]) and not digit_view(text[1:3]) and digit_view(text[3:4])
+
+
+public func test_ord_on_a_view() -> bool:
+    return code_view("a") == 97 and code_view("é") == 233 and code_view("€") == 8364 and code_view("😀") == 128512 and code_view("\u0000") == 0
+
+
+public func test_ord_of_a_slice() -> bool:
+    const text = "xé€😀"
+    return code_view(text[0:1]) == 120 and code_view(text[1:3]) == 233 and code_view(text[3:6]) == 8364 and code_view(text[6:10]) == 128512
+
+
+func digit_rounds(count: int) -> int:
+    mut hits = 0
+    for i in range(count):
+        if digit_view("123"):
+            hits += 1
+    return hits
+
+
+func alpha_rounds(count: int) -> int:
+    mut hits = 0
+    for i in range(count):
+        if alpha_view("abc"):
+            hits += 1
+    return hits
+
+
+func space_rounds(count: int) -> int:
+    mut hits = 0
+    for i in range(count):
+        if space_view(" \t"):
+            hits += 1
+    return hits
+
+
+func code_rounds(count: int) -> int:
+    mut total = 0
+    for i in range(count):
+        total += code_view("é")
+    return total
+
+
+func slice_rounds(count: int) -> int:
+    const text = "x12 ab"
+    mut hits = 0
+    for i in range(count):
+        if digit_view(text[1:3]) and space_view(text[3:4]) and alpha_view(text[4:6]):
+            hits += 1
+        hits += code_view(text[0:1])
+    return hits
+
+
+public func test_is_digit_allocates_nothing_on_a_view() -> bool:
+    return digit_rounds(2) == 2 and testing.allocations(digit_rounds, 200) - testing.allocations(digit_rounds, 100) == 0
+
+
+public func test_is_alpha_allocates_nothing_on_a_view() -> bool:
+    return alpha_rounds(2) == 2 and testing.allocations(alpha_rounds, 200) - testing.allocations(alpha_rounds, 100) == 0
+
+
+public func test_is_space_allocates_nothing_on_a_view() -> bool:
+    return space_rounds(2) == 2 and testing.allocations(space_rounds, 200) - testing.allocations(space_rounds, 100) == 0
+
+
+public func test_ord_allocates_nothing_on_a_view() -> bool:
+    return code_rounds(2) == 466 and testing.allocations(code_rounds, 200) - testing.allocations(code_rounds, 100) == 0
+
+
+public func test_slices_passed_to_the_predicates_and_ord_allocate_nothing() -> bool:
+    return slice_rounds(2) == 2 * 121 and testing.allocations(slice_rounds, 200) - testing.allocations(slice_rounds, 100) == 0

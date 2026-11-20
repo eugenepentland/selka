@@ -1,0 +1,207 @@
+# The byte-string module: the operations specific to `bytes`, each taking the byte
+# string first. A `bytes` value is immutable, so every word here answers a value.
+#
+# Whether `data` starts with `prefix`. Every read of this module also takes a `byte_buffer`,
+# which lends its octets for the call. With `start` or `end`, the searches read the octets
+# in `[start, end)`: an `end` past the length is the length, and a negative bound traps
+# `R_TEXT_BOUNDS`. Offsets still count from the first octet of `data`.
+public builtin func starts_with(data: bytes, prefix: bytes, start: int = 0, end: int = 9223372036854775807) -> bool
+
+
+# Whether `data` ends with `suffix`.
+public builtin func ends_with(data: bytes, suffix: bytes, start: int = 0, end: int = 9223372036854775807) -> bool
+
+
+# The octet offset of the first occurrence of `needle`, or -1 when absent.
+public builtin func find(data: bytes, needle: bytes, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# The octet offset of the last occurrence of `needle`, or -1 when absent.
+public builtin func rfind(data: bytes, needle: bytes, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# How many non-overlapping occurrences of `needle` the data holds; the empty needle
+# occurs `len(data) + 1` times.
+public builtin func count(data: bytes, needle: bytes, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# The octet offset of the first occurrence of `needle`, trapping with
+# `R_SUBSTRING_NOT_FOUND` when it is absent; `find` answers -1 instead.
+public builtin func index(data: bytes, needle: bytes, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# The octet offset of the last occurrence of `needle`, trapping with
+# `R_SUBSTRING_NOT_FOUND` when it is absent; `rfind` answers -1 instead.
+public builtin func rindex(data: bytes, needle: bytes, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# Split on `separator`, keeping every piece including empty ones.
+public builtin func split(data: bytes, separator: bytes) -> bytes[]
+
+
+# Join `parts` with `separator` between them.
+public builtin func join(parts: bytes[], separator: bytes) -> bytes
+
+
+# `data` with every non-overlapping occurrence of `old` replaced by `new`, scanning from the front, as `strings.replace` does for
+# `str`. An empty `old` traps with `R_EMPTY_SEPARATOR`, as `split` does.
+public func replace(data: bytes, old: bytes, new: bytes) -> bytes:
+    return join(split(data, old), new)
+
+
+# The data without leading or trailing whitespace.
+public builtin func strip(data: bytes) -> bytes
+
+
+# The data without leading whitespace.
+public builtin func lstrip(data: bytes) -> bytes
+
+
+# The data without trailing whitespace.
+public builtin func rstrip(data: bytes) -> bytes
+
+
+# The data's words: maximal runs of octets that are not ASCII whitespace (space, tab,
+# line feed, vertical tab, form feed, carriage return), each a new byte string.
+public builtin func words(data: bytes) -> bytes[]
+
+
+# The data without the leading or trailing octets that `characters` holds.
+public builtin func strip_chars(data: bytes, characters: bytes) -> bytes
+
+
+# The data without the leading octets that `characters` holds.
+public builtin func lstrip_chars(data: bytes, characters: bytes) -> bytes
+
+
+# The data without the trailing octets that `characters` holds.
+public builtin func rstrip_chars(data: bytes, characters: bytes) -> bytes
+
+
+# Parse the whole data as a decimal integer, or None when it is not one.
+public builtin func parse_int(data: bytes) -> int?
+
+
+# Parse the whole data as a decimal float, or None when it is not one.
+public builtin func parse_float(data: bytes) -> float?
+
+
+# The Unicode scalar count of the data, or the error when it is not valid UTF-8.
+public builtin func scalar_count(data: bytes) -> int fails str
+
+
+# The octets of the data as a list of integers from 0 to 255.
+public builtin func to_list(data: bytes) -> int[]
+
+
+# The offset of the first octet at or after `start` that `octets` holds, or -1 when none
+# does: a scanner's search for any of a few delimiters. With `end`, the search reads the
+# octets in `[start, end)` only, so the next delimiter inside one line of a large buffer
+# is found without reading past the line: an `end` past the length is the length, and a
+# negative `start` or `end` traps, as a negative `start` always did. Offsets count from the
+# first octet of `data`.
+public builtin func find_any(data: bytes, octets: bytes, start: int, end: int = 9223372036854775807) -> int
+
+
+# Parse the octets in `[start, end)` as a decimal integer.
+public builtin func parse_int_range(data: bytes, start: int, end: int) -> int?
+
+
+# Parse the octets in `[start, end)` as a decimal float.
+public builtin func parse_float_range(data: bytes, start: int, end: int) -> float?
+
+
+# The Unicode scalar count of the octets in `[start, end)`, or the error when the
+# window is not valid UTF-8.
+public builtin func scalar_count_range(data: bytes, start: int, end: int) -> int fails str
+
+
+# Fixed-width reads of the octets at `offset` in `data`: one bounds check covers the whole width.
+# The `_be` reads take the most significant octet first and the `_le` reads the least significant
+# first; floats are little-endian only. `offset` counts from the first octet of `data`, which may be a
+# view or a slice. An offset below zero, or a width that is not inside `data`, traps with the same
+# located failure as indexing.
+# The octet at `offset` as an unsigned 8-bit integer; a single octet has no byte order.
+public func read_u8(data: bytes, offset: int) -> u8:
+    return __read_u8_le(data, offset)
+
+
+# The octet at `offset` as a signed 8-bit integer (two's complement).
+public func read_i8(data: bytes, offset: int) -> i8:
+    return __read_i8_le(data, offset)
+
+
+# The unsigned 16-bit integer read from the big-endian octets at `offset`.
+public func read_u16_be(data: bytes, offset: int) -> u16:
+    return __read_u16_be(data, offset)
+
+
+# The unsigned 16-bit integer read from the little-endian octets at `offset`.
+public func read_u16_le(data: bytes, offset: int) -> u16:
+    return __read_u16_le(data, offset)
+
+
+# The unsigned 32-bit integer read from the big-endian octets at `offset`.
+public func read_u32_be(data: bytes, offset: int) -> u32:
+    return __read_u32_be(data, offset)
+
+
+# The unsigned 32-bit integer read from the little-endian octets at `offset`.
+public func read_u32_le(data: bytes, offset: int) -> u32:
+    return __read_u32_le(data, offset)
+
+
+# The unsigned 64-bit integer read from the big-endian octets at `offset`.
+public func read_u64_be(data: bytes, offset: int) -> u64:
+    return __read_u64_be(data, offset)
+
+
+# The unsigned 64-bit integer read from the little-endian octets at `offset`.
+public func read_u64_le(data: bytes, offset: int) -> u64:
+    return __read_u64_le(data, offset)
+
+
+# The signed 16-bit integer read from the big-endian octets at `offset`.
+public func read_i16_be(data: bytes, offset: int) -> i16:
+    return __read_i16_be(data, offset)
+
+
+# The signed 16-bit integer read from the little-endian octets at `offset`.
+public func read_i16_le(data: bytes, offset: int) -> i16:
+    return __read_i16_le(data, offset)
+
+
+# The signed 32-bit integer read from the big-endian octets at `offset`.
+public func read_i32_be(data: bytes, offset: int) -> i32:
+    return __read_i32_be(data, offset)
+
+
+# The signed 32-bit integer read from the little-endian octets at `offset`.
+public func read_i32_le(data: bytes, offset: int) -> i32:
+    return __read_i32_le(data, offset)
+
+
+# The signed 64-bit integer read from the big-endian octets at `offset`.
+public func read_i64_be(data: bytes, offset: int) -> i64:
+    return __read_i64_be(data, offset)
+
+
+# The signed 64-bit integer read from the little-endian octets at `offset`.
+public func read_i64_le(data: bytes, offset: int) -> i64:
+    return __read_i64_le(data, offset)
+
+
+# The binary32 float read from the little-endian octets at `offset`.
+public func read_f32_le(data: bytes, offset: int) -> f32:
+    return __read_f32_le(data, offset)
+
+
+# The binary64 float read from the little-endian octets at `offset`.
+public func read_f64_le(data: bytes, offset: int) -> float:
+    return __read_f64_le(data, offset)
+
+
+# Bytes for even-length hexadecimal text, accepting either letter case: the type's own `bytes.fromhex(text)`, which a
+# file that imports this module reaches here (W13-S5: a rewrite that adds `import bytes` keeps the spelling working).
+public func fromhex(text: str) -> bytes fails str:
+    return try bytes.fromhex(text)

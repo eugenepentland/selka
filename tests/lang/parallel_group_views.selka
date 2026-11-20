@@ -1,0 +1,184 @@
+# A plain list, text or bytes parameter given to `g.submit` (FR58): the task reads what the caller passed, as a direct
+# call does, whether the caller passed a whole value, a slice, a literal, a field or an element. The task is lent the
+# view itself; the group joins before the function that owns the parameter returns.
+import parallel
+import strings
+
+record Row:
+    name: str
+    cells: int[]
+
+
+record Holder:
+    values: int[]
+    word: str
+
+
+func weigh_l(l: int[]) -> int:
+    mut sum = 0
+    for v in l:
+        sum = sum + v
+    return sum * 100 + len(l)
+
+
+func weigh_s(s: str) -> int:
+    mut codes = 0
+    for c in strings.chars(s):
+        codes = codes + len(c)
+    return len(s) * 1000 + codes
+
+
+func weigh_b(data: bytes) -> int:
+    mut sum = 0
+    for v in data:
+        sum = sum + v
+    return sum * 100 + len(data)
+
+
+func weigh_words(words: str[]) -> int:
+    mut total = 0
+    for w in words:
+        total = total * 10 + len(w)
+    return total * 100 + len(words)
+
+
+func weigh_rows(rows: Row[]) -> int:
+    mut total = 0
+    for r in rows:
+        total = total * 10 + len(r.name)
+        for v in r.cells:
+            total = total + v
+    return total * 100 + len(rows)
+
+
+func by_list(xs: int[]) -> int:
+    with parallel.group() as g:
+        const t = g.submit(weigh_l, xs)
+        return t.result()
+
+
+func by_text(s: str) -> int:
+    with parallel.group() as g:
+        const t = g.submit(weigh_s, s)
+        return t.result()
+
+
+func by_bytes(data: bytes) -> int:
+    with parallel.group() as g:
+        const t = g.submit(weigh_b, data)
+        return t.result()
+
+
+func by_words(words: str[]) -> int:
+    with parallel.group() as g:
+        const t = g.submit(weigh_words, words)
+        return t.result()
+
+
+func by_rows(rows: Row[]) -> int:
+    with parallel.group() as g:
+        const t = g.submit(weigh_rows, rows)
+        return t.result()
+
+
+# The parameter passes through two functions before it is submitted.
+func through_one(xs: int[]) -> int:
+    return by_list(xs)
+
+
+func through_two(xs: int[]) -> int:
+    return through_one(xs)
+
+
+# A slice of the parameter is passed on, and the next function submits it.
+func slice_of_slice(xs: int[]) -> int:
+    return by_list(xs[1:3])
+
+
+# Two tasks are given the same parameter, beside a text parameter and a scalar.
+func two_tasks(xs: int[], s: str, k: int) -> int:
+    with parallel.group() as g:
+        const a = g.submit(weigh_l, xs)
+        const b = g.submit(weigh_l, xs)
+        const c = g.submit(weigh_s, s)
+        return a.result() + b.result() + c.result() + k
+
+
+# A view parameter beside an `own` argument, which the thunk takes out of the environment after the view's two fields.
+func view_then_own(xs: int[], own extra: int[]) -> int:
+    return weigh_l(xs) + len(extra)
+
+
+func with_owned(xs: int[]) -> int:
+    with parallel.group() as g:
+        const t = g.submit(view_then_own, xs, [1, 2, 3])
+        return t.result()
+
+
+public func test_a_list_slice_is_what_the_task_reads() -> bool:
+    const ys = [10, 20, 30, 40]
+    return by_list(ys[1:3]) == weigh_l(ys[1:3]) and by_list(ys[1:3]) == 5002
+
+
+public func test_a_text_slice_is_what_the_task_reads() -> bool:
+    const word = "abcdefgh"
+    return by_text(word[2:4]) == weigh_s(word[2:4]) and by_text(word[2:4]) == 2002
+
+
+public func test_a_bytes_slice_is_what_the_task_reads() -> bool:
+    const data = b"\x01\x02\x03\x04"
+    return by_bytes(data[1:3]) == weigh_b(data[1:3]) and by_bytes(data[1:3]) == 502 and by_bytes(data) == 1004
+
+
+public func test_every_way_a_list_arrives() -> bool:
+    const ys = [10, 20, 30, 40]
+    const holder = Holder(values=[1, 2], word="hey")
+    const grid = [[5], [6, 7]]
+    const whole = by_list(ys) == 10004
+    const literal = by_list([3, 4]) == 702
+    const field = by_list(holder.values) == 302
+    const element = by_list(grid[1]) == 1302
+    return whole and literal and field and element
+
+
+public func test_every_way_a_text_arrives() -> bool:
+    const word = "abcdefgh"
+    const holder = Holder(values=[1], word="hey")
+    const words = ["one", "three"]
+    const whole = by_text(word) == 8008
+    const literal = by_text("hi") == 2002
+    const field = by_text(holder.word) == 3003
+    const element = by_text(words[1]) == 5005
+    return whole and literal and field and element
+
+
+public func test_a_slice_of_a_slice_is_what_the_task_reads() -> bool:
+    const ys = [1, 2, 3, 4, 5, 6]
+    return slice_of_slice(ys[1:5]) == weigh_l(ys[2:4]) and slice_of_slice(ys[1:5]) == 702
+
+
+public func test_a_slice_of_text_values_is_what_the_task_reads() -> bool:
+    const words = ["a", "bb", "ccc", "dddd"]
+    return by_words(words[1:3]) == weigh_words(words[1:3]) and by_words(words[1:3]) == 2302
+
+
+public func test_a_slice_of_records_is_what_the_task_reads() -> bool:
+    const rows = [Row(name="a", cells=[1]), Row(name="bb", cells=[2, 3]), Row(name="ccc", cells=[4])]
+    const direct = weigh_rows(rows[1:3])
+    return by_rows(rows[1:3]) == direct and direct == 7702
+
+
+public func test_a_parameter_passed_through_two_functions() -> bool:
+    const ys = [10, 20, 30, 40]
+    return through_two(ys[1:3]) == 5002 and through_two(ys) == 10004
+
+
+public func test_two_tasks_share_one_parameter() -> bool:
+    const ys = [10, 20, 30, 40]
+    const word = "abcdefgh"
+    return two_tasks(ys[1:3], word[2:5], 1) == 5002 + 5002 + 3003 + 1
+
+
+public func test_a_view_parameter_beside_an_owned_argument() -> bool:
+    const ys = [10, 20, 30, 40]
+    return with_owned(ys[1:3]) == 5005

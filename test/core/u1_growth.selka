@@ -1,0 +1,77 @@
+# Growth of byte buffers and lists (NEW-CORE-U1-GROW-1): a large block grows with
+# `realloc`. Appends start from an empty buffer, cross the small-block classes, the
+# small-to-large boundary and many large doublings (some through `reserve`); a buffer
+# another name still holds is copied before its append. Every answer here
+# is the base compiler's (main 35df839be).
+import buffers
+
+func checksum(buffer: byte_buffer) -> int:
+    mut total = 0
+    for i in range(len(buffer)):
+        total = (total * 31 + buffer[i] + i) % 1000003
+    return total
+
+
+func piece_appends(count: int) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"0123456789abcdefghij"
+    for i in range(count):
+        _ = buffers.append_range(mut buffer, piece, i % 7, 7 + i % 13)
+        if i % 997 == 0:
+            _ = buffers.reserve(mut buffer, i)
+    return checksum(buffer) * 1000 + len(buffer)
+
+
+func byte_appends(count: int) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    for i in range(count):
+        _ = buffers.append_byte(mut buffer, i % 251)
+    return checksum(buffer) + len(buffer) * 1000003
+
+
+# The append copies `b` because `kept` still holds it: `kept` keeps the old octets.
+func shared_append(count: int) -> int:
+    mut empty: int[] = []
+    mut b = byte_buffer(empty)
+    for i in range(count):
+        _ = buffers.append_byte(mut b, i % 200)
+    mut kept = copy(b)
+    for i in range(count):
+        _ = buffers.append_range(mut b, b"xyz", 0, 3)
+    _ = buffers.append_byte(mut kept, 7)
+    return checksum(b) * 7 + checksum(kept) + len(b) * 100 + len(kept)
+
+
+func numbers(count: int) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    for i in range(count):
+        buffers.append_int(mut buffer, i * 7919 - 50000)
+        _ = buffers.append_byte(mut buffer, 44)
+    return checksum(buffer) + len(buffer)
+
+
+func list_growth(count: int) -> int:
+    mut xs: int[] = []
+    for i in range(count):
+        append(mut xs, i * 3)
+    mut keep = copy(xs)
+    append(mut xs, 1)
+    mut total = 0
+    for x in keep:
+        total = (total + x) % 1000003
+    return total + len(xs) + len(keep)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut scale = 1 + len(args) * 9
+    print(out, piece_appends(3000 * scale), byte_appends(70000 * scale))
+    print(out, shared_append(5000 * scale), numbers(20000 * scale), list_growth(100000 * scale))
+    mut empty: int[] = []
+    mut small = byte_buffer(empty)
+    print(out, len(small))
+    _ = buffers.append_byte(mut small, 1)
+    print(out, len(small), small[0])
+    return 0

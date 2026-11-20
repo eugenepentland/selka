@@ -1,0 +1,422 @@
+# `@linear` records (D-FFI-11, docs/records-and-unions.md#linear-records): the accepted half of every path the rules
+# name. The refused half (an owner left unconsumed on a path, a use after consumption, the uses a linear value refuses)
+# is in src/linear_rules_test.zig, because a guest test cannot expect a rejection.
+@linear
+record Token:
+    id: int
+    weight: int = 1
+
+
+record Pair:
+    token: Token
+    label: int
+
+
+func make(id: int) -> Token:
+    return Token(id=id)
+
+
+# The one way to end an owner without handing it on: `own token.field` consumes the record.
+func finish(own token: Token) -> int:
+    return own token.id
+
+
+func peek(mut token: Token) -> int:
+    return token.id + token.weight
+
+
+public func test_consumed_once_on_the_one_path() -> bool:
+    const token = make(4)
+    return finish(own token) == 4
+
+
+func early(flag: bool) -> int:
+    const token = make(7)
+    if flag:
+        return finish(own token) + 100
+    return finish(own token)
+
+
+public func test_early_return_consumes_before_it_leaves() -> bool:
+    return early(True) == 107 and early(False) == 7
+
+
+func failing(flag: bool) -> int fails str:
+    const token = make(3)
+    if flag:
+        _ = finish(own token)
+        fail "refused"
+    return finish(own token)
+
+
+public func test_fail_consumes_before_it_leaves() -> bool:
+    match failing(True):
+        case Ok(_):
+            return False
+        case Err(message):
+            match failing(False):
+                case Ok(value):
+                    return message == "refused" and value == 3
+                case Err(_):
+                    return False
+
+
+func checked(id: int) -> Token fails str:
+    if id < 0:
+        fail "negative"
+    return make(id)
+
+
+func propagates(id: int) -> int fails str:
+    const token = try checked(id)
+    return finish(own token)
+
+
+public func test_try_before_the_owner_exists_and_a_fails_result() -> bool:
+    match propagates(-1):
+        case Ok(_):
+            return False
+        case Err(message):
+            match propagates(5):
+                case Ok(value):
+                    return message == "negative" and value == 5
+                case Err(_):
+                    return False
+
+
+public func test_owners_declared_in_a_loop_body_are_consumed_before_break_and_continue() -> bool:
+    mut total = 0
+    for i in range(6):
+        const token = make(i)
+        if i == 4:
+            total += finish(own token)
+            break
+        if i % 2 == 1:
+            total += finish(own token) * 10
+            continue
+        total += finish(own token)
+    return total == 0 + 10 + 2 + 30 + 4
+
+
+public func test_an_outer_owner_is_consumed_after_its_loop() -> bool:
+    mut token = make(2)
+    mut seen = 0
+    for _ in range(3):
+        seen += peek(mut token)
+    return seen + finish(own token) == 11
+
+
+func maybe(flag: bool) -> Token?:
+    if flag:
+        return Some(make(9))
+    return None
+
+
+public func test_match_own_arms_consume_in_every_arm() -> bool:
+    mut total = 0
+    match own maybe(True):
+        case Some(token):
+            total += finish(own token)
+        case None:
+            total += 1000
+    match own maybe(False):
+        case Some(token):
+            total += finish(own token)
+        case None:
+            total += 1
+    return total == 10
+
+
+public func test_a_record_holding_a_linear_field_is_linear_and_its_other_fields_read() -> bool:
+    const pair = Pair(token=make(6), label=2)
+    const label = pair.label
+    return label + finish(own pair.token) == 8
+
+
+public func test_mut_borrows_and_a_moved_owner_carries_the_obligation() -> bool:
+    mut token = make(5)
+    const before = peek(mut token)
+    const moved = own token
+    const value = finish(own moved)
+    return before == 6 and value == 5
+
+
+public func test_a_field_read_borrows_the_owner() -> bool:
+    const token = make(8)
+    const id = token.id
+    const value = finish(own token)
+    return id == 8 and value == 8
+
+
+func renew(mut token: Token):
+    token.weight = token.weight + 10
+
+
+public func test_a_mut_parameter_writes_a_plain_field_and_the_owner_stays_obliged() -> bool:
+    mut token = make(1)
+    renew(mut token)
+    token.id = 2
+    const weight = token.weight
+    const id = finish(own token)
+    return weight == 11 and id == 2
+
+
+record Outer:
+    inner: Pair
+    n: int
+
+
+func pair_of(id: int) -> Pair:
+    return Pair(token=make(id), label=id * 10)
+
+
+public func test_own_takes_a_nested_linear_field_and_ends_every_holder() -> bool:
+    const outer = Outer(inner=pair_of(3), n=1)
+    const n = outer.n
+    return n + finish(own outer.inner.token) == 4
+
+
+public func test_mut_lends_a_linear_field_and_a_field_of_it_reads_through() -> bool:
+    mut pair = pair_of(5)
+    const seen = peek(mut pair.token)
+    const id = pair.token.id
+    const label = pair.label
+    const value = finish(own pair.token)
+    return seen == 6 and id == 5 and label == 50 and value == 5
+
+
+public func test_own_takes_the_linear_field_of_a_call_result() -> bool:
+    return finish(own pair_of(7).token) == 7
+
+
+public func test_a_plain_match_of_a_linear_option_consumes_it() -> bool:
+    const option: Token? = Some(make(2))
+    mut total = 0
+    match option:
+        case Some(token):
+            total += finish(own token)
+        case None:
+            total += 100
+    return total == 2
+
+
+record Deep2:
+    inner: Pair
+    tag: int
+
+
+record Deep3:
+    inner: Deep2
+    tag: int
+
+
+record Maybe:
+    token: Token?
+    tag: int
+
+
+func checked_pair(id: int) -> Pair fails str:
+    if id < 0:
+        fail "negative"
+    return pair_of(id)
+
+
+public func test_three_holders_deep_and_an_option_inside_a_holder() -> bool:
+    const deep = Deep3(inner=Deep2(inner=pair_of(4), tag=2), tag=3)
+    const tag = deep.inner.tag + deep.tag
+    const first = finish(own deep.inner.inner.token)
+    const boxed = Maybe(token=Some(make(6)), tag=1)
+    mut second = 0
+    match own boxed.token:
+        case Some(token):
+            second = finish(own token)
+        case None:
+            second = 100
+    return tag == 5 and first == 4 and second == 6
+
+
+func through_try(id: int) -> int fails str:
+    const pair = try checked_pair(id)
+    const label = pair.label
+    return label + finish(own pair.token)
+
+
+public func test_a_fails_function_returns_a_holder_and_the_caller_ends_it() -> bool:
+    match through_try(2):
+        case Ok(value):
+            match through_try(-1):
+                case Ok(_):
+                    return False
+                case Err(message):
+                    return value == 22 and message == "negative"
+        case Err(_):
+            return False
+
+
+public func test_nested_loops_end_their_owners_before_every_exit() -> bool:
+    mut total = 0
+    for i in range(3):
+        const outer = make(i)
+        for j in range(4):
+            const inner = make(j)
+            if j == 2:
+                total += finish(own inner)
+                break
+            total += finish(own inner)
+        total += finish(own outer) * 10
+    return total == 3 * (0 + 1 + 2) + 10 * (0 + 1 + 2)
+
+
+# `match mut` lends a linear owner to its arms and does not end it (FX8, decision LIN): the binding is read, written and
+# lent `mut` in place, and the matched owner is still to be consumed after the match. A `match mut` that is an owner's
+# only use is refused (src/linear_rules_test.zig).
+enum Slot:
+    busy(held: Token)
+    idle
+
+
+record Harness:
+    slot: Slot
+    name: str
+
+
+func release(own slot: Slot) -> int:
+    match own slot:
+        case busy(held):
+            return finish(own held)
+        case idle:
+            return 0
+
+
+func poke(mut slot: Slot) -> int:
+    match mut slot:
+        case busy(held):
+            return peek(mut held)
+        case idle:
+            return -1
+
+
+public func test_a_match_mut_binding_is_lent_read_and_written_and_the_owner_is_consumed_after() -> bool:
+    mut slot = Slot.busy(held=make(40))
+    mut seen = 0
+    match mut slot:
+        case busy(held):
+            renew(mut held)
+            held.id = held.id + 1
+            seen = held.id + peek(mut held)
+        case idle:
+            pass
+    const ended = release(own slot)
+    return seen == 93 and ended == 41
+
+
+public func test_a_match_mut_in_a_loop_a_field_place_and_a_mut_parameter_lend_without_ending() -> bool:
+    mut slot = Slot.busy(held=make(1))
+    for i in range(3):
+        match mut slot:
+            case busy(held):
+                renew(mut held)
+            case idle:
+                pass
+    mut harness = Harness(slot=Slot.busy(held=make(10)), name="h")
+    match mut harness.slot:
+        case busy(held):
+            renew(mut held)
+        case idle:
+            pass
+    const poked = poke(mut slot)
+    const first = release(own slot)
+    const second = release(own harness.slot)
+    return poked == 32 and first == 1 and second == 10
+
+
+# What `maybe().unwrap_or(default)` cannot do for a linear payload (it is refused at check: src/linear_rules_test.zig):
+# `match own` takes the payload on `Some` and makes the default only on `None`, so each path ends one owner.
+func or_made(present: bool, fallback: int) -> Token:
+    match own maybe(present):
+        case Some(token):
+            return token
+        case None:
+            return make(fallback)
+
+
+public func test_match_own_gives_the_payload_or_makes_the_default_on_none() -> bool:
+    const kept = or_made(True, 4)
+    const made = or_made(False, 4)
+    const first = finish(own kept)
+    const second = finish(own made)
+    return first == 9 and second == 4
+
+
+# A record ended by a field that holds a list: the discard `_ = own ledger.undo` only reads the list (`E_OWN_MARKER`, checked in
+# src/core/single_owner_test.zig), so the field is taken where it is kept, and the kept list goes when its last use ends.
+@linear
+record Ledger:
+    undo: int[]
+    weight: int
+
+
+func rollback(own ledger: Ledger) -> int:
+    const kept = own ledger.undo
+    return len(kept)
+
+
+func spend(own ledger: Ledger) -> int:
+    return own ledger.weight
+
+
+public func test_a_list_field_taken_into_a_binding_ends_the_owner() -> bool:
+    return rollback(Ledger(undo=[3, 4], weight=1)) == 2 and spend(Ledger(undo=[], weight=9)) == 9
+
+
+# A plain parameter of a `@linear` type is a read-only loan for the call (decision LINEAR-LEND): the callee reads it and
+# lends it on, the caller still owns it and consumes it afterwards.
+func weigh(token: Token) -> int:
+    return token.id * 100 + token.weight
+
+
+func weigh_twice(token: Token) -> int:
+    return weigh(token) + weigh(token)
+
+
+func label_and_weight(pair: Pair) -> int:
+    return pair.label + weigh_twice(pair.token)
+
+
+func undo_count(ledger: Ledger) -> int:
+    return len(ledger.undo) + ledger.weight
+
+
+public func test_a_plain_parameter_reads_a_linear_owner_and_the_caller_consumes_it() -> bool:
+    const token = make(3)
+    const seen = weigh(token)
+    const id = finish(own token)
+    return seen == 301 and id == 3
+
+
+public func test_a_plain_parameter_lends_on_to_another_plain_parameter() -> bool:
+    const token = make(2)
+    const seen = weigh_twice(token)
+    const pair = pair_of(4)
+    const both = label_and_weight(pair)
+    const id = finish(own token)
+    const paired = finish(own pair.token)
+    return seen == 402 and both == 842 and id == 2 and paired == 4
+
+
+public func test_a_plain_helper_runs_between_mut_uses_and_before_the_final_own() -> bool:
+    mut token = make(1)
+    const first = weigh(token)
+    renew(mut token)
+    const second = weigh(token)
+    renew(mut token)
+    const third = weigh_twice(token)
+    const id = finish(own token)
+    return first == 101 and second == 111 and third == 242 and id == 1
+
+
+public func test_a_plain_parameter_borrows_a_linear_record_with_a_list_field() -> bool:
+    const ledger = Ledger(undo=[1, 2, 3], weight=4)
+    const count = undo_count(ledger)
+    const undone = rollback(own ledger)
+    return count == 7 and undone == 3

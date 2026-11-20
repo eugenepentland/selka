@@ -1,0 +1,450 @@
+fn_cell_local_fresh_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_fresh_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_fresh_returned
+  at
+  got EM.named(text='a')
+fn_cell_local_fresh_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_own_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_own_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_own_returned
+  at
+  got EM.named(text='a')
+fn_cell_local_own_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_call_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_call_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_call_returned
+  at
+  got EM.named(text='a')
+fn_cell_local_call_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_local_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_fresh_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_fresh_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_fresh_returned
+  at
+  got EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_fresh_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_own_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_own_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_own_returned
+  at
+  got EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_own_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_call_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_call_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_call_returned
+  at
+  got EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_call_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_param_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+fn_cell_field_fresh_bound
+  at
+  was EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_fresh_dropped
+  at
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_fresh_returned
+  at
+  got EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_fresh_passed
+  at
+  passed EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_own_bound
+  at
+  was EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_own_dropped
+  at
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_own_returned
+  at
+  got EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_own_passed
+  at
+  passed EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_call_bound
+  at
+  was EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_call_dropped
+  at
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_call_returned
+  at
+  got EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_call_passed
+  at
+  passed EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_field_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+fn_cell_matchmut_fresh_bound
+  at
+  was EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_fresh_returned
+  at
+  got EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_fresh_passed
+  at
+  passed EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_own_bound
+  at
+  was EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_own_dropped
+  at
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_own_returned
+  at
+  got EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_own_passed
+  at
+  passed EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_call_bound
+  at
+  was EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_call_dropped
+  at
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_call_returned
+  at
+  got EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_call_passed
+  at
+  passed EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+fn_cell_matchmut_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_local_fresh_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_fresh_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_fresh_returned
+  at
+  got EM.named(text='a')
+builtin_cell_local_fresh_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_own_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_own_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_own_returned
+  at
+  got EM.named(text='a')
+builtin_cell_local_own_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_call_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_call_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_call_returned
+  at
+  got EM.named(text='a')
+builtin_cell_local_call_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_local_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_fresh_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_fresh_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_fresh_returned
+  at
+  got EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_fresh_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_own_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_own_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_own_returned
+  at
+  got EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_own_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_call_bound
+  at
+  was EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_call_dropped
+  at
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_call_returned
+  at
+  got EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_call_passed
+  at
+  passed EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_param_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after [EM.named(text='new'), EM.blank]
+builtin_cell_field_fresh_bound
+  at
+  was EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_fresh_dropped
+  at
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_fresh_returned
+  at
+  got EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_fresh_passed
+  at
+  passed EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_own_bound
+  at
+  was EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_own_dropped
+  at
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_own_returned
+  at
+  got EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_own_passed
+  at
+  passed EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_call_bound
+  at
+  was EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_call_dropped
+  at
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_call_returned
+  at
+  got EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_call_passed
+  at
+  passed EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_field_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after Holder(items=[EM.named(text='new'), EM.blank], tag=0)
+builtin_cell_matchmut_fresh_bound
+  at
+  was EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_fresh_returned
+  at
+  got EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_fresh_passed
+  at
+  passed EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_fresh_passed_own
+  at
+  sunk EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_own_bound
+  at
+  was EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_own_dropped
+  at
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_own_returned
+  at
+  got EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_own_passed
+  at
+  passed EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_own_passed_own
+  at
+  sunk EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_call_bound
+  at
+  was EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_call_dropped
+  at
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_call_returned
+  at
+  got EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_call_passed
+  at
+  passed EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])
+builtin_cell_matchmut_call_passed_own
+  at
+  sunk EM.named(text='a')
+  after Box.full(items=[EM.named(text='new'), EM.blank])

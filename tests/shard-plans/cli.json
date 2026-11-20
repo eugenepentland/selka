@@ -1,0 +1,2927 @@
+{
+  "root": "test/integration.zig",
+  "shards": 6,
+  "tests": [
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI compiler eviction safely refills artifacts from source",
+      "shard": 0
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI config persists and legacy namespace refuses without mutation",
+      "shard": 4
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI covers the shared stage store: it needs the namespace a build creates, persists a cap, previews and collects",
+      "shard": 1
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI initializes a namespace that lost its marker only when asked and refuses a wrong marker or foreign files",
+      "shard": 0
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI invalid limits and missing namespaces are explicit refusals",
+      "shard": 3
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI observes terminated process lease release without a delay",
+      "shard": 0
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI policy interval controls collection on real compiler store open",
+      "shard": 2
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI preview is immutable and zero budgets collect with empty PATH",
+      "shard": 2
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI refuses preview without a lock without creating one",
+      "shard": 5
+    },
+    {
+      "name": "cache_retention_cli_test.test.native retention CLI runs beside an active lease, takes only what needs no exclusive lease, and does not change policy",
+      "shard": 4
+    },
+    {
+      "name": "check_build_agree_cli_test.test.check/build: a const alias of an optional list field is a local the IR verifier admits",
+      "shard": 3
+    },
+    {
+      "name": "check_build_agree_cli_test.test.check/build: a function value of a mut-parameter function in another module links, because its adapter's unit calls the function",
+      "shard": 2
+    },
+    {
+      "name": "check_build_agree_redo_cli_test.test.check/build agree: F-RA-115 as the redo wrote it, a fallible borrowed result of a mut parameter, is refused by both",
+      "shard": 5
+    },
+    {
+      "name": "check_build_agree_redo_cli_test.test.check/build agree: F-RA-115 without a failure, a borrowed result of a mut parameter the function writes",
+      "shard": 4
+    },
+    {
+      "name": "check_build_agree_redo_cli_test.test.check/build agree: F-RA-14, a call passing a record and a copy of its nested field, then a write to a sibling",
+      "shard": 0
+    },
+    {
+      "name": "check_build_agree_redo_cli_test.test.check/build agree: F-RA-202, a record of two borrowed text results, is refused by both as a stored borrow",
+      "shard": 1
+    },
+    {
+      "name": "check_build_agree_redo_cli_test.test.check/build agree: F-RA-710, two mut arguments that are disjoint fields of one record at different depths",
+      "shard": 0
+    },
+    {
+      "name": "check_build_agree_redo_cli_test.test.check/build agree: F-RA-807, sets.discard on a set field of a mut record",
+      "shard": 1
+    },
+    {
+      "name": "check_directory_cli_test.test.check DIR: a clean project reports the modules of the project, not the generated entry",
+      "shard": 0
+    },
+    {
+      "name": "check_directory_cli_test.test.check DIR: a directory check names a file it skipped because its name is no module name",
+      "shard": 1
+    },
+    {
+      "name": "check_directory_cli_test.test.check DIR: a directory check reports the warnings of the modules and none of its generated entry",
+      "shard": 3
+    },
+    {
+      "name": "check_directory_cli_test.test.check DIR: a project that holds a module named like the generated entry is refused with exit status 2",
+      "shard": 2
+    },
+    {
+      "name": "check_directory_cli_test.test.check DIR: a test module nobody imports keeps its access to the private declarations of the module it tests",
+      "shard": 2
+    },
+    {
+      "name": "check_directory_cli_test.test.check DIR: checking the entry alone never sees a module nothing imports, and checking the directory does (F-G2d-1)",
+      "shard": 3
+    },
+    {
+      "name": "check_generic_bodies_cli_test.test.check: a generic body that build refuses in an instance is refused by check of its module, with the build's diagnostic",
+      "shard": 0
+    },
+    {
+      "name": "check_generic_bodies_cli_test.test.check: a generic body that is right for int passes check, as the int instance builds",
+      "shard": 2
+    },
+    {
+      "name": "components.test.CLI component bootstrap rebuilds and installs without an interpreter on PATH",
+      "shard": 1
+    },
+    {
+      "name": "components.test.CLI components agree with reference and shadow in every checked consumer",
+      "shard": 1
+    },
+    {
+      "name": "components.test.CLI components preserve syntax fallback and never silently recover a missing package",
+      "shard": 3
+    },
+    {
+      "name": "debug_codegen_cli_test.test.a plain build compiles its units as --debug-lean does, and --debug-o0, --optimize-debug and --unoptimized each as a build of their own",
+      "shard": 1
+    },
+    {
+      "name": "debug_codegen_cli_test.test.a program prints the same under the lean build and the -O0 build, and a trap keeps its text and source line",
+      "shard": 0
+    },
+    {
+      "name": "debug_codegen_cli_test.test.selka test builds at -O0 unless asked for the lean build, and a directory run passes its mode to every child",
+      "shard": 2
+    },
+    {
+      "name": "engine_cli_test.test.a query is computed once, served by the next process, and cut off early when an edit leaves its dependency's answer alone",
+      "shard": 3
+    },
+    {
+      "name": "engine_cli_test.test.a query of a file that is not there fails with a message and stores nothing",
+      "shard": 1
+    },
+    {
+      "name": "engine_cli_test.test.explain names the read that changed, through the chain of queries that depend on it",
+      "shard": 0
+    },
+    {
+      "name": "engine_cli_test.test.the closure of a kind lists the files its code identity covers, and the compiler is not among them",
+      "shard": 3
+    },
+    {
+      "name": "file_directory_errors_cli_test.test.directory errors: mkdir, listdir and remove say why the operating system refused",
+      "shard": 1
+    },
+    {
+      "name": "file_read_errors_cli_test.test.file read errors: a directory, a file used as a parent and a missing file say why",
+      "shard": 3
+    },
+    {
+      "name": "file_read_errors_cli_test.test.file read errors: a grant that excludes the path still says so, and a directory inside it still says why",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI check --examples leaves a graph with no example alone and checks a header-less file",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI check --examples locates a refused example in its docstring with the repair as data",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI check checks a library module or a test file without main",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix --imports repairs the modules a file imports too, and a program entry always does",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix applies every structured fix across modules to a fixed point",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix copies a list slice an owned parameter takes, leaves parallel.map's as it is, and the result checks clean",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix copies a strip result bound before its text is replaced",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix copies every borrowed return of a function that also returns a new value, every function in one round",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix drops a field default that builds a record without its required field, and the program prints what it printed",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix drops the own and the copy from dicts.add and dicts.append_to keys, which borrow them now, and the program prints the same lines",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix drops the type from qualified case patterns and keeps the program's result",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix gives a plain resource parameter and its call site the own mode",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix gives a stored resource parameter and its call sites the own mode",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix gives a view-returning function used as a value a copying wrapper beside it",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix gives every http.Error match the arms of the cases it split into, copied from the case it used to be",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix leaves a docstring example whose repair cannot be mapped as written and reports it",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix leaves a fails call in a contract condition as it is",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix leaves a float rename that would call the user's own wrapper for a hand edit",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix makes the same edits and report whether a directory's checks run on one worker or several",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix marks a bare argument for an implicit Some and the marked call converges",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix migrates frontend syntax to a clean check and then reaches a fixed point",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix migrates lists.exchange callers to its own replacement: own at a last use, a copy otherwise",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix migrates managed reversed hex once without nested copies",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix migrates pinned pre-marker Lox syntax until every file checks",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix migrates the port defect shapes without capture, overlapping edits or mangling",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix moves a record at its last use in a match arm and borrows a const bound to a copy of an element, and the program prints the same lines",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix of a module repairs that file only and names what it left in the modules it imports",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix of a test file leaves the modules it imports alone, and a directory still repairs them all",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix over a directory with entries that share an import repairs them in one run",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix puts an imported view function's copying wrapper at the end of the importing module",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix qualifies a bare name that an imported module declares",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix removes a needless local copy and preserves the declared owning return",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix removes mut from capability parameters that nothing writes, down a call chain, and the program prints the same lines",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix removes retired arena blocks, dedents their bodies and unwraps escapes",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix removes the own markers that capability handles made redundant, and the program prints the same lines",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix renames a fallible parallel.map to parallel.map_results and keeps its meaning",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix renames a type declared under a builtin type's name, and the qualified references to it in the modules that import it",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix renames the uses inside a module that builds its own type under a builtin name, which never checked",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix repairs docstring examples on a prompt line and a continuation line to a passing selka test",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix reports what it cannot fix once and exits 1",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix retires retained views including generic numeric range fusion",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a Result return clause to fails and keeps every call",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a byte buffer's write spellings to their buffers homes",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a dictionary's nine method spellings to their dicts homes",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a list's append and sort to the prelude writers",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a list's seven module words to their lists homes",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a literal if chain on a plain bytes to a match and leaves one on an option alone, so the program still checks",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a set's nine method spellings to their sets homes, with the own marker",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites a stream's print and write methods to the stream-first functions",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites integer bit operators to their prelude calls",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites removed option presence tests to the identity test",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites retired byte-string methods to their function homes",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites retired text methods to their function homes",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix rewrites retired text search methods to the option convention",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix splits receiver overlap into a preceding call without repeating effects",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix takes accessor results that now borrow, moved payloads and stored results, to a clean check with the same output",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix takes an element binding to a const borrow or its write-back, and copies a return, to a clean check",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes a Python conversion in a format string hole and a text times an integer as the calls they stand for",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes a dictionary key and a set member as the store that copies it only when new",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes an enum case with its enum when one enum has it, and leaves a case two enums have (R3-SMALLDIAG)",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes own for a copy of an owned local or own parameter at its last use, and keeps the copies a move would break",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes own for an owned name and a copy for a borrowed one at append and sets.add, and leaves the dicts calls alone",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes parentheses for a line continued after an operator or a backslash, one statement at a time",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes the copy a stored char_slice needs and leaves the program's result",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes the copy that each hidden view copy makes, and the program prints the same line",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.CLI fix writes try before a fails call used as its plain value",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.CLI warm imported direct and callback ABIs follow producer rebinding changes",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.D2 CLI fix materializes stored dictionary projections with contextual list snapshots",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.D2 rejects the former held receiver snapshot history and aggregate view corpora",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.F2 contextual own arithmetic is untouched by fix",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.F5 bare fail transfers while redundant fail own repairs to a fixed point",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.F6 M5 identifies both arguments and gives a mutable writeback instead of a bare copy",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.F6 callable from on either side of fails is syntax only without a fix",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.F6 duplicate contextual from names repair without changing other names",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.F6 duplicate from deletion preserves source order and the later failure clause",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.F6 f-string pieces retain loans through later mutating pieces",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.F6 from after fails is syntax only and fix leaves it unchanged",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.F6 generic concrete storage gets repairs but dependent moves remain shared",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.F6 managed wrapped declarations and generic scalar instances retain from contracts",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.F6 marker eligibility names container borrowed-call and mut-parameter causes",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.F6 misplaced and callable from syntax explains its supported position",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.F6 move repair copies later-used names and carriers but transfers last uses",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.F6 optional scalar successes ignore managed failure payloads for from eligibility",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.F6 scalar and duplicate from refusals carry certain clause repairs",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.F6 scalar from clauses report R4 and remove only the clause before fails",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.F6 undeclared borrow points at the first missing lender rather than first borrowed return",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.F9 CLI fix repairs both sequential arena blocks reusing a name",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.F9 CLI fix still withholds nested arena name shadowing",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.O3 borrowed signatures fix extends one clause in parameter order",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.O3 borrowed signatures fix imported declarations including wrappers slices mut and generic instances",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.O3 borrowed signatures mixed return repair copies borrowed paths and removes the clause",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.O4 owned moves fix bindings stores constructors and calls without changing values",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.O4 owned moves fix const aliases at their initializers before later transfers",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.O4 owned moves fix redundant markers but preserve a field return carrier move",
+      "shard": 2
+    },
+    {
+      "name": "fix_cli_test.test.a project check reports a type error in one module beside the ownership errors of another",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.a project check with a type error in one module and 600 ownership errors in another reports them all under a 192 MiB ceiling",
+      "shard": 3
+    },
+    {
+      "name": "fix_cli_test.test.check reports every borrowed value a mut binding keeps in one run, two in one body",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.check reports every independent type error of a body in one run, in source order (F-RC-214)",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.check reports every missing own of a file in one run, three in one call (F-RA-507, F-RA-613)",
+      "shard": 5
+    },
+    {
+      "name": "fix_cli_test.test.check reports one error for each root cause: a moved list used three times, a failed binding used twice",
+      "shard": 1
+    },
+    {
+      "name": "fix_cli_test.test.check reports the ownership errors of the bodies that checked beside a type error, in source order, and leaves its callers unjudged",
+      "shard": 0
+    },
+    {
+      "name": "fix_cli_test.test.fix settles a file of independent ownership repairs in one round, and the program runs",
+      "shard": 4
+    },
+    {
+      "name": "fix_cli_test.test.qualified construction import stays used through cold warm checks and exact unused-import fix",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions and folds preserve iteration and empty input semantics",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions compose with contextual repetition and membership repairs",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions fill exact source contract",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions fill helper preserves negative counts",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions generator any and all stop every nested loop before the next source",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions generator exact source contract",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions generic repairs agree across imported independent roots",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions imported local nominal types survive independent roots",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions module collisions keep explicit accumulator loops",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions preserve source filter key value order and managed folds",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions repair nested yields and sources in their repeated contexts",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_comprehensions_test.test.wave1 comprehensions retain min and max empty input traps",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.O4 generic comprehension results move into wrappers and owning calls while readers borrow",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control conditional exact source contract",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions certain first argument hoist runs selected arm only",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions certain interpolation and operand hoists remain idempotent",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions compose with lambda conditional and match extraction",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions compose with repeated generic gather output selection",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions deferred gather retains outer short circuit nofix",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions deferred owners preserve conditional type diagnostics",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions generic repair remains symbolic for two types and named calls",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions imported helper repairs agree across independent roots",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions imported nominal repairs use original module type names",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions match repairs evaluate target once and preserve fail",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions nested match selection retains failure and managed result handling",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions preview direct inferred managed and contextual repairs",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control expressions uncertain short circuit repeated and preceding read have no fix",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_control_expressions_test.test.wave1 control match exact source contract",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_declarations_test.test.wave1 declaration migration target checks runs and remains fix-idempotent",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI coalesces duplicate named requirements within limits",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI coalesces repeated identical named operations",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI defers inferred callbacks until mutation repairs",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI defers shared declarations across independent roots",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI does not capture existing builtin calls",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI does not substitute qualified nominal names matching bound subjects",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI fixes all independent directory roots before shared metadata changes",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI leaves ordinary generic and reserved variant constructors alone",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI migrates imported inferred named operations",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI migrates member collisions and representation access",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI passes callbacks to imported domain owned generic members",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI passes explicit and inferred generic forwarding callbacks",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves CRLF comments and nondefault suite indentation",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves already removed codec spellings with spaced brackets",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves conflicting operation ceiling diagnostics and metadata",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves dependent sites for unsupported domain indentation",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves grouped wrap unwrap and generic calls",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves invalid named operation call diagnostics and metadata",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves invariants and avoids function and local captures",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves operation metadata when inferred type is unknown",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI preserves trailing commas comments defaults and named arguments",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI reserves own parameters loop bindings and generated stems",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI substitutes named subjects inside callback collection types",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_domain_test.test.wave1 domain CLI withholds dependent edits for an uncertain domain suite",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_effects_test.test.wave1 effects CLI converges combined domain and operation clauses",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_effects_test.test.wave1 effects CLI erases extern noalloc without attributing a bodyless declaration",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_effects_test.test.wave1 effects CLI relocates multiline noalloc declaration and erases callback noalloc",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_effects_test.test.wave1 effects CLI removes clauses across imported modules and independent roots",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_effects_test.test.wave1 effects CLI resolves duplicate operation ceilings before domain migration",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_effects_test.test.wave1 effects CLI retains parser diagnostic and fix across warm cache checks",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_lambda_test.test.wave1 lambda generic callback callers retain distinct int and str contracts",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_lambda_test.test.wave1 lambda migration preserves managed callback mutation at runtime",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_lambda_test.test.wave1 lambda preview fix check and idempotence across independent roots",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_list_membership_test.test.wave1 list membership migrates generic equality constraints",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_list_membership_test.test.wave1 list membership migrates pure dictionary values",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_list_membership_test.test.wave1 list membership migrates pure float and list literal needles",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_list_membership_test.test.wave1 list membership migrates pure literal list",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_list_membership_test.test.wave1 list membership migration retains positive and negative tests",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_list_membership_test.test.wave1 list membership withholds reordered calls",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_negative_index_test.test.WAVE1 imported max name withholds a generated clamp and preserves source",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_negative_index_test.test.WAVE1 negative index CLI fix is complete and idempotent",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 imported alias still rejects a shadowing local",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition and membership preserve locals behind import aliases",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition ignores import text inside docstrings",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition import avoids top level function name",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition import follows retired module header",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates bytes",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates generic list assignment",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates generic singleton without concrete type names",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates list",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates list assignment with loops",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates multi element list expression without hoisting",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates old Result argument",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates old match with alias",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates old try",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates string assignment",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition migrates text",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition preserves two effectful operand calls in count first order",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition preserves unsigned maximum empty sequences and argument order",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition reuses module alias",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition shares helper edits across independent roots",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition widens narrow counts exactly",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_repetition_test.test.wave1 repetition withholds arbitrary generic list expression",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple C1 connected callers migrate beside a disjoint semantic refusal",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple C1 independent sort repair proceeds beside unrelated errors and tuple refusals",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple C1 shared scopes defer transitively and name the withheld repairs",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple C1 tupleScope and syntaxComplete retain directory wide deferral for incomplete graphs",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple C1 tupleScope retains shared consumer protection through source aliases",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple Result-return records remain manual without partial consumer writes",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple borrowed Result operands remain deferred without partial staging",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple ignored Result operands are explicitly discarded after staging",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple literal return and generic signature retain two concrete providers",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple owned Result parameters transfer into staging",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple place targets run after every RHS operand in original order",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple return inferred names collision and named generic calls",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple return names fields and expands every call site",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple scalar Results stage without an own marker",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple shared literal-return fields ignore consumer names and import closures",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple shared signature survives an unrelated independent root error",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple shared signature waits for a parser failure before tuple recognition",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple shared signature waits for unsupported independent consumer",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple sort key returns become record keys",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple stored and printed tuples remain manual diagnostics",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple swap snapshots a managed local before a later operand writes it",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple swap stages every operand before writes",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave1_tuple_test.test.wave1 tuple waits for earlier scalar domain migration without deadlock",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave2_w_test.test.perf B1 a bound list view stored in a dictionary value takes the copy repair",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave2_w_test.test.perf B1 a bound list view stored in a list element takes the copy repair",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave2_w_test.test.perf B1 a bound list view stored in a record field takes the copy repair",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave2_w_test.test.perf B1 a returned bound list view takes the declaration repair",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W1 an octet position still counts len",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W1 the scalar helper's negative-position repair keeps the value on non-ASCII text",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W2 a deferred list binding of two slices builds and keeps its value",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W3 a read-only bound slice stays accepted",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W3 a stored bound list view takes the copy repair on its binding",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W3 a stored bound text view takes the copy repair on its binding",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave2_w_test.test.wave2 W4 a list view of a mutable source is refused like a text view",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes b1 a returned list slice takes the declaration repair",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes b1 a stored list slice takes the copy repair",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes b2 a helper call without its import takes the import repair",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes b2 a single-file program keeps the helper spellings",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes c2 a ranged endpoint inside a scalar traps at its call",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes c2 a str search answers in octet offsets and the helpers stay scalar",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes c2 leaves bytes and the unranged counts alone",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes r4 a live view invalidated in a loop is not a loop move",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes r4 a live view invalidated in a loop takes the copy repair",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes x1 a view result that outlives its source takes the copy repair",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes: a failing command never exits with empty standard error",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes: every refused view-shape cell takes its certain fix",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave3_fixes_test.test.wave3 fixes: the view-shape matrix is current",
+      "shard": 2
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 borrow calls and their view types migrate to slices",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 invalidated slice views migrate to the copy the language requires",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 returned slices migrate to an explicit borrowing declaration",
+      "shard": 3
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 slice escapes migrate to the explicit copy the language requires",
+      "shard": 4
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 stepped slice refusal points at the step it removed",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 stepped slices carry the certain repair without an import",
+      "shard": 0
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 stepped slices migrate to the stride helpers",
+      "shard": 1
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 stored byte slices migrate to the explicit copy the language requires",
+      "shard": 5
+    },
+    {
+      "name": "fix_wave3_text_test.test.wave3 text iteration migrates to the chars loop source",
+      "shard": 3
+    },
+    {
+      "name": "frame_floor_cli_test.test.a built binary that fills the native stack names the stack limit and a remedy it can take",
+      "shard": 3
+    },
+    {
+      "name": "friction_cli_test.test.friction record: a module the loader cannot read appears though the checker never ran",
+      "shard": 1
+    },
+    {
+      "name": "friction_cli_test.test.friction record: a usage error writes nothing and a clean program lists nothing",
+      "shard": 5
+    },
+    {
+      "name": "friction_cli_test.test.friction record: build, run and test carry the diagnostics they render",
+      "shard": 2
+    },
+    {
+      "name": "friction_cli_test.test.friction record: check names an ownership diagnostic the checker never lists",
+      "shard": 2
+    },
+    {
+      "name": "friction_cli_test.test.friction record: the flag names a build's log and a repeated flag is refused",
+      "shard": 0
+    },
+    {
+      "name": "hole_replay_cli_test.test.a check that refused a hole leaves the next build compiling it as a trap",
+      "shard": 2
+    },
+    {
+      "name": "hole_replay_cli_test.test.a release build refuses a hole main reaches that a debug build kept, and builds past one it does not, from the same work directory",
+      "shard": 2
+    },
+    {
+      "name": "hole_replay_cli_test.test.a typed hole hides neither an unread capability parameter nor a warning of the same module",
+      "shard": 2
+    },
+    {
+      "name": "hole_replay_cli_test.test.an edit beside a kept hole does not let check accept it, and filling the hole does",
+      "shard": 3
+    },
+    {
+      "name": "hole_replay_cli_test.test.check of the file, check of the directory and the json form keep listing every hole",
+      "shard": 0
+    },
+    {
+      "name": "hole_replay_cli_test.test.check refuses a hole in a new work directory after a debug build published to a shared store",
+      "shard": 4
+    },
+    {
+      "name": "hole_replay_cli_test.test.check refuses a hole in the work directory a debug build used, with the shared store off",
+      "shard": 0
+    },
+    {
+      "name": "hole_replay_cli_test.test.check refuses a hole that a test run kept as a trap, in a new work directory",
+      "shard": 3
+    },
+    {
+      "name": "hole_replay_cli_test.test.check-module of a file with no hole of its own says only how many the other modules hold",
+      "shard": 4
+    },
+    {
+      "name": "hole_replay_cli_test.test.check-module reports the holes of its file in full and those of other modules as one counted line",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.C2 concurrent publishers never expose a partial entry",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.C2 damaged truncated oversized and foreign-version entries fall back fresh",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.C2 ordinary body reuse crosses processes and relocates warnings",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.C3 symbolic template reuse crosses processes and preserves selective invalidation",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.C3s concrete specialization reuse survives fresh processes with selective invalidation",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.C3s damaged truncated and foreign specialization entries fall back fresh",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.C3s no-cache performs specialization checks without reads or writes",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.C3s provider body changes stay visible through reused specializations",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.C3s reused specialization warnings relocate and defaults stay equivalent",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI O3 api-diff reads declared from contracts despite invalid bodies",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI a copied and stored capability keeps its directory grant under --restrict (5C)",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI accepts Python capability spellings and lets a declared type keep the name",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI an edit to one contract clause is never served from a warm cache",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI an entry that imports and has a hyphen in its name is refused with the name to give it",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI answers removed C-backend commands with what replaces them",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI api --check and --write: exit codes, diff, json, body-edit stability and cache states",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI api-diff records a baseline and classifies body and interface changes",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI approximate discovery is advisory explains drift and reports budget exhaustion",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI binding warnings do not alter status or result output",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI blocking server survives writes after its client has closed",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI budget traps name the flag that raises the budget",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI build loads a module project entry without --project",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI cache gc previews by default and reports what it visited, would remove and leaves",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI check keeps every entry check when main is declared",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI check keeps plain single-file programs on the one-unit path",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI check of a library after edits reports exactly what a check without a cache reports",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI check of a library enforces configured warning and interface gates",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI check of a library prepares nothing for a first check and rewrites nothing when unchanged",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI check of a module entry follows imports and records no executable verdict",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI check of an executable after an edit reports the imports its stood-in bodies use",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI check on a CHECK-PROJECT-ENTRY-1 module project loads the reachable graph",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI check rejects a stale interface file when selka.json sets interface_files",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI check session reuses parses and clears retained storage",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI check timings name every project phase",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI check type-checks a file without main as a library",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI check warns W_NEEDLESS_COPY with its fix, and fix, lint and a waiver agree",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI check writes one status line on success and none on failure or in JSON",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI check-module checks bodies and never invents main",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI check-module enforces configured warning and interface gates",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI check-module follows imports and cannot cache an executable verdict",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI check-project reports an import no reference resolves through",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI checkProjectPolicy distinguishes language failures policy failures and configuration failures",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI checks and lowers the qualified whole-path helper methods",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI checks and runs module programs with private boundaries and cross-file traps",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI checks and runs the migrated managed value assignment",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI checks array schemas dumps indexing and reports bounds traps",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI checks bounded environment access without granting ambient process access",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI checks external capabilities but cannot silently grant ambient providers",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI checks nominal record units and factory execution",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI checks resource data operations effects and required mutation without ambient providers",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI checks resource ownership completion and implicit cleanup effects without ambient access",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI checks runs and dumps records and declared complete conversions",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI clock entropy and environment providers honour their grants",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI commands that need an entry point still report E_MAIN for a library",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI context answers a symbol question with declaration before contract",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI context answers an incomplete project without checked facts",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI context classifies a declaration against an api-diff baseline",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI context keeps emitted bytes within the requested budget",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI context refuses an unqualified name that two modules both declare",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI context rejects a symbol no declaration carries",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI context rejects missing conflicting and malformed options",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI context reports an unreadable baseline as error.BaselineUnreadable",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI context resolves a source position and rejects unusable coordinates",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI cost --sites adds source rows with inlined origin and loop depth and one cost-sites-v1 JSON",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI cost --sites names unresolved calls, reports nested depth and is empty without sites",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI cost, cost --sites, list-interfaces --cost, run --stats and lint classify a probe of a borrowed dictionary",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI declaration listing accounts for every byte with disjoint ordered ranges",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI declaration listing separates parse failures from checking and usage failures",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI denies a Network entry point and an endpoint outside the grant under restrict",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI directory grants scope the file surface and separate reading from writing",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI directory test applies each entry's own cases file and lets a test file reach its module's privates",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI directory tests forward the installed host receipt when modes are already normalized",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI discovers cross module duplicates with options and rejects invalid dependencies",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI distinguishes source errors runtime traps and Usage errors",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI docs lists the embedded guides and prints one from a directory with no docs",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI embedded inputs reach context and generic schema and obey project byte budgets",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI empty test selection names an unloaded sibling and preserves JSON",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI executes complete enum tables and rejects missing mappings in every command",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI executes concrete nominal instances and reports argument identity errors",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI executes control flow and preserves discarded traps",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI executes generic fixed arrays and reports uncalled template shape errors",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI executes the exact plan acceptance programs and recursive functions",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI executes variants dumps dispatch and rejects newly incomplete matches",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI execution timings preserve results and runtime diagnostics",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI exposes fs.read_only permission attenuation and rejects the removed spelling",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI features identify installed compiler without source input",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI formats nominal templates and runs programs with unused declarations",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI formatter and test agree on headerless sibling test imports",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI formatter check locates spacing and missing final newline",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI formatter lays a multi-line parenthesized expression out so that it still parses",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI formatter replaceFile writes in place and prints a unified diff",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI formatter supports stdout check mode and syntax-only formatting",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI forwards guest arguments after -- for run and build --run",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI frame budgets count main and reject invalid overrides",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI grant flags reject repeats empty values and commands that do not execute",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI grants a narrowed endpoint and the network module exchanges bytes over loopback",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI grants every capability by default and resolves paths against the working directory",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI guest frame preflight permits a restored compiler limit and preserves a caller limit",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI handles recoverable results and rejects silent error loss",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI help answers on stdout with the everyday commands first and exits 0",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI index-project prints the summary by default, the full document on --full and a selection per filter",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI interfaces, the contracts manifest, context and api-diff carry contract clauses",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI keeps a listener unreadable and accepts only on a listener",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI lint --against prints changed declarations in full without gate",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI lint accept records a baseline that gate then accepts",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI lint change-without-test blocks a changed helper only under gate and against",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI lint prints one count line per report-only rule and --all lists every finding",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI lint reads cost --sites for alloc-in-loop only in a changed declaration",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI lint reports L_ findings and blocks only under --gate",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI lint size rules report in a plain run and refuse under gate",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI lint test hygiene rules flag fake tests and leave expression tests alone",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI lint undocumented-export reports under agent and blocks under strict",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI list-interfaces --cost output appends exact release costs without changing the default listing",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI list-interfaces prints a tests column from the shared reachability index",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI list-interfaces renders capability parameters with their Python spelling",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI listens on an allowed endpoint and serves an HTTP request",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI managed constants check and reject expressions",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI managed constants import run build installed and invalidate warm caches",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI maps Result main ok and err to status codes and one diagnostic",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI migrated corpus projects carry the checked mutation contract",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI missing arguments and missing files are host or usage failures",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI module discovery keeps header validity separate from compilation",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI module discovery loads real files and diagnoses cross-file cycles",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI module formatting is syntax only and canonical for every reachable module",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI module interfaces parse bodies and check exported signature visibility",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI module quality reports preserve export roots and advisory thresholds",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI narrows a Network to one literal endpoint and rejects a dynamic host",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI native build forwards diagnostic presentation to its source frontend",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI nested record alias rejects under effects and runs with a mutation footprint",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI passes every NaN to foreign code as the canonical quiet NaN",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI preserves integer width bounds and explicit casts",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI project checks reuse syntax and verdicts and invalidate only changed modules",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI project-dependencies buildIndex emits checked graph identity and rejects invalid bodies",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI property test discards inputs that break a precondition or a record invariant",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI property test names the parameter and type it cannot generate",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI property test runs in one process, reuses a pass until its seed or runs change, and reports a timed-out child without shrinking",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI property test shrinks a failing sum to the single-element list [100] and reports how to reproduce it",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI property test that fails with an Err reports the minimal input's error return trace",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI provider replacements recapture embedded fixture edits with a warm test cache",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI reads a 40,000 byte payload through a 64 KiB chunk with every octet intact",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI refuses a listen without authority and rejects malformed listen grants",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI refuses a retired host declaration at check time and names extern func",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI refuses an ungranted entry capability only while --restrict is active",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI rejects an unaddressable native frame reservation without a compiler panic",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI rejects iteration growth written back through a borrowed named field",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI rejects malformed repeated and empty endpoint grants",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI rejects recursive nominal layouts but preserves finite nested and phantom forms",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI reports unused nominal template requirement errors",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI resolves the Python capability spellings inside projects that import modules",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI run and check success",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI run judges a noalloc probe of a borrowed dictionary by its key type",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI run loads a project entry that imports a standard module and leaves single-file run unchanged",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI run reports each frontend warning once",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI run takes --threads and refuses a count outside 1 to 256 (E1c)",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI schema inputs load fresh generated modules and reject malformed manifests",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI separates eprint stderr from print stdout byte-exactly",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI sessionCheck returns host failure without terminating the session",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI specializes nominal generic bodies and reports uncalled shape errors",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI static quality report uses advisory thresholds and rejects invalid options",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI step budgets stop a loop and reject invalid options",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI streams program output and reports the entry result only on request",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI test affected selects tests that reach a changed declaration",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI test carries sets, dictionaries with tuple keys, bytes and floats across the copied-value boundary",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI test discovers a test_ function without an explicit export",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI test hands declared capabilities deterministic stand-ins and reuses their passes",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI test holds the compiler and its build tools to the host ceiling and names it when they run out",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI test ignores unexported test_ helpers that cannot default",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI test of one file still gives its test processes more address space than the compiler's ceiling",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI test reports a Result test's Err with its error return trace in text and JSON",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI test reports an exported ill-shaped test as a failed case",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI test retains exact embedded budgets and recaptures tightened and widened policy",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.CLI tests-for answers a project that does not type-check from its syntax and accepts module.name",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.CLI tests-for lists direct and transitive tests and rejects an unknown name",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.CLI the interface-files example keeps its checked-in interface files current",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.CLI the mut spelling checks and runs while the removed flag is rejected",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI threads a Host capability through an extern call and runs it natively",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.CLI warnings deny makes a checker warning rejecting in check and check-project",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.CLI withholds Host under restrict and grants it with --allow-host",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.F1 check accepts direct and transitive noalloc allocations without warnings",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.F1 lint accepts a reasoned noalloc waiver on a library declaration",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.F1 lint blocks noalloc allocations in every profile",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.F1 run rejects a violated noalloc contract before execution",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.F1 test retries reject noalloc failures without reporting success",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.F1 unsupported unused bounded bodies fail with a reason and block lint",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.F3 project and module checks report both recovered syntax errors",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.F3 project migration edits belong to their own diagnostic",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.F8 formatter accepts the exact standard library sources that check accepts",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.F8 formatter rejects internal intrinsics in an ordinary source named math",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.F8 formatter withholds standard library trust when any source bytes differ",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.G2o a project check works in the build's work directory and leaves the old front-end directories alone",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.G2o checkOnSession refuses a project whose index, check or ownership validation fails, with the status and text of the old driver",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.P1 ignores an unselected production body type error while its declarations stay valid",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.P1 preserves the original wider replacement effect clause as a removal diagnostic",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.P1 rejects every incompatible replacement dimension",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.P1 rejects stronger or malformed replacements and a bad production interface",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.P1 selects a validated fake while the unfinished production body is never checked",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.R3 canonical descriptors compare provider scalar and nominal contracts",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.R3 canonical descriptors expand transparent aliases for discovery and nested contracts",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.SELKA_FRONTEND_CACHE moves the checked-body store and invalidation baseline out of the working directory",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.a 64 KiB network chunk emits code whose size does not depend on the chunk",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.a Debug build's executable does not depend on where its cache is",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.a Process entry parameter needs --allow-process under --restrict, for run and an installed executable",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a broken precondition traps with the old core's description of the clause",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.a build leaves in its certificate directory the certificates of that build and removes a stale one",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.a build that fails without diagnostics of its own prints one line naming the error and the stage store, and exits 2",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a built executable hands main every argument and reads runtime options from SELKA_OPTIONS",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.a built program at -o is a read-only second name for the stored file, and a later build replaces it without writing through",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.a built program reports the frame reservation its address space cannot back",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a cached check sees a field renamed in a record reached only through a list element",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.a cached re-check of a borrowed-payload callee keeps the cold check's diagnostics",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a call-depth budget the memory ceiling cannot back is refused up front with what it needs",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.a directory run discovers project roots instead of every module",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a directory run runs a main-less test library no root imports, and every test once",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.a file under a hidden folder of a project imports from the project's selka.json directory, and a directory run still skips the folder",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a fixed-width read that runs past the end of a view traps with the list bounds report",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a guest build inside a build.zig project leaves no Zig cache in that project",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a listener queues the connections that arrive before the program accepts any",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.a local named like an imported path root is the local in its scope and the module path outside it",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a missing, unreadable or directory entry is refused by name with the usage status",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a module checks against emitted interfaces after its imports' sources are gone",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.a native run reports a failed assert with its message",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a program reads its standard input in lines, chunks and frames, across the buffer size, and a bad read traps R_INPUT",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a restricted run reads monotonic time and sleeps without --allow-clock, and its wall-clock read fails until granted",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a scalar-only mut record parameter writes the caller",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a single-entry test report lists the project sources its check loaded",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.a test run that refuses its entry by name creates no cache directory",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.a test whose result is not bool fails its case and the run",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.a typed expectation failure names both actual and expected values",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.a typed hole does not hide an ownership error in a finished function",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.all commands preserve stdout and deterministic advisory stderr",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.all commands reject invalid programs before execution and locate runtime traps",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.an arena block is rejected with its targeted removal diagnostic",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.an entry capability written T? is Some when the command line grants it and None when --restrict does not",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.an executable built without a frame ceiling refuses a runtime frame budget",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.an executable built without a requested ceiling refuses a runtime step budget",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.appending a 64 KiB chunk is one runtime copy and code that does not grow with the chunk",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.asking for certificates changes neither the emitted LLVM nor the executable",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.boundary acceptance CLI runs through run build --run and installed paths",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.build --run detects module projects and installed binaries receive the same argv",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.build, run and test leave out the W_COPY_MOVE hints that check, a flag and json show",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.check FILE prints its own warnings and one line per other module, and --warnings, json, a directory and fix see every one",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.check after a one-body edit re-checks only that body when retention cannot hold the project",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.check of a project entry checks the merged program and writes no per-module records",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.check reports an embed's diagnostic at its literal and exits nonzero",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.checked reduction loops sum and trap the same from the LLVM fast copy as from QBE",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.configured policy never disables independent import-cycle rejection",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.dump-ir --certificate --validate prints the certificate and counts the functions it validated",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.dump-ir --certificate prints the versioned certificate text, the same on every run",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.dump-ir --fact-certificate prints the same text on every run, and mutate-fact-certificates writes mutants it rejects",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.dump-syntax writes the framed payload, refused files too, and the layout without a file",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.dump-tokens --tables writes the tag names and reserved spellings and needs no file",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.duplicate discovery is separate advisory analysis with explicit options",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.element loops over lists, nested lists, records and bytes compute and trap the same from LLVM as from QBE",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.every building and running command refuses --unchecked as removed",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.every implemented feature carries a kind, a summary and a documentation pointer",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.guest print output stays off the test protocol and shows on failure",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.library modules and bare *_test.selka files are valid guest test entries",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy enforces selka.json across ordinary project commands cold warm and after policy-only edits",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy keeps a configured project's warm verdicts replayable on disk and in a session",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy policy applies to native test preparation ProjectConfigurationFailed and ProjectPolicyRejected",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy policy discovery above the native test entry enforces the ancestor config",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy policy discovery anchors to the entry file instead of the shell working directory",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy policy identity participates in project-dependencies receipts",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy policy reports missing and malformed configuration as host status 2",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.loadConfiguredPolicy policy statuses parseDocument HostConfiguration and PolicyViolation",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.module by module, a trapping and a printing test report what the whole-program run reports",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.multiple missing capabilities report exactly one identical diagnostic",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.named constraints fake-only entry ignores an absent or invalid production module",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.named constraints review repros keep their repaired checking outcomes",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.oversized source is a host resource failure with no result output",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.run --verify-ownership validates the functions the passes finish and says how many",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.run build --run and installed executables accept more than 256 guest arguments",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.run build --run and installed executables share the restricted capability diagnostic",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.run on the new core keeps the exit, argument, budget and grant contract",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.run refuses --emit-certificates, which only a build writes",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.run replaces an inherited SELKA_OPTIONS with its own command line",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.run takes every budget in both spellings and prints its own usage for a bad flag",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.selka build answers the core's developer switches as selka-core did",
+      "shard": 3
+    },
+    {
+      "name": "integration.test.selka fix converges on a three-owner borrowed result, cold and cached, to the same file",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.selka packages builds two applications from one locked library without writing either tree",
+      "shard": 4
+    },
+    {
+      "name": "integration.test.selka packages lock pins each resolved root and module hash and refuses bad namespaces, empty packages and stray sources",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.selka packages refuses drift, shared paths, doubled namespaces, standard names and symbolic links before compiling",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.selka run reads standard input under --restrict too: an Input needs no grant",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.selka test inside a build.zig project compiles its runner without a Zig cache there",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.selka test runs a module that embeds and reruns it when only the fixture changes",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.selka.json limits set the run and test defaults and the command line still wins",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.test --verify-ownership runs a guest test with the validator on",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.test refuses a frame budget its per-test ceiling cannot back and accepts one it can",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.test, build, run and check write no cache into the working directory under --cache-dir",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.the CLI test binary names neither its build tree nor the executables it runs outside debug sections",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.the interfaces command is listed in help and answers a bad action with its usage",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.the old back end's commands and flags are refused by name with what replaces them",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.validate-certificates prints a verdict per function and mutate-certificates writes mutants it rejects",
+      "shard": 0
+    },
+    {
+      "name": "integration.test.validate-fact-certificates reads a certificate through a link, as the facts half of the gate lays out the files it checks",
+      "shard": 2
+    },
+    {
+      "name": "integration.test.validateUnitConfiguredPolicy checks required configuration for single-unit commands",
+      "shard": 5
+    },
+    {
+      "name": "integration.test.versioned loops LLVM vectorizes compute and trap exactly as QBE does",
+      "shard": 1
+    },
+    {
+      "name": "integration.test.warnings of modules git tracks unmodified are counted, and every one is a flag, an edit or json away",
+      "shard": 4
+    },
+    {
+      "name": "network_poller_cli_test.test.a poller and a client in one process: the poller reports every step",
+      "shard": 0
+    },
+    {
+      "name": "network_poller_cli_test.test.a poller closes an idle client after the timeout it asked for, and sixty idle clients with it, and still answers a new one",
+      "shard": 1
+    },
+    {
+      "name": "network_poller_cli_test.test.a poller holds no descriptor after fifteen hundred connect, echo and close cycles",
+      "shard": 0
+    },
+    {
+      "name": "network_poller_cli_test.test.a poller sends a response larger than the socket buffers over several wake-ups to a slow reader",
+      "shard": 2
+    },
+    {
+      "name": "network_poller_cli_test.test.a poller serves sixty concurrent clients on one thread while an idle client waits",
+      "shard": 2
+    },
+    {
+      "name": "network_poller_cli_test.test.a poller with a full connection table leaves clients in the backlog until a slot frees",
+      "shard": 1
+    },
+    {
+      "name": "network_poller_cli_test.test.the poller reports the bound port, each client's address and its connection limit",
+      "shard": 1
+    },
+    {
+      "name": "network_poller_cli_test.test.the shipped event-loop echo example echoes concurrent clients and logs each peer",
+      "shard": 5
+    },
+    {
+      "name": "overview_cli_test.test.overview CLI bytes ignore cache placement and absolute checkout parent",
+      "shard": 1
+    },
+    {
+      "name": "overview_cli_test.test.overview CLI rejects ambiguous modes and missing projects",
+      "shard": 1
+    },
+    {
+      "name": "overview_cli_test.test.overview CLI writes checks emits equivalent JSON and caps stale diff",
+      "shard": 1
+    },
+    {
+      "name": "overview_cli_test.test.overview html is a mode of its own: with --write or --check it is usage and writes nothing",
+      "shard": 0
+    },
+    {
+      "name": "overview_cli_test.test.overview html writes the project page and its data, with the back link",
+      "shard": 4
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix copies a borrowed field without repeating its receiver",
+      "shard": 5
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix copies a borrowed index without repeating its index",
+      "shard": 3
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix copies a dictionary selection after its operands run once",
+      "shard": 5
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix copies an assignment operand without wrapping its synthetic assignment",
+      "shard": 0
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix copies owned variant payload slices and reaches a fixed point",
+      "shard": 5
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix declares a borrowed return exactly and reaches a fixed point",
+      "shard": 0
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix detaches an iteration value before storing it",
+      "shard": 0
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix leaves a returned capability alone: a capability is a handle (5C)",
+      "shard": 0
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix never proposes copying an already moved value",
+      "shard": 0
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix never redirects a mutation to a throwaway copy",
+      "shard": 2
+    },
+    {
+      "name": "ownership_fix_cli_test.test.ownership fix withholds tuple snapshots that would clone shared class identity",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.CLI O3 api-diff source preflight reports normal Core R4 diagnostics",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.CLI O3 declaration tools share Core source preflight despite invalid bodies",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.CLI docs prints the checked release guide outside the source tree",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.F4 api-diff malformed and mixed-version baselines retain input errors",
+      "shard": 0
+    },
+    {
+      "name": "release_cli_test.test.F4 api-diff source reorder is neutral while nonempty narrowing is compatible",
+      "shard": 0
+    },
+    {
+      "name": "release_cli_test.test.F4 api-diff upgrade command quotes baseline paths and leaves them unchanged",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.F4 pre-source v1 baseline reports one actionable upgrade instead of declaration breaks",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.F4 removing from breaks the interface and a declared borrowing caller",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.FR-413 release check and init name the file and position of a source error",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.FR-423 the tests step runs each root through selka test and a warm run reuses every receipt",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.O3 api-diff classifies declared source changes independently of bodies",
+      "shard": 3
+    },
+    {
+      "name": "release_cli_test.test.release CLI CommentDelimiterCollision restores earlier adopted sources",
+      "shard": 0
+    },
+    {
+      "name": "release_cli_test.test.release CLI InvalidReleasePaths rejects overlapping metadata paths before writing files",
+      "shard": 3
+    },
+    {
+      "name": "release_cli_test.test.release CLI Markdown fences run standalone and skipped examples refuse release",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.release CLI adoption leaves extern declarations and existing docstrings in place",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.release CLI adoption needs adjacency skips banners prints every adoption and previews dry runs",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.release CLI adopts multiline comments once while preserving directives constants and interface",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.release CLI body changes need no decision but removals need baseline names",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.release CLI check refuses holes and direct source errors stay findings",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.release CLI configured docs metadata keeps archived references and examples historical",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.release CLI doc reference diagnostics locate literal first and indented lines",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.release CLI docs rules block every profile without duplicating lint findings",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.release CLI example-only orphan api hints repair that module and hidden pending files validate",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.release CLI file-level waivers cover several declarations in the lint and docs steps",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.release CLI format failure names release.exclude and an exclusion skips an intentional repro",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.release CLI init draft check cut records a reviewed interface change",
+      "shard": 0
+    },
+    {
+      "name": "release_cli_test.test.release CLI long-example is a warning that never refuses a release",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.release CLI malformed metadata is a located usage failure",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.release CLI overview requires current existing interface files and cut writes nothing when refused",
+      "shard": 5
+    },
+    {
+      "name": "release_cli_test.test.release CLI overview step reports a reference-only edit as stale",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.release CLI private boolean tests aliases and marked cases share ordinary discovery",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.release CLI references honor odd and even opening backslash escapes",
+      "shard": 3
+    },
+    {
+      "name": "release_cli_test.test.release CLI references use whole spans skip fences and resolve unloaded standard modules",
+      "shard": 1
+    },
+    {
+      "name": "release_cli_test.test.release CLI rejects usage and validates every nested pending decision",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.release CLI skips are explicit refusals and exact filters do not duplicate prefix cases",
+      "shard": 4
+    },
+    {
+      "name": "release_cli_test.test.release CLI source errors refuse and dependent steps explain their skips",
+      "shard": 2
+    },
+    {
+      "name": "release_cli_test.test.release CLI transcript code and literal expected output are not prose references",
+      "shard": 0
+    },
+    {
+      "name": "release_cli_test.test.release CLI uses configured paths nested archives and selected test roots",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.release check refuses an invalid pending change note and release cut keeps it",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.release cut files change notes under the release and records their count",
+      "shard": 0
+    },
+    {
+      "name": "review_cli_test.test.review attention lists a new public function that takes a capability",
+      "shard": 0
+    },
+    {
+      "name": "review_cli_test.test.review behaviour lists a changed test body with its diff and attention says so",
+      "shard": 3
+    },
+    {
+      "name": "review_cli_test.test.review behaviour lists a citation that a new comment adds",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review behaviour lists a generated file and still asks for a decision on its new function",
+      "shard": 3
+    },
+    {
+      "name": "review_cli_test.test.review behaviour lists added and removed tests",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review behaviour reports a docstring example whose output changed",
+      "shard": 5
+    },
+    {
+      "name": "review_cli_test.test.review behaviour runs the head's tests with --test and records their counts",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review draft writes the change note skeleton and never overwrites a note",
+      "shard": 3
+    },
+    {
+      "name": "review_cli_test.test.review gate accepts a decision added under a release directory in the same change",
+      "shard": 5
+    },
+    {
+      "name": "review_cli_test.test.review gate compares a committed range",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review gate ignores a decision that was already pending on the base",
+      "shard": 0
+    },
+    {
+      "name": "review_cli_test.test.review gate lets one valid decision explain a new project",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review gate needs no note for a change limited to friction",
+      "shard": 3
+    },
+    {
+      "name": "review_cli_test.test.review gate passes a body-only change with a valid note and records the body change",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review gate reads an untracked note and decision in working-tree mode",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review gate refuses a change note that still holds a placeholder",
+      "shard": 1
+    },
+    {
+      "name": "review_cli_test.test.review gate refuses a head whose declarations do not load",
+      "shard": 4
+    },
+    {
+      "name": "review_cli_test.test.review gate refuses a new public function until a decision names it",
+      "shard": 0
+    },
+    {
+      "name": "review_cli_test.test.review gate refuses a source change that adds no change note",
+      "shard": 1
+    },
+    {
+      "name": "review_cli_test.test.review html is written when --check refuses the change, and the refusal still exits 3",
+      "shard": 1
+    },
+    {
+      "name": "review_cli_test.test.review html writes one self-contained page with the review's data, and two runs write the same bytes",
+      "shard": 5
+    },
+    {
+      "name": "review_cli_test.test.review index takes one site directory, and a missing one is a host failure",
+      "shard": 1
+    },
+    {
+      "name": "review_cli_test.test.review index writes the site's front page, with the banner, the open change and the bypassed landing, the same bytes twice",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review inside cuts a long edit at eighty diff lines and says how many lines it left out",
+      "shard": 4
+    },
+    {
+      "name": "review_cli_test.test.review inside gives no signal to an unrelated small edit and lists no module constant",
+      "shard": 1
+    },
+    {
+      "name": "review_cli_test.test.review inside lists a private helper whose body changed with its lines and decision points",
+      "shard": 2
+    },
+    {
+      "name": "review_cli_test.test.review inside names the special cases and the copied block of a parse_serve-shaped change",
+      "shard": 5
+    },
+    {
+      "name": "review_cli_test.test.review inside names the test helpers of a test module on one line",
+      "shard": 3
+    },
+    {
+      "name": "review_cli_test.test.review inside takes a new bool parameter that a branch tests as a flag",
+      "shard": 4
+    },
+    {
+      "name": "review_cli_test.test.review json writes a review-v1 object whose first sentence reads as the change",
+      "shard": 5
+    },
+    {
+      "name": "review_cli_test.test.review rejects other subcommands, a date and an unsafe name as usage",
+      "shard": 0
+    },
+    {
+      "name": "review_cli_test.test.selka docs lists the change review guide and prints its note format",
+      "shard": 3
+    },
+    {
+      "name": "runtime_limits_cli_test.test.a built binary takes --max-memory in SELKA_OPTIONS, then SELKA_MEMORY_LIMIT, and no ceiling when neither is set",
+      "shard": 1
+    },
+    {
+      "name": "runtime_limits_cli_test.test.a full disk behind standard output still traps R_OUTPUT, and a full disk behind standard error is still ignored",
+      "shard": 5
+    },
+    {
+      "name": "runtime_limits_cli_test.test.a reader that has gone from standard output or standard error ends the program quietly with status 141",
+      "shard": 5
+    },
+    {
+      "name": "runtime_limits_cli_test.test.a whole read of a file past 64 MiB returns every octet through each read path",
+      "shard": 1
+    },
+    {
+      "name": "runtime_limits_cli_test.test.a whole read past the byte ceiling traps R_MEMORY_BUDGET instead of returning a prefix",
+      "shard": 1
+    },
+    {
+      "name": "runtime_limits_cli_test.test.selka run applies its own ceiling, not the SELKA_MEMORY_LIMIT its program inherits, after a built binary of the same program",
+      "shard": 1
+    },
+    {
+      "name": "test_directory_unchecked_cli_test.test.a test file that does not check is reported once, as failing to check",
+      "shard": 2
+    },
+    {
+      "name": "trap_position_cli_test.test.lines added above a trapping function move the line a warm build reports, and a cold build reports the same",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k2_test.test.K2 deferred diagnostic still states that scalar domains were removed",
+      "shard": 3
+    },
+    {
+      "name": "wave1_cleanup_k2_test.test.K2 direct construction refuses negative cents",
+      "shard": 5
+    },
+    {
+      "name": "wave1_cleanup_k2_test.test.K2 field writes refuse negative cents",
+      "shard": 4
+    },
+    {
+      "name": "wave1_cleanup_k2_test.test.K2 positive direct construction preserves the value",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k2_test.test.K2 typed JSON construction refuses negative cents",
+      "shard": 3
+    },
+    {
+      "name": "wave1_cleanup_k2_test.test.K2 typed JSON preserves positive record object shape",
+      "shard": 2
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 assigning const then breaking permits one assignment",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 capability repair avoids parameter local global and import collisions",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 const assignments merge continuing branches",
+      "shard": 2
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 const cannot assign twice after partial branch",
+      "shard": 1
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 const read before assignment names missing path",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 generic definite assignment matches concrete branches",
+      "shard": 4
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 generic loops honor breaks and reject continuing assignment",
+      "shard": 4
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 initialized const and compound assignment remain immutable",
+      "shard": 4
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 loop backedges and continue reject repeated const assignment",
+      "shard": 4
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 loop exit possible assignment prevents later const write",
+      "shard": 2
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 managed uninitialized locals clean early return under checked ownership",
+      "shard": 5
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 match ignores returned arms and unions possible assignment",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 native generic invocation specializes const declaration",
+      "shard": 0
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 nested inner break cannot hide outer continue reassignment",
+      "shard": 2
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 range and collection loops reject repeated outer const initialization",
+      "shard": 3
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 underscore capability keeps callback type",
+      "shard": 2
+    },
+    {
+      "name": "wave1_cleanup_k4_test.test.cleanup k4 unused capability offers certain underscore rename",
+      "shard": 3
+    }
+  ],
+  "version": 1
+}

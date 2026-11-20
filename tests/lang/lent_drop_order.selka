@@ -1,0 +1,335 @@
+# Drop order for records and collections that hold borrows (lane J4). A Debug compiler validates each function's ownership
+# certificate, so each test fails to build when the pass destroys an owner while something still holds a loan on it.
+import dicts
+
+record Spoke:
+    name: bytes
+    pins: bytes[] = []
+
+
+record Body:
+    end_x: int
+    terminal: bytes
+    inline_lane: bool = False
+    deferred: Spoke? = None
+    source_net: bytes = b""
+
+
+record Branch:
+    terminal: bytes
+    chain: int
+
+
+func lookup(key: bytes) -> dict[bytes, bytes]?:
+    if len(key) == 0:
+        return None
+    mut pins: dict[bytes, bytes] = {}
+    pins[b"p1"] = b"sw"
+    pins[b"p22"] = b"in"
+    pins[b"p333"] = b"sw"
+    pins[b"p4"] = b"x"
+    return Some(own pins)
+
+
+# collect_pin_roles' shape (RB2): a local list of borrows of a dictionary's keys, filled in a loop. The loop's phis form a
+# cycle in the parent graph; the list must die before the dictionary on every exit.
+func pin_roles(key: bytes, need_input: bool) -> int:
+    mut pins: dict[bytes, bytes] = {}
+    mut has_pins = False
+    if len(key) > 0:
+        match lookup(key):
+            case Some(found):
+                pins = own found
+                has_pins = True
+            case None:
+                pass
+    if not has_pins:
+        return -1
+    mut has_input = False
+    mut outputs: bytes[] = []
+    mut nodes: bytes[] = []
+    for pad in dicts.keys(pins):
+        const role = pins[pad]
+        if role == b"in":
+            has_input = need_input
+        elif role == b"sw":
+            append(mut nodes, pad)
+        else:
+            append(mut outputs, copy(pad))
+    if not has_input:
+        return 0
+    mut total = len(outputs) * 100
+    for pad in nodes:
+        total += len(pad)
+    return total
+
+
+public func test_list_of_dictionary_keys_dies_before_the_dictionary() -> bool:
+    return pin_roles(b"k", True) == 106
+
+
+public func test_list_of_dictionary_keys_on_the_early_exit() -> bool:
+    return pin_roles(b"k", False) == 0 and pin_roles(b"", True) == -1
+
+
+# collect_branch_tree_left's shape (RB1): a borrowed record whose managed option field keeps its `None` default, appended to
+# a local list in a loop. The `None` owns nothing, so no owner dies at the end of an iteration under the list's loan.
+func branch_tree(branches: Branch[]) -> int:
+    mut bodies: Body[] = []
+    for idx in range(len(branches)):
+        const branch = branches[idx]
+        append(mut bodies, Body(end_x=idx + branch.chain, terminal=branch.terminal))
+    mut total = 0
+    for b in bodies:
+        total += b.end_x + len(b.terminal) + len(b.source_net)
+        match b.deferred:
+            case Some(spoke):
+                total += 1000 + len(spoke.name)
+            case None:
+                total += 1
+    return total
+
+
+public func test_borrowed_record_with_a_none_default_in_a_loop() -> bool:
+    mut branches: Branch[] = []
+    append(mut branches, Branch(terminal=b"t-one", chain=10))
+    append(mut branches, Branch(terminal=b"t-two", chain=20))
+    append(mut branches, Branch(terminal=b"t-three", chain=30))
+    return branch_tree(branches) == 0 + 10 + 5 + 1 + 1 + 20 + 5 + 1 + 2 + 30 + 7 + 1
+
+
+public func test_borrowed_record_with_a_none_default_in_an_empty_loop() -> bool:
+    mut branches: Branch[] = []
+    return branch_tree(branches) == 0
+
+
+record Outer:
+    body: Body
+    tag: bytes
+
+
+# A dictionary of borrowed records that keep a `None` default, filled in a loop.
+func dict_of_bodies(names: bytes[]) -> int:
+    mut by: dict[bytes, Body] = {}
+    for n in names:
+        by[n] = Body(end_x=len(by), terminal=n)
+    mut total = 0
+    for k in dicts.keys(by):
+        total += by[k].end_x + len(by[k].terminal)
+    return total
+
+
+public func test_dictionary_of_borrowed_records_with_a_none_default() -> bool:
+    mut names: bytes[] = []
+    append(mut names, b"aa")
+    append(mut names, b"bbb")
+    return dict_of_bodies(names) == 0 + 2 + 1 + 3
+
+
+# A borrowed record with a `None` default nested in another borrowed record, in a loop.
+func nested(names: bytes[]) -> int:
+    mut outs: Outer[] = []
+    for n in names:
+        append(mut outs, Outer(body=Body(end_x=1, terminal=n), tag=n))
+    mut total = 0
+    for o in outs:
+        total += o.body.end_x + len(o.tag)
+    return total
+
+
+public func test_nested_borrowed_records_with_a_none_default() -> bool:
+    mut names: bytes[] = []
+    append(mut names, b"aa")
+    append(mut names, b"bbb")
+    return nested(names) == 7
+
+
+# Options of a borrowed record with a `None` default, in a list, in a loop.
+func options(names: bytes[]) -> int:
+    mut opts: Body?[] = []
+    for n in names:
+        if len(n) > 2:
+            append(mut opts, Some(Body(end_x=len(n), terminal=n)))
+        else:
+            append(mut opts, None)
+    mut total = 0
+    for o in opts:
+        match o:
+            case Some(b):
+                total += b.end_x
+            case None:
+                total += 100
+    return total
+
+
+public func test_options_of_borrowed_records_with_a_none_default() -> bool:
+    mut names: bytes[] = []
+    append(mut names, b"aa")
+    append(mut names, b"bbb")
+    return options(names) == 103
+
+
+# A long chain of list values with no loop (each append of a borrow names the list it updates): before J4 the search for a
+# loan gave up after 256 steps and answered "no loan", so the owner died before the list that borrows from it.
+func long_chain(name: bytes) -> int:
+    const owner = Spoke(name=b"first-" + name)
+    mut nodes: bytes[] = []
+    append(mut nodes, owner.name)
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    append(mut nodes, b"zz")
+    mut total = 0
+    for node in nodes:
+        total += len(node)
+    return total
+
+
+public func test_long_chain_of_borrows_dies_before_its_root() -> bool:
+    return long_chain(b"nm") == 8 + 150 * 2

@@ -1,0 +1,20 @@
+# A device `main` that takes both its registers and the `Host` (MCU-EXT): it calls the C of `extern_host.c` for a word,
+# writes the word's low byte through QEMU's UART0 (as `uart_qemu.selka` does) and reads the control register back, and a
+# `debug` line goes through the bare runtime's own `myl_core_span_stream_write` (the QEMU platform does not define it).
+# chip_word() is 0x5E41: its low byte 0x41 (65, "A") plus the control register's 1 is 66.
+# bare-platform: qemu
+# bare-status: 66
+# bare-serial: A
+# bare-link: extern_host.c
+import registers
+
+extern func chip_word(host: Host) -> u32
+
+
+func main(reg: Registers, host: Host) -> int:
+    const word = chip_word(host)
+    debug(word)
+    registers.write32(reg, 0x40004010, 16)
+    registers.write32(reg, 0x40004008, 1)
+    registers.write32(reg, 0x40004000, bit_and(word, 0xFF))
+    return int(bit_and(word, 0xFF)) + int(registers.read32(reg, 0x40004008))

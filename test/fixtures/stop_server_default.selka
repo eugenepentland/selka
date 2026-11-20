@@ -1,0 +1,31 @@
+# The same server without a Stop (FR5b, STOP-1): SIGTERM and SIGINT end it by the default action, as before. At most 60 s.
+import filesystem
+import network
+
+func main(net: Network, fs: Filesystem, out: Stream, err: Stream) -> int:
+    match filesystem.realpath(fs, "/proc/self"):
+        case Ok(path):
+            print(err, "guest " + path)
+        case Err(_):
+            return 1
+    match network.open_poller_at(net, "127.0.0.1:0"):
+        case ok(poller):
+            mut polled = own poller
+            mut outcome = network.new_outcome()
+            polled = network.port(own polled, network.LISTENER, mut outcome)
+            print(out, "port " + str(outcome.value))
+            mut ready = network.new_ready()
+            mut turns = 0
+            while turns < 600:
+                polled = network.wait(own polled, 100, mut ready)
+                turns += 1
+                for index in range(ready.count):
+                    if ready.ids[index] == network.LISTENER:
+                        polled = network.accept(own polled, mut outcome)
+                        if outcome.code == network.OUTCOME_OK:
+                            const id = outcome.value
+                            polled = network.send(own polled, id, b"hello\n", 0, mut outcome)
+            _ = own polled
+            return 3
+        case err(_):
+            return 2

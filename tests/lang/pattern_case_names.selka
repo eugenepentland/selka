@@ -1,0 +1,61 @@
+import strings
+
+enum Side:
+    left
+    right
+
+
+enum Kind:
+    Kind
+    other(value: int)
+
+
+enum Word:
+    strings
+    plain
+
+
+func label(side: Side) -> int:
+    match side:
+        case left:
+            return 1
+        case right:
+            return 2
+
+
+func kind_value(kind: Kind) -> int:
+    match kind:
+        case Kind:
+            return 10
+        case other(value=v):
+            return v
+
+
+func word_length(word: Word, text: str) -> int:
+    match word:
+        case strings:
+            return strings.char_count(text)
+        case plain:
+            return 0
+
+
+# A case name never reads a local of the same spelling: the scrutinee's type decides.
+func shadowed_label(side: Side) -> int:
+    const left = 7
+    match side:
+        case left:
+            return left + 1
+        case right:
+            return left + 2
+
+
+public func test_bare_case_names_name_the_matched_type() -> bool:
+    return label(Side.left) == 1 and label(Side.right) == 2
+
+
+public func test_case_name_does_not_read_a_local() -> bool:
+    return shadowed_label(Side.left) == 8 and shadowed_label(Side.right) == 9
+
+
+public func test_case_named_like_its_type_and_like_a_module() -> bool:
+    return kind_value(Kind.Kind) == 10 and kind_value(Kind.other(value=4)) == 4 and word_length(Word.strings, "héllo") == 5 and word_length(Word.plain, "x") == 0

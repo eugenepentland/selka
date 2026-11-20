@@ -1,0 +1,203 @@
+//! Shared bounded component process ownership and verified deployment.
+const std = @import("std");
+const product = @import("product.zig");
+const fast_sha256 = @import("fast_sha256.zig");
+const component_worker = @import("component_worker.zig");
+
+/// A resident component worker: one child process serving framed requests over its standard input and output.
+pub const Worker = component_worker.Worker;
+/// One request to a resident worker: the snapshot identity it belongs to, the payload and its deadline.
+pub const Request = component_worker.Request;
+/// Immutable Linux executable snapshot. Keep this descriptor alive through launch.
+/// A sealed memfd can execute while sibling forks retain writable descriptors.
+pub fn sealedExecutable(io: std.Io, contents: []const u8) SnapshotError!std.Io.File {
+    const linux = std.os.linux;
+    const fd = try std.posix.memfd_createZ("selka-planner", linux.MFD.CLOEXEC | linux.MFD.ALLOW_SEALING);
+    const file: std.Io.File = .{ .handle = fd, .flags = .{ .nonblocking = false } };
+    errdefer file.close(io);
+    try file.writeStreamingAll(io, contents);
+    try file.setPermissions(io, .fromMode(0o500));
+    const seals = linux.F.SEAL_WRITE | linux.F.SEAL_GROW | linux.F.SEAL_SHRINK | linux.F.SEAL_SEAL;
+    const result = linux.fcntl(fd, linux.F.ADD_SEALS, seals);
+    if (linux.errno(result) != .SUCCESS) return std.posix.unexpectedErrno(linux.errno(result));
+    return file;
+}
+
+/// Snapshot creation fails closed when the kernel cannot enforce immutability.
+pub const SnapshotError = std.posix.MemFdCreateError || std.Io.File.Writer.Error || std.Io.File.SetPermissionsError || std.posix.UnexpectedError;
+
+const LaunchEvent = union(enum) {
+    completed: std.process.RunError!std.process.RunResult,
+    deadline: std.Io.Cancelable!void,
+};
+
+/// Race the entire child lifecycle against its deadline, including wait after EOF.
+/// The allocator is the launch arena, so discarded late results die with that arena.
+pub fn runBounded(arena: std.mem.Allocator, io: std.Io, options: std.process.RunOptions) std.process.RunError!std.process.RunResult {
+    var events: [2]LaunchEvent = undefined;
+    var select = std.Io.Select(LaunchEvent).init(io, &events);
+    // Cancel joins every task before execute releases the launch arena. The run
+    // task's defer kills and reaps its child when cancellation interrupts wait.
+    defer select.cancelDiscard();
+    select.concurrent(.completed, runChild, .{ arena, io, options }) catch |err| {
+        diagnose(io, "start child task", err);
+        return error.SystemResources;
+    };
+    select.concurrent(.deadline, std.Io.Timeout.sleep, .{ options.timeout, io }) catch |err| {
+        diagnose(io, "start deadline task", err);
+        return error.SystemResources;
+    };
+    const event = try select.await();
+    return switch (event) {
+        .completed => |result| result,
+        .deadline => |result| blk: {
+            try result;
+            break :blk error.Timeout;
+        },
+    };
+}
+
+/// Own the process explicitly: canceled stdlib wait clears its ID before returning.
+fn runChild(a: std.mem.Allocator, io: std.Io, options: std.process.RunOptions) std.process.RunError!std.process.RunResult {
+    var child = std.process.spawn(io, .{
+        .argv = options.argv,
+        .environ_map = options.environ_map,
+        .stdin = .ignore,
+        .stdout = .pipe,
+        .stderr = .pipe,
+    }) catch |err| {
+        diagnose(io, "spawn child", err);
+        return err;
+    };
+    defer terminate(io, &child);
+    var buffer: std.Io.File.MultiReader.Buffer(2) = undefined;
+    var reader: std.Io.File.MultiReader = undefined;
+    reader.init(a, io, buffer.toStreams(), &.{ child.stdout.?, child.stderr.? });
+    defer reader.deinit();
+    while (reader.fill(64, options.timeout)) |_| {
+        if (options.stdout_limit.toInt()) |limit| {
+            if (reader.reader(0).buffered().len > limit) return error.StreamTooLong;
+        }
+        if (options.stderr_limit.toInt()) |limit| {
+            if (reader.reader(1).buffered().len > limit) return error.StreamTooLong;
+        }
+    } else |err| switch (err) {
+        error.EndOfStream => {},
+        else => |other| {
+            diagnose(io, "capture output", other);
+            return other;
+        },
+    }
+    reader.checkAnyError() catch |err| {
+        diagnose(io, "read output stream", err);
+        return err;
+    };
+    const pid = child.id;
+    const term = child.wait(io) catch |err| {
+        // On Linux the stdlib clears ownership on cancellation without reaping.
+        // Its descriptor cleanup has already run; restore only process ownership.
+        child.id = pid;
+        diagnose(io, "wait for child", err);
+        return err;
+    };
+    const stdout = try reader.toOwnedSlice(0);
+    errdefer a.free(stdout);
+    return .{ .term = term, .stdout = stdout, .stderr = try reader.toOwnedSlice(1) };
+}
+
+fn diagnose(io: std.Io, stage: []const u8, err: anyerror) void {
+    switch (err) {
+        error.Canceled, error.Timeout, error.StreamTooLong, error.OutOfMemory => return,
+        else => {},
+    }
+    var buffer: [256]u8 = undefined;
+    const message = std.fmt.bufPrint(&buffer, "selka: component {s} failed: {s}\n", .{ stage, @errorName(err) }) catch return;
+    std.Io.File.stderr().writeStreamingAll(io, message) catch return;
+}
+
+/// SIGKILL makes reaping bounded even if a component ignores SIGTERM.
+fn terminate(io: std.Io, child: *std.process.Child) void {
+    const pid = child.id orelse return;
+    _ = std.os.linux.kill(pid, std.os.linux.SIG.KILL);
+    child.kill(io);
+}
+
+/// Verified executable deployment identity and owned path.
+pub const Verified = struct { path: []u8, digest: [32]u8 };
+/// Verified deployment and its allocator-owned immutable executable bytes.
+pub const Snapshot = struct {
+    verified: Verified,
+    contents: []const u8,
+    /// Release both owned allocations after all borrowers have finished.
+    pub fn deinit(self: Snapshot, a: std.mem.Allocator) void {
+        a.free(self.verified.path);
+        a.free(self.contents);
+    }
+};
+/// Shared deployment validation failures.
+pub const Error = error{ OutOfMemory, ComponentMissing, ComponentManifest, ComponentDigest };
+
+/// Whether the component folder exists: the one `SELKA_COMPONENT_DIR` names, else `../libexec/selka/components` beside
+/// the executable. A compiler without one (a bare `bin/selka`, or `zig build -Dcomponents=reference`) uses its built-in
+/// test index and cache plan (`noticeBuiltIn`); a folder that is present but holds a wrong component stays an error.
+pub fn folderPresent(io: std.Io, environ: *const std.process.Environ.Map) bool {
+    var buffer: [3 * std.fs.max_path_bytes]u8 = undefined;
+    var fixed = std.heap.FixedBufferAllocator.init(&buffer);
+    const a = fixed.allocator();
+    const directory = environ.get("SELKA_COMPONENT_DIR") orelse blk: {
+        const executable = std.process.executableDirPathAlloc(io, a) catch return true;
+        break :blk std.fs.path.join(a, &.{ executable, "..", "libexec", product.user_dir, "components" }) catch return true;
+    };
+    // Only an absent folder selects the built-in implementations; any other failure is left to the manifest check.
+    _ = std.Io.Dir.cwd().statFile(io, directory, .{}) catch |err| return err != error.FileNotFound;
+    return true;
+}
+
+var notice_printed = std.atomic.Value(bool).init(false);
+
+/// The line `noticeBuiltIn` prints on standard error.
+pub const built_in_notice = "selka: no component folder found; using the built-in test index and cache plan\n";
+
+/// Say once per process, on standard error, that no component folder was found and the built-in implementations answer.
+pub fn noticeBuiltIn(io: std.Io) void {
+    if (notice_printed.swap(true, .monotonic)) return;
+    std.Io.File.stderr().writeStreamingAll(io, built_in_notice) catch {};
+}
+const Manifest = struct { format: u32, component: []const u8, protocol: u32, schema: u32, artifact: []const u8, sha256: []const u8 };
+/// Verify manifest and binary SHA-256, returning an allocator-owned path.
+pub fn artifact(a: std.mem.Allocator, io: std.Io, directory: []const u8, component: []const u8) Error!Verified {
+    const snapshot = try artifactSnapshot(a, io, directory, component);
+    a.free(snapshot.contents);
+    return snapshot.verified;
+}
+/// Verify once and retain the exact bytes associated with the deployment digest.
+pub fn artifactSnapshot(a: std.mem.Allocator, io: std.Io, directory: []const u8, component: []const u8) Error!Snapshot {
+    const filename = try std.fmt.allocPrint(a, "{s}.json", .{component});
+    defer a.free(filename);
+    const path = try std.fs.path.join(a, &.{ directory, filename });
+    defer a.free(path);
+    const bytes = std.Io.Dir.cwd().readFileAlloc(io, path, a, .limited(65536)) catch |err| return mapFailure(err, error.ComponentMissing);
+    defer a.free(bytes);
+    const parsed = std.json.parseFromSlice(Manifest, a, bytes, .{ .ignore_unknown_fields = true }) catch |err| return mapFailure(err, error.ComponentManifest);
+    defer parsed.deinit();
+    const m = parsed.value;
+    const version: u32 = if (std.mem.eql(u8, component, "cache-plan")) 2 else 1;
+    if (m.format != 1 or m.protocol != version or m.schema != version) return error.ComponentManifest;
+    if (!std.mem.eql(u8, m.component, component) or m.sha256.len != 64) return error.ComponentManifest;
+    if (m.artifact.len == 0 or std.mem.indexOfAny(u8, m.artifact, "/\\") != null) return error.ComponentManifest;
+    if (std.mem.eql(u8, m.artifact, ".") or std.mem.eql(u8, m.artifact, "..")) return error.ComponentManifest;
+    var expected: [32]u8 = undefined;
+    _ = std.fmt.hexToBytes(&expected, m.sha256) catch |err| return mapFailure(err, error.ComponentManifest);
+    const binary = try std.fs.path.join(a, &.{ directory, m.artifact });
+    errdefer a.free(binary);
+    const contents = std.Io.Dir.cwd().readFileAlloc(io, binary, a, .limited(64 << 20)) catch |err| return mapFailure(err, error.ComponentMissing);
+    errdefer a.free(contents);
+    var digest: [32]u8 = undefined;
+    fast_sha256.Sha256.hash(contents, &digest, .{});
+    if (!std.mem.eql(u8, &digest, &expected)) return error.ComponentDigest;
+    return .{ .verified = .{ .path = binary, .digest = digest }, .contents = contents };
+}
+
+fn mapFailure(err: anyerror, fallback: Error) Error {
+    return if (err == error.OutOfMemory) error.OutOfMemory else fallback;
+}

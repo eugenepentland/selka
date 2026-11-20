@@ -1,0 +1,24 @@
+# A program that calls the standard modules `base64`, `bytes`, `hex`, `lists`, `math`, `strings` and `time` with only some of them
+# imported: `selka fix` adds the rest in one round, in the sorted block.
+import base64
+import bytes
+import hex
+import lists
+import math
+import strings
+import time
+
+func shout(text: str) -> str:
+    return strings.upper(text)
+
+
+func main(out: Stream) -> int:
+    mut xs: int[] = [1, 2]
+    _ = lists.exchange(mut xs, 0, 7)
+    print(out, shout("a"), xs)
+    print(out, hex.encode(b"hi"))
+    print(out, bytes.find(b"abc", b"c"))
+    print(out, math.hypot(3.0, 4.0))
+    print(out, time.is_leap_year(2024))
+    print(out, base64.b64encode(b"hi"))
+    return 0

@@ -1,0 +1,72 @@
+# A read-only borrowed dictionary (`const table = record.table`, `const alias = parameter`) is probed in place.
+# The allocation classifier, the @noalloc contract check and the ownership pass read its table through the
+# dictionary it borrows (F18): a @noalloc promise over such a probe is judged by the key type, a text key stays
+# a view instead of being copied at every probe, and the items of a borrowed unit-keyed dictionary compile.
+import dicts
+import testing
+
+record Holder:
+    ints: dict[int, int]
+    words: dict[str, int]
+    flags: dict[Unit, int]
+
+
+@noalloc
+func int_probe(h: Holder, key: int) -> int:
+    const table = h.ints
+    return table[key]
+
+
+@noalloc
+func text_probe(h: Holder, key: str) -> int:
+    const table = h.words
+    return table[key]
+
+
+@noalloc
+func alias_probe(table: dict[int, int], key: int) -> int:
+    const alias = table
+    return alias[key]
+
+
+func unit_total(h: Holder) -> int:
+    const table = h.flags
+    mut total = 0
+    for item in dicts.items(table):
+        total += item.value
+    return total
+
+
+func sample() -> Holder:
+    mut ints: dict[int, int] = {1: 10, 2: 20}
+    mut words: dict[str, int] = {"a": 3, "b": 4}
+    mut flags: dict[Unit, int] = {}
+    return Holder(ints=own ints, words=own words, flags=own flags)
+
+
+func probe_rounds(rounds: int) -> int:
+    const h = sample()
+    mut total = 0
+    for i in range(rounds):
+        total += int_probe(h, 1) + text_probe(h, "b") + alias_probe(h.ints, 2)
+    return total
+
+
+public func test_noalloc_integer_probe_of_a_borrowed_field_dictionary() -> bool:
+    return int_probe(sample(), 2) == 20
+
+
+public func test_noalloc_text_probe_of_a_borrowed_field_dictionary() -> bool:
+    return text_probe(sample(), "a") == 3
+
+
+public func test_noalloc_probe_of_a_borrowed_alias_of_a_parameter() -> bool:
+    return alias_probe(sample().ints, 1) == 10
+
+
+public func test_items_of_a_borrowed_unit_keyed_dictionary() -> bool:
+    return unit_total(sample()) == 0
+
+
+public func test_probes_of_borrowed_dictionaries_allocate_nothing_per_call() -> bool:
+    return probe_rounds(2) == 68 and testing.allocations(probe_rounds, 200) - testing.allocations(probe_rounds, 100) == 0

@@ -1,0 +1,5 @@
+import strings
+
+func main() -> int:
+    mut parts = "a,b".split(",")
+    return len(parts) + strings.char_count("ab".upper().lower())

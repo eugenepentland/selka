@@ -1,0 +1,8 @@
+# Through a field: `name_of` lends from the whole record, so replacing a field while `n` is live is refused.
+import lib
+
+func main() -> int:
+    mut bag = lib.Bag(names=["a"], count=1)
+    const n = lib.name_of(bag)
+    bag.names = ["z"]
+    return len(n)

@@ -1,0 +1,24 @@
+record Parser:
+    toks: str[]
+    i: int
+
+record Call:
+    name: str
+    args: str[]
+
+func advance(mut p: Parser):
+    p.i += 1
+
+func word(mut p: Parser) -> str:
+    const w = copy(p.toks[p.i])
+    advance(mut p)
+    return w
+
+func parse(mut p: Parser) -> Call:
+    mut args: str[] = []
+    for i in range(0, 3):
+        const a = word(mut p)
+        append(mut args, own a)
+    for tk in p.toks:
+        advance(mut p)
+    return Call(name="f", args=args)

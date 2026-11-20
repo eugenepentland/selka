@@ -1,0 +1,52 @@
+ownership-certificate-v2
+class drop Drop
+class iconst Constant
+class list_new Fresh
+class print Output
+class undef Constant
+function bad_read_named_unit result scalar from - unchecked -
+block b0 preds -
+inst %3 undef Constant reads - consumes - state none parents -
+inst - print Output reads %3 consumes - state none parents -
+term ret -
+end
+function bad_j3 result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst - drop Drop reads - consumes %0 state none parents -
+inst - print Output reads %0 consumes - state none parents -
+term ret -
+end
+function bad_trap_meet result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %1 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %1
+inst - print Output reads %1 consumes - state none parents -
+term unreachable
+end
+function bad_trap_chain result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+inst - drop Drop reads - consumes %0 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %0
+inst - print Output reads %0 consumes - state none parents -
+term jump b4
+block b4 preds b3
+term unreachable
+end

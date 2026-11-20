@@ -1,0 +1,60 @@
+# A slice of a `byte_buffer` read in place, and a whitespace split of a borrowed `bytes` (FR25 item 2, 15 November 2026).
+# `print(out, buf[0:1])`, a format hole, `len`, a loop, an index, `find`, `hex`, `split` and `startswith` of a buffer's slice
+# stopped the build with `internal error[E_CORE_HIDDEN_COPY]`: a buffer has no borrowed slice (it can grow under one), so the
+# slice is a copy of just that range, and the copy was not marked as the one the slice expression names. The split of a `bytes`
+# parameter (`bytes.words(b)`) copied the whole borrowed receiver first for the same reason (no span form).
+import bytes
+import hex
+
+func pieces(b: bytes) -> bytes[]:
+    return bytes.words(b)
+
+
+func words(b: bytes) -> bytes[]:
+    return bytes.words(b)
+
+
+func count_pieces(b: bytes) -> int:
+    const found = bytes.words(b)
+    return len(found)
+
+
+public func test_a_buffer_slice_is_read_by_a_format_hole_and_len() -> bool:
+    const buf = byte_buffer([120, 97, 120])
+    return f"<{buf[0:1]}>" == "<b'x'>" and len(buf[1:3]) == 2
+
+
+public func test_a_buffer_slice_is_iterated_indexed_and_hex_encoded() -> bool:
+    const buf = byte_buffer([120, 97, 122, 97])
+    mut total = 0
+    for octet in buf[1:3]:
+        total = total + octet
+    return total == 97 + 122 and buf[1:4][2] == 97 and hex.encode(buf[0:2]) == "7861"
+
+
+public func test_a_buffer_slice_is_compared_with_another_slice() -> bool:
+    const buf = byte_buffer([97, 32, 98, 32, 99])
+    return buf[0:2] != buf[2:4] and buf[1:2] == buf[3:4]
+
+
+public func test_membership_in_a_buffer_slice_reads_the_range_only() -> bool:
+    mut buf = byte_buffer([120, 97, 122, 97])
+    const inside = 122 in buf[1:3]
+    const outside = 120 in buf[1:3]
+    _ = append(mut buf, bytes([200]))
+    return inside and not outside and (200 in buf[3:5]) and not (200 in buf[0:4])
+
+
+public func test_a_slice_taken_before_the_buffer_grows_keeps_its_octets() -> bool:
+    mut buf = byte_buffer([120, 97])
+    const before = bytes(buf[0:2])
+    for step in range(64):
+        _ = append(mut buf, bytes([step]))
+    return before == b"xa" and len(buf) == 66
+
+
+public func test_whitespace_split_of_a_borrowed_bytes_is_the_split_of_an_owned_one() -> bool:
+    const text = b"  a  bb\t c\n\xce\xbb d  "
+    mut owned = text + b""
+    const direct = bytes.words(owned)
+    return pieces(text) == direct and words(text) == direct and len(direct) == 5 and count_pieces(b"   ") == 0

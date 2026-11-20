@@ -1,0 +1,654 @@
+# Parallel task groups: the lowered surface (`with parallel.group()`, `submit`, `result`). Each test joins its tasks on
+# every exit edge, and each argument shape is checked for its value, worked out from the functions' definitions.
+# Tests run one thread; `SELKA_THREADS=8` runs the same code concurrently.
+import dicts
+import parallel
+import strings
+
+# A reduction with real work: the task reads its list after the work, so a list dropped before the join would be read freed.
+func weigh(values: int[], work: int) -> int:
+    mut total = 0
+    for i in range(work):
+        total += i % 3
+    for v in values:
+        total += v
+    return total
+
+
+# Allocates and frees while the group's tasks may still be running.
+func churn(count: int) -> int:
+    mut seen = 0
+    for i in range(count):
+        const scratch = [i, i + 1, i + 2, i + 3]
+        seen += len(scratch)
+    return seen
+
+
+func consume(own values: int[]) -> int:
+    mut total = 0
+    for v in values:
+        total += v
+    return total
+
+
+func make_list(size: int) -> int[]:
+    mut out: int[] = []
+    for i in range(size):
+        append(mut out, i)
+    return out
+
+
+func length_of(values: int[], pad: int) -> int:
+    return len(values) + pad
+
+
+func load(path: str) -> int fails str:
+    if len(path) == 0:
+        fail "empty path"
+    return len(path)
+
+
+record Design:
+    name: str
+    nets: int[]
+
+
+func count_nets(design: Design, extra: int) -> int:
+    mut total = extra
+    for net in design.nets:
+        total += net
+    return total + len(design.name)
+
+
+func consume_design(own design: Design, extra: int) -> int:
+    return count_nets(design, extra)
+
+
+# Fall-through: a list declared in the block and lent to the task, read after real work.
+func fall_through() -> int:
+    mut out = 0
+    with parallel.group() as g:
+        const xs = [1, 2, 3, 4]
+        const t = g.submit(weigh, xs, 2000)
+        out = t.result()
+    return out
+
+
+# `return` from inside the block joins before it returns.
+func by_return(flag: int) -> int:
+    with parallel.group() as g:
+        const xs = [1, 2, 3, 4]
+        const t = g.submit(weigh, xs, 3000)
+        if flag > 0:
+            return t.result() + churn(500)
+        mut sink = churn(100)
+        return sink
+
+
+# `break` leaves the loop from inside the block, after the join.
+func by_break() -> int:
+    mut out = 0
+    for i in range(5):
+        with parallel.group() as g:
+            const xs = [i, i, i]
+            const t = g.submit(weigh, xs, 2000)
+            if i == 2:
+                out += churn(50)
+                break
+            out += t.result()
+    return out
+
+
+# `continue` skips the rest of the block; the join still happens.
+func by_continue() -> int:
+    mut out = 0
+    for i in range(4):
+        with parallel.group() as g:
+            const xs = [i, 1]
+            const t = g.submit(weigh, xs, 1500)
+            if i == 1:
+                continue
+            out += t.result() + churn(10)
+    return out
+
+
+# `fail` from inside the block joins, then the failure leaves the function.
+func by_fail(flag: int) -> int fails str:
+    with parallel.group() as g:
+        const xs = [5, 6]
+        const t = g.submit(weigh, xs, 2500)
+        if flag > 0:
+            fail "failed after submit"
+        return t.result()
+
+
+# `try` on a fallible task's result: the failure leaves the block through the join.
+func by_try(flag: int) -> int fails str:
+    with parallel.group() as g:
+        mut path = ""
+        if flag != 0:
+            path = "x"
+        const t = g.submit(load, path)
+        const n = try t.result()
+        return n + 40
+
+
+# Two handles in one block, both read.
+func two_handles() -> int:
+    with parallel.group() as g:
+        const a = g.submit(weigh, [1, 2], 10)
+        const b = g.submit(weigh, [3], 20)
+        return a.result() + b.result()
+
+
+# A fallible task read with `match`.
+func match_result(path: str) -> int:
+    with parallel.group() as g:
+        const t = g.submit(load, path)
+        match t.result():
+            case Ok(value):
+                return value
+            case Err(error):
+                return -1
+
+
+# A `const` handle in a loop body: one task per iteration, read in the same iteration.
+func handle_in_loop(data: int[]) -> int:
+    mut sum = 0
+    with parallel.group() as g:
+        for value in data:
+            const t = g.submit(weigh, [value], 3)
+            sum += t.result()
+    return sum
+
+
+# A bare submit of a procedure that returns nothing.
+func tick(n: int):
+    return
+
+
+func bare_submit() -> int:
+    mut counter = 7
+    with parallel.group() as g:
+        g.submit(tick, counter)
+    return counter
+
+
+# Nested groups: the inner block joins before the outer one.
+func nested_groups() -> int:
+    mut out = 0
+    with parallel.group() as outer:
+        const a = outer.submit(weigh, [3], 1)
+        with parallel.group() as inner:
+            const b = inner.submit(weigh, [4], 1)
+            out = b.result()
+        out += a.result()
+    return out
+
+
+# A group in a `while` loop, with `continue` before the read.
+func while_continue(limit: int) -> int:
+    mut i = 0
+    mut sum = 0
+    while i < limit:
+        i += 1
+        with parallel.group() as g:
+            const t = g.submit(weigh, [i], 0)
+            if i == 2:
+                continue
+            sum += t.result()
+    return sum
+
+
+# A lent owner's read during the window sees its value unchanged, and the task's result is the value at submit.
+func loan_read() -> int:
+    mut data = [1, 2, 3]
+    mut n = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, data, 0)
+        n = len(data) * 100 + data[0]
+        n += t.result()
+    return n
+
+
+# The owned argument: the callee takes the list and frees it.
+func owned_list() -> int:
+    mut answer = 0
+    with parallel.group() as g:
+        const xs = [1, 2, 3, 4]
+        const t = g.submit(consume, own xs)
+        answer = t.result()
+    return answer
+
+
+# A temporary handed to the task: the environment owns it and frees it once.
+func temporary() -> int:
+    mut answer = 0
+    with parallel.group() as g:
+        const t = g.submit(length_of, make_list(7), 3)
+        answer = t.result()
+    return answer
+
+
+# A lent record with a list field: the design is read after the join.
+func lent_record() -> int:
+    const design = Design(name="top", nets=[1, 2, 3])
+    mut answer = 0
+    with parallel.group() as g:
+        const t = g.submit(count_nets, design, 100)
+        answer = t.result()
+    return answer + len(design.nets)
+
+
+# An owned record.
+func owned_record() -> int:
+    mut answer = 0
+    with parallel.group() as g:
+        const d = Design(name="xy", nets=[4, 5])
+        const t = g.submit(consume_design, own d, 1)
+        answer = t.result()
+    return answer
+
+
+# Owned, lent and temporary arguments in one submit.
+func mixed_masks() -> int:
+    mut answer = 0
+    with parallel.group() as g:
+        const xs = [1, 2]
+        const ys = [10, 20, 30]
+        const t = g.submit(mixed, own xs, ys, 5)
+        answer = t.result()
+    return answer
+
+
+func mixed(own values: int[], other: int[], tag: int) -> int:
+    return consume(own values) + length_of(other, tag)
+
+
+public func test_fall_through_reads_lent_list_after_work() -> bool:
+    return fall_through() == 2009
+
+
+public func test_return_joins_before_leaving() -> bool:
+    return by_return(1) == 5010 and by_return(0) == 400
+
+
+public func test_break_joins_before_leaving_the_loop() -> bool:
+    return by_break() == 4201
+
+
+public func test_continue_joins_before_the_next_iteration() -> bool:
+    return by_continue() == 4628
+
+
+public func test_fail_leaves_after_the_join() -> bool:
+    match by_fail(0):
+        case Ok(value):
+            return value == 2510
+        case Err(text):
+            return False
+
+
+public func test_fail_after_submit_reports_the_failure() -> bool:
+    match by_fail(1):
+        case Ok(value):
+            return False
+        case Err(text):
+            return text == "failed after submit"
+
+
+public func test_try_reads_a_fallible_task() -> bool:
+    match by_try(1):
+        case Ok(value):
+            return value == 41
+        case Err(text):
+            return False
+
+
+public func test_try_passes_a_task_failure_out() -> bool:
+    match by_try(0):
+        case Ok(value):
+            return False
+        case Err(text):
+            return text == "empty path"
+
+
+public func test_two_handles_are_both_read() -> bool:
+    return two_handles() == 34
+
+
+public func test_match_on_a_fallible_result() -> bool:
+    return match_result("abc") == 3 and match_result("") == -1
+
+
+public func test_handle_in_a_loop_reads_each_task() -> bool:
+    return handle_in_loop([1, 2, 3]) == 15
+
+
+public func test_bare_submit_of_a_procedure() -> bool:
+    return bare_submit() == 7
+
+
+public func test_nested_groups_join_inner_first() -> bool:
+    return nested_groups() == 7
+
+
+public func test_group_in_while_skips_on_continue() -> bool:
+    return while_continue(3) == 4
+
+
+public func test_loan_read_sees_the_value_at_submit() -> bool:
+    return loan_read() == 307
+
+
+public func test_owned_argument_is_taken_by_the_callee() -> bool:
+    return owned_list() == 10
+
+
+public func test_temporary_is_handed_over() -> bool:
+    return temporary() == 10
+
+
+public func test_lent_record_is_read_after_the_join() -> bool:
+    return lent_record() == 112
+
+
+public func test_owned_record_is_taken_by_the_callee() -> bool:
+    return owned_record() == 12
+
+
+public func test_owned_lent_and_temporary_masks() -> bool:
+    return mixed_masks() == 11
+
+
+func consume_list(own values: int[]) -> int:
+    mut total = 0
+    for v in values:
+        total += v
+    return total
+
+
+# A value lent to one group, moved with `own` after that group's block, then followed by a second group: the second
+# group's join must not read the moved value.
+func moved_between_groups() -> int:
+    mut data = [1, 2, 3]
+    mut first = 0
+    with parallel.group() as g1:
+        const t = g1.submit(weigh, data, 0)
+        first = t.result()
+    const taken = consume_list(own data)
+    mut second = 0
+    const other = [4, 5]
+    with parallel.group() as g2:
+        const u = g2.submit(weigh, other, 0)
+        second = u.result()
+    return first + taken + second
+
+
+public func test_group_after_a_move_between_groups() -> bool:
+    return moved_between_groups() == 6 + 6 + 9
+
+
+record Pair:
+    values: int[]
+
+
+record Bag:
+    items: int[]
+    inner: Pair
+
+
+func weigh_pair(pair: Pair, work: int) -> int:
+    return weigh(pair.values, work)
+
+
+# A list field lent to a task, read after real work, with the owner dropped only after the join.
+public func test_lent_list_field_is_read_after_the_join() -> bool:
+    const bag = Bag(items=[1, 2, 3], inner=Pair(values=[4, 5]))
+    mut out = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, bag.items, 3000)
+        const noise = churn(300)
+        out = t.result() + noise * 0
+    return out == 3006
+
+
+# A record field lent to a record parameter.
+public func test_lent_record_field_is_read_after_the_join() -> bool:
+    const bag = Bag(items=[1, 2, 3], inner=Pair(values=[4, 5]))
+    mut out = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh_pair, bag.inner, 3000)
+        const noise = churn(300)
+        out = t.result() + noise * 0
+    return out == 3009
+
+
+# A top-level borrowed binding of a field, then lent.
+public func test_lent_borrowed_binding_is_read_after_the_join() -> bool:
+    const bag = Bag(items=[1, 2, 3], inner=Pair(values=[4, 5]))
+    const items = bag.items
+    mut out = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, items, 3000)
+        const noise = churn(300)
+        out = t.result() + noise * 0
+    return out == 3006
+
+
+# A list element lent through a binding first.
+public func test_lent_bound_list_element_is_read_after_the_join() -> bool:
+    const rows = [[1, 2], [3, 4, 5]]
+    mut out = 0
+    with parallel.group() as g:
+        const row = rows[1]
+        const t = g.submit(weigh, row, 3000)
+        const noise = churn(300)
+        out = t.result() + noise * 0
+    return out == 3012
+
+
+# A dictionary value lent directly.
+public func test_lent_dictionary_value_is_read_after_the_join() -> bool:
+    const table = {"k": [7, 8]}
+    mut out = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, table["k"], 3000)
+        const noise = churn(300)
+        out = t.result() + noise * 0
+    return out == 3015
+
+
+func nets_of(design: Design) -> int[] from design:
+    return design.nets
+
+
+func measure_text(text: str, work: int) -> int:
+    mut total = 0
+    for i in range(work):
+        total += i % 3
+    return total + len(text)
+
+
+# A borrowed call result, given to a task as a copy: the task owns its list, and the design keeps its own.
+func borrowed_call_copied(design: Design) -> int:
+    mut answer = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, copy(nets_of(design)), 3000)
+        answer = t.result()
+    return answer + len(design.nets)
+
+
+# A dictionary lookup with a fallback, copied for the task: a hit and a miss both hand the task their own list.
+func dictionary_fallback_copied(flag: int) -> int:
+    mut table: dict[int, int[]] = {}
+    table[1] = [1, 2, 3]
+    const fallback: int[] = [9]
+    mut answer = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, copy(dicts.get(table, flag, fallback)), 3000)
+        answer = t.result()
+    return answer
+
+
+# A selection between two sources, copied for the task.
+func text_selection_copied(flag: int) -> int:
+    const first = f"a{flag}"
+    const second = f"b{flag}"
+    mut answer = 0
+    with parallel.group() as g:
+        const t = g.submit(measure_text, copy(min(first, second)), 3000)
+        answer = t.result()
+    return answer
+
+
+public func test_borrowed_call_result_is_copied_for_a_task() -> bool:
+    return borrowed_call_copied(Design(name="top", nets=[1, 2, 3])) == 3006 + 3
+
+
+public func test_dictionary_fallback_is_copied_for_a_task() -> bool:
+    return dictionary_fallback_copied(1) == 3006 and dictionary_fallback_copied(0) == 3009
+
+
+public func test_two_source_selection_is_copied_for_a_task() -> bool:
+    return text_selection_copied(1) == 3002
+
+
+# Each lender exceeds 1 KiB, so small-block recycling cannot hide a missing loan.
+func task_alias_pressure() -> int:
+    mut total = 0
+    for i in range(32):
+        const scratch = make_list(400)
+        total += len(scratch)
+    return total
+
+
+public func test_F1_list_alias_inside_group_keeps_large_lender() -> bool:
+    mut values = make_list(400)
+    mut answer = 0
+    with parallel.group() as g:
+        const alias = values
+        const again = alias
+        const job = g.submit(weigh, again, 12000)
+        const noise = task_alias_pressure()
+        answer = job.result() + noise * 0
+        const after_result = task_alias_pressure()
+        answer += after_result * 0
+    append(mut values, 400)
+    return answer == 91800 and len(values) == 401 and values[400] == 400
+
+
+public func test_F1_list_alias_outside_group_keeps_large_lender() -> bool:
+    mut values = make_list(400)
+    const alias = values
+    mut answer = 0
+    with parallel.group() as g:
+        const job = g.submit(weigh, alias, 12000)
+        const noise = task_alias_pressure()
+        answer = job.result() + noise * 0
+    values = [7]
+    return answer == 91800 and values[0] == 7
+
+
+public func test_F1_element_field_and_dictionary_aliases_keep_large_lenders() -> bool:
+    const rows = [make_list(400)]
+    const bag = Bag(items=make_list(400), inner=Pair(values=[1]))
+    const mapping = {1: make_list(400)}
+    mut answer = 0
+    with parallel.group() as g:
+        const row = rows[0]
+        const field = bag.items
+        const entry = mapping[1]
+        const a = g.submit(weigh, row, 3000)
+        const b = g.submit(weigh, field, 3000)
+        const c = g.submit(weigh, entry, 3000)
+        const noise = task_alias_pressure()
+        answer = a.result() + b.result() + c.result() + noise * 0
+    return answer == 248400 and len(rows[0]) == 400 and len(bag.items) == 400 and len(mapping[1]) == 400
+
+
+func task_alias_record_size(value: Pair) -> int:
+    return weigh(value.values, 3000)
+
+
+func task_alias_dictionary_size(value: dict[int, int[]]) -> int:
+    return weigh(value[1], 3000)
+
+
+public func test_F1_record_and_dictionary_aliases_lend_storage() -> bool:
+    const pair = Pair(values=make_list(400))
+    const mapping = {1: make_list(400)}
+    const record_alias = pair
+    mut answer = 0
+    with parallel.group() as g:
+        const dictionary_alias = mapping
+        const a = g.submit(task_alias_record_size, record_alias)
+        const b = g.submit(task_alias_dictionary_size, dictionary_alias)
+        const noise = task_alias_pressure()
+        answer = a.result() + b.result() + noise * 0
+    return answer == 165600 and len(pair.values) == 400 and len(mapping[1]) == 400
+
+
+record TaskAliasMappingHolder:
+    mapping: dict[int, Pair]
+
+
+public func test_F1_dictionary_record_values_lend_directly_and_through_aliases() -> bool:
+    const holder = TaskAliasMappingHolder(mapping={1: Pair(values=make_list(400)), 2: Pair(values=make_list(400))})
+    mut answer = 0
+    with parallel.group() as g:
+        const alias = holder.mapping[2]
+        const direct = g.submit(task_alias_record_size, holder.mapping[1])
+        const borrowed = g.submit(task_alias_record_size, alias)
+        const noise = task_alias_pressure()
+        answer = direct.result() + borrowed.result() + noise * 0
+    return answer == 165600 and holder.mapping[1].values[399] == 399 and holder.mapping[2].values[399] == 399
+
+
+func task_alias_large_text() -> str:
+    mut text = ""
+    for i in range(2048):
+        text += "x"
+    return text
+
+
+func task_alias_bytes_size(value: bytes) -> int:
+    return len(value)
+
+
+public func test_F1_text_and_bytes_aliases_preserve_whole_views() -> bool:
+    const text = task_alias_large_text()
+    const octets = strings.encode(text)
+    const text_alias = text
+    mut answer = 0
+    with parallel.group() as g:
+        const bytes_alias = octets
+        const a = g.submit(measure_text, text_alias, 3000)
+        const b = g.submit(task_alias_bytes_size, bytes_alias)
+        const noise = task_alias_pressure()
+        answer = a.result() + b.result() + noise * 0
+    return answer == 7096 and len(text) == 2048 and len(octets) == 2048
+
+
+func task_alias_early_return() -> int:
+    const values = make_list(400)
+    with parallel.group() as g:
+        const alias = values
+        const job = g.submit(weigh, alias, 3000)
+        return job.result()
+
+
+public func test_F1_nested_groups_and_early_return_join_alias_lenders() -> bool:
+    mut values = make_list(400)
+    mut answer = 0
+    with parallel.group() as outer:
+        const alias = values
+        const a = outer.submit(weigh, alias, 3000)
+        with parallel.group() as inner:
+            const again = alias
+            const b = inner.submit(weigh, again, 3000)
+            answer = b.result()
+        const noise = task_alias_pressure()
+        answer += a.result() + noise * 0
+    values = [9]
+    return answer == 165600 and task_alias_early_return() == 82800 and values[0] == 9

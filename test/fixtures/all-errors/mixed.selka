@@ -1,0 +1,30 @@
+# A type error beside ownership errors in other functions: all are reported, in source order. A function that calls the
+# body that failed to check is not judged for ownership.
+record Pair:
+    left: bytes
+    right: bytes
+
+
+func broken(n: int) -> bytes:
+    return n + b"x"
+
+
+func pair(name: bytes) -> Pair:
+    const l = name + b"l"
+    const r = name + b"r"
+    return Pair(left=l, right=r)
+
+
+func uses_broken(name: bytes) -> Pair:
+    const l = broken(1)
+    const r = name + b"r"
+    return Pair(left=l, right=r)
+
+
+func later(name: bytes) -> Pair:
+    const l = name + b"l"
+    return Pair(left=l, right=b"r")
+
+
+func main() -> int:
+    return len(pair(b"x").left) + len(later(b"y").left)

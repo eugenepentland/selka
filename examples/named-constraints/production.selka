@@ -1,0 +1,10 @@
+public record DiscountPrices:
+    value: int
+
+
+public func make(discount: int) -> DiscountPrices:
+    return DiscountPrices(value=discount)
+
+
+public func price(policy: DiscountPrices, subtotal: int) -> int:
+    return subtotal - policy.value

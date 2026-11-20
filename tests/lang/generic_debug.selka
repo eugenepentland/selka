@@ -1,0 +1,69 @@
+# Lane FX (12 November 2026): `debug(...)` inside a generic function behaves as in a plain one. Until FX the template
+# checker refused it (E_UNKNOWN_FUNCTION, "no function has this qualified name"). A `debug` line writes standard error
+# and evaluates its arguments in every build mode (W5), so these tests check the values and effects around it.
+record Pair:
+    left: int
+    right: str
+
+
+func shown[T: copy](value: T) -> T:
+    debug(value)
+    return copy(value)
+
+
+func labelled[T: copy](value: T, label: str) -> T:
+    debug(label, value, sep=": ", end="!\n")
+    return copy(value)
+
+
+func bump(mut counter: int) -> int:
+    counter += 1
+    return counter
+
+
+func counted[T: copy](value: T) -> int:
+    mut counter = 0
+    debug(bump(mut counter), value)
+    debug(bump(mut counter))
+    return counter
+
+
+func items[T: copy](values: T[]) -> int:
+    mut seen = 0
+    for value in values:
+        if seen >= 0:
+            debug("item", seen, value)
+        seen += 1
+    return seen
+
+
+func checked[T: copy](value: T, ok: bool) -> T fails str:
+    if not ok:
+        fail "refused"
+    debug("ok", value)
+    return copy(value)
+
+
+public func test_debug_in_a_generic_body_returns_the_value_for_every_instance() -> bool:
+    const pair = shown(Pair(left=2, right="p"))
+    return shown(41) == 41 and shown("text") == "text" and shown([1, 2]) == [1, 2] and pair.left == 2 and labelled(3.5, "f") == 3.5
+
+
+public func test_debug_in_a_generic_body_evaluates_its_arguments() -> bool:
+    return counted("x") == 2 and counted(7) == 2
+
+
+public func test_debug_in_a_loop_and_a_failing_generic_function() -> bool:
+    mut fine = False
+    match checked("v", True):
+        case Ok(value):
+            fine = value == "v"
+        case Err(reason):
+            fine = len(reason) < 0
+    mut refused = False
+    match checked(1, False):
+        case Ok(value):
+            refused = value < 0
+        case Err(reason):
+            refused = reason == "refused"
+    return items(["a", "b", "c"]) == 3 and fine and refused

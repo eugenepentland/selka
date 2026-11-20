@@ -1,0 +1,24 @@
+# `copy` of a nested value: a record holding a list of records holding text.
+record Leaf:
+    tag: str
+    n: int
+
+
+record Tree:
+    name: str
+    leaves: Leaf[]
+
+
+func main() -> int:
+    mut leaves: Leaf[] = []
+    for i in range(6):
+        append(mut leaves, Leaf(tag=f"t{i}", n=i))
+    const tree = Tree(name="root", leaves=leaves)
+    mut other = copy(tree)
+    other.leaves[2].n = 50
+    append(mut other.leaves, Leaf(tag="extra", n=9))
+    mut total = len(tree.leaves) * 100 + len(other.leaves)
+    total += tree.leaves[2].n + other.leaves[2].n
+    for leaf in other.leaves:
+        total += len(leaf.tag)
+    return total % 256

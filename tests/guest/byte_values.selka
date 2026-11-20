@@ -1,0 +1,49 @@
+import bytes
+import hex
+import strings
+
+public func test_indexing_and_slicing() -> bool:
+    mut header = b"my"
+    mut body = b"lang"
+    mut whole = header + body
+    if len(whole) != 6 or whole[0] != 109 or whole[len(whole) - 1] != 103:
+        return False
+    if whole[2:6] != body or len(whole[2:99]) != 4 or len(whole[max(len(whole) - 1, 0):0]) != 0:
+        return False
+    mut total = 0
+    for value in whole:
+        total += value
+    return total == 109 + 121 + 108 + 97 + 110 + 103
+
+
+public func test_search_and_split() -> bool:
+    mut record = b"name,age,city"
+    if not bytes.starts_with(record, b"name") or not bytes.ends_with(record, b"city"):
+        return False
+    if bytes.find(record, b"age") != 5 or bytes.find(record, b"zz") != -1:
+        return False
+    if 44 not in record or b"city" not in record or b"zz" in record:
+        return False
+    mut fields = bytes.split(record, b",")
+    if len(fields) != 3 or fields[1] != b"age":
+        return False
+    return bytes.join(fields, b",") == record
+
+
+public func test_conversion() -> bool:
+    mut values: int[] = [72, 105]
+    mut greeting = bytes(values)
+    if greeting != b"Hi" or bytes.to_list(greeting) != values:
+        return False
+    mut encoded = strings.encode("héllo")
+    if len(encoded) != 6 or hex.encode(encoded) != "68c3a96c6c6f":
+        return False
+    match strings.decode(encoded):
+        case Ok(text):
+            return text == "héllo"
+        case Err(_):
+            return False
+
+
+func main() -> int:
+    return 0

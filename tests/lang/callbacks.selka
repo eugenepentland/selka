@@ -1,0 +1,134 @@
+func inc(x: i64) -> i64:
+    return x + 1
+
+
+func apply_exact(f: func(i64) -> i64, x: i64) -> i64:
+    return f(x)
+
+
+func apply_lambda(f: func(int) -> int, value: int) -> int:
+    return f(value)
+
+
+func apply_generic[T](f: func(T) -> T, value: T) -> T:
+    return f(value)
+
+
+const OFFSET: int = 2
+
+
+type F = func(i64) -> i64
+
+
+record BoxCall[T]:
+    value: T
+
+
+func get_box[T](b: BoxCall[T]) -> T from b:
+    return b.value
+
+
+func repeat_cb[T](f: F, x: i64, tag: T) -> i64:
+    _ = tag
+    return f(f(x))
+
+
+func choose_cb() -> func(i64) -> i64:
+    return inc
+
+
+func pure_cb(x: i64) -> i64:
+    return x + 1
+
+
+type Sink = func(i64) -> i64
+
+
+func stash_sink() -> Sink:
+    return pure_cb
+
+
+func invoke_sink(f: Sink, x: i64) -> i64:
+    return f(x)
+
+
+# spec: CALLBACK-1
+public func test_callbacks_infer_function_values_and_invoke_passed_exact_signatures() -> bool:
+    mut f = inc
+    return f(4) == 5
+
+
+# spec-case: CALLBACK-1
+public func test_callbacks_invoke_passed_exact_signatures_through_a_parameter() -> bool:
+    return apply_exact(inc, 8) == 9
+
+
+func add_two(value: int) -> int:
+    return value + 2
+
+
+# spec: PY-LAMBDA-1
+public func test_expression_lambdas_use_an_expected_callback_signature_and_invoke_correctly() -> bool:
+    return apply_lambda(add_two, 40) == 42
+
+
+func add_offset(value: int) -> int:
+    return value + OFFSET
+
+
+# spec-case: PY-LAMBDA-1
+public func test_expression_lambdas_read_module_constants() -> bool:
+    return apply_lambda(add_offset, 40) == 42
+
+
+public func test_callbacks_retain_values_through_records_arrays_and_ordinary_generic_forwarding() -> bool:
+    mut b = BoxCall[F](value=inc)
+    mut all: FixedArray[F, 1] = FixedArray[F, 1]([get_box[F](b)])
+    mut f = all[0]
+    return repeat_cb[bool](f, 5, True) == 7
+
+
+public func test_callbacks_return_from_a_chooser_and_invoke() -> bool:
+    mut f = choose_cb()
+    return f(8) == 9
+
+
+# spec-case: CALLBACK-1
+public func test_stored_and_returned_callbacks_retain_the_destination_effect_contract(out: Stream) -> bool:
+    # `invoke_sink`'s `Sink` parameter declares `effects(output)`, so calling it
+    # is an output of this body's signature too. The runner supplies `out`; the
+    # assertion itself never prints.
+    _ = out
+    mut stored = pure_cb
+    mut returned = stash_sink()
+    return invoke_sink(stored, 10) + invoke_sink(returned, 31) == 43
+
+
+# spec-case: CALLBACK-1
+public func test_generic_callback_parameters_use_the_same_directional_relation(out: Stream) -> bool:
+    _ = out
+    return apply_generic[int](pure_cb, 41) == 42
+
+
+func main() -> int:
+    return 0
+
+
+record Handler:
+    callback: func(int) -> int
+
+
+func twice(value: int) -> int:
+    return value * 2
+
+
+func call_stored(handler: Handler, value: int) -> int:
+    const callback = handler.callback
+    return callback(value)
+
+
+# FR-422: a function value stored in a record field is called after binding it.
+public func test_a_callback_stored_in_a_record_field_is_called_after_binding_it() -> bool:
+    const handler = Handler(callback=twice)
+    const callback = handler.callback
+    return callback(21) == 42 and call_stored(handler, 4) == 8

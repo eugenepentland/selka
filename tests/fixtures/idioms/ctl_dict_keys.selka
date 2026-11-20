@@ -1,0 +1,5 @@
+import dicts
+
+func main() -> int:
+    mut d = {"a": 1, "b": 2}
+    return len(dicts.keys(d)) + len(dicts.values(d))

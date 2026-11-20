@@ -1,0 +1,54 @@
+"""A callee's postcondition on an integer result reaches its callers (proof steps S2): the interval a function returns
+takes the branches that dominate each return, so an index bounded by a callee's `@ensures` needs no bounds check of its
+own. These tests pin the values such calls compute at both ends of each bound; `src/core/return_interval_test.zig`
+shows the checks are proved."""
+
+
+@ensures(result >= 0 and result < 3)
+func clamp(value: int) -> int:
+    if value < 0:
+        return 0
+    if value > 2:
+        return 2
+    return value
+
+
+@ensures(result >= 0 and result < 3)
+func wrapped(value: int) -> int:
+    return value % 3
+
+
+func below(value: int, top: int) -> int:
+    if value >= top:
+        return top - 1
+    if value < 0:
+        return 0
+    return value
+
+
+func pick(xs: int[], i: int) -> int:
+    return xs[clamp(i - 3)]
+
+
+public func test_clamped_index_reads_each_end_of_the_list() -> bool:
+    const xs: int[] = [10, 20, 30]
+    mut seen: int[] = []
+    for i in range(-2, 9):
+        append(mut seen, pick(xs, i))
+    return seen == [10, 10, 10, 10, 10, 10, 20, 30, 30, 30, 30]
+
+
+public func test_a_remainder_bounded_by_its_ensures_indexes_the_list() -> bool:
+    const xs: int[] = [10, 20, 30]
+    mut total = 0
+    for i in range(-7, 8):
+        total += xs[wrapped(i)]
+    return total == 20 * 15
+
+
+public func test_a_bound_from_a_parameter_is_kept_where_the_caller_cannot_know_it() -> bool:
+    const xs: int[] = [1, 2, 3, 4]
+    mut total = 0
+    for top in range(1, 5):
+        total += xs[below(9, top)] + xs[below(-4, top)]
+    return total == (1 + 2 + 3 + 4) + 4

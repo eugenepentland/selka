@@ -1,0 +1,84 @@
+.zig-cache*/
+.zig-global-cache/
+zig-out
+__pycache__/
+*.pyc
+
+.mylang-cache/
+.selka-cache/
+
+.pending/
+
+experiments/application_comparison/baselines/*/zig/.guardian/cache/
+qbe_runtime.o
+
+# Local agent/tooling scratch and caches (not project content).
+.claude/
+# This machine's agent rules, loaded beside CLAUDE.md (GH-7.2).
+CLAUDE.local.md
+.dsh-global-cache/
+.tmp/
+.zig-global/
+env.my
+env.selka
+qualified_unresolved.my
+qualified_unresolved.selka
+zz-attr-tmp/
+zz-probe.out.qbe-manifest.json
+
+# Cascade experiment: run artifacts, working copies and probe scratch.
+experiments/cascade/work/
+experiments/cascade/runs/
+experiments/cascade/probes/
+experiments/cascade/.cache/
+experiments/cascade/tools/
+
+# M3 project-invocation experiment: scratch copies and the frozen tool binaries.
+# The application snapshots, case pack, evidence and cohort readouts are tracked.
+experiments/project-invocation-m3/work/
+experiments/project-invocation-m3/pack/tools/bin/
+
+# Evidence stays out of git (experiments/README.md): under experiments/ only
+# write-ups and small sources are tracked; data, logs, archives and binaries go in
+# ~/ai/canopy/mylang-evidence-archive/. Already tracked files are unaffected.
+experiments/**
+!experiments/**/
+!experiments/**/*.md
+!experiments/**/*.my
+!experiments/**/*.selka
+!experiments/**/*.py
+!experiments/**/*.sh
+!experiments/**/*.zig
+!experiments/**/*.c
+!experiments/**/*.h
+!experiments/**/.gitignore
+docs/audits/evidence/**
+!docs/audits/evidence/**/
+!docs/audits/evidence/**/*.md
+*.tar
+*.tar.gz
+*.tgz
+# Scratch inside experiments/ stays ignored: these come after the whitelist above
+# because the later rule wins.
+experiments/**/.mylang-cache/
+experiments/**/.selka-cache/
+experiments/**/.zig-cache*/
+experiments/**/.tmp/
+experiments/**/__pycache__/
+experiments/cascade/work/
+experiments/cascade/runs/
+experiments/cascade/probes/
+experiments/cascade/.cache/
+experiments/cascade/tools/
+experiments/project-invocation-m3/work/
+experiments/project-invocation-m3/pack/tools/bin/
+experiments/application_comparison/baselines/*/zig/.guardian/cache/
+
+# Evidence stays out of git (CLAUDE.md). Old pool worktrees still hold untracked copies of the
+# data that the 2026-10-21 history cleanup removed from docs/audits/velocity-implementation; keep
+# a broad `git add` there from committing them again. The directory's notes and scripts stay tracked.
+docs/audits/velocity-implementation/**/*.json
+docs/audits/velocity-implementation/**/*.csv
+docs/audits/velocity-implementation/**/*.log
+docs/audits/velocity-implementation/**/*.txt
+docs/audits/velocity-implementation/**/*.tsv

@@ -1,0 +1,18 @@
+pins 1000000 connections 1000000 nets 161763 largest 796594 roots_mix 589908456
+source 666296 reached 796594 depth 37
+source 830873 reached 1 depth 0
+source 870510 reached 796594 depth 34
+source 198131 reached 796594 depth 33
+source 396600 reached 796594 depth 32
+source 883122 reached 796594 depth 32
+source 355384 reached 796594 depth 36
+source 406342 reached 1 depth 0
+source 698849 reached 2 depth 1
+source 235818 reached 1 depth 0
+source 520584 reached 796594 depth 33
+source 950024 reached 796594 depth 36
+source 274676 reached 796594 depth 32
+source 599088 reached 796594 depth 36
+source 177573 reached 796594 depth 35
+source 456135 reached 796594 depth 33
+distances_mix 987271335

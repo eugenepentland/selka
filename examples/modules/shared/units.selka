@@ -1,0 +1,9 @@
+@invariant(self.value >= 0, "a distance is never negative")
+public record Distance:
+    value: int
+
+
+public func make(value: int) -> Distance:
+    if value < 0:
+        return Distance(value=0)
+    return Distance(value=value)

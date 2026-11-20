@@ -1,0 +1,15 @@
+import catalog
+import main
+import reader
+
+public func test_value() -> bool:
+    return catalog.value() == 4
+
+
+public func test_indirect() -> bool:
+    return reader.read() == 4
+
+
+public func test_report(out: Stream) -> bool:
+    main.report(out)
+    return True

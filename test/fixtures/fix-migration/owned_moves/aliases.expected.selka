@@ -1,0 +1,55 @@
+record Box:
+    items: int[]
+
+
+func consume(own values: int[]) -> int:
+    return values[0]
+
+
+# Reading the alias and its source never turns this borrow into a move.
+func read_only() -> int:
+    const source = [1]
+    const alias = source
+    return alias[0] + source[0]
+
+
+func later_move() -> int:
+    const source = [10]
+    const alias = source
+    mut destination = alias
+    return destination[0]
+
+
+func later_store() -> int:
+    const source = [20]
+    const alias = own source
+    mut destination = Box(items=[])
+    destination.items = own alias
+    return destination.items[0]
+
+
+func later_return() -> int[]:
+    const source = [30]
+    const alias = own source
+    return alias
+
+
+func later_call() -> int:
+    const source = [40]
+    const alias = own source
+    return consume(own alias)
+
+
+# An own parameter still needs its explicit transfer into a const owner.
+func parameter_alias(own source: int[]) -> int[]:
+    const alias = own source
+    return alias
+
+
+func main(out: Stream) -> int:
+    const returned = later_return()
+    const parameter = parameter_alias([50])
+    const total = read_only() + later_move() + later_store() + returned[0] + later_call() + parameter[0]
+    assert total == 152
+    print(out, total)
+    return 0

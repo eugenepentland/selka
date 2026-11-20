@@ -1,0 +1,122 @@
+# Programs `selka check` accepted and the build refused (lane CB, 9 November 2026). Each test here failed to build before
+# its fix; experiments/check-build-20261109/DECISIONS.md has the reasons.
+enum Kind:
+    a
+    b
+    c
+
+
+record Check:
+    kind: Kind
+    ok: bool
+
+
+record Row:
+    ok: bool
+    checks: Check[]
+
+
+record Counts:
+    a: int = 0
+    b: int = 0
+    c: int = 0
+
+
+record Roll:
+    checked: int = 0
+    filled: Counts = Counts()
+    expected: Counts = Counts()
+    items: Row[] = []
+
+
+# F-PB-1: the loop variable `r` is read again from `sc` after `sc.checked` is written, and the inner loop's collection
+# `r.checks` is then a place of `sc` too, read again after each write the inner loop makes to `sc`.
+func roll_up(own items: Row[]) -> Roll:
+    mut sc = Roll(items=own items)
+    for r in sc.items:
+        sc.checked += 1
+        for c in r.checks:
+            if c.kind == Kind.a:
+                sc.expected.a += 1
+                if c.ok:
+                    sc.filled.a += 1
+            elif c.kind == Kind.b:
+                sc.expected.b += 1
+                if c.ok:
+                    sc.filled.b += 1
+            else:
+                sc.expected.c += 1
+                if c.ok:
+                    sc.filled.c += 1
+    return sc
+
+
+public func test_loop_over_a_field_of_a_record_the_body_writes() -> bool:
+    const rows: Row[] = [
+        Row(ok=True, checks=[Check(kind=Kind.a, ok=True), Check(kind=Kind.c, ok=False)]),
+        Row(ok=False, checks=[Check(kind=Kind.b, ok=True), Check(kind=Kind.a, ok=False), Check(kind=Kind.a, ok=True)]),
+    ]
+    const sc = roll_up(own rows)
+    return sc.checked == 2 and sc.expected.a == 3 and sc.filled.a == 2 and sc.expected.b == 1 and sc.filled.b == 1 and sc.expected.c == 1 and sc.filled.c == 0 and len(sc.items) == 2
+
+
+record Totals:
+    seen: int = 0
+    sum: int = 0
+    rows: int[][] = []
+
+
+# The same shape with a scalar element and a write after the inner loop as well.
+func totals(own rows: int[][]) -> Totals:
+    mut t = Totals(rows=own rows)
+    for row in t.rows:
+        t.seen += 1
+        for v in row:
+            t.sum += v
+        t.seen += 1
+    return t
+
+
+public func test_loop_over_an_element_of_a_record_written_before_and_after() -> bool:
+    const empty: int[] = []
+    const rows: int[][] = [[1, 2], own empty, [3]]
+    const t = totals(own rows)
+    return t.seen == 6 and t.sum == 6 and len(t.rows) == 3
+
+
+record Inst:
+    ref_des: bytes
+
+
+record Block:
+    instances: Inst[]
+
+
+# F-PB-3: a `mut` local that holds a borrow of `sb` is assigned in a loop that can `continue`, so the result is a phi of
+# phis that feed each other.
+func hub_ref(sb: Block) -> bytes from sb:
+    mut hub = b""
+    for inst in sb.instances:
+        if len(inst.ref_des) == 0 or inst.ref_des[0] != 85:
+            continue
+        if len(hub) > 0:
+            return b""
+        hub = inst.ref_des
+    return hub
+
+
+func last_u(sb: Block) -> bytes from sb:
+    mut found = b"none"
+    for inst in sb.instances:
+        if len(inst.ref_des) == 0:
+            continue
+        if inst.ref_des[0] == 85:
+            found = inst.ref_des
+    return found
+
+
+public func test_from_result_reassigned_from_an_element_in_a_loop_that_continues() -> bool:
+    const one = Block(instances=[Inst(ref_des=b"R1"), Inst(ref_des=b""), Inst(ref_des=b"U1")])
+    const two = Block(instances=[Inst(ref_des=b"U1"), Inst(ref_des=b"U2")])
+    const none = Block(instances=[Inst(ref_des=b"R1")])
+    return hub_ref(one) == b"U1" and hub_ref(two) == b"" and hub_ref(none) == b"" and last_u(two) == b"U2" and last_u(none) == b"none"

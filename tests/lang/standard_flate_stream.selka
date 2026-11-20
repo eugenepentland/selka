@@ -1,0 +1,510 @@
+import buffers
+import flate
+import flate_stream_fixtures as fixtures
+
+# `flate.feed` takes compressed bytes a piece at a time and returns the plain bytes each piece yields; `flate.finish` and
+# `flate.ended` say whether the stream ended cleanly; `flate.crc32_update` and `flate.adler32_update` are the checksums in
+# running form. The streams are in `flate_stream_fixtures.selka`: the two of a mebibyte were made by the system `gzip -9`, the
+# small ones by `gzip` or Python's zlib (`experiments/audit-work-20261111/gzstream_gen_fixtures.py`), and every checksum
+# below is Python's. A guest test has a budget of 1,000,000 executed blocks, so the inputs of a mebibyte are streams of
+# repeated data that decode in a few thousand symbols, one decode to a test.
+const RAW: int = 0
+
+
+const ZLIB: int = 1
+
+
+const GZIP: int = 2
+
+
+# The size of the whole of the input, which makes one piece of any stream here.
+const WHOLE: int = 100000000
+
+
+# The most one call may return: a mebibyte and the last match.
+const CHUNK_LIMIT: int = 1048576 + 258
+
+
+const NO_LIMIT: int = 9223372036854775807
+
+
+const MEBIBYTE: int = 1048576
+
+
+const MAGIC: str = "the data is not gzip: the magic number is wrong"
+
+
+const SIZE_LIMIT: str = "the result is past the size limit"
+
+
+const TRUNCATED: str = "unexpected end of the compressed data"
+
+
+# What a stream gave: the plain bytes and an empty message, or the message that stopped it.
+record Outcome:
+    plain: bytes
+    message: str
+
+
+func make(kind: int, limit: int) -> flate.Inflater:
+    if kind == RAW:
+        return flate.inflater(limit)
+    if kind == ZLIB:
+        return flate.zlib_inflater(limit)
+    return flate.gzip_inflater(limit)
+
+
+# Feed `data` to a stream `size` bytes at a time, take each call's output and the rest of the call's piece with empty
+# feeds, and finish: all the plain bytes, or the message of the first failure.
+func through(kind: int, data: bytes, size: int, limit: int) -> bytes fails str:
+    mut stream = make(kind, limit)
+    mut out = buffers.empty()
+    mut at = 0
+    while at < len(data):
+        const end = min(at + size, len(data))
+        mut plain = try flate.feed(mut stream, data[at:end])
+        while len(plain) > 0:
+            buffers.append(mut out, plain)
+            plain = try flate.feed(mut stream, b"")
+        at = end
+    try flate.finish(stream)
+    return bytes(out)
+
+
+func outcome(kind: int, data: bytes, size: int, limit: int) -> Outcome:
+    const plain = through(kind, data, size, limit) else Err(message):
+        return Outcome(plain=b"", message=own message)
+    return Outcome(plain=own plain, message="")
+
+
+# The stream fed in pieces of each of `sizes` gives `expected` and no message.
+func gives(kind: int, data: bytes, expected: bytes, sizes: int[], name: str) -> bool:
+    for size in sizes:
+        const result = outcome(kind, data, size, NO_LIMIT)
+        assert result.message == "", f"{name} in pieces of {size}: {result.message}"
+        assert result.plain == expected, f"{name} in pieces of {size} gave other bytes"
+    return True
+
+
+# The stream fed in pieces of each of `sizes` stops with `message`.
+func stops(kind: int, data: bytes, message: str, sizes: int[], name: str) -> bool:
+    for size in sizes:
+        const result = outcome(kind, data, size, NO_LIMIT)
+        assert result.message == message, f"{name} in pieces of {size}: `{result.message}`"
+    return True
+
+
+# `piece` repeated `times` times, by doubling.
+func repeated(piece: bytes, times: int) -> bytes:
+    mut out = buffers.empty()
+    buffers.append(mut out, piece)
+    mut count = 1
+    while count < times:
+        const more = min(count, times - count)
+        buffers.append(mut out, bytes(out[0:more * len(piece)]))
+        count += more
+    return bytes(out)
+
+
+func put_u32(mut out: byte_buffer, value: int):
+    for part in range(4):
+        _ = buffers.append_byte(mut out, bit_and(shift_right(value, part * 8), 255))
+
+
+# A gzip member of `plain` in stored blocks of 65,535 bytes, with the CRC-32 `crc` Python gave for `plain`.
+func stored_member(plain: bytes, crc: int) -> bytes:
+    mut out = buffers.empty()
+    buffers.append(mut out, b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff")
+    mut at = 0
+    while at < len(plain):
+        const length = min(65535, len(plain) - at)
+        if at + length == len(plain):
+            _ = buffers.append_byte(mut out, 1)
+        else:
+            _ = buffers.append_byte(mut out, 0)
+        _ = buffers.append_byte(mut out, bit_and(length, 255))
+        _ = buffers.append_byte(mut out, shift_right(length, 8))
+        _ = buffers.append_byte(mut out, bit_and(bit_xor(length, 65535), 255))
+        _ = buffers.append_byte(mut out, shift_right(bit_xor(length, 65535), 8))
+        _ = buffers.append_range(mut out, plain, at, at + length)
+        at += length
+    put_u32(mut out, crc)
+    put_u32(mut out, len(plain))
+    return bytes(out)
+
+
+# The byte `at` of `data` replaced by `value`.
+func with_byte(data: bytes, at: int, value: int) -> bytes:
+    mut out = buffers.empty()
+    buffers.append(mut out, data[0:at])
+    _ = buffers.append_byte(mut out, value)
+    buffers.append(mut out, data[at + 1:])
+    return bytes(out)
+
+
+# `data` with the lowest bit of the byte `back` from its end flipped.
+func with_flipped(data: bytes, back: int) -> bytes:
+    const at = len(data) - back
+    return with_byte(data, at, bit_xor(int(data[at]), 1))
+
+
+# The plain bytes of `fixtures.gz_fixed_all()`, which a stream gives in pieces of `size` bytes, are 86,040 with CRC-32 2983503818
+# (Python's). Its one fixed-code block uses all 286 literal/length symbols and all 30 distance symbols, so every code of the
+# fixed tables is read.
+func fixed_all_in_pieces_of(size: int) -> bool:
+    const result = outcome(GZIP, fixtures.gz_fixed_all(), size, NO_LIMIT)
+    assert result.message == "", f"pieces of {size}: {result.message}"
+    assert len(result.plain) == 86040, f"pieces of {size}: {len(result.plain)} bytes"
+    assert flate.crc32(result.plain) == 2983503818, f"pieces of {size}"
+    return True
+
+
+public func test_a_fixed_block_that_uses_every_symbol_inflates_in_pieces_of_one_byte() -> bool:
+    return fixed_all_in_pieces_of(1)
+
+
+public func test_a_fixed_block_that_uses_every_symbol_inflates_in_larger_pieces_and_whole() -> bool:
+    assert fixed_all_in_pieces_of(4096)
+    return fixed_all_in_pieces_of(WHOLE)
+
+
+public func test_a_gzip_stored_block_inflates_in_any_pieces() -> bool:
+    return gives(GZIP, fixtures.gz_stored(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "gzip, stored block")
+
+
+public func test_a_gzip_fixed_block_inflates_in_any_pieces() -> bool:
+    return gives(GZIP, fixtures.gz_fixed(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "gzip, fixed block")
+
+
+public func test_a_gzip_dynamic_block_inflates_in_any_pieces() -> bool:
+    return gives(GZIP, fixtures.gz_dynamic(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "gzip, dynamic block")
+
+
+public func test_a_zlib_stored_block_inflates_in_any_pieces() -> bool:
+    return gives(ZLIB, fixtures.zlib_stored(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "zlib, stored block")
+
+
+public func test_a_zlib_fixed_block_inflates_in_any_pieces() -> bool:
+    return gives(ZLIB, fixtures.zlib_fixed(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "zlib, fixed block")
+
+
+public func test_a_zlib_dynamic_block_inflates_in_any_pieces() -> bool:
+    return gives(ZLIB, fixtures.zlib_dynamic(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "zlib, dynamic block")
+
+
+public func test_a_raw_stored_block_inflates_in_any_pieces() -> bool:
+    return gives(RAW, fixtures.raw_stored(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "raw, stored block")
+
+
+public func test_a_raw_fixed_block_inflates_in_any_pieces() -> bool:
+    return gives(RAW, fixtures.raw_fixed(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "raw, fixed block")
+
+
+public func test_a_raw_dynamic_block_inflates_in_any_pieces() -> bool:
+    return gives(RAW, fixtures.raw_dynamic(), fixtures.base(), [1, 7, 4096, 65536, WHOLE], "raw, dynamic block")
+
+
+# What the one-shot function for `kind` gives for `data`.
+func one_shot(kind: int, data: bytes) -> Outcome:
+    if kind == RAW:
+        const plain = flate.inflate(data, NO_LIMIT) else Err(message):
+            return Outcome(plain=b"", message=own message)
+        return Outcome(plain=own plain, message="")
+    if kind == ZLIB:
+        const plain = flate.zlib_decode(data, NO_LIMIT) else Err(message):
+            return Outcome(plain=b"", message=own message)
+        return Outcome(plain=own plain, message="")
+    const plain = flate.gunzip(data, NO_LIMIT) else Err(message):
+        return Outcome(plain=b"", message=own message)
+    return Outcome(plain=own plain, message="")
+
+
+public func test_the_streaming_form_gives_what_the_one_shot_functions_give() -> bool:
+    const plain = fixtures.base()
+    assert one_shot(GZIP, fixtures.gz_dynamic()).plain == plain
+    assert one_shot(ZLIB, fixtures.zlib_fixed()).plain == outcome(ZLIB, fixtures.zlib_fixed(), 7, NO_LIMIT).plain
+    assert one_shot(RAW, fixtures.raw_stored()).plain == outcome(RAW, fixtures.raw_stored(), 1, NO_LIMIT).plain
+    const garbage = fixtures.gz_short_fixed() + b"these are not the bytes of a member"
+    assert one_shot(GZIP, garbage).message == outcome(GZIP, garbage, 7, NO_LIMIT).message
+    assert one_shot(ZLIB, fixtures.zlib_short_fixed() + b"x").message == outcome(ZLIB, fixtures.zlib_short_fixed() + b"x", 7, NO_LIMIT).message
+    return True
+
+
+public func test_several_members_and_an_empty_member_inflate_in_pieces_of_one_byte() -> bool:
+    const plain = fixtures.base()
+    const members = fixtures.gz_dynamic() + fixtures.gz_empty() + fixtures.gz_fixed() + fixtures.gz_stored()
+    return gives(GZIP, members, plain + plain + plain, [1], "four members")
+
+
+public func test_several_members_and_an_empty_member_inflate_in_larger_pieces_and_whole() -> bool:
+    const plain = fixtures.base()
+    const members = fixtures.gz_dynamic() + fixtures.gz_empty() + fixtures.gz_fixed() + fixtures.gz_stored()
+    return gives(GZIP, members, plain + plain + plain, [7, 4096, WHOLE], "four members")
+
+
+public func test_empty_members_inflate_to_nothing_in_any_pieces() -> bool:
+    assert gives(GZIP, fixtures.gz_empty(), b"", [1, 7, WHOLE], "an empty member")
+    assert gives(GZIP, fixtures.gz_empty() + fixtures.gz_empty(), b"", [1, 7, WHOLE], "two empty members")
+    return True
+
+
+public func test_zero_padding_after_the_last_member_is_ignored_in_any_pieces() -> bool:
+    const padded = fixtures.gz_fixed() + fixtures.gz_empty() + b"\x00\x00\x00\x00\x00\x00\x00"
+    return gives(GZIP, padded, fixtures.base(), [1, 7, WHOLE], "a member, an empty member and zero padding")
+
+
+public func test_an_empty_input_is_an_empty_gzip_stream_and_not_an_empty_raw_or_zlib_stream() -> bool:
+    assert flate.ended(flate.gzip_inflater(NO_LIMIT))
+    assert not flate.ended(flate.inflater(NO_LIMIT))
+    assert not flate.ended(flate.zlib_inflater(NO_LIMIT))
+    assert outcome(GZIP, b"", 1, NO_LIMIT).message == ""
+    assert outcome(RAW, b"", 1, NO_LIMIT).message == TRUNCATED
+    assert outcome(ZLIB, b"", 1, NO_LIMIT).message == "the zlib stream is too short"
+    return True
+
+
+public func test_a_mebibyte_of_zeros_inflates_in_pieces_of_one_byte() -> bool:
+    return gives(GZIP, fixtures.zeros_gz(), repeated(b"\x00", MEBIBYTE), [1], "a mebibyte of zeros")
+
+
+public func test_a_mebibyte_of_zeros_inflates_in_pieces_of_seven_bytes() -> bool:
+    return gives(GZIP, fixtures.zeros_gz(), repeated(b"\x00", MEBIBYTE), [7], "a mebibyte of zeros")
+
+
+public func test_a_mebibyte_of_zeros_inflates_in_pieces_of_4096_bytes() -> bool:
+    return gives(GZIP, fixtures.zeros_gz(), repeated(b"\x00", MEBIBYTE), [4096], "a mebibyte of zeros")
+
+
+public func test_a_mebibyte_of_zeros_inflates_in_pieces_of_65536_bytes() -> bool:
+    return gives(GZIP, fixtures.zeros_gz(), repeated(b"\x00", MEBIBYTE), [65536], "a mebibyte of zeros")
+
+
+public func test_a_mebibyte_of_zeros_inflates_whole() -> bool:
+    return gives(GZIP, fixtures.zeros_gz(), repeated(b"\x00", MEBIBYTE), [WHOLE], "a mebibyte of zeros")
+
+
+public func test_a_mebibyte_of_repeated_text_inflates_in_pieces_of_seven_bytes() -> bool:
+    return gives(GZIP, fixtures.pattern_gz(), repeated(fixtures.pattern(), 1024), [7], "a mebibyte of text")
+
+
+public func test_a_mebibyte_of_repeated_text_inflates_in_pieces_of_4096_bytes() -> bool:
+    return gives(GZIP, fixtures.pattern_gz(), repeated(fixtures.pattern(), 1024), [4096], "a mebibyte of text")
+
+
+public func test_a_mebibyte_of_repeated_text_inflates_in_pieces_of_65536_bytes() -> bool:
+    return gives(GZIP, fixtures.pattern_gz(), repeated(fixtures.pattern(), 1024), [65536], "a mebibyte of text")
+
+
+public func test_a_mebibyte_of_repeated_text_inflates_whole() -> bool:
+    return gives(GZIP, fixtures.pattern_gz(), repeated(fixtures.pattern(), 1024), [WHOLE], "a mebibyte of text")
+
+
+public func test_a_stored_member_of_a_mebibyte_inflates_in_pieces_of_4096_bytes() -> bool:
+    const plain = repeated(fixtures.pattern(), 1024)
+    return gives(GZIP, stored_member(plain, 1060151433), plain, [4096], "a stored mebibyte")
+
+
+public func test_a_stored_member_of_a_mebibyte_inflates_in_pieces_of_65536_bytes() -> bool:
+    const plain = repeated(fixtures.pattern(), 1024)
+    return gives(GZIP, stored_member(plain, 1060151433), plain, [65536], "a stored mebibyte")
+
+
+public func test_a_stored_member_of_a_mebibyte_inflates_whole() -> bool:
+    const plain = repeated(fixtures.pattern(), 1024)
+    return gives(GZIP, stored_member(plain, 1060151433), plain, [WHOLE], "a stored mebibyte")
+
+
+# The sizes of the chunks a gzip stream gives when all of `data` is fed at once and then the stream is fed nothing until it
+# gives nothing more.
+func chunk_sizes(data: bytes) -> int[] fails str:
+    mut stream = flate.gzip_inflater(NO_LIMIT)
+    mut sizes: int[] = []
+    mut plain = try flate.feed(mut stream, data)
+    while len(plain) > 0:
+        append(mut sizes, len(plain))
+        plain = try flate.feed(mut stream, b"")
+    try flate.finish(stream)
+    return sizes
+
+
+func chunks_or_none(data: bytes) -> int[]:
+    const sizes = chunk_sizes(data) else Err(_):
+        return []
+    return sizes
+
+
+# A call returns about a mebibyte at most, and the rest of the piece comes with the empty feeds that follow.
+public func test_a_call_returns_at_most_a_mebibyte_and_the_empty_feeds_return_the_rest() -> bool:
+    const plain = repeated(fixtures.pattern(), 1536)
+    const sizes = chunks_or_none(stored_member(plain, 9079911))
+    assert len(sizes) == 2, f"{len(sizes)} chunks"
+    assert sizes[0] + sizes[1] == len(plain), f"{sizes[0]} and {sizes[1]} bytes"
+    assert sizes[0] <= CHUNK_LIMIT, f"a chunk of {sizes[0]} bytes"
+    assert sizes[1] <= CHUNK_LIMIT, f"a chunk of {sizes[1]} bytes"
+    return True
+
+
+public func test_the_limit_stops_a_stream_past_it() -> bool:
+    const plain = fixtures.base()
+    assert outcome(GZIP, fixtures.gz_dynamic(), 7, len(plain)).message == ""
+    assert outcome(GZIP, fixtures.gz_dynamic(), 7, len(plain) - 1).message == SIZE_LIMIT
+    assert outcome(GZIP, fixtures.gz_stored(), 4096, len(plain) - 1).message == SIZE_LIMIT
+    assert outcome(GZIP, fixtures.zeros_gz(), 65536, 100000).message == SIZE_LIMIT
+    return True
+
+
+# `member` cut at each byte from `first` up to `last` is a stream that has not ended, and `finish` says where it stopped.
+func cuts_report_where_they_stopped(member: bytes, first: int, last: int) -> bool:
+    for cut in range(first, last):
+        const result = outcome(GZIP, member[0:cut], WHOLE, NO_LIMIT)
+        if cut < 10:
+            assert result.message == "the gzip header is cut short", f"cut at {cut}: {result.message}"
+        elif cut < len(member) - 8:
+            assert result.message == TRUNCATED, f"cut at {cut}: {result.message}"
+        else:
+            assert result.message == "the gzip member is cut short", f"cut at {cut}: {result.message}"
+    return True
+
+
+# A gzip member cut at any byte but 0 is a stream that has not ended.
+public func test_a_gzip_member_cut_in_its_first_half_reports_where_it_stopped() -> bool:
+    const member = fixtures.gz_short_stored()
+    return cuts_report_where_they_stopped(member, 1, len(member) // 2)
+
+
+public func test_a_gzip_member_cut_in_its_second_half_reports_where_it_stopped() -> bool:
+    const member = fixtures.gz_short_stored()
+    return cuts_report_where_they_stopped(member, len(member) // 2, len(member))
+
+
+public func test_a_gzip_member_with_a_fixed_block_cut_in_many_places_is_refused() -> bool:
+    const member = fixtures.gz_short_fixed()
+    mut cut = 3
+    while cut < len(member):
+        const result = outcome(GZIP, member[0:cut], 5, NO_LIMIT)
+        assert result.message != "", f"cut at {cut} was taken"
+        cut += 9
+    return True
+
+
+public func test_zlib_and_raw_streams_cut_short_are_refused() -> bool:
+    const packed = fixtures.zlib_short_fixed()
+    assert outcome(ZLIB, packed[0:1], 1, NO_LIMIT).message == "the zlib stream is too short"
+    assert outcome(ZLIB, packed[0:30], 7, NO_LIMIT).message == TRUNCATED
+    assert outcome(ZLIB, packed[0:len(packed) - 2], 7, NO_LIMIT).message == "the zlib stream has the wrong length"
+    const raw = fixtures.raw_short_fixed()
+    assert outcome(RAW, raw[0:1], 1, NO_LIMIT).message == TRUNCATED
+    assert outcome(RAW, raw[0:len(raw) - 1], 7, NO_LIMIT).message == TRUNCATED
+    return True
+
+
+public func test_a_wrong_gzip_checksum_is_reported_in_any_pieces() -> bool:
+    const message = "the gzip checksum does not match"
+    assert stops(GZIP, with_flipped(fixtures.gz_short_stored(), 5), message, [1, 7, WHOLE], "a short stored member")
+    assert stops(GZIP, with_flipped(fixtures.gz_short_fixed(), 6), message, [1, 7, WHOLE], "a short fixed member")
+    assert stops(GZIP, with_flipped(fixtures.gz_dynamic(), 8), message, [7, WHOLE], "a dynamic member")
+    return True
+
+
+public func test_a_wrong_gzip_length_is_reported_in_any_pieces() -> bool:
+    const message = "the gzip size does not match"
+    assert stops(GZIP, with_flipped(fixtures.gz_short_stored(), 1), message, [1, 7, WHOLE], "a short stored member")
+    assert stops(GZIP, with_flipped(fixtures.gz_short_fixed(), 2), message, [1, 7, WHOLE], "a short fixed member")
+    assert stops(GZIP, with_flipped(fixtures.gz_dynamic(), 4), message, [7, WHOLE], "a dynamic member")
+    return True
+
+
+public func test_a_wrong_zlib_checksum_is_reported_in_any_pieces() -> bool:
+    const message = "the zlib checksum does not match"
+    assert stops(ZLIB, with_flipped(fixtures.zlib_short_fixed(), 1), message, [1, 7, WHOLE], "a short fixed stream")
+    assert stops(ZLIB, with_flipped(fixtures.zlib_dynamic(), 3), message, [7, WHOLE], "a dynamic stream")
+    return True
+
+
+public func test_data_after_a_gzip_member_is_reported_in_any_pieces() -> bool:
+    const member = fixtures.gz_short_fixed()
+    assert stops(GZIP, member + b"xyz", MAGIC, [1, 7, WHOLE], "three bytes after a member")
+    assert stops(GZIP, member + b"\x00\x00xyz", MAGIC, [1, 7, WHOLE], "zero bytes and then three bytes after a member")
+    assert stops(GZIP, member + member[0:5], "the gzip header is cut short", [1, 7, WHOLE], "a second member cut short")
+    assert stops(GZIP, member + b"\x1f\x8b\x07", "the gzip member does not use the deflate method", [1, 7, WHOLE], "a second member of another method")
+    return True
+
+
+public func test_data_after_a_zlib_or_raw_stream_is_reported_in_any_pieces() -> bool:
+    assert stops(ZLIB, fixtures.zlib_short_fixed() + b"x", "the zlib stream has the wrong length", [1, 7, WHOLE], "a byte after a zlib stream")
+    assert stops(RAW, fixtures.raw_short_fixed() + b"x", "there is data after the end of the DEFLATE stream", [1, 7, WHOLE], "a byte after a raw stream")
+    return True
+
+
+# The message `feed` fails with, or "" when it does not.
+func feed_message(mut stream: flate.Inflater, piece: bytes) -> str:
+    const plain = flate.feed(mut stream, piece) else Err(message):
+        return message
+    return ""
+
+
+# The message `finish` fails with, or "" when it does not.
+func finish_message(stream: flate.Inflater) -> str:
+    _ = flate.finish(stream) else Err(message):
+        return message
+    return ""
+
+
+public func test_a_stream_that_failed_fails_again_with_the_same_message() -> bool:
+    mut stream = flate.gzip_inflater(NO_LIMIT)
+    assert feed_message(mut stream, b"not gzip at all, not gzip at all") == MAGIC
+    assert feed_message(mut stream, b"") == MAGIC
+    assert finish_message(stream) == MAGIC
+    assert not flate.ended(stream)
+    return True
+
+
+public func test_a_damaged_stream_is_reported_whatever_the_pieces() -> bool:
+    const member = fixtures.gz_short_fixed()
+    mut position = 10
+    while position < len(member):
+        const damaged = with_byte(member, position, bit_xor(int(member[position]), 255))
+        assert outcome(GZIP, damaged, 7, NO_LIMIT).message != "", f"byte {position} flipped was taken in pieces of 7"
+        assert outcome(GZIP, damaged, WHOLE, NO_LIMIT).message != "", f"byte {position} flipped was taken whole"
+        position += 9
+    return True
+
+
+public func test_crc_32_in_running_form_matches_the_whole_over_every_cut_of_a_kibibyte() -> bool:
+    const text = copy(fixtures.base()[0:1024])
+    const whole = flate.crc32(text)
+    for cut in range(1025):
+        assert flate.crc32_update(flate.crc32(text[0:cut]), text[cut:]) == whole, f"cut at {cut}"
+    assert flate.crc32_update(0, b"") == 0
+    assert flate.crc32_update(flate.crc32(b"abc"), b"") == flate.crc32(b"abc")
+    assert flate.crc32(fixtures.base()) == 2283901643
+    return True
+
+
+public func test_adler_32_in_running_form_matches_the_whole_over_every_cut_of_a_kibibyte() -> bool:
+    const text = copy(fixtures.base()[0:1024])
+    const whole = flate.adler32(text)
+    for cut in range(1025):
+        assert flate.adler32_update(flate.adler32(text[0:cut]), text[cut:]) == whole, f"cut at {cut}"
+    assert flate.adler32_update(1, b"") == 1
+    assert flate.adler32(fixtures.base()) == 3010012228
+    return True
+
+
+public func test_the_running_checksums_fold_one_byte_at_a_time() -> bool:
+    const text = fixtures.base()
+    mut crc = 0
+    mut adler = 1
+    for at in range(len(text)):
+        crc = flate.crc32_update(crc, text[at:at + 1])
+        adler = flate.adler32_update(adler, text[at:at + 1])
+    assert crc == 2283901643
+    assert adler == 3010012228
+    return True
+
+
+public func test_the_running_checksums_agree_with_zlib_on_a_mebibyte_of_zeros() -> bool:
+    const zeros = repeated(b"\x00", MEBIBYTE)
+    assert flate.crc32(zeros) == 2805525020
+    assert flate.crc32_update(flate.crc32(zeros[0:524288]), zeros[524288:]) == 2805525020
+    return True

@@ -1,0 +1,18 @@
+import dicts
+import strings
+
+func histogram(text: str) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for word in strings.split(text, " "):
+        if word != "":
+            counts[copy(word)] = dicts.get(counts, word, 0) + 1
+    return counts
+
+
+func main() -> int:
+    mut counts = histogram("red blue red green blue red")
+    if counts["red"] != 3 or counts["blue"] != 2:
+        return 1
+    if dicts.get(counts, "missing", 0) != 0 or len(counts) != 3:
+        return 2
+    return 42

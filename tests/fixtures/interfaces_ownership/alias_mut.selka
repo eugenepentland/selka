@@ -1,0 +1,8 @@
+# A loan passed back to a `mut` parameter of the same list: `grow` may write `xs` while `h` borrows it.
+import lib
+
+func main() -> int:
+    mut xs = ["a"]
+    const h = lib.head(xs)
+    lib.grow(mut xs, h)
+    return len(xs)

@@ -1,0 +1,8 @@
+{
+  "unit": [
+    "semantic_key_records_test.test.a chain restored from its records equals a fresh prepare, and every module is served from its record",
+    "semantic_key_records_test.test.a comment or body edit in the leaf keeps the records of every module that imports it",
+    "semantic_key_records_test.test.a signature edit in the leaf re-keys every importer and matches a fresh prepare",
+    "semantic_key_records_test.test.a type edit in the leaf moves the contexts that name the type through the chain"
+  ]
+}

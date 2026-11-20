@@ -1,0 +1,21 @@
+func load(fs: Filesystem) -> str fails str:
+    with try fs.open("notes.txt", "r") as f:
+        return f.read()
+
+
+func main(fs: Filesystem, out: Stream) -> int:
+    print(out, fs.exists("notes.txt"))
+    print(out, fs.read_text("notes.txt"))
+    print(out, fs.read_file("notes.txt"))
+    print(out, fs.write_text("copy.txt", "beta\n"))
+    print(out, fs.write_file("copy.bin", b"raw"))
+    print(out, fs.mkdir("sub"))
+    print(out, fs.listdir("sub"))
+    print(out, fs.remove("copy.txt"))
+    print(out, fs.remove("sub"))
+    match load(fs):
+        case Ok(text):
+            print(out, text)
+        case Err(message):
+            print(out, message)
+    return 0

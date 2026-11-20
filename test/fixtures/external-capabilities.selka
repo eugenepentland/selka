@@ -1,0 +1,23 @@
+import random
+import strings
+import time
+
+func sample(clock: Clock, rng: Entropy) -> int fails str:
+    match time.now(clock):
+        case Ok(instant):
+            match random.from_entropy(rng):
+                case Ok(generator):
+                    _ = generator
+                    return instant.unix_nanoseconds
+                case Err(message):
+                    fail message
+        case Err(message):
+            fail message
+
+
+func main(clock: Clock, rng: Entropy) -> int:
+    match sample(clock, rng):
+        case Ok(now):
+            return now
+        case Err(message):
+            return strings.char_count(message)

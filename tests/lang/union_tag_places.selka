@@ -1,0 +1,69 @@
+# `match mut` on a place whose case another statement established: the IR verifier's union-tag rule follows the place.
+# Shape R (a field): `if box.note is None:` gives the field a value, and `match mut box.note:` reads the field again, so
+# the tag test and the payload read are two `record_get`s of one field. Shape P (a parameter): after
+# `if best is None: ... return`, `match best` and `match mut best` read a `phi` of the parameter and of a `Some` the
+# function made. Lane VL, V4 (the protobuf decoders and the port's `dc_load::fold`).
+record Note:
+    text: str
+    marks: int
+
+
+record Box:
+    count: int
+    note: Note?
+
+
+func ensure_note(mut box: Box, text: str) -> int:
+    if box.note is None:
+        box.note = Some(Note(text=copy(text), marks=0))
+    match mut box.note:
+        case Some(inner):
+            inner.marks += 1
+            return len(inner.text) + inner.marks
+        case None:
+            return -1
+
+
+record Reading:
+    volts: float[]
+    label: str
+
+
+func scale(mut values: float[], by: float):
+    for i in range(len(values)):
+        values[i] = values[i] * by
+
+
+func fold(mut best: Reading?, own next: Reading, mode: int) -> int:
+    if best is None:
+        best = Some(own next)
+        return 0
+    match mut best:
+        case None:
+            return -1
+        case Some(known):
+            if mode == 1:
+                scale(mut known.volts, 2.0)
+            if mode == 2:
+                scale(mut known.volts, 3.0)
+            return len(known.volts)
+
+
+public func test_a_field_given_a_value_is_matched_mutably_in_place() -> bool:
+    mut empty = Box(count=1, note=None)
+    mut full = Box(count=2, note=Some(Note(text="abc", marks=4)))
+    return ensure_note(mut empty, "hello") == 6 and ensure_note(mut full, "unused") == 8 and ensure_note(mut empty, "x") == 7
+
+
+public func test_a_parameter_tested_and_remade_is_matched_mutably_in_place() -> bool:
+    mut best: Reading? = None
+    const first = fold(mut best, Reading(volts=[1.0, 2.0], label="a"), 1)
+    const second = fold(mut best, Reading(volts=[9.0], label="b"), 1)
+    const third = fold(mut best, Reading(volts=[9.0], label="c"), 2)
+    mut total = 0.0
+    match best:
+        case Some(known):
+            total = known.volts[0] + known.volts[1]
+        case None:
+            pass
+    return first == 0 and second == 2 and third == 2 and total == 18.0

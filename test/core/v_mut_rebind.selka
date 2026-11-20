@@ -1,0 +1,85 @@
+func replace_list(mut items: int[], other: int[]) -> int[]:
+    append(mut items, 5)
+    items = copy(other)
+    append(mut items, 7)
+    items[0] = 9
+    return copy(items)
+
+
+func replace_rows(mut items: int[][], other: int[][]) -> int[][]:
+    items = copy(other)
+    for index in range(6):
+        items[index % 2][0] = index
+    return copy(items)
+
+
+func rebound_twice(mut items: int[], first: int[], second: int[]) -> int:
+    append(mut items, 1)
+    items = copy(first)
+    append(mut items, 2)
+    items = copy(second)
+    items[0] = 3
+    return len(items)
+
+
+func early(mut items: int[], other: int[], leave: bool) -> int:
+    append(mut items, 4)
+    if leave:
+        items = copy(other)
+        append(mut items, 6)
+        return len(items)
+    append(mut items, 8)
+    return len(items)
+
+
+record Box:
+    items: int[]
+    n: int
+
+
+func reset_box(mut b: Box, other: Box) -> int:
+    b.n = 5
+    append(mut b.items, 1)
+    b = copy(other)
+    b.n = b.n + 100
+    append(mut b.items, 2)
+    return len(b.items)
+
+
+func digest(xs: int[]) -> int:
+    mut h = len(xs)
+    for x in xs:
+        h = h * 31 + x
+    return h
+
+
+func digest_rows(rows: int[][]) -> int:
+    mut h = len(rows)
+    for row in rows:
+        h = h * 131 + digest(row)
+    return h
+
+
+func main(out: Stream) -> int:
+    mut items = [1]
+    mut source = [2]
+    mut changed = replace_list(mut items, source)
+    print(out, digest(changed), digest(source), digest(items))
+    mut rows = [[1]]
+    mut row = [2]
+    mut shared = [copy(row), copy(row)]
+    mut moved = replace_rows(mut rows, shared)
+    print(out, digest_rows(moved), digest_rows(shared), digest(row), digest_rows(rows))
+    mut held = [0]
+    mut first = [10, 11]
+    mut second = [20]
+    print(out, rebound_twice(mut held, first, second), digest(held), digest(first), digest(second))
+    mut a = [1]
+    mut b = [1]
+    mut other = [2]
+    print(out, early(mut a, other, True), early(mut b, other, False), digest(a), digest(b), digest(other))
+    mut box = Box(items=[10], n=1)
+    mut spare = Box(items=[20, 21], n=2)
+    mut got = reset_box(mut box, spare)
+    print(out, got, box.n, digest(box.items), spare.n, digest(spare.items))
+    return 0

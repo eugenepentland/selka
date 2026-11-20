@@ -1,0 +1,9 @@
+public func program() -> i64:
+    mut x = 0
+    if True:
+        x = 4
+    else:
+        x = 9
+    if False:
+        return 6
+    return x

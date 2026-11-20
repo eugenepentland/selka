@@ -1,0 +1,14 @@
+# Records holding texts in a list, and a dictionary from text to record.
+record Item:
+    name: str
+    count: int
+
+
+func main() -> int:
+    mut items: Item[] = []
+    for i in range(15):
+        append(mut items, Item(name=f"item{i}", count=i))
+    mut index: dict[str, int] = {}
+    for it in items:
+        index[it.name] = it.count * 2
+    return (index["item7"] + len(items) + len(items[3].name)) % 256

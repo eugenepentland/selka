@@ -1,0 +1,15 @@
+# What text_of_collections.selka reads through an import: the text of lists a module receives, spelled in that module.
+public func list_text(items: int[]) -> str:
+    return str(items)
+
+
+public func names_repr(names: str[]) -> str:
+    return repr(names)
+
+
+public func table_text(table: dict[str, int[]]) -> str:
+    return str(table)
+
+
+public func found_text(found: int[]?) -> str:
+    return str(found)

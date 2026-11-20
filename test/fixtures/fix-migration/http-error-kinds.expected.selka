@@ -1,0 +1,57 @@
+import byte_builder
+import http
+
+# A program written before http.Error gained HeaderTooLarge, BodyTooLarge and UnsupportedVersion: the limit
+# refusals reached these matches as Malformed and a version the codec will not speak as Unsupported.
+func describe(error: http.Error) -> str:
+    match error:
+        case Incomplete:
+            return "incomplete"
+        case Malformed(value=detail):
+            return "malformed: " + detail
+        case BodyTooLarge(value=detail):
+            return "malformed: " + detail
+        case HeaderTooLarge(value=detail):
+            return "malformed: " + detail
+        case Unsupported(value=detail):
+            const shown = "unsupported: " + detail
+            return shown
+        case UnsupportedVersion(value=detail):
+            const shown = "unsupported: " + detail
+            return shown
+
+
+func kind(data: bytes) -> int:
+    match http.parse_request(data):
+        case Ok(_):
+            return 0
+        case Err(Incomplete):
+            return 1
+        case Err(Malformed(value=_)):
+            return 2
+        case Err(BodyTooLarge(value=_)):
+            return 2
+        case Err(HeaderTooLarge(value=_)):
+            return 2
+        case Err(Unsupported(value=_)):
+            return 3
+        case Err(UnsupportedVersion(value=_)):
+            return 3
+
+
+func text_of(data: bytes) -> str:
+    match http.parse_request(data):
+        case Ok(_):
+            return "ok"
+        case Err(error):
+            return describe(error)
+
+
+func main(out: Stream) -> int:
+    const wide = b"GET / HTTP/1.1\r\nX: " + byte_builder.repeat(b"y", 70000) + b"\r\n\r\n"
+    print(out, kind(b"GET / HTTP/1.1\r\n\r\n"), kind(b"POST / HTTP/1.1\r\nContent-Length: 9\r\n\r\nx"), kind(b"GET /a b HTTP/1.1\r\n\r\n"), kind(b"GET / HTTP/2.0\r\n\r\n"), kind(wide), kind(b"POST / HTTP/1.1\r\nContent-Length: 2000000\r\n\r\n"))
+    print(out, text_of(wide))
+    print(out, text_of(b"GET / HTTP/2.0\r\n\r\n"))
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

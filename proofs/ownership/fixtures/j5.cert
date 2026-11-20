@@ -1,0 +1,26 @@
+ownership-certificate-v2
+class drop Drop
+class param Parameter
+class record_get Project
+function bad_j5 result scalar from - unchecked -
+param 0 %0 borrowed
+inst %0 param Parameter reads - consumes - state borrowed parents ^0
+block b0 preds -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function bad_j5_ret result owned from - unchecked -
+param 0 %0 borrowed
+inst %0 param Parameter reads - consumes - state borrowed parents ^0
+block b0 preds -
+term ret %0
+end
+function bad_j5_from result borrowed from 0 unchecked -
+param 0 %0 borrowed
+param 1 %1 borrowed
+inst %0 param Parameter reads - consumes - state borrowed parents ^0
+inst %1 param Parameter reads - consumes - state borrowed parents ^1
+block b0 preds -
+inst %2 record_get Project reads %1 consumes - state borrowed parents %1
+term ret %2
+end

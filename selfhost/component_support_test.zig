@@ -1,0 +1,204 @@
+//! Native coordinator boundary regression tests; no Python runtime required.
+const std = @import("std");
+const files = @import("component_files.zig");
+const builder = @import("component_builder_identity.zig");
+const t = std.testing;
+
+// digest takes no allocator: even a large executable cannot enter an arena.
+test "streaming checksum hashes eight MiB with fixed storage" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const file = try temporary.dir.createFile(t.io, "large", .{});
+    const block: [65536]u8 = @splat('A');
+    for (0..128) |_| try file.writeStreamingAll(t.io, &block);
+    file.close(t.io);
+    const path = try temporary.dir.realPathFileAlloc(t.io, "large", t.allocator);
+    defer t.allocator.free(path);
+    const hash = try files.digest(t.io, path);
+    try t.expectEqualStrings("b16bd32b101132fd0102461bc75ea65442c37293ac881ae953486c8ac26a7388", &hash);
+}
+
+test "canonical JSON matches sorted Python ensure_ascii Unicode golden" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var items: std.array_list.Managed(std.json.Value) = .init(a);
+    try items.appendSlice(&.{ .{ .bool = true }, .null, .{ .integer = 42 } });
+    const nested = try files.object(a, &.{.{ .name = "é", .value = files.string("雪\x00😀") }});
+    const value = try files.object(a, &.{ .{ .name = "中", .value = nested }, .{ .name = "a", .value = .{ .array = items } } });
+    const result = try files.canonical(a, value);
+    try t.expectEqualStrings("{\"a\":[true,null,42],\"\\u4e2d\":{\"\\u00e9\":\"\\u96ea\\u0000\\ud83d\\ude00\"}}", result);
+}
+
+test "atomic JSON preserves identical inode and modification time but replaces changed bytes" {
+    if (@import("builtin").os.tag != .linux) return error.SkipZigTest;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const name = "metadata.json";
+    try temporary.dir.writeFile(t.io, .{ .sub_path = name, .data = "" });
+    const path = try temporary.dir.realPathFileAlloc(t.io, name, t.allocator);
+    defer t.allocator.free(path);
+    // Span multiple comparison buffers to exercise bounded streaming equality.
+    const payload: [8193]u8 = @splat('x');
+    const value = files.string(&payload);
+    try files.atomicJson(t.allocator, t.io, path, value, 0o600);
+    const before = try temporary.dir.statFile(t.io, name, .{});
+    try files.atomicJson(t.allocator, t.io, path, value, 0o600);
+    const unchanged = try temporary.dir.statFile(t.io, name, .{});
+    try t.expectEqual(before.inode, unchanged.inode);
+    try t.expectEqual(before.mtime.nanoseconds, unchanged.mtime.nanoseconds);
+    try t.expectEqual(before.ctime.nanoseconds, unchanged.ctime.nanoseconds);
+    try files.atomicJson(t.allocator, t.io, path, files.string("changed"), 0o600);
+    const changed = try temporary.dir.statFile(t.io, name, .{});
+    try t.expect(before.inode != changed.inode);
+    try t.expectEqual(@as(u32, 0o600), changed.permissions.toMode() & 0o7777);
+    const content = try temporary.dir.readFileAlloc(t.io, name, t.allocator, .limited(32));
+    defer t.allocator.free(content);
+    try t.expectEqualStrings("\"changed\"\n", content);
+}
+
+test "atomic JSON repairs corrupt missing and incorrectly permissioned metadata" {
+    if (@import("builtin").os.tag != .linux) return error.SkipZigTest;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const name = "metadata.json";
+    // Same length as canonical null plus newline; equality must compare actual bytes.
+    try temporary.dir.writeFile(t.io, .{ .sub_path = name, .data = "null " });
+    const path = try temporary.dir.realPathFileAlloc(t.io, name, t.allocator);
+    defer t.allocator.free(path);
+    {
+        const original = try temporary.dir.openFile(t.io, name, .{});
+        defer original.close(t.io);
+        try original.setPermissions(t.io, .fromMode(0o644));
+    }
+    const corrupt = try temporary.dir.statFile(t.io, name, .{});
+    try files.atomicJson(t.allocator, t.io, path, .null, 0o644);
+    const repaired = try temporary.dir.statFile(t.io, name, .{});
+    try t.expect(corrupt.inode != repaired.inode);
+    const file = try temporary.dir.openFile(t.io, name, .{});
+    defer file.close(t.io);
+    try file.setPermissions(t.io, .fromMode(0o600));
+    try files.atomicJson(t.allocator, t.io, path, .null, 0o644);
+    const permissions = try temporary.dir.statFile(t.io, name, .{});
+    try t.expect(repaired.inode != permissions.inode);
+    try t.expectEqual(@as(u32, 0o644), permissions.permissions.toMode() & 0o7777);
+    try temporary.dir.deleteFile(t.io, name);
+    try files.atomicJson(t.allocator, t.io, path, .null, 0o644);
+    const content = try temporary.dir.readFileAlloc(t.io, name, t.allocator, .limited(16));
+    defer t.allocator.free(content);
+    try t.expectEqualStrings("null\n", content);
+    const recreated = try temporary.dir.statFile(t.io, name, .{});
+    try t.expectEqual(@as(u32, 0o644), recreated.permissions.toMode() & 0o7777);
+}
+
+test "tree identity excludes cache components and preserves ordinary and linked files" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.createDirPath(t.io, "source/__pycache__");
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "source/__pycache__/ignored", .data = "excluded" });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "source/ignored.pyc", .data = "excluded" });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "source/contains__pycache__text.selka", .data = "kept" });
+    try temporary.dir.symLink(t.io, "contains__pycache__text.selka", "source/linked.selka", .{});
+    try temporary.dir.symLink(t.io, "__pycache__", "source/linked-directory", .{ .is_directory = true });
+    const path = try temporary.dir.realPathFileAlloc(t.io, "source", t.allocator);
+    defer t.allocator.free(path);
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const identity = try files.tree(arena.allocator(), t.io, path);
+    try t.expectEqual(@as(usize, 2), identity.object.count());
+    try t.expectEqualStrings(&files.textDigest("kept"), identity.object.get("contains__pycache__text.selka").?.string);
+    try t.expectEqualStrings(identity.object.get("contains__pycache__text.selka").?.string, identity.object.get("linked.selka").?.string);
+}
+
+test "CPU metadata streams procfs despite its zero stat size" {
+    if (@import("builtin").os.tag != .linux) return error.SkipZigTest;
+    const stat = try std.Io.Dir.cwd().statFile(t.io, "/proc/cpuinfo", .{});
+    try t.expectEqual(@as(u64, 0), stat.size);
+    const record = try files.firstBlock(t.allocator, t.io, "/proc/cpuinfo");
+    defer t.allocator.free(record);
+    try t.expect(record.len > 0);
+    try t.expect(std.mem.indexOfScalar(u8, record, ':') != null);
+    try t.expect(std.mem.indexOf(u8, record, "\n\n") == null);
+}
+
+test "CPU metadata first block ends at separator and rejects its byte ceiling" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "cpu", .data = "model: first\nflags: a b\n\nmodel: second\n" });
+    const path = try temporary.dir.realPathFileAlloc(t.io, "cpu", t.allocator);
+    defer t.allocator.free(path);
+    const record = try files.firstBlock(t.allocator, t.io, path);
+    defer t.allocator.free(record);
+    try t.expectEqualStrings("model: first\nflags: a b", record);
+    const ceiling: [65536]u8 = @splat('x');
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "cpu", .data = &ceiling });
+    try t.expectError(error.CpuMetadataTooLarge, files.firstBlock(t.allocator, t.io, path));
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "cpu", .data = ceiling[0..65535] });
+    const boundary = try files.firstBlock(t.allocator, t.io, path);
+    defer t.allocator.free(boundary);
+    try t.expectEqual(@as(usize, 65535), boundary.len);
+}
+
+/// Count the imports and embeds of the builder's sources that name neither the
+/// standard library nor another listed builder source.
+fn unlistedBuilderInputs() usize {
+    var unlisted: usize = 0;
+    for (builder.sources) |source| {
+        for ([_][]const u8{ "@import(\"", "@embedFile(\"" }) |opener| {
+            var rest = source.bytes;
+            while (std.mem.indexOf(u8, rest, opener)) |start| {
+                rest = rest[start + opener.len ..];
+                const end = std.mem.indexOfScalar(u8, rest, '"') orelse return unlisted + 1;
+                const name = rest[0..end];
+                if (!std.mem.eql(u8, name, "std") and !std.mem.eql(u8, name, "builtin") and !listedBuilderSource(name)) unlisted += 1;
+            }
+        }
+    }
+    return unlisted;
+}
+
+fn listedBuilderSource(name: []const u8) bool {
+    for (builder.sources) |source| if (std.mem.eql(u8, source.name, name)) return true;
+    return false;
+}
+
+test "builder identity covers the builder's whole source closure without its location" {
+    try t.expectEqual(@as(usize, 0), unlistedBuilderInputs());
+    try t.expectEqualStrings("components.zig", builder.sources[builder.sources.len - 1].name);
+    try t.expectEqualStrings("selka-components-builder-v1", builder.domain);
+    const first = builder.sourcesDigest();
+    const second = builder.sourcesDigest();
+    try t.expectEqualStrings(&first, &second);
+    try t.expect(std.mem.indexOfScalar(u8, builder.target, '/') == null);
+}
+
+test "the builder's children inherit the store locations and no other SELKA variable" {
+    const components = @import("components.zig");
+    var process = std.process.Environ.Map.init(t.allocator);
+    defer process.deinit();
+    try process.put("PATH", "/usr/bin");
+    try process.put("ZIG", "/ambient/zig");
+    try process.put("SELKA_ZIG", "/ambient/zig");
+    try process.put("SELKA_COMPILER_SHARED_CACHE", "/gate/stores/compiler");
+    try process.put("SELKA_TEST_SHARED_CACHE", "/gate/stores/tests");
+    try process.put("SELKA_STAGE_SHARED_CACHE", "");
+    try process.put("SELKA_CORE_RUNTIME_CACHE", "/user/objects");
+    try process.put("SELKA_FRONTEND_CACHE", "/user/frontend");
+    try process.put("SELKA_CORE_TEST_CACHE", "/user/core-tests");
+    try process.put("SELKA_VERIFICATION_SHARED_CACHE", "/user/evidence");
+    try process.put("SELKA_STORE_SETTINGS", "/user/selka.json");
+    try process.put("SELKA_COMPONENT_DIR", "/user/components");
+    var environment = try components.inheritedEnvironment(t.allocator, &process);
+    defer environment.deinit();
+    try t.expectEqualStrings("/gate/stores/compiler", environment.get("SELKA_COMPILER_SHARED_CACHE").?);
+    try t.expectEqualStrings("/gate/stores/tests", environment.get("SELKA_TEST_SHARED_CACHE").?);
+    try t.expectEqualStrings("", environment.get("SELKA_STAGE_SHARED_CACHE").?);
+    try t.expectEqualStrings("/usr/bin", environment.get("PATH").?);
+    try t.expectEqual(@as(usize, 4), environment.count());
+    var unnamed = std.process.Environ.Map.init(t.allocator);
+    defer unnamed.deinit();
+    try unnamed.put("SELKA_CORE_RUNTIME_CACHE", "/user/objects");
+    var none = try components.inheritedEnvironment(t.allocator, &unnamed);
+    defer none.deinit();
+    try t.expectEqual(@as(usize, 0), none.count());
+}

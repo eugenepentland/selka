@@ -1,0 +1,175 @@
+# Parallel map: the fallible form (`try parallel.map`), the explicit list-of-results form
+# (`parallel.map_results`) and the lowest-index failure. Every item runs before a failure returns.
+import dicts
+import parallel
+
+func attempt(value: int) -> str fails str:
+    if value % 2 == 0:
+        return "ok-" + str(value)
+    fail "bad-" + str(value)
+
+
+func double(value: int) -> int:
+    return value * 2
+
+
+func collect(values: int[]) -> str[] fails str:
+    return try parallel.map(values, attempt)
+
+
+# A fallible map of distinct successes keeps input order.
+public func test_try_map_keeps_input_order() -> bool:
+    match collect([0, 2, 4]):
+        case Ok(texts):
+            return len(texts) == 3 and texts[0] == "ok-0" and texts[2] == "ok-4"
+        case Err(text):
+            return False
+
+
+# The failure returned is the one with the lowest input index, not the first to finish.
+public func test_try_map_returns_the_lowest_index_failure() -> bool:
+    match collect([0, 1, 3]):
+        case Ok(texts):
+            return False
+        case Err(text):
+            return text == "bad-1"
+
+
+# A fallible map with only failures still reports the lowest index.
+public func test_try_map_of_only_failures_reports_the_first_item() -> bool:
+    match collect([5, 3]):
+        case Ok(texts):
+            return False
+        case Err(text):
+            return text == "bad-5"
+
+
+# The explicit list-of-results form keeps every element, in order, as a Result.
+public func test_map_results_keeps_every_result_in_order() -> bool:
+    const results = parallel.map_results([0, 1, 2, 3], attempt)
+    const count = len(results)
+    mut oks = 0
+    mut errors = 0
+    for result in results:
+        match result:
+            case Ok(text):
+                oks += 1
+            case Err(text):
+                errors += 1
+    _ = results
+    return count == 4 and oks == 2 and errors == 2
+
+
+# An infallible map is unchanged.
+public func test_infallible_map_is_unchanged() -> bool:
+    const doubled = parallel.map([1, 2, 3], double)
+    return len(doubled) == 3 and doubled[0] == 2 and doubled[2] == 6
+
+
+func scale_by(value: int, factor: int) -> int:
+    return value * factor
+
+
+func shift(value: int, bias: int, flip: bool) -> int:
+    if flip:
+        return value - bias
+    return value + bias
+
+
+func mix(value: int, a: int, b: int, c: int, d: int, e: int) -> int:
+    return value + a + b * 2 + c * 3 + d * 4 + e * 5
+
+
+# Trailing arguments: each item gets them, read-only and unchanged, and the results keep the input order.
+public func test_map_with_one_argument_gives_every_item_the_argument() -> bool:
+    const doubled = parallel.map([1, 2, 3], scale_by, 10)
+    return len(doubled) == 3 and doubled[0] == 10 and doubled[2] == 30
+
+
+public func test_map_with_a_bool_and_an_int_argument() -> bool:
+    const moved = parallel.map([1, 2, 3], shift, 5, True)
+    return moved[0] == -4 and moved[2] == -2
+
+
+public func test_map_with_five_arguments_over_many_chunks() -> bool:
+    mut items: int[] = []
+    for i in range(5000):
+        append(mut items, i)
+    const out = parallel.map(items, mix, 1, 2, 3, 4, 5)
+    mut total = 0
+    for v in out:
+        total += v
+    return total == 12772500
+
+
+record Ledger:
+    names: str[]
+    weights: int[]
+
+
+func load(value: int, ledger: Ledger) -> int:
+    return value + len(ledger.weights)
+
+
+func tag(value: int, label: str) -> str:
+    return label + str(value)
+
+
+func lookup(value: int, table: dict[str, int], key: str) -> int:
+    return value + dicts.get(table, key, 0)
+
+
+func count_names(value: int, names: str[]) -> int:
+    return value + len(names)
+
+
+func row_total(row: int[], bias: int) -> int:
+    mut total = bias
+    for cell in row:
+        total += cell
+    return total
+
+
+# A record holding a large list is lent to every item: each item reads the same list, and the results keep input order.
+public func test_map_lends_a_large_record_to_every_item() -> bool:
+    mut weights: int[] = []
+    for i in range(20000):
+        append(mut weights, i)
+    const ledger = Ledger(names=["a"], weights=own weights)
+    mut items: int[] = []
+    for i in range(300):
+        append(mut items, i)
+    const out = parallel.map(items, load, ledger)
+    return len(out) == 300 and out[0] == 20000 and out[299] == 20299
+
+
+# A text argument is the same text for every item.
+public func test_map_with_a_text_argument() -> bool:
+    const labelled = parallel.map([1, 2], tag, "n")
+    return labelled[0] == "n1" and labelled[1] == "n2"
+
+
+# A dictionary argument is read by every item.
+public func test_map_with_a_dictionary_argument() -> bool:
+    mut table: dict[str, int] = {}
+    table["x"] = 7
+    const out = parallel.map([1, 5, 9], lookup, table, "x")
+    return out[0] == 8 and out[1] == 12 and out[2] == 16
+
+
+# A list argument is read by every item, and the argument is still usable after the map.
+public func test_map_argument_is_usable_after_the_map() -> bool:
+    mut names: str[] = []
+    append(mut names, "a")
+    append(mut names, "bc")
+    const lengths = parallel.map([1, 2, 3], count_names, names)
+    return len(lengths) == 3 and lengths[2] == 5 and len(names) == 2
+
+
+# An element that is itself a list gets a scalar argument as well (the callback takes the list, then the scalar).
+public func test_map_over_lists_with_a_scalar_argument() -> bool:
+    mut rows: int[][] = []
+    append(mut rows, [1, 2])
+    append(mut rows, [3, 4, 5])
+    const totals = parallel.map(rows, row_total, 100)
+    return len(totals) == 2 and totals[0] == 103 and totals[1] == 112

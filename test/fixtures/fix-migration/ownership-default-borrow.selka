@@ -1,0 +1,5 @@
+func keep(values: int[]) -> int[]:
+    return values
+
+func main() -> int:
+    return len(keep([1, 2]))

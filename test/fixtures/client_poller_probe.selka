@@ -1,0 +1,135 @@
+# A client with one Poller that listens on nothing (lane CLIENTPOLL): it dials CONNECTIONS connections to one echo server
+# (the test's `event_loop_server.selka`) in batches, sends each its own message, and checks that each answer is that message.
+# The test replaces the port in ADDRESS, runs this under `--restrict --allow-endpoint=ADDRESS` alone and compares the
+# transcript. The address is given to `dial_to` as a value, as a load tester reads it from its arguments.
+import byte_builder
+import network
+import strings
+
+const ADDRESS: str = "127.0.0.1:18301"
+
+
+const CONNECTIONS: int = 1500
+
+
+const BATCH: int = 250
+
+
+# What the loop knows of its connections: the ids in dial order, the ones that finished connecting (or failed), the message
+# each was sent and the ones whose answer was that message.
+record Book:
+    ids: int[]
+    opened: dict[int, bool]
+    failed: int
+    sent: dict[int, str]
+    echoed: dict[int, bool]
+
+
+# Record what one `wait` reported about connection `id`.
+func note(mut book: Book, id: int, flags: int):
+    if network.has(flags, network.EVENT_CONNECTED):
+        book.opened[id] = True
+    if network.has(flags, network.EVENT_ERROR):
+        book.failed += 1
+
+
+# Dial `count` more connections and record their ids.
+func dial_batch(mut poller: network.Poller, net: Network, count: int, mut book: Book):
+    mut outcome = network.new_outcome()
+    for _ in range(count):
+        network.dial_to(mut poller, net, ADDRESS, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            append(mut book.ids, outcome.value)
+        else:
+            book.failed += 1
+
+
+# Wait until every connection dialled so far has connected or failed, for at most 600 waits of 100 ms.
+func settle(own poller: network.Poller, mut book: Book) -> network.Poller:
+    mut live = own poller
+    mut ready = network.new_ready()
+    mut rounds = 0
+    while rounds < 600 and len(book.opened) + book.failed < len(book.ids):
+        rounds += 1
+        live = network.wait(own live, 100, mut ready)
+        for index in range(ready.count):
+            note(mut book, ready.ids[index], ready.flags[index])
+    return live
+
+
+# The message of connection number `index`: a letter the echo server does not read as a command, and the number.
+func message_of(index: int) -> str:
+    return "c" + str(index)
+
+
+# Send each connection its own message.
+func send_all(own poller: network.Poller, mut book: Book) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    for index in range(len(book.ids)):
+        const id = book.ids[index]
+        const message = message_of(index)
+        live = network.send(own live, id, strings.encode(message), 0, mut outcome)
+        const taken = outcome.code == network.OUTCOME_OK and outcome.value == len(message)
+        if taken:
+            book.sent[id] = own message
+    return live
+
+
+# Read the answer of connection `id` and record it when it is the message sent.
+func answer(own poller: network.Poller, id: int, mut book: Book) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut raw = byte_builder.create()
+    live = network.recv(own live, id, mut raw, mut outcome)
+    if outcome.code == network.OUTCOME_OK and id in book.sent:
+        const wanted = book.sent[id]
+        if byte_builder.finish(raw) == strings.encode(wanted):
+            book.echoed[id] = True
+    return live
+
+
+# Wait for the answers, for at most 600 waits of 100 ms.
+func collect(own poller: network.Poller, mut book: Book) -> network.Poller:
+    mut live = own poller
+    mut ready = network.new_ready()
+    mut rounds = 0
+    while rounds < 600 and len(book.echoed) < len(book.sent):
+        rounds += 1
+        live = network.wait(own live, 100, mut ready)
+        for index in range(ready.count):
+            if network.has(ready.flags[index], network.EVENT_READABLE):
+                live = answer(own live, ready.ids[index], mut book)
+    return live
+
+
+func probe(own poller: network.Poller, net: Network, out: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut book = Book(ids=[], opened={}, failed=0, sent={}, echoed={})
+    # Nothing listens: nothing is ever waiting to be accepted, and the listener has no port.
+    live = network.accept(own live, mut outcome)
+    print(out, "accept", outcome.code == network.OUTCOME_WOULD_BLOCK)
+    live = network.port(own live, network.LISTENER, mut outcome)
+    print(out, "listener", outcome.code == network.OUTCOME_BAD)
+    mut dialled = 0
+    while dialled < CONNECTIONS:
+        dial_batch(mut live, net, BATCH, mut book)
+        dialled += BATCH
+        live = settle(own live, mut book)
+    print(out, "dialled", len(book.ids), "connected", len(book.opened), "failed", book.failed)
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "limit", outcome.value >= CONNECTIONS, "open", outcome.extra)
+    live = send_all(own live, mut book)
+    live = collect(own live, mut book)
+    print(out, "sent", len(book.sent), "echoed", len(book.echoed))
+    return 0
+
+
+func main(net: Network, out: Stream) -> int:
+    match network.open_client_poller(net):
+        case ok(poller):
+            return probe(own poller, net, out)
+        case err(code):
+            print(out, "open failed", code, network.describe(code))
+            return 1

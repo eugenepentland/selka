@@ -1,0 +1,16 @@
+name = "arith"
+version = "0.1.0"
+defaultTargets = ["Arith", "arith-templates"]
+
+[leanOptions]
+autoImplicit = false
+
+# The Lean model: LLVM integer semantics on BitVec, the lowering formulas and their proofs
+# (core Lean 4 only).
+[[lean_lib]]
+name = "Arith"
+
+# `lake exe arith-templates` renders the formulas as the LLVM text the emitter is pinned to.
+[[lean_exe]]
+name = "arith-templates"
+root = "Main"

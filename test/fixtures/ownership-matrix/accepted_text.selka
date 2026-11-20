@@ -1,0 +1,4740 @@
+record Item:
+    name: str
+    count: int
+
+
+record Rec:
+    name: str
+    items: int[]
+    item: Item
+    raw: bytes
+
+
+record TextBox:
+    value: str
+
+
+record ItemBox:
+    value: Item
+
+
+record BytesBox:
+    value: bytes
+
+
+record IntsBox:
+    value: int[]
+
+
+func make_bytes(n: int) -> bytes:
+    if n > 100:
+        return b"long" + b"er"
+    return b"ab" + b"cd"
+
+
+func make_ints(n: int) -> int[]:
+    return [n, n + 1]
+
+
+func first_bytes(r: Rec) -> bytes from r:
+    return r.raw
+
+
+func first_ints(r: Rec) -> int[] from r:
+    return r.items
+
+
+func read_bytes(s: bytes) -> int:
+    return len(s)
+
+
+func read_ints(s: int[]) -> int:
+    return len(s)
+
+
+func keep_bytes(own s: bytes) -> int:
+    return len(s)
+
+
+func keep_ints(own s: int[]) -> int:
+    return len(s)
+
+
+func make_text(n: int) -> str:
+    return f"text{n}"
+
+
+func make_item(n: int) -> Item:
+    return Item(name=f"item{n}", count=n)
+
+
+func first_text(r: Rec) -> str from r:
+    return r.name
+
+
+func first_item(r: Rec) -> Item from r:
+    return r.item
+
+
+func read_text(s: str) -> int:
+    return len(s)
+
+
+func read_item(i: Item) -> int:
+    return i.count
+
+
+func keep_text(own s: str) -> int:
+    return len(s)
+
+
+func keep_item(own i: Item) -> int:
+    return i.count
+
+
+func probe_text__local__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const c = a
+    return read_text(c)
+
+
+func call_text__local__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__const_bind__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const c = own a
+    return read_text(c)
+
+
+func call_text__local__const_bind__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const c = copy(a)
+    return read_text(c)
+
+
+func call_text__local__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut c = a
+    return read_text(c)
+
+
+func call_text__local__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__mut_bind__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut c = own a
+    return read_text(c)
+
+
+func call_text__local__mut_bind__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut c = copy(a)
+    return read_text(c)
+
+
+func call_text__local__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut c = a
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__local__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const b = TextBox(value=a)
+    return read_text(b.value)
+
+
+func call_text__local__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__record_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const b = TextBox(value=own a)
+    return read_text(b.value)
+
+
+func call_text__local__record_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const b = TextBox(value=copy(a))
+    return read_text(b.value)
+
+
+func call_text__local__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__record_returned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    const a = make_text(n)
+    return TextBox(value=own a)
+
+
+func call_text__local__record_returned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    const a = make_text(n)
+    return TextBox(value=copy(a))
+
+
+func call_text__local__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const s: str? = Some(a)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__local__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__some_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const s: str? = Some(own a)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__local__some_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    const s: str? = Some(copy(a))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__local__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut l: str[] = []
+    append(mut l, a)
+    return len(l)
+
+
+func call_text__local__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__list_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut l: str[] = []
+    append(mut l, own a)
+    return len(l)
+
+
+func call_text__local__list_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut l: str[] = []
+    append(mut l, copy(a))
+    return len(l)
+
+
+func call_text__local__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__list_returned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    const a = make_text(n)
+    mut l: str[] = []
+    append(mut l, own a)
+    return l
+
+
+func call_text__local__list_returned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    const a = make_text(n)
+    mut l: str[] = []
+    append(mut l, copy(a))
+    return l
+
+
+func call_text__local__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut d: dict[int, str] = {}
+    d[n] = a
+    return len(d)
+
+
+func call_text__local__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__dict_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut d: dict[int, str] = {}
+    d[n] = own a
+    return len(d)
+
+
+func call_text__local__dict_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mut d: dict[int, str] = {}
+    d[n] = copy(a)
+    return len(d)
+
+
+func call_text__local__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    return read_text(a)
+
+
+func call_text__local__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    return read_text(copy(a))
+
+
+func call_text__local__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__arg_own__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    return keep_text(own a)
+
+
+func call_text__local__arg_own__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    return keep_text(copy(a))
+
+
+func call_text__local__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__return_owned__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    const a = make_text(n)
+    return a
+
+
+func call_text__local__return_owned__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    const a = make_text(n)
+    return copy(a)
+
+
+func call_text__local__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local__list_out_param__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    append(mut out, own a)
+    return len(out)
+
+
+func call_text__local__list_out_param__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    append(mut out, copy(a))
+    return len(out)
+
+
+func call_text__local__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__field_of_mut_param__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mr.name = own a
+    return n
+
+
+func call_text__local__field_of_mut_param__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const a = make_text(n)
+    mr.name = copy(a)
+    return n
+
+
+func call_text__local__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = p
+    return read_text(c)
+
+
+func call_text__param__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(p)
+    return read_text(c)
+
+
+func call_text__param__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = p
+    return read_text(c)
+
+
+func call_text__param__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(p)
+    return read_text(c)
+
+
+func call_text__param__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = p
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__param__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=p)
+    return read_text(b.value)
+
+
+func call_text__param__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(p))
+    return read_text(b.value)
+
+
+func call_text__param__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(p))
+
+
+func call_text__param__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(p)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(p))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, p)
+    return len(l)
+
+
+func call_text__param__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(p))
+    return len(l)
+
+
+func call_text__param__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(p))
+    return l
+
+
+func call_text__param__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = p
+    return len(d)
+
+
+func call_text__param__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(p)
+    return len(d)
+
+
+func call_text__param__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(p)
+
+
+func call_text__param__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(p))
+
+
+func call_text__param__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(p))
+
+
+func call_text__param__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(p)
+
+
+func call_text__param__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from p:
+    return p
+
+
+func call_text__param__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(p))
+    return len(out)
+
+
+func call_text__param__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(p)
+    return n
+
+
+func call_text__param__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = o
+    return read_text(c)
+
+
+func call_text__own_param__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__const_bind__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = own o
+    return read_text(c)
+
+
+func call_text__own_param__const_bind__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(o)
+    return read_text(c)
+
+
+func call_text__own_param__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = o
+    return read_text(c)
+
+
+func call_text__own_param__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__mut_bind__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = own o
+    return read_text(c)
+
+
+func call_text__own_param__mut_bind__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(o)
+    return read_text(c)
+
+
+func call_text__own_param__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = o
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__own_param__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=o)
+    return read_text(b.value)
+
+
+func call_text__own_param__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__record_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=own o)
+    return read_text(b.value)
+
+
+func call_text__own_param__record_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(o))
+    return read_text(b.value)
+
+
+func call_text__own_param__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__record_returned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=own o)
+
+
+func call_text__own_param__record_returned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__own_param__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__own_param__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(o))
+
+
+func call_text__own_param__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__own_param__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__own_param__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(o)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__own_param__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__some_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(own o)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__own_param__some_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(o))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__own_param__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, o)
+    return len(l)
+
+
+func call_text__own_param__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__list_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, own o)
+    return len(l)
+
+
+func call_text__own_param__list_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(o))
+    return len(l)
+
+
+func call_text__own_param__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__list_returned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, own o)
+    return l
+
+
+func call_text__own_param__list_returned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__own_param__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__own_param__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(o))
+    return l
+
+
+func call_text__own_param__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__own_param__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__own_param__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = o
+    return len(d)
+
+
+func call_text__own_param__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__dict_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = own o
+    return len(d)
+
+
+func call_text__own_param__dict_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(o)
+    return len(d)
+
+
+func call_text__own_param__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(o)
+
+
+func call_text__own_param__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(o))
+
+
+func call_text__own_param__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__arg_own__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(own o)
+
+
+func call_text__own_param__arg_own__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(o))
+
+
+func call_text__own_param__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__return_owned__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return o
+
+
+func call_text__own_param__return_owned__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__own_param__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__own_param__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(o)
+
+
+func call_text__own_param__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__own_param__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__own_param__list_out_param__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, own o)
+    return len(out)
+
+
+func call_text__own_param__list_out_param__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(o))
+    return len(out)
+
+
+func call_text__own_param__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__field_of_mut_param__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = own o
+    return n
+
+
+func call_text__own_param__field_of_mut_param__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__own_param__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(o)
+    return n
+
+
+func call_text__own_param__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__own_param__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = r.name
+    return read_text(c)
+
+
+func call_text__param_field__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(r.name)
+    return read_text(c)
+
+
+func call_text__param_field__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = r.name
+    return read_text(c)
+
+
+func call_text__param_field__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(r.name)
+    return read_text(c)
+
+
+func call_text__param_field__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = r.name
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__param_field__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=r.name)
+    return read_text(b.value)
+
+
+func call_text__param_field__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(r.name))
+    return read_text(b.value)
+
+
+func call_text__param_field__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(r.name))
+
+
+func call_text__param_field__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_field__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_field__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(r.name)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param_field__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(r.name))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param_field__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, r.name)
+    return len(l)
+
+
+func call_text__param_field__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(r.name))
+    return len(l)
+
+
+func call_text__param_field__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(r.name))
+    return l
+
+
+func call_text__param_field__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_field__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_field__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = r.name
+    return len(d)
+
+
+func call_text__param_field__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(r.name)
+    return len(d)
+
+
+func call_text__param_field__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(r.name)
+
+
+func call_text__param_field__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(r.name))
+
+
+func call_text__param_field__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(r.name))
+
+
+func call_text__param_field__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(r.name)
+
+
+func call_text__param_field__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_field__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_field__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from r:
+    return r.name
+
+
+func call_text__param_field__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_field__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_field__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(r.name))
+    return len(out)
+
+
+func call_text__param_field__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_field__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(r.name)
+    return n
+
+
+func call_text__param_field__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_field__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = ts[0]
+    return read_text(c)
+
+
+func call_text__param_element__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(ts[0])
+    return read_text(c)
+
+
+func call_text__param_element__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = ts[0]
+    return read_text(c)
+
+
+func call_text__param_element__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(ts[0])
+    return read_text(c)
+
+
+func call_text__param_element__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = ts[0]
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__param_element__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=ts[0])
+    return read_text(b.value)
+
+
+func call_text__param_element__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(ts[0]))
+    return read_text(b.value)
+
+
+func call_text__param_element__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(ts[0]))
+
+
+func call_text__param_element__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_element__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_element__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(ts[0])
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param_element__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(ts[0]))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param_element__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, ts[0])
+    return len(l)
+
+
+func call_text__param_element__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(ts[0]))
+    return len(l)
+
+
+func call_text__param_element__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(ts[0]))
+    return l
+
+
+func call_text__param_element__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_element__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_element__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = ts[0]
+    return len(d)
+
+
+func call_text__param_element__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(ts[0])
+    return len(d)
+
+
+func call_text__param_element__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(ts[0])
+
+
+func call_text__param_element__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(ts[0]))
+
+
+func call_text__param_element__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(ts[0]))
+
+
+func call_text__param_element__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(ts[0])
+
+
+func call_text__param_element__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_element__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_element__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from ts:
+    return ts[0]
+
+
+func call_text__param_element__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_element__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_element__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(ts[0]))
+    return len(out)
+
+
+func call_text__param_element__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_element__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(ts[0])
+    return n
+
+
+func call_text__param_element__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_element__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = first_text(r)
+    return read_text(c)
+
+
+func call_text__from_call__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(first_text(r))
+    return read_text(c)
+
+
+func call_text__from_call__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = first_text(r)
+    return read_text(c)
+
+
+func call_text__from_call__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(first_text(r))
+    return read_text(c)
+
+
+func call_text__from_call__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = first_text(r)
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__from_call__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(first_text(r)))
+    return read_text(b.value)
+
+
+func call_text__from_call__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(first_text(r)))
+
+
+func call_text__from_call__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__from_call__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__from_call__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(first_text(r)))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__from_call__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(first_text(r)))
+    return len(l)
+
+
+func call_text__from_call__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(first_text(r)))
+    return l
+
+
+func call_text__from_call__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__from_call__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__from_call__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(first_text(r))
+    return len(d)
+
+
+func call_text__from_call__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(first_text(r))
+
+
+func call_text__from_call__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(first_text(r)))
+
+
+func call_text__from_call__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(first_text(r)))
+
+
+func call_text__from_call__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(first_text(r))
+
+
+func call_text__from_call__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__from_call__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__from_call__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from r:
+    return first_text(r)
+
+
+func call_text__from_call__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__from_call__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__from_call__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(first_text(r)))
+    return len(out)
+
+
+func call_text__from_call__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__from_call__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(first_text(r))
+    return n
+
+
+func call_text__from_call__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__from_call__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const c = loc.name
+    return read_text(c)
+
+
+func call_text__local_field__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__const_bind__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const c = own loc.name
+    return read_text(c)
+
+
+func call_text__local_field__const_bind__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const c = copy(loc.name)
+    return read_text(c)
+
+
+func call_text__local_field__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut c = loc.name
+    return read_text(c)
+
+
+func call_text__local_field__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__mut_bind__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut c = own loc.name
+    return read_text(c)
+
+
+func call_text__local_field__mut_bind__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut c = copy(loc.name)
+    return read_text(c)
+
+
+func call_text__local_field__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut c = loc.name
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__local_field__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const b = TextBox(value=loc.name)
+    return read_text(b.value)
+
+
+func call_text__local_field__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__record_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const b = TextBox(value=own loc.name)
+    return read_text(b.value)
+
+
+func call_text__local_field__record_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const b = TextBox(value=copy(loc.name))
+    return read_text(b.value)
+
+
+func call_text__local_field__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__record_returned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return TextBox(value=own loc.name)
+
+
+func call_text__local_field__record_returned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local_field__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local_field__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return TextBox(value=copy(loc.name))
+
+
+func call_text__local_field__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local_field__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local_field__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const s: str? = Some(loc.name)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__local_field__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__some_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const s: str? = Some(own loc.name)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__local_field__some_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    const s: str? = Some(copy(loc.name))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__local_field__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut l: str[] = []
+    append(mut l, loc.name)
+    return len(l)
+
+
+func call_text__local_field__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__list_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut l: str[] = []
+    append(mut l, own loc.name)
+    return len(l)
+
+
+func call_text__local_field__list_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut l: str[] = []
+    append(mut l, copy(loc.name))
+    return len(l)
+
+
+func call_text__local_field__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__list_returned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut l: str[] = []
+    append(mut l, own loc.name)
+    return l
+
+
+func call_text__local_field__list_returned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local_field__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local_field__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut l: str[] = []
+    append(mut l, copy(loc.name))
+    return l
+
+
+func call_text__local_field__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local_field__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local_field__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut d: dict[int, str] = {}
+    d[n] = loc.name
+    return len(d)
+
+
+func call_text__local_field__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__dict_local__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut d: dict[int, str] = {}
+    d[n] = own loc.name
+    return len(d)
+
+
+func call_text__local_field__dict_local__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut d: dict[int, str] = {}
+    d[n] = copy(loc.name)
+    return len(d)
+
+
+func call_text__local_field__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return read_text(loc.name)
+
+
+func call_text__local_field__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return read_text(copy(loc.name))
+
+
+func call_text__local_field__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__arg_own__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return keep_text(own loc.name)
+
+
+func call_text__local_field__arg_own__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return keep_text(copy(loc.name))
+
+
+func call_text__local_field__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__return_owned__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return own loc.name
+
+
+func call_text__local_field__return_owned__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local_field__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local_field__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return copy(loc.name)
+
+
+func call_text__local_field__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__local_field__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__local_field__list_out_param__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    append(mut out, own loc.name)
+    return len(out)
+
+
+func call_text__local_field__list_out_param__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    append(mut out, copy(loc.name))
+    return len(out)
+
+
+func call_text__local_field__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__field_of_mut_param__own(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mr.name = own loc.name
+    return n
+
+
+func call_text__local_field__field_of_mut_param__own() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__local_field__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mr.name = copy(loc.name)
+    return n
+
+
+func call_text__local_field__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__local_field__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = m
+    return read_text(c)
+
+
+func call_text__mut_param__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(m)
+    return read_text(c)
+
+
+func call_text__mut_param__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = m
+    return read_text(c)
+
+
+func call_text__mut_param__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(m)
+    return read_text(c)
+
+
+func call_text__mut_param__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = m
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__mut_param__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=m)
+    return read_text(b.value)
+
+
+func call_text__mut_param__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(m))
+    return read_text(b.value)
+
+
+func call_text__mut_param__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(m))
+
+
+func call_text__mut_param__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(m)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__mut_param__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(m))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__mut_param__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, m)
+    return len(l)
+
+
+func call_text__mut_param__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(m))
+    return len(l)
+
+
+func call_text__mut_param__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(m))
+    return l
+
+
+func call_text__mut_param__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = m
+    return len(d)
+
+
+func call_text__mut_param__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(m)
+    return len(d)
+
+
+func call_text__mut_param__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(m)
+
+
+func call_text__mut_param__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(m))
+
+
+func call_text__mut_param__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(m))
+
+
+func call_text__mut_param__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(m)
+
+
+func call_text__mut_param__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from m:
+    return m
+
+
+func call_text__mut_param__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(m))
+    return len(out)
+
+
+func call_text__mut_param__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(m)
+    return n
+
+
+func call_text__mut_param__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = mr.name
+    return read_text(c)
+
+
+func call_text__mut_param_field__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(mr.name)
+    return read_text(c)
+
+
+func call_text__mut_param_field__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = mr.name
+    return read_text(c)
+
+
+func call_text__mut_param_field__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(mr.name)
+    return read_text(c)
+
+
+func call_text__mut_param_field__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = mr.name
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__mut_param_field__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=mr.name)
+    return read_text(b.value)
+
+
+func call_text__mut_param_field__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(mr.name))
+    return read_text(b.value)
+
+
+func call_text__mut_param_field__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(mr.name))
+
+
+func call_text__mut_param_field__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param_field__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param_field__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(mr.name)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__mut_param_field__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(mr.name))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__mut_param_field__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, mr.name)
+    return len(l)
+
+
+func call_text__mut_param_field__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(mr.name))
+    return len(l)
+
+
+func call_text__mut_param_field__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(mr.name))
+    return l
+
+
+func call_text__mut_param_field__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param_field__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param_field__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = mr.name
+    return len(d)
+
+
+func call_text__mut_param_field__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(mr.name)
+    return len(d)
+
+
+func call_text__mut_param_field__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(mr.name)
+
+
+func call_text__mut_param_field__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(mr.name))
+
+
+func call_text__mut_param_field__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(mr.name))
+
+
+func call_text__mut_param_field__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(mr.name)
+
+
+func call_text__mut_param_field__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param_field__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param_field__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from mr:
+    return mr.name
+
+
+func call_text__mut_param_field__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__mut_param_field__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__mut_param_field__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(mr.name))
+    return len(out)
+
+
+func call_text__mut_param_field__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__mut_param_field__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(mr.name)
+    return n
+
+
+func call_text__mut_param_field__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__mut_param_field__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = make_text(n)
+    return read_text(c)
+
+
+func call_text__fresh_call__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = make_text(n)
+    return read_text(c)
+
+
+func call_text__fresh_call__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__record_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=make_text(n))
+    return read_text(b.value)
+
+
+func call_text__fresh_call__record_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__record_returned__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=make_text(n))
+
+
+func call_text__fresh_call__record_returned__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__fresh_call__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__fresh_call__some_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(make_text(n))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__fresh_call__some_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__list_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, make_text(n))
+    return len(l)
+
+
+func call_text__fresh_call__list_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__list_returned__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, make_text(n))
+    return l
+
+
+func call_text__fresh_call__list_returned__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__fresh_call__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__fresh_call__dict_local__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = make_text(n)
+    return len(d)
+
+
+func call_text__fresh_call__dict_local__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(make_text(n))
+
+
+func call_text__fresh_call__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__arg_own__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(make_text(n))
+
+
+func call_text__fresh_call__arg_own__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__return_owned__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return make_text(n)
+
+
+func call_text__fresh_call__return_owned__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__fresh_call__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__fresh_call__list_out_param__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, make_text(n))
+    return len(out)
+
+
+func call_text__fresh_call__list_out_param__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__fresh_call__field_of_mut_param__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = make_text(n)
+    return n
+
+
+func call_text__fresh_call__field_of_mut_param__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__fresh_call__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__const_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = p[0:2]
+    return read_text(c)
+
+
+func call_text__param_slice__const_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__const_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__const_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const c = copy(p[0:2])
+    return read_text(c)
+
+
+func call_text__param_slice__const_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__const_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__mut_bind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = p[0:2]
+    return read_text(c)
+
+
+func call_text__param_slice__mut_bind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__mut_bind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__mut_bind__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = copy(p[0:2])
+    return read_text(c)
+
+
+func call_text__param_slice__mut_bind__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__mut_bind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__mut_rebind__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut c = p[0:2]
+    if n > 3:
+        c = r.name
+    return read_text(c)
+
+
+func call_text__param_slice__mut_rebind__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__record_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const b = TextBox(value=copy(p[0:2]))
+    return read_text(b.value)
+
+
+func call_text__param_slice__record_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__record_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__record_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> TextBox:
+    return TextBox(value=copy(p[0:2]))
+
+
+func call_text__param_slice__record_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_slice__record_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_slice__some_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    const s: str? = Some(copy(p[0:2]))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_text(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_text__param_slice__some_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__some_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__list_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut l: str[] = []
+    append(mut l, copy(p[0:2]))
+    return len(l)
+
+
+func call_text__param_slice__list_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__list_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__list_returned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str[]:
+    mut l: str[] = []
+    append(mut l, copy(p[0:2]))
+    return l
+
+
+func call_text__param_slice__list_returned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_slice__list_returned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_slice__dict_local__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, str] = {}
+    d[n] = copy(p[0:2])
+    return len(d)
+
+
+func call_text__param_slice__dict_local__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__dict_local__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__arg_plain__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(p[0:2])
+
+
+func call_text__param_slice__arg_plain__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__arg_plain__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__arg_plain__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return read_text(copy(p[0:2]))
+
+
+func call_text__param_slice__arg_plain__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__arg_plain__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__arg_own__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    return keep_text(copy(p[0:2]))
+
+
+func call_text__param_slice__arg_own__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__arg_own__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__return_owned__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str:
+    return copy(p[0:2])
+
+
+func call_text__param_slice__return_owned__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_slice__return_owned__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_slice__return_from__bare(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> str from p:
+    return p[0:2]
+
+
+func call_text__param_slice__return_from__bare() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_text__param_slice__return_from__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_text__param_slice__list_out_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    append(mut out, copy(p[0:2]))
+    return len(out)
+
+
+func call_text__param_slice__list_out_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__list_out_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_text__param_slice__field_of_mut_param__copy(p: str, own o: str, r: Rec, ts: str[], mut m: str, mut out: str[], mut mr: Rec, n: int) -> int:
+    mr.name = copy(p[0:2])
+    return n
+
+
+func call_text__param_slice__field_of_mut_param__copy() -> int:
+    const p = make_text(1)
+    const o = make_text(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_text(4)]
+    mut m = make_text(5)
+    mut out: str[] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_text__param_slice__field_of_mut_param__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func main() -> int:
+    mut total = 0
+    total = total + call_text__local__const_bind__bare()
+    total = total + call_text__local__const_bind__own()
+    total = total + call_text__local__const_bind__copy()
+    total = total + call_text__local__mut_bind__bare()
+    total = total + call_text__local__mut_bind__own()
+    total = total + call_text__local__mut_bind__copy()
+    total = total + call_text__local__mut_rebind__bare()
+    total = total + call_text__local__record_local__bare()
+    total = total + call_text__local__record_local__own()
+    total = total + call_text__local__record_local__copy()
+    total = total + call_text__local__record_returned__own()
+    total = total + call_text__local__record_returned__copy()
+    total = total + call_text__local__some_local__bare()
+    total = total + call_text__local__some_local__own()
+    total = total + call_text__local__some_local__copy()
+    total = total + call_text__local__list_local__bare()
+    total = total + call_text__local__list_local__own()
+    total = total + call_text__local__list_local__copy()
+    total = total + call_text__local__list_returned__own()
+    total = total + call_text__local__list_returned__copy()
+    total = total + call_text__local__dict_local__bare()
+    total = total + call_text__local__dict_local__own()
+    total = total + call_text__local__dict_local__copy()
+    total = total + call_text__local__arg_plain__bare()
+    total = total + call_text__local__arg_plain__copy()
+    total = total + call_text__local__arg_own__own()
+    total = total + call_text__local__arg_own__copy()
+    total = total + call_text__local__return_owned__bare()
+    total = total + call_text__local__return_owned__copy()
+    total = total + call_text__local__list_out_param__own()
+    total = total + call_text__local__list_out_param__copy()
+    total = total + call_text__local__field_of_mut_param__own()
+    total = total + call_text__local__field_of_mut_param__copy()
+    total = total + call_text__param__const_bind__bare()
+    total = total + call_text__param__const_bind__copy()
+    total = total + call_text__param__mut_bind__bare()
+    total = total + call_text__param__mut_bind__copy()
+    total = total + call_text__param__mut_rebind__bare()
+    total = total + call_text__param__record_local__bare()
+    total = total + call_text__param__record_local__copy()
+    total = total + call_text__param__record_returned__copy()
+    total = total + call_text__param__some_local__bare()
+    total = total + call_text__param__some_local__copy()
+    total = total + call_text__param__list_local__bare()
+    total = total + call_text__param__list_local__copy()
+    total = total + call_text__param__list_returned__copy()
+    total = total + call_text__param__dict_local__bare()
+    total = total + call_text__param__dict_local__copy()
+    total = total + call_text__param__arg_plain__bare()
+    total = total + call_text__param__arg_plain__copy()
+    total = total + call_text__param__arg_own__copy()
+    total = total + call_text__param__return_owned__copy()
+    total = total + call_text__param__return_from__bare()
+    total = total + call_text__param__list_out_param__copy()
+    total = total + call_text__param__field_of_mut_param__copy()
+    total = total + call_text__own_param__const_bind__bare()
+    total = total + call_text__own_param__const_bind__own()
+    total = total + call_text__own_param__const_bind__copy()
+    total = total + call_text__own_param__mut_bind__bare()
+    total = total + call_text__own_param__mut_bind__own()
+    total = total + call_text__own_param__mut_bind__copy()
+    total = total + call_text__own_param__mut_rebind__bare()
+    total = total + call_text__own_param__record_local__bare()
+    total = total + call_text__own_param__record_local__own()
+    total = total + call_text__own_param__record_local__copy()
+    total = total + call_text__own_param__record_returned__own()
+    total = total + call_text__own_param__record_returned__copy()
+    total = total + call_text__own_param__some_local__bare()
+    total = total + call_text__own_param__some_local__own()
+    total = total + call_text__own_param__some_local__copy()
+    total = total + call_text__own_param__list_local__bare()
+    total = total + call_text__own_param__list_local__own()
+    total = total + call_text__own_param__list_local__copy()
+    total = total + call_text__own_param__list_returned__own()
+    total = total + call_text__own_param__list_returned__copy()
+    total = total + call_text__own_param__dict_local__bare()
+    total = total + call_text__own_param__dict_local__own()
+    total = total + call_text__own_param__dict_local__copy()
+    total = total + call_text__own_param__arg_plain__bare()
+    total = total + call_text__own_param__arg_plain__copy()
+    total = total + call_text__own_param__arg_own__own()
+    total = total + call_text__own_param__arg_own__copy()
+    total = total + call_text__own_param__return_owned__bare()
+    total = total + call_text__own_param__return_owned__copy()
+    total = total + call_text__own_param__list_out_param__own()
+    total = total + call_text__own_param__list_out_param__copy()
+    total = total + call_text__own_param__field_of_mut_param__own()
+    total = total + call_text__own_param__field_of_mut_param__copy()
+    total = total + call_text__param_field__const_bind__bare()
+    total = total + call_text__param_field__const_bind__copy()
+    total = total + call_text__param_field__mut_bind__bare()
+    total = total + call_text__param_field__mut_bind__copy()
+    total = total + call_text__param_field__mut_rebind__bare()
+    total = total + call_text__param_field__record_local__bare()
+    total = total + call_text__param_field__record_local__copy()
+    total = total + call_text__param_field__record_returned__copy()
+    total = total + call_text__param_field__some_local__bare()
+    total = total + call_text__param_field__some_local__copy()
+    total = total + call_text__param_field__list_local__bare()
+    total = total + call_text__param_field__list_local__copy()
+    total = total + call_text__param_field__list_returned__copy()
+    total = total + call_text__param_field__dict_local__bare()
+    total = total + call_text__param_field__dict_local__copy()
+    total = total + call_text__param_field__arg_plain__bare()
+    total = total + call_text__param_field__arg_plain__copy()
+    total = total + call_text__param_field__arg_own__copy()
+    total = total + call_text__param_field__return_owned__copy()
+    total = total + call_text__param_field__return_from__bare()
+    total = total + call_text__param_field__list_out_param__copy()
+    total = total + call_text__param_field__field_of_mut_param__copy()
+    total = total + call_text__param_element__const_bind__bare()
+    total = total + call_text__param_element__const_bind__copy()
+    total = total + call_text__param_element__mut_bind__bare()
+    total = total + call_text__param_element__mut_bind__copy()
+    total = total + call_text__param_element__mut_rebind__bare()
+    total = total + call_text__param_element__record_local__bare()
+    total = total + call_text__param_element__record_local__copy()
+    total = total + call_text__param_element__record_returned__copy()
+    total = total + call_text__param_element__some_local__bare()
+    total = total + call_text__param_element__some_local__copy()
+    total = total + call_text__param_element__list_local__bare()
+    total = total + call_text__param_element__list_local__copy()
+    total = total + call_text__param_element__list_returned__copy()
+    total = total + call_text__param_element__dict_local__bare()
+    total = total + call_text__param_element__dict_local__copy()
+    total = total + call_text__param_element__arg_plain__bare()
+    total = total + call_text__param_element__arg_plain__copy()
+    total = total + call_text__param_element__arg_own__copy()
+    total = total + call_text__param_element__return_owned__copy()
+    total = total + call_text__param_element__return_from__bare()
+    total = total + call_text__param_element__list_out_param__copy()
+    total = total + call_text__param_element__field_of_mut_param__copy()
+    total = total + call_text__from_call__const_bind__bare()
+    total = total + call_text__from_call__const_bind__copy()
+    total = total + call_text__from_call__mut_bind__bare()
+    total = total + call_text__from_call__mut_bind__copy()
+    total = total + call_text__from_call__mut_rebind__bare()
+    total = total + call_text__from_call__record_local__copy()
+    total = total + call_text__from_call__record_returned__copy()
+    total = total + call_text__from_call__some_local__copy()
+    total = total + call_text__from_call__list_local__copy()
+    total = total + call_text__from_call__list_returned__copy()
+    total = total + call_text__from_call__dict_local__copy()
+    total = total + call_text__from_call__arg_plain__bare()
+    total = total + call_text__from_call__arg_plain__copy()
+    total = total + call_text__from_call__arg_own__copy()
+    total = total + call_text__from_call__return_owned__copy()
+    total = total + call_text__from_call__return_from__bare()
+    total = total + call_text__from_call__list_out_param__copy()
+    total = total + call_text__from_call__field_of_mut_param__copy()
+    total = total + call_text__local_field__const_bind__bare()
+    total = total + call_text__local_field__const_bind__own()
+    total = total + call_text__local_field__const_bind__copy()
+    total = total + call_text__local_field__mut_bind__bare()
+    total = total + call_text__local_field__mut_bind__own()
+    total = total + call_text__local_field__mut_bind__copy()
+    total = total + call_text__local_field__mut_rebind__bare()
+    total = total + call_text__local_field__record_local__bare()
+    total = total + call_text__local_field__record_local__own()
+    total = total + call_text__local_field__record_local__copy()
+    total = total + call_text__local_field__record_returned__own()
+    total = total + call_text__local_field__record_returned__copy()
+    total = total + call_text__local_field__some_local__bare()
+    total = total + call_text__local_field__some_local__own()
+    total = total + call_text__local_field__some_local__copy()
+    total = total + call_text__local_field__list_local__bare()
+    total = total + call_text__local_field__list_local__own()
+    total = total + call_text__local_field__list_local__copy()
+    total = total + call_text__local_field__list_returned__own()
+    total = total + call_text__local_field__list_returned__copy()
+    total = total + call_text__local_field__dict_local__bare()
+    total = total + call_text__local_field__dict_local__own()
+    total = total + call_text__local_field__dict_local__copy()
+    total = total + call_text__local_field__arg_plain__bare()
+    total = total + call_text__local_field__arg_plain__copy()
+    total = total + call_text__local_field__arg_own__own()
+    total = total + call_text__local_field__arg_own__copy()
+    total = total + call_text__local_field__return_owned__own()
+    total = total + call_text__local_field__return_owned__copy()
+    total = total + call_text__local_field__list_out_param__own()
+    total = total + call_text__local_field__list_out_param__copy()
+    total = total + call_text__local_field__field_of_mut_param__own()
+    total = total + call_text__local_field__field_of_mut_param__copy()
+    total = total + call_text__mut_param__const_bind__bare()
+    total = total + call_text__mut_param__const_bind__copy()
+    total = total + call_text__mut_param__mut_bind__bare()
+    total = total + call_text__mut_param__mut_bind__copy()
+    total = total + call_text__mut_param__mut_rebind__bare()
+    total = total + call_text__mut_param__record_local__bare()
+    total = total + call_text__mut_param__record_local__copy()
+    total = total + call_text__mut_param__record_returned__copy()
+    total = total + call_text__mut_param__some_local__bare()
+    total = total + call_text__mut_param__some_local__copy()
+    total = total + call_text__mut_param__list_local__bare()
+    total = total + call_text__mut_param__list_local__copy()
+    total = total + call_text__mut_param__list_returned__copy()
+    total = total + call_text__mut_param__dict_local__bare()
+    total = total + call_text__mut_param__dict_local__copy()
+    total = total + call_text__mut_param__arg_plain__bare()
+    total = total + call_text__mut_param__arg_plain__copy()
+    total = total + call_text__mut_param__arg_own__copy()
+    total = total + call_text__mut_param__return_owned__copy()
+    total = total + call_text__mut_param__return_from__bare()
+    total = total + call_text__mut_param__list_out_param__copy()
+    total = total + call_text__mut_param__field_of_mut_param__copy()
+    total = total + call_text__mut_param_field__const_bind__bare()
+    total = total + call_text__mut_param_field__const_bind__copy()
+    total = total + call_text__mut_param_field__mut_bind__bare()
+    total = total + call_text__mut_param_field__mut_bind__copy()
+    total = total + call_text__mut_param_field__mut_rebind__bare()
+    total = total + call_text__mut_param_field__record_local__bare()
+    total = total + call_text__mut_param_field__record_local__copy()
+    total = total + call_text__mut_param_field__record_returned__copy()
+    total = total + call_text__mut_param_field__some_local__bare()
+    total = total + call_text__mut_param_field__some_local__copy()
+    total = total + call_text__mut_param_field__list_local__bare()
+    total = total + call_text__mut_param_field__list_local__copy()
+    total = total + call_text__mut_param_field__list_returned__copy()
+    total = total + call_text__mut_param_field__dict_local__bare()
+    total = total + call_text__mut_param_field__dict_local__copy()
+    total = total + call_text__mut_param_field__arg_plain__bare()
+    total = total + call_text__mut_param_field__arg_plain__copy()
+    total = total + call_text__mut_param_field__arg_own__copy()
+    total = total + call_text__mut_param_field__return_owned__copy()
+    total = total + call_text__mut_param_field__return_from__bare()
+    total = total + call_text__mut_param_field__list_out_param__copy()
+    total = total + call_text__mut_param_field__field_of_mut_param__copy()
+    total = total + call_text__fresh_call__const_bind__bare()
+    total = total + call_text__fresh_call__mut_bind__bare()
+    total = total + call_text__fresh_call__record_local__bare()
+    total = total + call_text__fresh_call__record_returned__bare()
+    total = total + call_text__fresh_call__some_local__bare()
+    total = total + call_text__fresh_call__list_local__bare()
+    total = total + call_text__fresh_call__list_returned__bare()
+    total = total + call_text__fresh_call__dict_local__bare()
+    total = total + call_text__fresh_call__arg_plain__bare()
+    total = total + call_text__fresh_call__arg_own__bare()
+    total = total + call_text__fresh_call__return_owned__bare()
+    total = total + call_text__fresh_call__list_out_param__bare()
+    total = total + call_text__fresh_call__field_of_mut_param__bare()
+    total = total + call_text__param_slice__const_bind__bare()
+    total = total + call_text__param_slice__const_bind__copy()
+    total = total + call_text__param_slice__mut_bind__bare()
+    total = total + call_text__param_slice__mut_bind__copy()
+    total = total + call_text__param_slice__mut_rebind__bare()
+    total = total + call_text__param_slice__record_local__copy()
+    total = total + call_text__param_slice__record_returned__copy()
+    total = total + call_text__param_slice__some_local__copy()
+    total = total + call_text__param_slice__list_local__copy()
+    total = total + call_text__param_slice__list_returned__copy()
+    total = total + call_text__param_slice__dict_local__copy()
+    total = total + call_text__param_slice__arg_plain__bare()
+    total = total + call_text__param_slice__arg_plain__copy()
+    total = total + call_text__param_slice__arg_own__copy()
+    total = total + call_text__param_slice__return_owned__copy()
+    total = total + call_text__param_slice__return_from__bare()
+    total = total + call_text__param_slice__list_out_param__copy()
+    total = total + call_text__param_slice__field_of_mut_param__copy()
+    if total < 0:
+        return 3
+    return 0

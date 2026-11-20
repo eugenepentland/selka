@@ -1,0 +1,10 @@
+# A dictionary with integer keys past the small size (the probe over 16-slot control groups).
+func main() -> int:
+    mut seen: dict[int, int] = {}
+    for i in range(200):
+        seen[i * 13 % 997] = i
+    mut total = 0
+    for k in range(997):
+        if k in seen:
+            total += seen[k]
+    return (total + len(seen)) % 256

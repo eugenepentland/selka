@@ -1,0 +1,8 @@
+Build Summary: 19/19 steps succeeded; 38/3559 tests passed (3521 skipped)
+test-units success
++- verification action unit member 0 38 pass, 3521 skip (3559 total) 30s MaxRSS:205M
+   +- compile test debug native success 9s MaxRSS:754M
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native cached 9ms MaxRSS:40M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 3s

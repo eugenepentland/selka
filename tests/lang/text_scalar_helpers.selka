@@ -1,0 +1,70 @@
+# spec-case: TEXT-SCALARS-1
+import lists
+import strings
+
+public func test_char_count_counts_scalars_in_every_text() -> bool:
+    return strings.char_count("") == 0 and strings.char_count("abc") == 3 and strings.char_count("héllo") == 5 and strings.char_count("日本語") == 3
+
+
+# spec-case: TEXT-SCALARS-1
+public func test_char_at_returns_the_one_scalar_text_at_a_scalar_position() -> bool:
+    return strings.char_at("héllo", 0) == "h" and strings.char_at("héllo", 1) == "é" and strings.char_at("日本語", 2) == "語" and strings.char_at("abc", 2) == "c"
+
+
+# spec-case: TEXT-SCALARS-1
+public func test_char_slice_copies_scalars_and_clamps_its_end() -> bool:
+    return strings.char_slice("héllo", 1, 3) == "él" and strings.char_slice("héllo", None, 2) == "hé" and strings.char_slice("héllo", 2, None) == "llo" and strings.char_slice("héllo", 0, 99) == "héllo" and strings.char_slice("héllo", 4, 2) == ""
+
+
+# spec-case: TEXT-SCALARS-1
+public func test_char_stride_walks_scalars_with_a_step() -> bool:
+    return strings.char_stride("abcdef", None, None, 2) == "ace" and strings.char_stride("abcdef", 1, None, 2) == "bdf" and strings.char_stride("abcdef", None, 4, 2) == "ac" and strings.char_stride("abcdef", 0, 5, 3) == "ad"
+
+
+# spec-case: TEXT-SCALARS-1
+public func test_chars_loop_yields_one_scalar_texts_in_order() -> bool:
+    mut seen = ""
+    mut count = 0
+    for character in strings.chars("héllo"):
+        seen += character
+        count += 1
+    return seen == "héllo" and count == 5 and strings.char_count(seen) == strings.char_count("héllo")
+
+
+# spec-case: TEXT-SCALARS-1
+public func test_bytes_loop_yields_the_octets_of_valid_text() -> bool:
+    mut count = 0
+    mut first = -1
+    mut last = -1
+    for octet in strings.bytes("héllo"):
+        if first < 0:
+            first = octet
+        last = octet
+        count += 1
+    return count == 6 and first == 104 and last == 111
+
+
+# spec-case: TEXT-SCALARS-1
+public func test_list_stride_copies_elements_with_a_step() -> bool:
+    const values = [10, 20, 30, 40, 50]
+    const every_other = lists.stride(values, None, None, 2)
+    const middle = lists.stride(values, 1, 4, 2)
+    return every_other == [10, 30, 50] and middle == [20, 40] and len(values) == 5
+
+
+func main() -> int:
+    if not test_char_count_counts_scalars_in_every_text():
+        return 1
+    if not test_char_at_returns_the_one_scalar_text_at_a_scalar_position():
+        return 2
+    if not test_char_slice_copies_scalars_and_clamps_its_end():
+        return 3
+    if not test_char_stride_walks_scalars_with_a_step():
+        return 4
+    if not test_chars_loop_yields_one_scalar_texts_in_order():
+        return 5
+    if not test_bytes_loop_yields_the_octets_of_valid_text():
+        return 6
+    if not test_list_stride_copies_elements_with_a_step():
+        return 7
+    return 0

@@ -1,0 +1,3 @@
+func main() -> int:
+    mut xs = [1, 2, 3]
+    return xs[-1]

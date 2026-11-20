@@ -1,0 +1,33 @@
+record Tok:
+    kind: int
+    text: str
+    pos: int
+
+record Parser:
+    toks: Tok[]
+    i: int
+
+record Call:
+    name: str
+    args: str[]
+    pos: int
+
+func cur(p: Parser) -> Tok from p:
+    return p.toks[p.i]
+
+func advance(mut p: Parser):
+    p.i += 1
+
+func word(mut p: Parser) -> str:
+    const w = copy(cur(p).text)
+    advance(mut p)
+    return w
+
+func parse(mut p: Parser) -> Call:
+    mut t = cur(p)
+    mut args: str[] = []
+    while t.kind != 0:
+        const a = word(mut p)
+        append(mut args, a)
+        t = cur(p)
+    return Call(name="f", args=args, pos=t.pos)

@@ -1,0 +1,33 @@
+# Proof steps S2: a function's return interval takes the branches that dominate each `ret`, so a caller knows what an
+# `@ensures` on the result says. `clamp` bounds its result with `if`s (its clause folds), `wrapped` with a kept clause
+# (its passing edges carry the bound); either way `xs[...]` below has its bounds check proved.
+@ensures(result >= 0 and result < 3)
+func clamp(value: int) -> int:
+    if value < 0:
+        return 0
+    if value > 2:
+        return 2
+    return value
+
+
+@ensures(result >= 0 and result < 3)
+func wrapped(value: int) -> int:
+    return value % 7 - 2
+
+
+func pick(i: int) -> int:
+    const xs: int[] = [10, 20, 30]
+    return xs[clamp(i - 3)]
+
+
+func pick_wrapped(i: int) -> int:
+    const xs: int[] = [10, 20, 30]
+    return xs[wrapped(i)]
+
+
+func main(args: str[], out: Stream) -> int:
+    # With n arguments, clamp sees n - 3: 0 and 1 to 3 arguments give 10, 4 gives 20, 5 and more give 30.
+    print(out, pick(len(args)))
+    if len(args) % 7 >= 2 and len(args) % 7 <= 4:
+        print(out, pick_wrapped(len(args)))
+    return 0

@@ -1,0 +1,23 @@
+# A Unicode marker keeps the fix spans tied to UTF-8 bytes: λ.
+public func choose(left: str[], right: str[], take_left: bool) -> str[]:
+    if take_left:
+        return left
+    return right
+
+
+public func view(data: bytes) -> bytes:
+    return data[1:3]
+
+
+public func checked(value: str, failed: bool) -> str fails str:
+    if failed:
+        fail "rejected"
+    return value[0:2]
+
+
+public func through(mut values: str[]) -> str[]:
+    return values
+
+
+public func generic[T](value: T) -> T:
+    return value

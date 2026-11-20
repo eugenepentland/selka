@@ -1,0 +1,8 @@
+func scale(n: int) -> int:
+    mut total = 0
+    for index in range(n):
+        total = total + index * 10
+    return total
+
+
+public const STEP: int = scale(4)

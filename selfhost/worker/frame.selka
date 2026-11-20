@@ -1,0 +1,88 @@
+# The framed message of a resident component worker (component-worker-v1), read from standard input and written to
+# standard output: a 64-octet header and a payload, the envelope of component-protocol-v1 with its own magic.
+#
+#   offset  width  meaning
+#   0       8      ASCII magic `SLKWRK01`
+#   8       4      envelope version, exactly 1
+#   12      4      operation schema, exactly 1 (the echo operation)
+#   16      4      message kind: 0 request, 1 reply, 2 quit
+#   20      4      payload length in octets, at most 16 MiB, 0 for a quit
+#   24      8      request id, opaque, echoed unchanged
+#   32      32     snapshot identity, opaque, echoed unchanged
+#
+# All integers are unsigned little-endian. A header that fails any rule makes the worker diagnose on standard error
+# and exit with status 1, writing nothing: the host reads that as a failed exchange and never as a reply.
+import binary
+import byte_builder
+
+# The fields of a decoded header. `request_id` has 8 octets and `snapshot` 32.
+public record Header:
+    kind: int
+    payload_length: int
+    request_id: bytes
+    snapshot: bytes
+
+
+# Largest payload either side accepts.
+public func max_payload() -> int:
+    return 16777216
+
+
+# The message kinds, as the header spells them.
+public func request_kind() -> int:
+    return 0
+
+
+public func reply_kind() -> int:
+    return 1
+
+
+public func quit_kind() -> int:
+    return 2
+
+
+# The frame for `kind` with the opaque identity and the payload.
+public func encode(kind: int, request_id: bytes, snapshot: bytes, payload: bytes) -> bytes:
+    mut out = byte_builder.create()
+    byte_builder.append(mut out, b"SLKWRK01")
+    binary.put_u32_le(mut out, 1)
+    binary.put_u32_le(mut out, 1)
+    binary.put_u32_le(mut out, u32(kind))
+    binary.put_u32_le(mut out, u32(len(payload)))
+    byte_builder.append(mut out, request_id)
+    byte_builder.append(mut out, snapshot)
+    byte_builder.append(mut out, payload)
+    return byte_builder.finish(out)
+
+
+# Read one number of the header; the length was checked, so a failure here is a bug, reported as a short header.
+func field(data: bytes, at: int) -> int fails str:
+    mut position = at
+    match binary.get_u32_le(data, mut position):
+        case Ok(value):
+            return int(value)
+        case Err(_):
+            fail "worker frame: short header"
+
+
+# Validate and decode the 64 octets of a header.
+public func decode_header(data: bytes) -> Header fails str:
+    if len(data) != 64:
+        fail "worker frame: short header"
+    if data[0:8] != b"SLKWRK01":
+        fail "worker frame: bad magic"
+    const version = try field(data, 8)
+    if version != 1:
+        fail "worker frame: unsupported protocol version"
+    const schema = try field(data, 12)
+    if schema != 1:
+        fail "worker frame: unsupported operation schema"
+    const kind = try field(data, 16)
+    if kind > 2:
+        fail "worker frame: unknown message kind"
+    const length = try field(data, 20)
+    if length > max_payload():
+        fail "worker frame: payload over the limit"
+    if kind == 2 and length != 0:
+        fail "worker frame: a quit frame carries no payload"
+    return Header(kind=kind, payload_length=length, request_id=copy(data[24:32]), snapshot=copy(data[32:64]))

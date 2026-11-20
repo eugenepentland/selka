@@ -1,0 +1,16 @@
+# A list extended with an element of itself: one list, read at one index, so the append reads the list itself.
+import lists
+
+func self_extend(source_index: int) -> int:
+    mut rows: int[][][] = [[], []]
+    lists.extend(mut rows[0], rows[0])
+    for value in range(4):
+        append(mut rows[0], [value])
+    lists.extend(mut rows[0], rows[0])
+    lists.extend(mut rows[0], rows[source_index])
+    return len(rows[0])
+
+
+func main(out: Stream) -> int:
+    print(out, self_extend(1))
+    return 0

@@ -1,0 +1,183 @@
+import lists
+
+func transfer(mut left: str[], mut right: str[]) -> Unit:
+    append(mut right, copy(left[0]))
+    lists.clear(mut left)
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_literal_sibling_mut_arguments_keep_owners_independent() -> bool:
+    mut rows = [["left-" + str(1)], ["right-" + str(2)]]
+    transfer(mut rows[0], mut rows[1])
+    return rows == [[], ["right-2", "left-1"]]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_literal_sibling_callback_arguments_keep_owners_independent() -> bool:
+    const callback: func(mut str[], mut str[]) -> Unit = transfer
+    mut rows = [["left-" + str(1)], ["right-" + str(2)]]
+    callback(mut rows[0], mut rows[1])
+    return rows == [[], ["right-2", "left-1"]]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_nested_literal_sibling_arguments_preserve_unrelated_owners() -> bool:
+    mut rows = [[["left-" + str(1)], ["right-" + str(2)]], [["untouched"]]]
+    transfer(mut rows[0][0], mut rows[0][1])
+    return rows == [[[], ["right-2", "left-1"]], [["untouched"]]]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_reversed_literal_arguments_preserve_call_order() -> bool:
+    mut rows = [["left-" + str(1)], ["right-" + str(2)]]
+    transfer(mut rows[1], mut rows[0])
+    return rows == [["left-1", "right-2"], []]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_separate_nested_ancestors_preserve_other_children() -> bool:
+    mut rows = [[["left-" + str(1)], ["first untouched"]], [["right-" + str(2)], ["second untouched"]]]
+    transfer(mut rows[0][0], mut rows[1][0])
+    return rows == [[[], ["first untouched"]], [["right-2", "left-1"], ["second untouched"]]]
+
+
+func distribute(mut first: str[], mut second: str[], mut third: str[]) -> Unit:
+    append(mut second, copy(first[0]))
+    append(mut third, copy(first[0]))
+    lists.clear(mut first)
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_three_managed_arguments_reattach_each_child_once() -> bool:
+    mut rows = [["first-" + str(1)], ["second-" + str(2)], ["third-" + str(3)], ["untouched"]]
+    distribute(mut rows[0], mut rows[1], mut rows[2])
+    return rows == [[], ["second-2", "first-1"], ["third-3", "first-1"], ["untouched"]]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_nested_callback_rebuilds_shared_ancestors_once() -> bool:
+    const callback: func(mut str[], mut str[]) -> Unit = transfer
+    mut rows = [[["left-" + str(1)], ["right-" + str(2)]], [["untouched"]]]
+    callback(mut rows[0][0], mut rows[0][1])
+    return rows == [[[], ["right-2", "left-1"]], [["untouched"]]]
+
+
+func transfer_depths(mut left: str[][], mut right: str[]) -> Unit:
+    append(mut right, copy(left[0][0]))
+    lists.clear(mut left)
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_unequal_list_depths_keep_disjoint_owners() -> bool:
+    mut rows = [[["left-" + str(1)], ["left untouched"]], [["right-" + str(2)], ["right untouched"]]]
+    transfer_depths(mut rows[0], mut rows[1][0])
+    return rows == [[], [["right-2", "left-1"], ["right untouched"]]]
+
+
+func join_text(mut left: str, mut right: str) -> Unit:
+    right = right + left
+    left = ""
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_text_leaf_arguments_keep_their_owners() -> bool:
+    mut words = ["left-" + str(1), "right-" + str(2), "untouched"]
+    join_text(mut words[0], mut words[1])
+    return words == ["", "right-2left-1", "untouched"]
+
+
+func join_bytes(mut left: bytes, mut right: bytes) -> Unit:
+    right = right + left
+    left = b""
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_bytes_leaf_arguments_keep_their_owners() -> bool:
+    mut words = [b"left", b"right", b"untouched"]
+    join_bytes(mut words[0], mut words[1])
+    return words == [b"", b"rightleft", b"untouched"]
+
+
+record Payload:
+    first: str
+    second: str[]
+
+
+func transfer_records(mut left: Payload, mut right: Payload) -> Unit:
+    right.first = right.first + left.first
+    append(mut right.second, copy(left.second[0]))
+    left.first = ""
+    lists.clear(mut left.second)
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_inline_record_leaves_transfer_all_owned_fields_once() -> bool:
+    mut rows = [Payload(first="left-" + str(1), second=["first"]), Payload(first="right-" + str(2), second=["second"])]
+    transfer_records(mut rows[0], mut rows[1])
+    return rows[0].first == "" and rows[0].second == [] and rows[1].first == "right-2left-1" and rows[1].second == ["second", "first"]
+
+
+func transfer_arrays(mut left: FixedArray[str, 2], mut right: FixedArray[str, 2]) -> Unit:
+    right[0] = right[0] + left[0]
+    right[1] = right[1] + left[1]
+    left[0] = ""
+    left[1] = ""
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_inline_fixed_array_leaves_transfer_all_owned_elements_once() -> bool:
+    mut rows = [FixedArray[str, 2](["left-" + str(1), "first"]), FixedArray[str, 2](["right-" + str(2), "second"])]
+    transfer_arrays(mut rows[0], mut rows[1])
+    return rows[0][0] == "" and rows[0][1] == "" and rows[1][0] == "right-2left-1" and rows[1][1] == "secondfirst"
+
+
+func append_first(mut left: str[], right: str[]) -> Unit:
+    append(mut left, copy(right[0]))
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_read_sibling_element_beside_a_mutable_element_keeps_both_owners() -> bool:
+    mut rows = [["left-" + str(1)], ["right-" + str(2)], ["untouched"]]
+    append_first(mut rows[0], rows[1])
+    append_first(mut rows[2], rows[0])
+    return rows == [["left-1", "right-2"], ["right-2"], ["untouched", "left-1"]]
+
+
+record Holder:
+    rows: str[][]
+    order: int[]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_literal_elements_of_a_list_held_in_a_field_keep_their_owners() -> bool:
+    mut holder = Holder(rows=[["left-" + str(1)], ["right-" + str(2)]], order=[1, 0])
+    transfer(mut holder.rows[0], mut holder.rows[1])
+    append_first(mut holder.rows[0], holder.rows[1])
+    return holder.rows == [["right-2"], ["right-2", "left-1"]]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_iterating_one_field_while_a_sibling_field_grows_keeps_every_owner() -> bool:
+    mut holder = Holder(rows=[["a-" + str(1)], ["b-" + str(2)]], order=[1, 0, 1])
+    for at in holder.order:
+        append(mut holder.rows[at], "step-" + str(at))
+    return holder.rows == [["a-1", "step-0"], ["b-2", "step-1", "step-1"]]
+
+
+func main() -> int:
+    assert test_literal_sibling_mut_arguments_keep_owners_independent()
+    assert test_literal_sibling_callback_arguments_keep_owners_independent()
+    assert test_nested_literal_sibling_arguments_preserve_unrelated_owners()
+    assert test_reversed_literal_arguments_preserve_call_order()
+    assert test_separate_nested_ancestors_preserve_other_children()
+    assert test_three_managed_arguments_reattach_each_child_once()
+    assert test_nested_callback_rebuilds_shared_ancestors_once()
+    assert test_unequal_list_depths_keep_disjoint_owners()
+    assert test_text_leaf_arguments_keep_their_owners()
+    assert test_bytes_leaf_arguments_keep_their_owners()
+    assert test_inline_record_leaves_transfer_all_owned_fields_once()
+    assert test_inline_fixed_array_leaves_transfer_all_owned_elements_once()
+    assert test_read_sibling_element_beside_a_mutable_element_keeps_both_owners()
+    assert test_literal_elements_of_a_list_held_in_a_field_keep_their_owners()
+    assert test_iterating_one_field_while_a_sibling_field_grows_keeps_every_owner()
+    return 0

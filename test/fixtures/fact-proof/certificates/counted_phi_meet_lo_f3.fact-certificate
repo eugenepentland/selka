@@ -1,0 +1,70 @@
+fact-certificate-v1
+function main linkage internal addr 0 params other ret i64
+param 0 -
+returns 0 0
+block b- reach preds -
+inst %0 param other none a - b - x - imm 0 aux 0 range -
+inst %1 str_const other none a - b - x - imm 0 aux 0 range -
+inst %3 iconst u64 none a - b - x - imm 0 aux 0 range -
+inst %7 iconst i64 none a - b - x - imm 0 aux 0 range -
+block b0 reach preds -
+inst %2 str_len u64 none a %1 b - x - imm 0 aux 0 range 0 140737488355328
+inst %4 str_view_of other none a %1 b %3 x %2 imm 0 aux 0 range -
+inst %5 call i64 none a #1 b - x %4,%1 imm 0 aux 0 range 0 9223372036854775807
+inst %6 print void none a - b - x %0,%5 imm 0 aux 0 range -
+term ret %7
+end
+function decode linkage internal addr 0 params other,other ret i64
+param 0 -
+param 1 -
+returns 0 9223372036854775807
+block b- reach preds -
+inst %0 param other none a - b - x - imm 0 aux 0 range -
+inst %1 param other none a - b - x - imm 1 aux 0 range -
+inst %2 iconst i64 none a - b - x - imm 0 aux 0 range -
+inst %3 iconst i64 none a - b - x - imm 0 aux 0 range -
+inst %4 iconst i64 none a - b - x - imm 0 aux 0 range -
+inst %14 iconst i64 none a - b - x - imm 64 aux 0 range -
+inst %16 iconst i64 none a - b - x - imm 1 aux 0 range -
+inst %19 iconst i64 none a - b - x - imm 6 aux 0 range -
+inst %21 iconst i64 none a - b - x - imm 8 aux 0 range -
+inst %24 iconst i64 none a - b - x - imm 8 aux 0 range -
+inst %26 iconst i64 none a - b - x - imm 16 aux 0 range -
+inst %31 iconst i64 none a - b - x - imm 1 aux 0 range -
+block b0 reach preds -
+inst %5 text_frame other none a %1 b %0 x - imm 0 aux 0 range -
+inst %6 str_len u64 none a %0 b - x - imm 0 aux 0 range 0 140737488355328
+inst %7 convert i64 proven a %6 b - x - imm 0 aux 0 range 0 140737488355328
+term jump b1
+block b1 reach preds b0,b3
+phi %9 i64 edges b0:%4,b3:%32 range 0 140737488355328
+phi %13 i64 edges b0:%2,b3:%35 range 0 9223372036854775807
+phi %18 i64 edges b0:%3,b3:%36 range -281474976710631 844424930131968
+inst %11 cmp bool none a %9 b %7 x - imm 2 aux 0 range 0 1
+term branch %11 b2 b4
+block b2 reach preds b1
+inst %15 mul i64 exact a %13 b %14 x - imm 0 aux 0 range 0 9223372036854775807
+inst %17 add i64 exact a %15 b %16 x - imm 0 aux 0 range 1 9223372036854775807
+inst %20 add i64 proven a %18 b %19 x - imm 0 aux 0 range -281474976710632 844424930131974
+inst %22 cmp bool none a %20 b %21 x - imm 5 aux 0 range 0 1
+term branch %22 b5 b6
+block b3 reach preds b6
+inst %32 add i64 proven a %9 b %31 x - imm 0 aux 0 range 1 140737488355328
+term jump b1
+block b4 reach preds b1
+term ret %13
+block b5 reach preds b2
+inst %25 sub i64 proven a %20 b %24 x - imm 0 aux 0 range 0 844424930131966
+inst %27 floor_rem i64 proven a %17 b %26 x - imm 0 aux 0 range 0 15
+term jump b6
+block b6 reach preds b2,b5
+phi %35 i64 edges b2:%17,b5:%27 range 0 9223372036854775807
+phi %36 i64 edges b2:%20,b5:%25 range -281474976710632 844424930131974
+term jump b3
+loop header b1 body b2 latch b3 exit b4
+site %7 0:140737488355328
+site %20 -281474976710638:844424930131968 6:6
+site %32 0:140737488355327 1:1
+site %25 8:844424930131974 8:8
+site %27 1:9223372036854775807 16:16
+end

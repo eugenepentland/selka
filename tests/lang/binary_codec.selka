@@ -1,0 +1,242 @@
+# The `binary` record codec: exact octets for every width and varint boundary, round trips, length-prefixed bytes and
+# text (views of the input), and clean failures: every proper prefix of a valid record is `Truncated`, an overlong
+# varint is `Overlong`, invalid UTF-8 is `Text`, and a failed read leaves the position where it was.
+import binary
+import byte_builder
+import hex
+
+func wrote_u16(mut builder: byte_builder.Builder):
+    binary.put_u16_le(mut builder, 0xabcdu16)
+
+
+func wrote_u32(mut builder: byte_builder.Builder):
+    binary.put_u32_le(mut builder, 0x01020304u32)
+
+
+func wrote_u64(mut builder: byte_builder.Builder):
+    binary.put_u64_le(mut builder, 0x0102030405060708u64)
+
+
+func wrote_signed(mut builder: byte_builder.Builder):
+    binary.put_i8(mut builder, i8(-2))
+    binary.put_i16_le(mut builder, i16(-2))
+    binary.put_i32_le(mut builder, i32(-2))
+    binary.put_i64_le(mut builder, -2)
+
+
+func every_width(mut builder: byte_builder.Builder):
+    binary.put_u8(mut builder, 255u8)
+    wrote_u16(mut builder)
+    wrote_u32(mut builder)
+    wrote_u64(mut builder)
+    wrote_signed(mut builder)
+
+
+func encoded(build: func(mut builder: byte_builder.Builder) -> Unit) -> bytes:
+    mut builder = byte_builder.create()
+    build(mut builder)
+    return byte_builder.finish(builder)
+
+
+public func test_fixed_widths_are_little_endian() -> bool:
+    return hex.encode(encoded(wrote_u16)) == "cdab" and hex.encode(encoded(wrote_u32)) == "04030201" and hex.encode(encoded(wrote_u64)) == "0807060504030201"
+
+
+public func test_signed_widths_are_twos_complement() -> bool:
+    return hex.encode(encoded(wrote_signed)) == "fe" + "feff" + "feffffff" + "feffffffffffffff"
+
+
+func uvarint_hex(value: u64) -> str:
+    mut builder = byte_builder.create()
+    binary.put_uvarint(mut builder, value)
+    return hex.encode(byte_builder.finish(builder))
+
+
+func varint_hex(value: i64) -> str:
+    mut builder = byte_builder.create()
+    binary.put_varint(mut builder, value)
+    return hex.encode(byte_builder.finish(builder))
+
+
+public func test_unsigned_varints_have_the_leb128_octets() -> bool:
+    return uvarint_hex(0u64) == "00" and uvarint_hex(1u64) == "01" and uvarint_hex(127u64) == "7f" and uvarint_hex(128u64) == "8001" and uvarint_hex(300u64) == "ac02" and uvarint_hex(16383u64) == "ff7f" and uvarint_hex(16384u64) == "808001" and uvarint_hex(18446744073709551615u64) == "ffffffffffffffffff01"
+
+
+public func test_signed_varints_are_zigzag() -> bool:
+    return varint_hex(0) == "00" and varint_hex(-1) == "01" and varint_hex(1) == "02" and varint_hex(-2) == "03" and varint_hex(63) == "7e" and varint_hex(-64) == "7f" and varint_hex(64) == "8001" and varint_hex(9223372036854775807) == "feffffffffffffffff01" and varint_hex(-9223372036854775807 - 1) == "ffffffffffffffffff01"
+
+
+func read_every_width(data: bytes) -> bool fails binary.Error:
+    mut at = 0
+    const a = try binary.get_u8(data, mut at)
+    const b = try binary.get_u16_le(data, mut at)
+    const c = try binary.get_u32_le(data, mut at)
+    const d = try binary.get_u64_le(data, mut at)
+    const e = try binary.get_i8(data, mut at)
+    const f = try binary.get_i16_le(data, mut at)
+    const g = try binary.get_i32_le(data, mut at)
+    const h = try binary.get_i64_le(data, mut at)
+    return a == 255u8 and b == 0xabcdu16 and c == 0x01020304u32 and d == 0x0102030405060708u64 and e == i8(-2) and f == i16(-2) and g == i32(-2) and h == -2 and binary.at_end(data, at)
+
+
+public func test_every_width_reads_back() -> bool:
+    match read_every_width(encoded(every_width)):
+        case Ok(same):
+            return same
+        case Err(_):
+            return False
+
+
+func varint_round_trip(unsigned: u64, signed: i64) -> bool fails binary.Error:
+    mut builder = byte_builder.create()
+    binary.put_uvarint(mut builder, unsigned)
+    binary.put_varint(mut builder, signed)
+    const data = byte_builder.finish(builder)
+    mut at = 0
+    const first = try binary.get_uvarint(data, mut at)
+    const second = try binary.get_varint(data, mut at)
+    return first == unsigned and second == signed and binary.at_end(data, at)
+
+
+public func test_varints_round_trip_across_the_range() -> bool:
+    mut good = 0
+    const unsigned: u64[] = [0u64, 1u64, 127u64, 128u64, 255u64, 16384u64, 4294967295u64, 4294967296u64, 9223372036854775808u64, 18446744073709551615u64]
+    const signed: int[] = [0, 1, -1, 63, -64, 64, -65, 2147483647, -2147483648, 9223372036854775807, -9223372036854775807 - 1]
+    for u in unsigned:
+        for s in signed:
+            match varint_round_trip(u, s):
+                case Ok(same):
+                    if same:
+                        good += 1
+                case Err(_):
+                    good += 0
+    return good == len(unsigned) * len(signed)
+
+
+func record_bytes() -> bytes:
+    mut builder = byte_builder.create()
+    binary.put_bytes(mut builder, b"\x00\x01\x02")
+    binary.put_text(mut builder, "λ€ ok")
+    binary.put_bytes(mut builder, b"")
+    binary.put_text(mut builder, "")
+    return byte_builder.finish(builder)
+
+
+func read_record(data: bytes) -> bool fails binary.Error:
+    mut at = 0
+    const blob = try binary.get_bytes(data, mut at)
+    const text = try binary.get_text(data, mut at)
+    const empty_blob = try binary.get_bytes(data, mut at)
+    const empty_text = try binary.get_text(data, mut at)
+    return blob == b"\x00\x01\x02" and text == "λ€ ok" and len(empty_blob) == 0 and len(empty_text) == 0 and binary.at_end(data, at)
+
+
+public func test_length_prefixed_bytes_and_text_round_trip() -> bool:
+    match read_record(record_bytes()):
+        case Ok(same):
+            return same
+        case Err(_):
+            return False
+
+
+public func test_the_length_prefix_counts_octets() -> bool:
+    return hex.encode(record_bytes()) == "03000102" + "08" + "cebbe282ac206f6b" + "00" + "00"
+
+
+func read_record_prefix(data: bytes) -> bool fails binary.Error:
+    mut at = 0
+    const blob = try binary.get_bytes(data, mut at)
+    const text = try binary.get_text(data, mut at)
+    const empty_blob = try binary.get_bytes(data, mut at)
+    const empty_text = try binary.get_text(data, mut at)
+    return len(blob) + len(text) + len(empty_blob) + len(empty_text) >= 0
+
+
+func truncated(data: bytes) -> bool:
+    match read_record_prefix(data):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Truncated:
+                    return True
+                case Overlong:
+                    return False
+                case Text:
+                    return False
+
+
+public func test_every_proper_prefix_of_a_record_is_truncated() -> bool:
+    const data = record_bytes()
+    mut failures = 0
+    for cut in range(len(data)):
+        if truncated(data[:cut]):
+            failures += 1
+    return failures == len(data)
+
+
+func position_after_failure(data: bytes) -> int:
+    mut at = 0
+    match binary.get_u32_le(data, mut at):
+        case Ok(_):
+            return -1
+        case Err(_):
+            return at
+
+
+public func test_a_failed_read_leaves_the_position_in_place() -> bool:
+    return position_after_failure(b"\x01\x02\x03") == 0 and position_after_failure(b"") == 0
+
+
+func varint_error(data: bytes) -> int:
+    mut at = 0
+    match binary.get_uvarint(data, mut at):
+        case Ok(_):
+            return 0
+        case Err(error):
+            match error:
+                case Truncated:
+                    return at + 1
+                case Overlong:
+                    return 100 + at
+                case Text:
+                    return -1
+
+
+public func test_a_short_varint_is_truncated_and_a_long_one_is_overlong() -> bool:
+    return varint_error(b"") == 1 and varint_error(b"\x80") == 1 and varint_error(b"\xff\xff\xff") == 1 and varint_error(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80") == 100 and varint_error(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x02") == 100 and varint_error(b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01") == 0
+
+
+func text_error(data: bytes) -> int:
+    mut at = 0
+    match binary.get_text(data, mut at):
+        case Ok(_):
+            return 0
+        case Err(error):
+            match error:
+                case Truncated:
+                    return 1 + at * 10
+                case Overlong:
+                    return 2
+                case Text:
+                    return 3 + at * 10
+
+
+public func test_invalid_utf8_text_fails_and_keeps_the_position() -> bool:
+    return text_error(b"\x02\xc3\x28") == 3 and text_error(b"\x01\xff") == 3 and text_error(b"\x05ab") == 1 and text_error(b"\x80") == 1
+
+
+public func test_remaining_and_at_end_track_the_position() -> bool:
+    const data = b"\x01\x02\x03"
+    mut at = 0
+    if binary.remaining(data, at) != 3 or binary.at_end(data, at):
+        return False
+    match binary.get_u16_le(data, mut at):
+        case Ok(_):
+            return binary.remaining(data, at) == 1 and not binary.at_end(data, at)
+        case Err(_):
+            return False
+
+
+public func test_messages_name_each_failure() -> bool:
+    return binary.message(binary.Error.Truncated) != binary.message(binary.Error.Overlong) and binary.message(binary.Error.Overlong) != binary.message(binary.Error.Text)

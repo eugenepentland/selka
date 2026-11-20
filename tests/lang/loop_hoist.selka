@@ -1,0 +1,135 @@
+# Loop-invariant counts and fields (lane D4, route (a)): a loop caches a list's count or a
+# record field only when the loop provably keeps it, so each test below changes its list inside
+# the loop in a way the cache must not miss.
+import lists
+
+record Box:
+    xs: int[]
+    ys: int[]
+
+
+func grow(mut xs: int[]):
+    append(mut xs, 7)
+
+
+# An append in the loop changes the count the next check reads.
+public func test_append_in_loop_is_seen_by_the_next_check() -> bool:
+    mut xs: int[] = []
+    mut total = 0
+    for i in range(4):
+        append(mut xs, i * 10)
+        total = total + xs[i]
+    return total == 60
+
+
+# A `mut` call in the loop changes the count the next check reads.
+public func test_mut_call_in_loop_is_seen_by_the_next_check() -> bool:
+    mut xs: int[] = [1]
+    mut total = 0
+    for i in range(3):
+        grow(mut xs)
+        total = total + xs[i + 1]
+    return total == 21
+
+
+# A field written with a list of another count: the cached count of that field must not be used.
+public func test_field_replaced_with_a_longer_list_is_seen() -> bool:
+    mut b = Box(xs=[1], ys=[100, 200, 300])
+    mut total = 0
+    for i in range(3):
+        total = total + b.xs[i] + b.ys[i]
+        b.xs = [1, 2, 3]
+    return total == 1 + 100 + 2 + 200 + 3 + 300
+
+
+# An element write keeps the count, so its checks may use the same count; the values still change.
+public func test_element_write_keeps_the_count_for_the_next_check() -> bool:
+    mut b = Box(xs=[1, 2, 3], ys=[])
+    mut total = 0
+    for i in range(3):
+        b.xs[i] = b.xs[i] * 10
+        total = total + b.xs[i]
+    return total == 60
+
+
+# A list element replaced in the loop: its old record's lists are gone, so its fields are re-read.
+public func test_owner_element_replaced_in_loop_is_seen() -> bool:
+    mut boxes: Box[] = [Box(xs=[1, 2], ys=[5])]
+    mut total = 0
+    for i in range(2):
+        total = total + boxes[0].xs[i]
+        boxes[0] = Box(xs=[10, 20, 30], ys=[5])
+    return total == 21
+
+
+record Poses:
+    pos: int[]
+
+
+func fill_poses(n: int) -> Poses:
+    mut result = Poses(pos=[])
+    for s in range(n):
+        append(mut result.pos, s)
+    for k in range(n):
+        result.pos[k] = 7
+    return result
+
+
+# A list in a record field, appended before the loop that writes it: the loop's count is the list
+# as it stands after the appends, not the empty list the record was built with.
+public func test_field_appended_before_loop_is_written_in_loop() -> bool:
+    mut result = Poses(pos=[])
+    append(mut result.pos, 0)
+    append(mut result.pos, 1)
+    append(mut result.pos, 2)
+    for k in range(3):
+        result.pos[k] = 7
+    return result.pos[2] == 7
+
+
+# The same through a helper that returns the record.
+public func test_field_filled_in_a_helper_is_written_in_loop() -> bool:
+    const p = fill_poses(3)
+    return p.pos[2] == 7
+
+
+# Pops before the loop: the loop reads the list as it stands after the pops.
+public func test_field_popped_before_loop_reads_the_current_count() -> bool:
+    mut result = Poses(pos=[1, 2, 3])
+    _ = lists.pop(mut result.pos)
+    _ = lists.pop(mut result.pos)
+    mut total = 0
+    for k in range(1):
+        total = total + result.pos[k]
+    return total == 1
+
+
+# A field replaced by another list before the loop: the loop reads the new list.
+public func test_field_replaced_before_loop_reads_the_new_list() -> bool:
+    mut result = Poses(pos=[1, 2])
+    result.pos = [5, 6, 7]
+    mut total = 0
+    for k in range(3):
+        total = total + result.pos[k]
+    return total == 18
+
+
+# Appends before the loop, then reads every element in the loop: the elements are the appended ones.
+public func test_field_appended_then_read_in_loop() -> bool:
+    mut result = Poses(pos=[])
+    for s in range(20):
+        append(mut result.pos, s * 3)
+    mut total = 0
+    for k in range(20):
+        total = total + result.pos[k]
+    return total == 570
+
+
+# A list appended in the loop, across many reallocations: the element pointer and count are re-read.
+public func test_field_appended_in_loop_across_reallocation() -> bool:
+    mut result = Poses(pos=[])
+    mut total = 0
+    for k in range(200):
+        append(mut result.pos, k)
+        total = total + result.pos[k]
+    return total == 19900

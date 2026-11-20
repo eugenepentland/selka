@@ -1,0 +1,16 @@
+# Text: format strings with plain holes, concatenation, comparison, split, a search.
+import strings
+
+func main() -> int:
+    mut s = ""
+    for i in range(25):
+        s = s + f"<{i}:{i * i}>"
+    const parts = strings.split("a,bb,ccc,dddd", ",")
+    mut total = len(s)
+    for p in parts:
+        total += len(p)
+    if "<24:576>" in s:
+        total += 100
+    if s != "<0:0><1:1>":
+        total += 7
+    return total % 256

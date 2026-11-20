@@ -1,0 +1,83 @@
+import record_constant_defaults_support as geo
+import testing
+
+# A record field may default to a non-empty bytes literal, a module constant (its own or an imported one) and so to NaN and
+# infinity. The default is a static constant of the declaring module: reading it allocates nothing, and the constructing
+# function's own names never reach it.
+const CAP: int = 3
+
+
+record Tag:
+    shape: bytes = b"GND"
+    code: int = CAP
+    id: int
+
+
+func shapes(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        const g = geo.Geometry(id=i)
+        total += len(g.shape) + len(g.named) + len(g.label) + g.cap + g.width
+    return total
+
+
+func tags(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        const t = Tag(id=i)
+        total += len(t.shape) + t.code
+    return total
+
+
+public func test_a_bytes_literal_default_fills_an_omitted_field() -> bool:
+    const plain = Tag(id=1)
+    const named = Tag(id=2, shape=b"VCC")
+    return plain.shape == b"GND" and len(plain.shape) == 3 and named.shape == b"VCC" and plain.id + named.id == 3
+
+
+public func test_a_module_constant_default_is_read_where_it_is_declared() -> bool:
+    # `CAP` here is 3; the support module's private `CAP` is 40, and `Tag` reads this module's.
+    const g = geo.Geometry(id=1)
+    const t = Tag(id=1)
+    return g.cap == 40 and g.below == -40 and t.code == 3
+
+
+public func test_every_constant_kind_reads_as_the_constant() -> bool:
+    const g = geo.Geometry(id=1)
+    return g.named == b"rect" and g.shape == b"round" and g.label == "auto" and g.ratio == 0.5 and g.on and g.width == geo.WIDTH
+
+
+public func test_nan_and_infinity_defaults() -> bool:
+    const g = geo.Geometry(id=1)
+    return g.unset != g.unset and g.top > 1.0e300 and g.bottom < -1.0e300 and g.top == geo.TOP and g.bottom == -geo.TOP
+
+
+public func test_a_required_field_after_defaulted_fields_is_named_in_construction() -> bool:
+    const a = geo.Geometry(id=5)
+    const b = geo.Geometry(width=1, id=6, cap=2)
+    return a.id == 5 and b.id == 6 and b.width == 1 and b.cap == 2 and b.below == -40
+
+
+public func test_a_default_record_with_defaults_of_its_own() -> bool:
+    const layer = geo.Layer()
+    return layer.base.id == 7 and layer.base.shape == b"round" and layer.named.shape == b"square" and layer.named.cap == 40 and layer.note == b"layer"
+
+
+public func test_a_generic_record_default_reads_its_module() -> bool:
+    const a = geo.Wrapper[int](value=1)
+    const b = geo.Wrapper[str](value="s", tag=b"other")
+    return a.tag == b"wrapped" and a.cap == 40 and b.tag == b"other" and b.cap == 40 and b.value == "s"
+
+
+public func test_a_default_read_in_a_loop_allocates_nothing_per_pass() -> bool:
+    return testing.allocations(shapes, 10) == testing.allocations(shapes, 1000) and testing.allocations(tags, 10) == testing.allocations(tags, 1000)
+
+
+public func test_the_loops_compute_what_the_defaults_say() -> bool:
+    return tags(4) == 4 * (3 + 3) and shapes(2) == 2 * (5 + 4 + 4 + 40 + 12)
+
+
+public func test_take_leaves_a_record_built_from_its_defaults() -> bool:
+    mut layer = geo.Layer(note=b"mine")
+    const old = take(mut layer)
+    return old.note == b"mine" and layer.note == b"layer" and layer.base.id == 7

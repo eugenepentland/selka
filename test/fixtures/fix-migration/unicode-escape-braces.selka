@@ -1,0 +1,5 @@
+# A Unicode escape written with braces, as Rust and JavaScript write it, is refused: the spelling is `\u` and four hexadecimal
+# digits. `selka fix` writes the same digits that way when the braces hold one to four of them.
+func main(out: Stream) -> int:
+    print(out, "\u{fffd} \u{e9} \u{41}")
+    return 0

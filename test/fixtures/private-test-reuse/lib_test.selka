@@ -1,0 +1,11 @@
+import lib
+
+public func test_the_private_page() -> bool:
+    const out = lib.page("x")
+    assert out.status == 200, "the status"
+    return True
+
+
+public func test_the_public_function() -> bool:
+    assert lib.serve("/") == 200, "serve"
+    return True

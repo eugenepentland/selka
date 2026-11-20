@@ -1,0 +1,1351 @@
+# An `own` parameter of each managed kind, used each way: unused, read, a part read, lent to a borrowing call, a part
+# or the whole moved out, read in a loop, and read on one branch while moved on the other (lane G, D-G-1). The gate's
+# Debug compiler validates the ownership certificate of every function it builds; before D-G-1 an `own` record whose
+# managed fields were each read once (the record, record2 and inlined borrow cells) was lowered as an emptied record,
+# a parameter state the certificate cannot state (E_OWNERSHIP_VALIDATION, J1).
+import sets
+
+record Holder:
+    refs: str[]
+    n: int
+
+
+record Holder2:
+    refs: str[]
+    name: str
+
+
+record Outer:
+    inner: Holder
+    tag: str
+
+
+enum Slot:
+    empty
+    pair(left: str[], right: str[])
+    one(value: Holder)
+
+
+func sink_list(own xs: str[]) -> int:
+    mut keep: str[][] = []
+    append(mut keep, own xs)
+    return len(keep)
+
+
+func sink_h(own h: Holder) -> int:
+    mut keep: Holder[] = []
+    append(mut keep, own h)
+    return len(keep)
+
+
+func make_list(n: int) -> int[]:
+    return [n, n + 1]
+
+
+func borrow_kind_list(x: int[]) -> int:
+    return len(x)
+
+
+func sink_kind_list(own x: int[]) -> int:
+    mut keep: int[][] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func list_unused(own p: int[], flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_list_unused() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_unused(own v, True) + list_unused(own w, False) == 0
+
+
+func list_read(own p: int[], flag: bool) -> int:
+    mut r = 0
+    r = len(p)
+    return r
+
+
+public func test_own_list_read() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_read(own v, True) + list_read(own w, False) == 4
+
+
+func list_part_read(own p: int[], flag: bool) -> int:
+    mut r = 0
+    r = r + p[0]
+    return r
+
+
+public func test_own_list_part_read() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_part_read(own v, True) + list_part_read(own w, False) == 3
+
+
+func list_borrow_call(own p: int[], flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_list(p)
+    return r
+
+
+public func test_own_list_borrow_call() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_borrow_call(own v, True) + list_borrow_call(own w, False) == 4
+
+
+func list_move_whole(own p: int[], flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_list(own p)
+    return r
+
+
+public func test_own_list_move_whole() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_move_whole(own v, True) + list_move_whole(own w, False) == 2
+
+
+func list_loop_read(own p: int[], flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + p[0]
+    return r
+
+
+public func test_own_list_loop_read() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_loop_read(own v, True) + list_loop_read(own w, False) == 9
+
+
+func list_branch(own p: int[], flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + p[0]
+    else:
+        r = r + sink_kind_list(own p)
+    return r
+
+
+public func test_own_list_branch() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_branch(own v, True) + list_branch(own w, False) == 2
+
+
+func list_branch_whole(own p: int[], flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + p[0]
+    else:
+        r = r + sink_kind_list(own p)
+    return r
+
+
+public func test_own_list_branch_whole() -> bool:
+    const v = make_list(1)
+    const w = make_list(2)
+    return list_branch_whole(own v, True) + list_branch_whole(own w, False) == 2
+
+
+func make_dict(n: int) -> dict[str, int]:
+    mut d: dict[str, int] = {}
+    d["a"] = n
+    return d
+
+
+func borrow_kind_dict(x: dict[str, int]) -> int:
+    return len(x)
+
+
+func sink_kind_dict(own x: dict[str, int]) -> int:
+    mut keep: dict[str, int][] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func dict_unused(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_dict_unused() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_unused(own v, True) + dict_unused(own w, False) == 0
+
+
+func dict_read(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    r = len(p)
+    return r
+
+
+public func test_own_dict_read() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_read(own v, True) + dict_read(own w, False) == 2
+
+
+func dict_part_read(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    r = r + p["a"]
+    return r
+
+
+public func test_own_dict_part_read() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_part_read(own v, True) + dict_part_read(own w, False) == 3
+
+
+func dict_borrow_call(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_dict(p)
+    return r
+
+
+public func test_own_dict_borrow_call() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_borrow_call(own v, True) + dict_borrow_call(own w, False) == 2
+
+
+func dict_move_whole(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_dict(own p)
+    return r
+
+
+public func test_own_dict_move_whole() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_move_whole(own v, True) + dict_move_whole(own w, False) == 2
+
+
+func dict_loop_read(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + p["a"]
+    return r
+
+
+public func test_own_dict_loop_read() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_loop_read(own v, True) + dict_loop_read(own w, False) == 9
+
+
+func dict_branch(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + p["a"]
+    else:
+        r = r + sink_kind_dict(own p)
+    return r
+
+
+public func test_own_dict_branch() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_branch(own v, True) + dict_branch(own w, False) == 2
+
+
+func dict_branch_whole(own p: dict[str, int], flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + p["a"]
+    else:
+        r = r + sink_kind_dict(own p)
+    return r
+
+
+public func test_own_dict_branch_whole() -> bool:
+    const v = make_dict(1)
+    const w = make_dict(2)
+    return dict_branch_whole(own v, True) + dict_branch_whole(own w, False) == 2
+
+
+func make_set(n: int) -> set[int]:
+    mut s: set[int] = set()
+    sets.include(mut s, n)
+    return s
+
+
+func borrow_kind_set(x: set[int]) -> int:
+    return len(x)
+
+
+func sink_kind_set(own x: set[int]) -> int:
+    mut keep: set[int][] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func set_unused(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_set_unused() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_unused(own v, True) + set_unused(own w, False) == 0
+
+
+func set_read(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    r = len(p)
+    return r
+
+
+public func test_own_set_read() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_read(own v, True) + set_read(own w, False) == 2
+
+
+func set_part_read(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    if 1 in p:
+        r = r + 1
+    return r
+
+
+public func test_own_set_part_read() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_part_read(own v, True) + set_part_read(own w, False) == 1
+
+
+func set_borrow_call(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_set(p)
+    return r
+
+
+public func test_own_set_borrow_call() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_borrow_call(own v, True) + set_borrow_call(own w, False) == 2
+
+
+func set_move_whole(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_set(own p)
+    return r
+
+
+public func test_own_set_move_whole() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_move_whole(own v, True) + set_move_whole(own w, False) == 2
+
+
+func set_loop_read(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        if 1 in p:
+            r = r + 1
+    return r
+
+
+public func test_own_set_loop_read() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_loop_read(own v, True) + set_loop_read(own w, False) == 3
+
+
+func set_branch(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    if flag:
+        if 1 in p:
+            r = r + 1
+    else:
+        r = r + sink_kind_set(own p)
+    return r
+
+
+public func test_own_set_branch() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_branch(own v, True) + set_branch(own w, False) == 2
+
+
+func set_branch_whole(own p: set[int], flag: bool) -> int:
+    mut r = 0
+    if flag:
+        if 1 in p:
+            r = r + 1
+    else:
+        r = r + sink_kind_set(own p)
+    return r
+
+
+public func test_own_set_branch_whole() -> bool:
+    const v = make_set(1)
+    const w = make_set(2)
+    return set_branch_whole(own v, True) + set_branch_whole(own w, False) == 2
+
+
+func make_str(n: int) -> str:
+    return "ab" + str(n)
+
+
+func borrow_kind_str(x: str) -> int:
+    return len(x)
+
+
+func sink_kind_str(own x: str) -> int:
+    mut keep: str[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func str_unused(own p: str, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_str_unused() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_unused(own v, True) + str_unused(own w, False) == 0
+
+
+func str_read(own p: str, flag: bool) -> int:
+    mut r = 0
+    r = len(p)
+    return r
+
+
+public func test_own_str_read() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_read(own v, True) + str_read(own w, False) == 6
+
+
+func str_part_read(own p: str, flag: bool) -> int:
+    mut r = 0
+    r = r + len(p[0:1])
+    return r
+
+
+public func test_own_str_part_read() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_part_read(own v, True) + str_part_read(own w, False) == 2
+
+
+func str_borrow_call(own p: str, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_str(p)
+    return r
+
+
+public func test_own_str_borrow_call() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_borrow_call(own v, True) + str_borrow_call(own w, False) == 6
+
+
+func str_move_whole(own p: str, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_str(own p)
+    return r
+
+
+public func test_own_str_move_whole() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_move_whole(own v, True) + str_move_whole(own w, False) == 2
+
+
+func str_loop_read(own p: str, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + len(p[0:1])
+    return r
+
+
+public func test_own_str_loop_read() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_loop_read(own v, True) + str_loop_read(own w, False) == 6
+
+
+func str_branch(own p: str, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p[0:1])
+    else:
+        r = r + sink_kind_str(own p)
+    return r
+
+
+public func test_own_str_branch() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_branch(own v, True) + str_branch(own w, False) == 2
+
+
+func str_branch_whole(own p: str, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p[0:1])
+    else:
+        r = r + sink_kind_str(own p)
+    return r
+
+
+public func test_own_str_branch_whole() -> bool:
+    const v = make_str(1)
+    const w = make_str(2)
+    return str_branch_whole(own v, True) + str_branch_whole(own w, False) == 2
+
+
+func make_bytes(n: int) -> bytes:
+    return b"abc"
+
+
+func borrow_kind_bytes(x: bytes) -> int:
+    return len(x)
+
+
+func sink_kind_bytes(own x: bytes) -> int:
+    mut keep: bytes[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func bytes_unused(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_bytes_unused() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_unused(own v, True) + bytes_unused(own w, False) == 0
+
+
+func bytes_read(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    r = len(p)
+    return r
+
+
+public func test_own_bytes_read() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_read(own v, True) + bytes_read(own w, False) == 6
+
+
+func bytes_part_read(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    r = r + len(p[0:1])
+    return r
+
+
+public func test_own_bytes_part_read() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_part_read(own v, True) + bytes_part_read(own w, False) == 2
+
+
+func bytes_borrow_call(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_bytes(p)
+    return r
+
+
+public func test_own_bytes_borrow_call() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_borrow_call(own v, True) + bytes_borrow_call(own w, False) == 6
+
+
+func bytes_move_whole(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_bytes(own p)
+    return r
+
+
+public func test_own_bytes_move_whole() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_move_whole(own v, True) + bytes_move_whole(own w, False) == 2
+
+
+func bytes_loop_read(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + len(p[0:1])
+    return r
+
+
+public func test_own_bytes_loop_read() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_loop_read(own v, True) + bytes_loop_read(own w, False) == 6
+
+
+func bytes_branch(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p[0:1])
+    else:
+        r = r + sink_kind_bytes(own p)
+    return r
+
+
+public func test_own_bytes_branch() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_branch(own v, True) + bytes_branch(own w, False) == 2
+
+
+func bytes_branch_whole(own p: bytes, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p[0:1])
+    else:
+        r = r + sink_kind_bytes(own p)
+    return r
+
+
+public func test_own_bytes_branch_whole() -> bool:
+    const v = make_bytes(1)
+    const w = make_bytes(2)
+    return bytes_branch_whole(own v, True) + bytes_branch_whole(own w, False) == 2
+
+
+func make_record(n: int) -> Holder:
+    return Holder(refs=["a" + str(n)], n=n)
+
+
+func borrow_kind_record(x: Holder) -> int:
+    return len(x.refs)
+
+
+func sink_kind_record(own x: Holder) -> int:
+    mut keep: Holder[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func record_unused(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_record_unused() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_unused(own v, True) + record_unused(own w, False) == 0
+
+
+func record_read(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    r = p.n
+    return r
+
+
+public func test_own_record_read() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_read(own v, True) + record_read(own w, False) == 3
+
+
+func record_part_read(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    r = r + len(p.refs)
+    return r
+
+
+public func test_own_record_part_read() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_part_read(own v, True) + record_part_read(own w, False) == 2
+
+
+func record_borrow_call(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_record(p)
+    return r
+
+
+public func test_own_record_borrow_call() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_borrow_call(own v, True) + record_borrow_call(own w, False) == 2
+
+
+func record_move_field(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_list(own p.refs)
+    return r
+
+
+public func test_own_record_move_field() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_move_field(own v, True) + record_move_field(own w, False) == 2
+
+
+func record_move_whole(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_record(own p)
+    return r
+
+
+public func test_own_record_move_whole() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_move_whole(own v, True) + record_move_whole(own w, False) == 2
+
+
+func record_loop_read(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + len(p.refs)
+    return r
+
+
+public func test_own_record_loop_read() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_loop_read(own v, True) + record_loop_read(own w, False) == 6
+
+
+func record_branch(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p.refs)
+    else:
+        r = r + sink_list(own p.refs)
+    return r
+
+
+public func test_own_record_branch() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_branch(own v, True) + record_branch(own w, False) == 2
+
+
+func record_branch_whole(own p: Holder, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p.refs)
+    else:
+        r = r + sink_kind_record(own p)
+    return r
+
+
+public func test_own_record_branch_whole() -> bool:
+    const v = make_record(1)
+    const w = make_record(2)
+    return record_branch_whole(own v, True) + record_branch_whole(own w, False) == 2
+
+
+func make_record2(n: int) -> Holder2:
+    return Holder2(refs=["a"], name="b" + str(n))
+
+
+func borrow_kind_record2(x: Holder2) -> int:
+    return len(x.refs)
+
+
+func sink_kind_record2(own x: Holder2) -> int:
+    mut keep: Holder2[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func record2_unused(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_record2_unused() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_unused(own v, True) + record2_unused(own w, False) == 0
+
+
+func record2_read(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    r = len(p.name)
+    return r
+
+
+public func test_own_record2_read() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_read(own v, True) + record2_read(own w, False) == 4
+
+
+func record2_part_read(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    r = r + len(p.refs) + len(p.name)
+    return r
+
+
+public func test_own_record2_part_read() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_part_read(own v, True) + record2_part_read(own w, False) == 6
+
+
+func record2_borrow_call(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_record2(p)
+    return r
+
+
+public func test_own_record2_borrow_call() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_borrow_call(own v, True) + record2_borrow_call(own w, False) == 2
+
+
+func record2_move_field(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_list(own p.refs)
+    return r
+
+
+public func test_own_record2_move_field() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_move_field(own v, True) + record2_move_field(own w, False) == 2
+
+
+func record2_move_whole(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_record2(own p)
+    return r
+
+
+public func test_own_record2_move_whole() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_move_whole(own v, True) + record2_move_whole(own w, False) == 2
+
+
+func record2_loop_read(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + len(p.refs) + len(p.name)
+    return r
+
+
+public func test_own_record2_loop_read() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_loop_read(own v, True) + record2_loop_read(own w, False) == 18
+
+
+func record2_branch(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p.refs) + len(p.name)
+    else:
+        r = r + sink_list(own p.refs)
+    return r
+
+
+public func test_own_record2_branch() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_branch(own v, True) + record2_branch(own w, False) == 4
+
+
+func record2_branch_whole(own p: Holder2, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p.refs) + len(p.name)
+    else:
+        r = r + sink_kind_record2(own p)
+    return r
+
+
+public func test_own_record2_branch_whole() -> bool:
+    const v = make_record2(1)
+    const w = make_record2(2)
+    return record2_branch_whole(own v, True) + record2_branch_whole(own w, False) == 4
+
+
+func make_nested(n: int) -> Outer:
+    return Outer(inner=Holder(refs=["a" + str(n)], n=n), tag="t")
+
+
+func borrow_kind_nested(x: Outer) -> int:
+    return len(x.inner.refs)
+
+
+func sink_kind_nested(own x: Outer) -> int:
+    mut keep: Outer[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func nested_unused(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_nested_unused() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_unused(own v, True) + nested_unused(own w, False) == 0
+
+
+func nested_read(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    r = len(p.tag)
+    return r
+
+
+public func test_own_nested_read() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_read(own v, True) + nested_read(own w, False) == 2
+
+
+func nested_part_read(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    r = r + len(p.inner.refs)
+    return r
+
+
+public func test_own_nested_part_read() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_part_read(own v, True) + nested_part_read(own w, False) == 2
+
+
+func nested_borrow_call(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_nested(p)
+    return r
+
+
+public func test_own_nested_borrow_call() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_borrow_call(own v, True) + nested_borrow_call(own w, False) == 2
+
+
+func nested_move_field(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_h(own p.inner)
+    return r
+
+
+public func test_own_nested_move_field() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_move_field(own v, True) + nested_move_field(own w, False) == 2
+
+
+func nested_move_whole(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_nested(own p)
+    return r
+
+
+public func test_own_nested_move_whole() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_move_whole(own v, True) + nested_move_whole(own w, False) == 2
+
+
+func nested_loop_read(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        r = r + len(p.inner.refs)
+    return r
+
+
+public func test_own_nested_loop_read() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_loop_read(own v, True) + nested_loop_read(own w, False) == 6
+
+
+func nested_branch(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p.inner.refs)
+    else:
+        r = r + sink_h(own p.inner)
+    return r
+
+
+public func test_own_nested_branch() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_branch(own v, True) + nested_branch(own w, False) == 2
+
+
+func nested_branch_whole(own p: Outer, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        r = r + len(p.inner.refs)
+    else:
+        r = r + sink_kind_nested(own p)
+    return r
+
+
+public func test_own_nested_branch_whole() -> bool:
+    const v = make_nested(1)
+    const w = make_nested(2)
+    return nested_branch_whole(own v, True) + nested_branch_whole(own w, False) == 2
+
+
+func make_option(n: int) -> str[]?:
+    if n == 0:
+        return None
+    return ["a" + str(n)]
+
+
+func borrow_kind_option(x: str[]?) -> int:
+    if x is None:
+        return 0
+    return 1
+
+
+func sink_kind_option(own x: str[]?) -> int:
+    mut keep: str[]?[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func option_unused(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_option_unused() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_unused(own v, True) + option_unused(own w, False) == 0
+
+
+func option_read(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    if p is None:
+        r = 1
+    return r
+
+
+public func test_own_option_read() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_read(own v, True) + option_read(own w, False) == 0
+
+
+func option_part_read(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    match p:
+        case Some(v):
+            r = r + len(v)
+        case None:
+            r = r + 0
+    return r
+
+
+public func test_own_option_part_read() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_part_read(own v, True) + option_part_read(own w, False) == 2
+
+
+func option_borrow_call(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_option(p)
+    return r
+
+
+public func test_own_option_borrow_call() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_borrow_call(own v, True) + option_borrow_call(own w, False) == 2
+
+
+func option_move_field(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    match own p:
+        case Some(v):
+            r = r + sink_list(own v)
+        case None:
+            r = r + 0
+    return r
+
+
+public func test_own_option_move_field() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_move_field(own v, True) + option_move_field(own w, False) == 2
+
+
+func option_move_whole(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_option(own p)
+    return r
+
+
+public func test_own_option_move_whole() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_move_whole(own v, True) + option_move_whole(own w, False) == 2
+
+
+func option_loop_read(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        match p:
+            case Some(v):
+                r = r + len(v)
+            case None:
+                r = r + 0
+    return r
+
+
+public func test_own_option_loop_read() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_loop_read(own v, True) + option_loop_read(own w, False) == 6
+
+
+func option_branch(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        match p:
+            case Some(v):
+                r = r + len(v)
+            case None:
+                r = r + 0
+    else:
+        match own p:
+            case Some(v):
+                r = r + sink_list(own v)
+            case None:
+                r = r + 0
+    return r
+
+
+public func test_own_option_branch() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_branch(own v, True) + option_branch(own w, False) == 2
+
+
+func option_branch_whole(own p: str[]?, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        match p:
+            case Some(v):
+                r = r + len(v)
+            case None:
+                r = r + 0
+    else:
+        r = r + sink_kind_option(own p)
+    return r
+
+
+public func test_own_option_branch_whole() -> bool:
+    const v = make_option(1)
+    const w = make_option(2)
+    return option_branch_whole(own v, True) + option_branch_whole(own w, False) == 2
+
+
+func make_union(n: int) -> Slot:
+    if n == 0:
+        return Slot.empty
+    return Slot.pair(left=["a" + str(n)], right=["b"])
+
+
+func borrow_kind_union(x: Slot) -> int:
+    match x:
+        case empty:
+            return 0
+        case pair(..) | one(..):
+            return 1
+
+
+func sink_kind_union(own x: Slot) -> int:
+    mut keep: Slot[] = []
+    append(mut keep, own x)
+    return len(keep)
+
+
+func union_unused(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    r = 0
+    return r
+
+
+public func test_own_union_unused() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_unused(own v, True) + union_unused(own w, False) == 0
+
+
+func union_read(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    match p:
+        case empty:
+            r = 1
+        case pair(..) | one(..):
+            r = 2
+    return r
+
+
+public func test_own_union_read() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_read(own v, True) + union_read(own w, False) == 4
+
+
+func union_part_read(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    match p:
+        case pair(left, right):
+            r = r + len(left) + len(right)
+        case one(value):
+            r = r + value.n
+        case empty:
+            r = r + 0
+    return r
+
+
+public func test_own_union_part_read() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_part_read(own v, True) + union_part_read(own w, False) == 4
+
+
+func union_borrow_call(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    r = r + borrow_kind_union(p)
+    return r
+
+
+public func test_own_union_borrow_call() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_borrow_call(own v, True) + union_borrow_call(own w, False) == 2
+
+
+func union_move_field(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    match own p:
+        case pair(left, right):
+            r = r + sink_list(own left)
+        case one(value):
+            r = r + sink_h(own value)
+        case empty:
+            r = r + 0
+    return r
+
+
+public func test_own_union_move_field() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_move_field(own v, True) + union_move_field(own w, False) == 2
+
+
+func union_move_whole(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    r = r + sink_kind_union(own p)
+    return r
+
+
+public func test_own_union_move_whole() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_move_whole(own v, True) + union_move_whole(own w, False) == 2
+
+
+func union_loop_read(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    for _ in range(3):
+        match p:
+            case pair(left, right):
+                r = r + len(left) + len(right)
+            case one(value):
+                r = r + value.n
+            case empty:
+                r = r + 0
+    return r
+
+
+public func test_own_union_loop_read() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_loop_read(own v, True) + union_loop_read(own w, False) == 12
+
+
+func union_branch(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        match p:
+            case pair(left, right):
+                r = r + len(left) + len(right)
+            case one(value):
+                r = r + value.n
+            case empty:
+                r = r + 0
+    else:
+        match own p:
+            case pair(left, right):
+                r = r + sink_list(own left)
+            case one(value):
+                r = r + sink_h(own value)
+            case empty:
+                r = r + 0
+    return r
+
+
+public func test_own_union_branch() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_branch(own v, True) + union_branch(own w, False) == 3
+
+
+func union_branch_whole(own p: Slot, flag: bool) -> int:
+    mut r = 0
+    if flag:
+        match p:
+            case pair(left, right):
+                r = r + len(left) + len(right)
+            case one(value):
+                r = r + value.n
+            case empty:
+                r = r + 0
+    else:
+        r = r + sink_kind_union(own p)
+    return r
+
+
+public func test_own_union_branch_whole() -> bool:
+    const v = make_union(1)
+    const w = make_union(2)
+    return union_branch_whole(own v, True) + union_branch_whole(own w, False) == 3

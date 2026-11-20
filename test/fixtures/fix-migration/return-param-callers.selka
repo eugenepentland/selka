@@ -1,0 +1,27 @@
+# F-8, F-15: a function that returns its parameter. Where no caller keeps the result, `selka fix` declares the result
+# `from` the parameter; where a caller keeps it, a `from` result would be lent to that caller, so the fix copies.
+record Ward:
+    issuer_url: str
+
+
+func label(status: str) -> str:
+    if status == "Needs your answer":
+        return "Needs you"
+    return status
+
+
+func https_url(url: str) -> str:
+    if url == "":
+        return "https://default"
+    return url
+
+
+func ward(text: str) -> Ward:
+    const issuer = https_url(text)
+    return Ward(issuer_url=own issuer)
+
+
+func main(out: Stream) -> int:
+    print(out, label("Queued"))
+    print(out, ward("https://a").issuer_url)
+    return 0

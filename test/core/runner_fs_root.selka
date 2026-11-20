@@ -1,0 +1,33 @@
+# The test filesystem's root is `.` (FR-419): a test can list the root it was
+# handed, and what it writes there appears in that listing.
+public func test_the_test_filesystem_root_is_dot(fs: Filesystem) -> bool:
+    match fs.write_text("note.txt", "x"):
+        case Ok(_):
+            match fs.listdir("."):
+                case Ok(names):
+                    return len(names) == 1 and names[0] == "note.txt"
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+public func test_dot_names_the_same_root_as_the_empty_path(fs: Filesystem) -> bool:
+    _ = fs.mkdir("sub")
+    match fs.listdir("."):
+        case Ok(dot):
+            match fs.listdir(""):
+                case Ok(empty):
+                    return len(dot) == 1 and len(empty) == 1 and dot[0] == empty[0] and dot[0] == "sub"
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+public func test_reading_the_root_names_a_directory_not_a_grant(fs: Filesystem) -> bool:
+    match fs.read_text("."):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "read '.': is a directory"

@@ -1,0 +1,78 @@
+# Dictionary probes: the lookup-with-absence and the two accumulating writes that
+# would otherwise need a membership test plus a second index in the caller.
+#
+# The value stored under `key`, or `None` when the mapping has no entry for it.
+# A managed value comes back as an independent copy, so the mapping stays usable
+# and the caller owns what it receives.
+public func find[K: equality, V: copy + storable](mapping: dict[K, V], key: K) -> V?:
+    if key in mapping:
+        return Some(copy(mapping[key]))
+    return None
+
+
+# Add `delta` to the integer stored under `key`, starting from zero when the
+# mapping has no entry for it yet. One probe answers both "is it there" and
+# "what is it". The key is borrowed: it is copied into the mapping only when it
+# is new, so a call that finds its key allocates nothing.
+public func add[K: equality](mut mapping: dict[K, int], key: K, delta: int):
+    mut total: int = delta
+    if key in mapping:
+        total = mapping[key] + delta
+    mapping[key] = total
+
+
+# Append `item` to the list stored under `key`, starting a list with it when the
+# mapping has no entry for it yet. The mapping takes `item`, so it is not copied;
+# the list grows in place. The key is borrowed and copied only when it is new.
+public func append_to[K: equality, V: copy + storable](mut mapping: dict[K, V[]], key: K, own item: V):
+    if key in mapping:
+        append(mut mapping[key], own item)
+    else:
+        mapping[key] = [own item]
+
+
+# The value stored under `key`, or `fallback` when the mapping has no entry. The
+# compiler supplies the lookup (`builtin func`); the answer borrows from the mapping
+# or the fallback, as `from` says, and is not copied.
+public builtin func get[K: equality, V: copy + storable](mapping: dict[K, V], key: K, fallback: V) -> V from mapping, fallback
+
+
+# Store `fallback` under `key` when the mapping has no entry, and answer the value
+# it then holds, borrowed from the mapping.
+public builtin func setdefault[K: equality, V: copy + storable](mut mapping: dict[K, V], key: K, fallback: V) -> V from mapping
+
+
+# Copy every entry of `other` into `mapping`, replacing the keys it already holds.
+public builtin func update[K: equality, V: copy + storable](mut mapping: dict[K, V], other: dict[K, V])
+
+
+# Remove the entry under `key` and answer its value, trapping `R_MISSING_KEY` when it
+# is absent.
+public builtin func pop[K: equality, V: copy + storable](mut mapping: dict[K, V], key: K) -> V
+
+
+# Remove the entry under `key` and answer its value, or `fallback` when the mapping
+# has no entry.
+public builtin func pop_default[K: equality, V: copy + storable](mut mapping: dict[K, V], key: K, fallback: V) -> V
+
+
+# Remove every entry.
+public builtin func clear[K: equality, V: copy + storable](mut mapping: dict[K, V])
+
+
+# A live view of the mapping's keys, in insertion order: `for key in dicts.keys(mapping)`
+# iterates the mapping without a copy, and `list(dicts.keys(mapping))` makes the
+# independent list. A view cannot be stored or returned, and no signature can name
+# it, so the declared `-> K[]` is the snapshot `list(...)` makes; the signature test
+# exempts this and the two below for that reason (`builtin_functions.unsigned_results`).
+public builtin func keys[K: equality, V: copy + storable](mapping: dict[K, V]) -> K[]
+
+
+# A live view of the mapping's values, in insertion order; `list(dicts.values(mapping))`
+# makes the independent list, which is what the declared result names (see `keys`).
+public builtin func values[K: equality, V: copy + storable](mapping: dict[K, V]) -> V[]
+
+
+# A live view of the mapping's entries as `DictItem` records; `list(dicts.items(mapping))`
+# makes the independent list, which is what the declared result names (see `keys`).
+public builtin func items[K: equality, V: copy + storable](mapping: dict[K, V]) -> DictItem[K, V][]

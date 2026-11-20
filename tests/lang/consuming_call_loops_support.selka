@@ -1,0 +1,8 @@
+# Lists that consuming_call_loops.selka takes straight from a call in another module (F-16).
+public record Net:
+    name: str
+    pins: str[]
+
+
+public func nets() -> Net[]:
+    return [Net(name="vcc", pins=["1", "2"]), Net(name="gnd", pins=["3"])]

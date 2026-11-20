@@ -1,0 +1,13 @@
+# parallel.map runs its items inline on one CPU.
+import parallel
+
+func square(n: int) -> int:
+    return n * n + 1
+
+
+func main() -> int:
+    const out = parallel.map([1, 2, 3, 4, 5, 6, 7, 8], square)
+    mut total = 0
+    for v in out:
+        total += v
+    return total % 256

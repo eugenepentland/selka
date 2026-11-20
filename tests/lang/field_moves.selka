@@ -1,0 +1,42 @@
+# A field moves out of a local record that is never read again (C3). The whole record is consumed, and its other
+# fields are plain managed storage that the ownership pass drops with it; an `own` parameter takes a field only when
+# its other fields are scalar. The move must be straight-line code: a conditional or looped move is refused, as are a
+# later read of the record or of a sibling and a move out of a parameter the callee does not own (see
+# src/core/field_borrow_test.zig).
+record Box:
+    items: int[]
+    names: int[]
+
+
+record Carrier:
+    items: int[]
+    tag: int
+
+
+func field_moves_take(own xs: int[]) -> int:
+    return len(xs)
+
+
+func first(own carrier: Carrier) -> int:
+    return field_moves_take(own carrier.items)
+
+
+public func test_field_moves_out_of_a_dead_record_and_the_record_is_rebuilt() -> bool:
+    const n = first(Carrier(items=[1, 2], tag=3))
+    mut box = Box(items=[4], names=[8])
+    const m = field_moves_take(own box.items)
+    box = Box(items=[9, 9], names=[1])
+    assert n == 2 and m == 1
+    assert len(box.items) == 2 and len(box.names) == 1
+    return True
+
+
+public func test_scalar_sibling_carrier_moves_out_of_an_own_parameter() -> bool:
+    assert first(Carrier(items=[1, 2], tag=3)) == 2
+    return True
+
+
+func main() -> int:
+    assert test_field_moves_out_of_a_dead_record_and_the_record_is_rebuilt()
+    assert test_scalar_sibling_carrier_moves_out_of_an_own_parameter()
+    return 0

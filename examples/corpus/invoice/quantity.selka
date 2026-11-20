@@ -1,0 +1,17 @@
+public enum InvalidQuantity:
+    outside_range
+
+
+public result Parsed:
+    ok: Count,
+    err: InvalidQuantity
+
+
+public record Count:
+    value: u16
+
+
+public func parse(value: int) -> Parsed:
+    if value < 0 or value > 99:
+        return Err(InvalidQuantity.outside_range)
+    return Ok(Count(value=u16(value)))

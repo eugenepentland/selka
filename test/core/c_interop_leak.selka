@@ -1,0 +1,27 @@
+# 100,000 copied `-> bytes` results and handle round trips under the leak check (D-FFI-3, D-FFI-4).
+extern type Thing
+
+
+extern func ffi_give(host: Host, mode: i64) -> bytes
+
+
+extern func ffi_give_heap(host: Host, n: i64) -> bytes
+
+
+extern func ffi_thing_new(host: Host, value: i64) -> Thing
+
+
+extern func ffi_thing_free(host: Host, thing: Thing) -> Unit
+
+
+extern func ffi_live_things(host: Host) -> i64
+
+
+func main(host: Host, out: Stream) -> int:
+    mut total = 0
+    for i in range(100000):
+        total += len(ffi_give(host, i % 3)) + len(ffi_give_heap(host, i % 11))
+        const thing = ffi_thing_new(host, i)
+        ffi_thing_free(host, thing)
+    print(out, total, ffi_live_things(host))
+    return 0

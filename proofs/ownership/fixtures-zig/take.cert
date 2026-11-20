@@ -1,0 +1,40 @@
+ownership-certificate-v2
+class drop Drop
+class iconst Constant
+class list_new Fresh
+class list_view_of View
+class record_make Construct
+class record_take Take
+function bad_take_holds_view result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 record_take Take reads - consumes %2 state owned parents -
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function ok_take_none_arm result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 record_take Take reads - consumes %2 state owned parents - noloans
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function ok_take_holds_view_dropped_first result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 record_take Take reads - consumes %2 state owned parents -
+inst - drop Drop reads - consumes %3 state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end

@@ -1,0 +1,111 @@
+name: CI
+# What a stranger's pull request is checked with: a fresh clone builds and runs on two Linux distributions, the sources are
+# formatted, and the guest suite passes. The complete gate (`zig build test` with its Python drivers and the Lean proofs)
+# stays on the maintainer's machine. Budget: 20 minutes a job; the first real run on GitHub sets the measured figure.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  # The stable Zig release `.zigversion` names, and the SHA-256 that https://ziglang.org/download/index.json publishes for its
+  # x86_64-linux tarball. The job that installs it compares the version with `.zigversion`.
+  ZIG_VERSION: 0.17.1
+  ZIG_SHA256: 3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a
+jobs:
+  fresh-clone:
+    name: Fresh clone on ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["debian:stable-slim", "fedora:latest"]
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: Install git, xz and curl
+        run: |
+          if command -v apt-get >/dev/null 2>&1; then
+            apt-get update
+            apt-get install --yes --no-install-recommends git xz-utils curl ca-certificates
+          else
+            dnf install --assumeyes git xz tar findutils diffutils
+            command -v curl >/dev/null 2>&1 || dnf install --assumeyes curl
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install Zig ${{ env.ZIG_VERSION }} (SHA-256 checked)
+        run: |
+          test "$ZIG_VERSION" = "$(cat .zigversion)"
+          curl --fail --silent --show-error --location --output zig.tar.xz \
+            "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz"
+          echo "${ZIG_SHA256}  zig.tar.xz" | sha256sum --check -
+          mkdir -p /opt/zig
+          tar -xJf zig.tar.xz -C /opt/zig --strip-components=1
+          rm zig.tar.xz
+          echo /opt/zig >> "$GITHUB_PATH"
+      - name: Zig is the version .zigversion names
+        run: test "$(zig version)" = "$(cat .zigversion)"
+      - name: Build
+        run: zig build
+      - name: Run a hello world
+        run: |
+          dir=$(mktemp -d)
+          printf 'func main(out: Stream) -> int:\n    print(out, "Hello, Selka!")\n    return 0\n' > "$dir/hello.selka"
+          test "$(zig-out/bin/selka run "$dir/hello.selka")" = "Hello, Selka!"
+      - name: Test a small file
+        run: |
+          set -eo pipefail
+          dir=$(mktemp -d)
+          printf 'func double(x: int) -> int:\n    return x * 2\n\npublic func test_double() -> bool:\n    return double(21) == 42\n' > "$dir/double.selka"
+          zig-out/bin/selka test "$dir/double.selka" | tee "$dir/out.txt"
+          grep -q '^1 passed, ' "$dir/out.txt"
+      - name: A second build rebuilds nothing
+        run: |
+          set -eo pipefail
+          # The logs go outside the checkout: an untracked file would change the tree the second build sees.
+          find zig-out -type f -exec sha256sum {} + | sort -k2 > "$RUNNER_TEMP/installed-before.txt"
+          zig build --summary all 2>&1 | tee "$RUNNER_TEMP/second-build.txt"
+          find zig-out -type f -exec sha256sum {} + | sort -k2 > "$RUNNER_TEMP/installed-after.txt"
+          diff "$RUNNER_TEMP/installed-before.txt" "$RUNNER_TEMP/installed-after.txt"
+          if grep -E '\+- compile ' "$RUNNER_TEMP/second-build.txt" | grep -v -E 'cached|reused'; then
+            echo "a compile step ran in the second build" >&2
+            exit 1
+          fi
+  fmt-check:
+    name: Formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "version=$(cat .zigversion)" >> "$GITHUB_OUTPUT"
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
+        with:
+          version: ${{ steps.toolchain.outputs.version }}
+          cache-key: fmt-check
+      - name: Verify exact toolchain
+        run: test "$(zig version)" = "$(cat .zigversion)"
+      - run: zig build fmt-check
+  guest-suite:
+    name: Guest suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "version=$(cat .zigversion)" >> "$GITHUB_OUTPUT"
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
+        with:
+          version: ${{ steps.toolchain.outputs.version }}
+          cache-key: guest-suite
+      - name: Verify exact toolchain
+        run: test "$(zig version)" = "$(cat .zigversion)"
+      - run: zig build test-lang --summary all

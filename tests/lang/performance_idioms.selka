@@ -1,0 +1,130 @@
+# Work per test, stated as a growth class rather than timed (`B5`). The `testing`
+# module counts the blocks a workload executes and the managed blocks the runtime
+# allocated for it, so a fixed idiom is a gated test: each asserts its class, and
+# each quadratic idiom asserts through `testing.growth` that `testing.linear`
+# would fail on it. Sizes stay inside the 1,000,000-block trial budget; a larger
+# step needs `limits.test.max_steps` in `selka.json`
+# (`docs/tooling/guest-tests.md#how-work-grows`).
+import lists
+import testing
+
+# A list built by appending, then read: blocks and allocations both grow with n.
+func append_values(n: int) -> int:
+    mut values: int[] = []
+    for i in range(n):
+        append(mut values, i)
+    return len(values)
+
+
+# One f-string bound to a local per element: after B2 exactly one managed block
+# per string, its own buffer.
+func store_lines(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        const line = f"x {i}"
+        total += len(line)
+    return total
+
+
+# The same piece printed to the test's own stream instead of stored.
+func print_lines(out: Stream, n: int) -> int:
+    for i in range(n):
+        print(out, f"row {i}: value={i * 3}")
+    return n
+
+
+# Arithmetic that allocates nothing at either size.
+func sum_to(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        total += i
+    return total
+
+
+# A workload whose block and allocation counts do not depend on n.
+func fixed_count(n: int) -> int:
+    return n * 3
+
+
+# A `str` queue drained from the front with the native shift: one call per
+# element and no copy per shift, so both counts grow with n.
+func drain_front(n: int) -> int:
+    mut queue: str[] = []
+    for i in range(n):
+        append(mut queue, "item")
+    mut total = 0
+    while len(queue) > 0:
+        total += len(lists.pop_at(mut queue, 0))
+    return total
+
+
+# A sort in every iteration: the sort itself is native, so the two counters the
+# suite reads do not see its compares and element moves; the loop rule
+# (`L_SORT_IN_LOOP`) judges this shape. The suite records the class it can see.
+func sort_each(n: int) -> int:
+    mut values: int[] = []
+    for i in range(n):
+        append(mut values, (i * 7919) % 1000)
+        values = sorted(values)
+    return values[0]
+
+
+# A linear search inside a loop: the scan's own blocks make the count quadratic.
+func scan_for_missing(n: int) -> int:
+    mut values: int[] = []
+    for i in range(n):
+        append(mut values, i)
+    mut total = 0
+    for i in range(n):
+        if lists.contains(values, n + i):
+            total += 1
+        total += 1
+    return total
+
+
+# The list module's `pop_at` lowers to the same native shift the method used, so a
+# front drain through the module word grows linearly too (B6's native kinds).
+func module_drain_front(n: int) -> int:
+    mut queue: int[] = []
+    for i in range(n):
+        append(mut queue, i)
+    mut total = 0
+    while len(queue) > 0:
+        total += lists.pop_at(mut queue, 0)
+    return total
+
+
+public func test_an_append_loop_grows_linearly() -> bool:
+    return testing.linear(append_values, 1000, 4000)
+
+
+public func test_storing_a_format_string_allocates_once_per_string() -> bool:
+    return testing.allocations(store_lines, 200) == 200 and testing.linear(store_lines, 500, 2000)
+
+
+public func test_printing_a_format_string_allocates_nothing(out: Stream) -> bool:
+    return testing.allocations_writing(print_lines, out, 200) == 0
+
+
+public func test_a_count_zero_at_both_sizes_passes() -> bool:
+    return testing.allocations(sum_to, 1000) == 0 and testing.linear(sum_to, 1000, 4000)
+
+
+public func test_a_constant_workload_stays_constant() -> bool:
+    return testing.constant(fixed_count, 1000, 4000)
+
+
+public func test_a_native_shift_drain_grows_linearly() -> bool:
+    return testing.linear(drain_front, 1000, 4000)
+
+
+public func test_a_sort_in_a_loop_moves_no_counter_the_suite_reads() -> bool:
+    return testing.linear(sort_each, 200, 800)
+
+
+public func test_a_linear_search_in_a_loop_is_quadratic() -> bool:
+    return testing.growth(scan_for_missing, 100, 400) > 6.0
+
+
+public func test_the_module_pop_at_drain_grows_linearly() -> bool:
+    return testing.linear(module_drain_front, 1000, 4000)

@@ -1,0 +1,46 @@
+# F-60: a bind-or-else over a call that fails, written with a bare `else:` or `else None:`, which only an Option's
+# absence takes. `selka fix` writes `else Err(_):`, which drops the failure as the block already did.
+record Box:
+    value: int
+
+
+func half(n: int) -> int fails str:
+    if n % 2 != 0:
+        fail "odd"
+    return n // 2
+
+
+func boxed(n: int) -> Box fails str:
+    if n < 0:
+        fail "negative"
+    return Box(value=n)
+
+
+func first(values: int[]) -> int?:
+    if len(values) == 0:
+        return None
+    return Some(values[0])
+
+
+func total(values: int[]) -> int:
+    mut sum = 0
+    for value in values:
+        const h = half(value) else Err(_):
+            continue
+        sum += h
+    return sum
+
+
+func main(out: Stream) -> int:
+    const h = half(6) else Err(_):
+        return 1
+    mut b = boxed(4) else Err(_):
+        return 2
+    b.value += 1
+    const r = half(8)
+    const q = r else Err(_):
+        return 3
+    const f = first([7]) else:
+        return 4
+    print(out, h, b.value, q, f, total([1, 2, 3, 4]))
+    return 0

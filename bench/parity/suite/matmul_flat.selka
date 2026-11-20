@@ -1,0 +1,43 @@
+# matmul_flat: matmul over one list[float] per matrix, indexed i * n + j,
+# C = A * B by the i-k-j loop; prints the trace and the sum of C, each scaled
+# by 1000.
+func lcg(seed: int) -> int:
+    return (seed * 3877 + 29573) % 139968
+
+
+public record RandomMatrix:
+    values: float[]
+    seed: int
+
+
+func random_matrix(n: int, input_seed: int) -> RandomMatrix:
+    mut seed = input_seed
+    mut values: float[] = []
+    for _ in range(n * n):
+        seed = lcg(seed)
+        append(mut values, float(seed) / 139968.0)
+    return RandomMatrix(values=own values, seed=seed)
+
+
+func main(out: Stream) -> int:
+    mut n = 500
+    const a = random_matrix(n, 42)
+    const b = random_matrix(n, a.seed)
+    mut c: float[] = []
+    for _ in range(0, n * n):
+        append(mut c, 0.0)
+    for i in range(n):
+        for k in range(n):
+            mut aik = a.values[i * n + k]
+            for j in range(n):
+                c[i * n + j] = c[i * n + j] + aik * b.values[k * n + j]
+    mut trace = 0.0
+    for i in range(n):
+        trace = trace + c[i * n + i]
+    mut total = 0.0
+    for i in range(n):
+        for j in range(n):
+            total = total + c[i * n + j]
+    print(out, int(trace * 1000.0))
+    print(out, int(total * 1000.0))
+    return 0

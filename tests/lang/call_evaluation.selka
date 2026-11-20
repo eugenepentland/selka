@@ -1,0 +1,197 @@
+# Arguments execute once in source order; parameters receive their bound values.
+func mark(mut seen: int[], value: int) -> int:
+    append(mut seen, value)
+    return value
+
+
+func pair(left: int, right: int) -> int:
+    return left * 10 + right
+
+
+func named_pair(named left: int, named right: int) -> int:
+    return left * 10 + right
+
+
+func call_named(callback: func(named left: int, named right: int) -> int, mut seen: int[]) -> int:
+    return callback(right=mark(mut seen, 2), left=mark(mut seen, 1))
+
+
+func defaulted(left: int, right: int, tail: int = 9) -> int:
+    return left * 100 + right * 10 + tail
+
+
+func fresh(mut seen: int[], value: int) -> str[]:
+    append(mut seen, value)
+    return ["value-" + str(value)]
+
+
+func read_pair(named left: str[], named right: str[]) -> int:
+    assert left[0] == "value-1"
+    assert right[0] == "value-2"
+    return len(left) * 10 + len(right)
+
+
+func call_fresh(callback: func(named left: str[], named right: str[]) -> int, mut seen: int[]) -> int:
+    return callback(right=fresh(mut seen, 2), left=fresh(mut seen, 1))
+
+
+func take_pair(named own left: str[][], named own right: str[][]) -> int:
+    return len(left[0]) * 10 + len(right[0])
+
+
+func call_take(callback: func(named own left: str[][], named own right: str[][]) -> int, own left: str[][], own right: str[][]) -> int:
+    return callback(right=own right, left=own left)
+
+
+func change(mut values: int[]) -> int:
+    append(mut values, 9)
+    return 7
+
+
+func inspect(named values: int[], named number: int) -> int:
+    return len(values) * 100 + number
+
+
+func touch(mut seen: int[], value: int) -> Unit:
+    append(mut seen, value)
+
+
+func after(named effect: Unit, named value: int) -> int:
+    _ = effect
+    return value
+
+
+func call_after(callback: func(named effect: Unit, named value: int) -> int, mut seen: int[]) -> int:
+    return callback(value=mark(mut seen, 3), effect=touch(mut seen, 4))
+
+
+func failing(mut seen: int[]) -> int fails int:
+    append(mut seen, 2)
+    fail 7
+
+
+func checked_pair(named left: str[], named later: Result[int, int]) -> int fails int:
+    const value = try later
+    return len(left) + value
+
+
+func checked_direct(mut seen: int[]) -> int fails int:
+    return try checked_pair(left=fresh(mut seen, 1), later=failing(mut seen))
+
+
+func checked_callback(callback: func(named left: str[], named later: Result[int, int]) -> Result[int, int], mut seen: int[]) -> int fails int:
+    return try callback(left=fresh(mut seen, 1), later=failing(mut seen))
+
+
+func take_checked(own left: str[][], later: Result[int, int]) -> int fails int:
+    const value = try later
+    return len(left) + value
+
+
+func checked_take(mut seen: int[], own left: str[][]) -> int fails int:
+    append(mut seen, 1)
+    return try take_checked(own left, failing(mut seen))
+
+
+public func test_direct_positional_arguments_execute_once_left_to_right() -> bool:
+    mut seen: int[] = []
+    const result = pair(mark(mut seen, 1), mark(mut seen, 2))
+    assert result == 12 and seen == [1, 2]
+    return True
+
+
+public func test_direct_keywords_preserve_source_order_before_defaults() -> bool:
+    mut seen: int[] = []
+    const result = defaulted(right=mark(mut seen, 2), left=mark(mut seen, 1))
+    assert result == 129 and seen == [2, 1]
+    return True
+
+
+public func test_callback_keywords_preserve_source_order() -> bool:
+    mut seen: int[] = []
+    const result = call_named(named_pair, mut seen)
+    assert result == 12 and seen == [2, 1]
+    return True
+
+
+public func test_direct_arguments_keep_fresh_managed_storage_until_the_call() -> bool:
+    mut seen: int[] = []
+    const result = read_pair(right=fresh(mut seen, 2), left=fresh(mut seen, 1))
+    assert result == 11 and seen == [2, 1]
+    return True
+
+
+public func test_callback_arguments_keep_fresh_managed_storage_until_the_call() -> bool:
+    mut seen: int[] = []
+    const result = call_fresh(read_pair, mut seen)
+    assert result == 11 and seen == [2, 1]
+    return True
+
+
+public func test_direct_arguments_transfer_nested_owners_and_preserve_copies() -> bool:
+    const left = [["left"]]
+    const right = [["right", "second"]]
+    const saved = copy(left)
+    const result = take_pair(right=own right, left=own left)
+    assert result == 12 and saved == [["left"]]
+    return True
+
+
+public func test_callback_arguments_transfer_nested_owners_and_preserve_copies() -> bool:
+    const left = [["left"]]
+    const right = [["right", "second"]]
+    const saved = copy(right)
+    const result = call_take(take_pair, own left, own right)
+    assert result == 12 and saved == [["right", "second"]]
+    return True
+
+
+public func test_source_mutation_finishes_before_a_later_borrow_in_both_call_kinds() -> bool:
+    const callback = inspect
+    mut first = [1, 2]
+    const direct = inspect(number=change(mut first), values=first)
+    mut second = [3, 4]
+    const indirect = callback(number=change(mut second), values=second)
+    assert direct == 307 and indirect == 307
+    assert first == [1, 2, 9] and second == [3, 4, 9]
+    return True
+
+
+public func test_unit_arguments_keep_effect_order_when_the_abi_erases_them() -> bool:
+    mut seen: int[] = []
+    const direct = after(effect=touch(mut seen, 1), value=mark(mut seen, 2))
+    const indirect = call_after(after, mut seen)
+    assert direct == 2 and indirect == 3 and seen == [1, 2, 3, 4]
+    return True
+
+
+# A later Result argument propagates in the callee, then returns normally here.
+# Nested try inside an argument is deliberately not part of the language.
+public func test_later_result_argument_error_releases_fresh_direct_and_callback_arguments() -> bool:
+    mut first: int[] = []
+    match checked_direct(mut first):
+        case Ok(_):
+            return False
+        case Err(code):
+            assert code == 7
+    mut second: int[] = []
+    match checked_callback(checked_pair, mut second):
+        case Ok(_):
+            return False
+        case Err(code):
+            assert code == 7
+    assert first == [1, 2] and second == [1, 2]
+    return True
+
+
+public func test_later_result_argument_error_destroys_moved_owners_and_preserves_independent_copies() -> bool:
+    const left = [["owned-left"]]
+    const saved = copy(left)
+    mut seen: int[] = []
+    match checked_take(mut seen, own left):
+        case Ok(_):
+            return False
+        case Err(code):
+            assert code == 7
+    assert saved == [["owned-left"]] and seen == [1, 2]
+    return True

@@ -1,0 +1,16 @@
+import private_helpers
+
+public func test_a_private_function_is_reached_from_its_test_file() -> bool:
+    const out = private_helpers.scaled(4)
+    assert out.value == 40, "scaled value"
+    assert out.unit == "dm!", "scaled unit"
+    return True
+
+
+public func test_a_private_record_is_built_from_its_test_file() -> bool:
+    const made = private_helpers.Reading(value=3, unit="m")
+    return made.value == 3 and made.unit == "m"
+
+
+public func test_the_public_function_reaches_the_private_ones() -> bool:
+    return private_helpers.describe(-2) == 20

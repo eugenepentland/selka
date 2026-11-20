@@ -1,0 +1,175 @@
+{
+  "cohorts": [
+    "dfb1",
+    "dfb2",
+    "dfb3"
+  ],
+  "roots": {
+    "cli": {
+      "cohort_digests": [
+        {
+          "file": "dfb1/last-run.json.gz",
+          "run": "dfb1",
+          "sha256": "afda34ab931be7cf89e5e80e2e66144627cdb9408e0790bf42be0a9701699c2a"
+        },
+        {
+          "file": "dfb2/last-run.json.gz",
+          "run": "dfb2",
+          "sha256": "ad766d57011a3057e1c3a0ae9fc9c73e9330c8aa704ae201ba449060face3eee"
+        },
+        {
+          "file": "dfb3/last-run.json.gz",
+          "run": "dfb3",
+          "sha256": "5b3fef367ee68fdf3a0b8143754d221ca9ce8996b26e972c6c453648a8f3d8dd"
+        }
+      ],
+      "exact_once_per_cohort": 719,
+      "insufficient_samples": [],
+      "largest_test_ns": 24962335283,
+      "longest_first": [
+        0,
+        5,
+        4,
+        3,
+        2,
+        1
+      ],
+      "max_to_lower_bound": 1.0000172712211073,
+      "minimum_samples": 3,
+      "observed_named_tests": 716,
+      "plan_sha256": "8523d09e392cb3e798494ec97308c09f74114b69ed49c144a0e52a3959a680d2",
+      "predicted_shard_ns": [
+        81307564252,
+        81304972948,
+        81305004077,
+        81305016652,
+        81307169558,
+        81307232485
+      ],
+      "reports": 3,
+      "root": "test/integration.zig",
+      "scope": "historical runner intervals; predicted, not measured shard walls",
+      "shards": 6,
+      "weighting": "per-test median of three compiler-edit gate cohorts (passed-test protocol intervals)"
+    },
+    "core": {
+      "cohort_digests": [
+        {
+          "file": "dfb1/last-run.json.gz",
+          "run": "dfb1",
+          "sha256": "afda34ab931be7cf89e5e80e2e66144627cdb9408e0790bf42be0a9701699c2a"
+        },
+        {
+          "file": "dfb2/last-run.json.gz",
+          "run": "dfb2",
+          "sha256": "ad766d57011a3057e1c3a0ae9fc9c73e9330c8aa704ae201ba449060face3eee"
+        },
+        {
+          "file": "dfb3/last-run.json.gz",
+          "run": "dfb3",
+          "sha256": "5b3fef367ee68fdf3a0b8143754d221ca9ce8996b26e972c6c453648a8f3d8dd"
+        }
+      ],
+      "exact_once_per_cohort": 2463,
+      "insufficient_samples": [
+        "emit_llvm.test.gate profile probe: src/core/emit_llvm.zig dfb1",
+        "emit_llvm.test.gate profile probe: src/core/emit_llvm.zig dfb2",
+        "emit_llvm.test.gate profile probe: src/core/emit_llvm.zig dfb3"
+      ],
+      "largest_test_ns": 47724890748,
+      "longest_first": [
+        0,
+        2,
+        4,
+        3,
+        6,
+        8,
+        7,
+        1,
+        5,
+        9
+      ],
+      "max_to_lower_bound": 1.0,
+      "minimum_samples": 3,
+      "observed_named_tests": 2463,
+      "plan_sha256": "5e24dff3077560fce90334cae87f060c9eaba139ffc0d61020407dc97df5a96f",
+      "predicted_shard_ns": [
+        47724890748,
+        33326080489,
+        33326083895,
+        33326080543,
+        33326083819,
+        33326080471,
+        33326080542,
+        33326080506,
+        33326080522,
+        33326080471
+      ],
+      "reports": 3,
+      "root": "src/core/root_test.zig",
+      "scope": "historical runner intervals; predicted, not measured shard walls",
+      "shards": 10,
+      "weighting": "per-test median of three compiler-edit gate cohorts (passed-test protocol intervals)"
+    },
+    "unit": {
+      "cohort_digests": [
+        {
+          "file": "dfb1/last-run.json.gz",
+          "run": "dfb1",
+          "sha256": "afda34ab931be7cf89e5e80e2e66144627cdb9408e0790bf42be0a9701699c2a"
+        },
+        {
+          "file": "dfb2/last-run.json.gz",
+          "run": "dfb2",
+          "sha256": "ad766d57011a3057e1c3a0ae9fc9c73e9330c8aa704ae201ba449060face3eee"
+        },
+        {
+          "file": "dfb3/last-run.json.gz",
+          "run": "dfb3",
+          "sha256": "5b3fef367ee68fdf3a0b8143754d221ca9ce8996b26e972c6c453648a8f3d8dd"
+        }
+      ],
+      "exact_once_per_cohort": 2832,
+      "insufficient_samples": [],
+      "largest_test_ns": 12987474162,
+      "longest_first": [
+        0,
+        9,
+        5,
+        6,
+        10,
+        3,
+        2,
+        1,
+        11,
+        4,
+        8,
+        7
+      ],
+      "max_to_lower_bound": 1.00000001037361,
+      "minimum_samples": 3,
+      "observed_named_tests": 2823,
+      "plan_sha256": "879f0eaf554cdabbf400e6a23126c76b3b4ec6fbd440373569a9e52e4c63491c",
+      "predicted_shard_ns": [
+        23304327100,
+        23304326843,
+        23304326851,
+        23304326870,
+        23304326841,
+        23304327003,
+        23304326971,
+        23304326460,
+        23304326544,
+        23304327007,
+        23304326967,
+        23304326842
+      ],
+      "reports": 3,
+      "root": "src/root_test.zig",
+      "scope": "historical runner intervals; predicted, not measured shard walls",
+      "shards": 12,
+      "weighting": "per-test median of three compiler-edit gate cohorts (passed-test protocol intervals)"
+    }
+  },
+  "scope": "scheduling hints from three compiler-edit gate cohorts; predicted, not measured shard walls"
+}

@@ -1,0 +1,5 @@
+import shop.billing
+
+func main() -> int:
+    mut lines = [billing.Line(quantity=2, unit_cents=50)]
+    return billing.charge(lines).value - 108

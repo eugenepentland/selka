@@ -1,0 +1,27 @@
+import network
+
+extern func final_status(host: Host) -> int
+
+
+func nested(net: Network, depth: int) -> bool:
+    match network.connect(net):
+        case err(_):
+            return False
+        case ok(owner):
+            const good: bool
+            if (depth == 0):
+                good = (True)
+            else:
+                good = (nested(net, depth - 1))
+            match network.close(own owner):
+                case ok(closed):
+                    return good and closed
+                case err(_):
+                    return False
+
+
+func main(net: Network, host: Host) -> int:
+    with net.host("127.0.0.1:1234") as scoped:
+        if not nested(scoped, 300):
+            return 1
+    return final_status(host)

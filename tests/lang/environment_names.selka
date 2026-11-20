@@ -1,0 +1,67 @@
+# `env.get(name)` for any `str`, odd names, and `env.names()` beyond sixty-four variables, on a fixed Environment
+# stand-in (the allow-list traps and the listing of more than sixty-four real variables are pinned by
+# src/environment_test.zig: a fixed Environment holds at most 64 names).
+import environment
+
+# The value of `name`, or "-" when there is none.
+func lookup(env: Environment, name: str) -> str:
+    match env.get(name):
+        case Some(value):
+            return copy(value)
+        case None:
+            return "-"
+
+
+# A stand-in with `count` variables N0, N1, ... holding v0, v1, ...
+func numbered(count: int) -> Environment:
+    mut values: dict[str, str] = {}
+    for index in range(count):
+        values[f"N{index}"] = f"v{index}"
+    return environment.fixed(values)
+
+
+public func test_a_computed_name_finds_its_value() -> bool:
+    const env = environment.fixed({"HOME": "/home/test", "LANG": "C"})
+    const prefix = "HO"
+    return lookup(env, prefix + "ME") == "/home/test" and lookup(env, "LANG") == "C" and lookup(env, f"{prefix}ME") == "/home/test"
+
+
+public func test_a_computed_name_that_is_not_set_answers_none() -> bool:
+    const env = environment.fixed({"HOME": "/home/test"})
+    const suffix = "X"
+    return lookup(env, "PATH") == "-" and lookup(env, "HOME" + suffix) == "-"
+
+
+public func test_a_name_held_in_a_record_or_list_is_a_name() -> bool:
+    const env = environment.fixed({"HOME": "/home/test", "LANG": "C"})
+    const wanted = ["LANG", "HOME", "NONE"]
+    mut found = ""
+    for name in wanted:
+        found = found + lookup(env, name) + ","
+    return found == "C,/home/test,-,"
+
+
+public func test_an_empty_name_or_one_with_nul_or_equals_answers_none() -> bool:
+    const env = environment.fixed({"HOME": "/home/test"})
+    return lookup(env, "") == "-" and lookup(env, "HOME=/home/test") == "-" and lookup(env, "HO\x00ME") == "-" and lookup(env, "=") == "-"
+
+
+public func test_a_name_over_255_octets_answers_none() -> bool:
+    const env = environment.fixed({"HOME": "/home/test"})
+    mut name = "H"
+    for _ in range(300):
+        name = name + "H"
+    return lookup(env, name) == "-"
+
+
+public func test_a_scoped_environment_answers_a_computed_name_inside_its_scope() -> bool:
+    const env = environment.fixed({"HOME": "/home/test", "LANG": "C"})
+    const wanted = "HO" + "ME"
+    with env.only("HOME") as narrowed:
+        return lookup(narrowed, wanted) == "/home/test" and lookup(narrowed, "") == "-"
+
+
+public func test_a_narrowed_environment_still_lists_only_its_names() -> bool:
+    const env = numbered(10)
+    with env.only("N7", "N8") as narrowed:
+        return narrowed.names() == ["N7", "N8"] and lookup(narrowed, "N7") == "v7" and env.names()[0] == "N0" and len(env.names()) == 10

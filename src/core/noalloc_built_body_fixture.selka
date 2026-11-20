@@ -1,0 +1,206 @@
+# F19 and F20: functions whose `@noalloc` promise is judged on the body a build emits, and plain functions
+# that give each Core pass something to rewrite. `main` calls every one so a build reaches them all.
+import bytes
+import strings
+
+record Point:
+    x: int
+    y: int
+
+
+record Holder:
+    words: dict[str, int]
+    octets: dict[bytes, int]
+
+
+@noalloc
+func text_length(s: str) -> int:
+    return len(s)
+
+
+@noalloc
+func text_index(s: str, i: int) -> int:
+    return s[i]
+
+
+@noalloc
+func tail_length(s: str) -> int:
+    return text_length(s[1:])
+
+
+@noalloc
+func byte_total(b: bytes) -> int:
+    mut total = 0
+    for i in range(len(b)):
+        total += b[i]
+    return total
+
+
+@noalloc
+func byte_position(b: bytes, needle: bytes) -> int:
+    return bytes.find(b, needle)
+
+
+@noalloc
+func word_probe(h: Holder, key: str) -> int:
+    const table = h.words
+    return table[key]
+
+
+@noalloc
+func octet_probe(h: Holder, key: bytes) -> int:
+    const table = h.octets
+    return table[key]
+
+
+@noalloc
+func slice_probe(d: dict[str, int], s: str) -> int:
+    return d[s[1:3]]
+
+
+@noalloc
+func slice_equals(s: str, t: str) -> bool:
+    return s[1:3] == t
+
+
+@noalloc
+func starts_with_a(s: str) -> bool:
+    return strings.starts_with(s, "a")
+
+
+@noalloc
+func is_numeric(s: str) -> bool:
+    return strings.is_digit(s)
+
+
+@noalloc
+func is_word(s: str) -> bool:
+    return strings.is_alpha(s)
+
+
+@noalloc
+func is_blank(s: str) -> bool:
+    return strings.is_space(s)
+
+
+@noalloc
+func first_scalar(s: str) -> int:
+    return ord(s)
+
+
+@noalloc
+func double(x: int) -> int:
+    return x * 2
+
+
+@noalloc
+func clamp(x: int, low: int, high: int) -> int:
+    if x < low:
+        return low
+    if x > high:
+        return high
+    return x
+
+
+@noalloc
+func signed_total(xs: int[], flag: bool) -> int:
+    mut total = 0
+    for i in range(len(xs)):
+        if flag:
+            total += clamp(double(xs[i]), -100, 100)
+        else:
+            total -= xs[i]
+    return total
+
+
+@noalloc
+func kind_total(xs: int[], kind: int, count: int) -> int:
+    mut total = 0
+    for i in range(count):
+        if kind == 0:
+            total += xs[i]
+        else:
+            total += xs[i] + 1
+    return total
+
+
+@noalloc
+func scaled_total(xs: int[], count: int) -> int:
+    mut total = 0
+    for j in range(count):
+        total += int((float(xs[j]) / 8.0 + 0.5) * 128000.0)
+    return total
+
+
+@noalloc
+func walk(p: Point, n: int) -> int:
+    mut x = p.x
+    mut y = p.y
+    for i in range(n):
+        x += 1
+        y += x
+    return x + y
+
+
+@noalloc
+func bump(mut xs: int[], i: int):
+    xs[i] += 1
+
+
+func word_count(text: str) -> int:
+    mut counts: dict[str, int] = {}
+    for word in strings.words(text):
+        mut key = copy(word)
+        mut count = 1
+        if word in counts:
+            count = counts[word] + 1
+        counts[own key] = count
+    return len(counts)
+
+
+func squares(n: int) -> int:
+    mut xs: int[] = []
+    for i in range(4):
+        append(mut xs, i * i + n)
+    return xs[3]
+
+
+func middle_total(xs: int[]) -> int:
+    mut total = 0
+    for x in xs[1:3]:
+        total += x
+    return total
+
+
+func encoded_length(text: str) -> int:
+    return len(strings.encode(text))
+
+
+func sample_holder() -> Holder:
+    mut words: dict[str, int] = {"a": 3, "bc": 4}
+    mut octets: dict[bytes, int] = {b"a": 5}
+    return Holder(words=own words, octets=own octets)
+
+
+func main(out: Stream) -> int:
+    const h = sample_holder()
+    mut xs: int[] = [1, 2, 3, 4]
+    mut total = 0
+    total += text_length("abc") + text_index("abc", 1) + tail_length("abc")
+    total += byte_total(b"abc") + byte_position(b"abc", b"c")
+    total += word_probe(h, "a") + octet_probe(h, b"a")
+    total += slice_probe(h.words, "xbc")
+    if slice_equals("abc", "bc"):
+        total += 1
+    if starts_with_a("abc"):
+        total += 1
+    if is_numeric("42") and is_word("ab") and is_blank(" \t"):
+        total += first_scalar("a")
+    total += signed_total(xs, True) + signed_total(xs, False)
+    total += walk(Point(x=1, y=2), 3)
+    total += kind_total(xs, len(xs) - 4, 4) + scaled_total(xs, 4)
+    bump(mut xs, 0)
+    total += xs[0]
+    total += word_count("a b a") + squares(1) + middle_total(xs) + encoded_length("abc")
+    print(out, total)
+    return 0

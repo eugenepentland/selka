@@ -1,0 +1,160 @@
+import byte_builder
+import hex as hexadecimal
+
+# SHA-256 as 64 lowercase hexadecimal digits. The runtime hashes the octets of `data` in place (no copy of the input),
+# with the CPU's SHA extensions when it has them and portable C otherwise; both give the same digest.
+public func sha256(data: bytes) -> str:
+    return hexadecimal.encode(sha256_bytes(data))
+
+
+# The SHA-256 digest of `data` as its 32 raw octets (`sha256` answers them as hexadecimal text).
+public builtin func sha256_bytes(data: bytes) -> bytes
+
+
+# The SHA-256 digest of the UTF-8 octets of `text` as its 32 raw octets, hashed in place: no encoded copy is made.
+public builtin func sha256_text_bytes(text: str) -> bytes
+
+
+# The BLAKE3 digest of `data` as its 32 raw octets (`blake3` answers them as a `Digest`).
+public builtin func blake3_bytes(data: bytes) -> bytes
+
+
+# The BLAKE3 digest of the UTF-8 octets of `text` as its 32 raw octets, hashed in place.
+public builtin func blake3_text_bytes(text: str) -> bytes
+
+
+# A BLAKE3 digest: its 32 octets as four 64-bit words, each the little-endian reading of eight consecutive
+# octets (`w0` is octets 0..7). It compares with `==`, keys a dictionary or a set, sits in a record field and is
+# copied freely. It is sealed: only this module builds one (`blake3`, `blake3_text`, `from_bytes`, `from_hex`), and its words
+# are read, never written one at a time.
+@sealed
+public record Digest:
+    w0: u64
+    w1: u64
+    w2: u64
+    w3: u64
+
+
+func digest_of(octets: bytes) -> Digest:
+    return Digest(w0=__read_u64_le(octets, 0), w1=__read_u64_le(octets, 8), w2=__read_u64_le(octets, 16), w3=__read_u64_le(octets, 24))
+
+
+# The BLAKE3 digest of `data`, hashed by the runtime over the octets in place (no copy of `data`).
+public func blake3(data: bytes) -> Digest:
+    return digest_of(blake3_bytes(data))
+
+
+# The BLAKE3 digest of the UTF-8 octets of `text`, hashed in place: no encoded copy of `text` is made.
+public func blake3_text(text: str) -> Digest:
+    return digest_of(blake3_text_bytes(text))
+
+
+# The 32 octets of a digest, the order the hash defines (the inverse of `from_bytes`).
+public func to_bytes(digest: Digest) -> bytes:
+    mut octets: int[] = []
+    const words = [digest.w0, digest.w1, digest.w2, digest.w3]
+    for word in words:
+        for part in range(8):
+            append(mut octets, int(bit_and(shift_right(word, u64(part * 8)), 255u64)))
+    return bytes(octets)
+
+
+# A digest as 64 lowercase hexadecimal digits, the spelling `sha256` answers.
+public func hex(digest: Digest) -> str:
+    return hexadecimal.encode(to_bytes(digest))
+
+
+# The digest whose octets are `data`; fails unless `data` holds exactly 32 octets.
+public func from_bytes(data: bytes) -> Digest fails str:
+    if len(data) != 32:
+        fail "a digest is exactly 32 octets"
+    return digest_of(data)
+
+
+# The digest written as 64 hexadecimal digits in either case; fails on any other text.
+public func from_hex(text: str) -> Digest fails str:
+    const octets = try bytes.fromhex(text)
+    return try from_bytes(octets)
+
+
+# ---- SHA-1 (FIPS 180-4), for protocols that require it ----
+# SHA-1 is broken for collisions: use it where a protocol names it (the WebSocket handshake of RFC 6455, Git's object
+# names), never to protect anything. It runs in Selka, about 1,100 executed blocks per 64 octets, which suits a
+# handshake's few dozen octets; hash bulk data with `sha256` or `blake3`.
+# The largest 32-bit word, the mask that keeps a sum to 32 bits.
+const WORD: int = 4294967295
+
+
+# A 32-bit word rotated left by `count` places.
+func rotate(word: int, count: int) -> int:
+    return bit_and(bit_or(shift_left(word, count), shift_right(word, 32 - count)), WORD)
+
+
+# The 32-bit big-endian word of `data` at `at`.
+func word_at(data: bytes, at: int) -> int:
+    return data[at] * 16777216 + data[at + 1] * 65536 + data[at + 2] * 256 + data[at + 3]
+
+
+# One round: the five working words after mixing `f`, the round constant `k` and the schedule word `w`.
+func mix(mut v: int[], f: int, k: int, w: int):
+    const t = bit_and(rotate(v[0], 5) + f + v[4] + k + w, WORD)
+    v[4] = v[3]
+    v[3] = v[2]
+    v[2] = rotate(v[1], 30)
+    v[1] = v[0]
+    v[0] = t
+
+
+# The chaining words after the 64-octet block of `data` at `start`.
+func compress(mut state: int[], data: bytes, start: int):
+    mut w: int[] = []
+    for index in range(16):
+        append(mut w, word_at(data, start + index * 4))
+    for index in range(16, 80):
+        append(mut w, rotate(bit_xor(bit_xor(w[index - 3], w[index - 8]), bit_xor(w[index - 14], w[index - 16])), 1))
+    mut v = copy(state)
+    for index in range(20):
+        mix(mut v, bit_or(bit_and(v[1], v[2]), bit_and(bit_xor(v[1], WORD), v[3])), 1518500249, w[index])
+    for index in range(20, 40):
+        mix(mut v, bit_xor(bit_xor(v[1], v[2]), v[3]), 1859775393, w[index])
+    for index in range(40, 60):
+        mix(mut v, bit_or(bit_or(bit_and(v[1], v[2]), bit_and(v[1], v[3])), bit_and(v[2], v[3])), 2400959708, w[index])
+    for index in range(60, 80):
+        mix(mut v, bit_xor(bit_xor(v[1], v[2]), v[3]), 3395469782, w[index])
+    for index in range(5):
+        state[index] = bit_and(state[index] + v[index], WORD)
+
+
+# The 20 octets of the SHA-1 digest of `data`, the form a protocol encodes (`base64.b64encode` for the WebSocket
+# `Sec-WebSocket-Accept`). The whole blocks are read from `data` in place; only the last one or two, with the padding,
+# are copied.
+public func sha1_bytes(data: bytes) -> bytes:
+    mut state = [1732584193, 4023233417, 2562383102, 271733878, 3285377520]
+    const whole = len(data) // 64 * 64
+    mut start = 0
+    while start < whole:
+        compress(mut state, data, start)
+        start += 64
+    mut tail = byte_builder.create()
+    _ = byte_builder.append_range(mut tail, data, whole, len(data))
+    _ = byte_builder.append_byte(mut tail, 128)
+    while len(tail.buffer) % 64 != 56:
+        _ = byte_builder.append_byte(mut tail, 0)
+    const bits = len(data) * 8
+    for place in range(8):
+        _ = byte_builder.append_byte(mut tail, shift_right(bits, (7 - place) * 8) % 256)
+    const last = byte_builder.finish(tail)
+    mut at = 0
+    while at < len(last):
+        compress(mut state, last, at)
+        at += 64
+    mut out = byte_builder.create()
+    for value in state:
+        for place in range(4):
+            _ = byte_builder.append_byte(mut out, shift_right(value, (3 - place) * 8) % 256)
+    return byte_builder.finish(out)
+
+
+# SHA-1 as 40 lowercase hexadecimal digits, the spelling `sha256` answers.
+public func sha1(data: bytes) -> str:
+    return hexadecimal.encode(sha1_bytes(data))

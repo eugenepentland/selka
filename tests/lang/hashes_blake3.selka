@@ -1,0 +1,114 @@
+# BLAKE3 digests (`hashes.blake3`, `hashes.blake3_text`, the `blake3()` method) and the `hashes.Digest` value.
+# Vectors are the official test pattern (octet i is i mod 251), recomputed by
+# experiments/incremental-engine-20261030/L1/blake3_reference.py, a port of the specification's reference code.
+import hashes
+import hex
+import strings
+
+# The official test pattern of `length` octets.
+func pattern(length: int) -> bytes:
+    mut octets: int[] = []
+    for index in range(length):
+        append(mut octets, index % 251)
+    return bytes(octets)
+
+
+func hex_of(length: int) -> str:
+    return hashes.hex(hashes.blake3(pattern(length)))
+
+
+public func test_the_empty_input() -> bool:
+    return hashes.hex(hashes.blake3(b"")) == "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+
+
+public func test_a_short_input() -> bool:
+    return hashes.hex(hashes.blake3(b"abc")) == "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+
+
+public func test_inputs_around_block_and_chunk_boundaries() -> bool:
+    return hex_of(3) == "e1be4d7a8ab5560aa4199eea339849ba8e293d55ca0a81006726d184519e647f" and hex_of(64) == "4eed7141ea4a5cd4b788606bd23f46e212af9cacebacdc7d1f4c6dc7f2511b98" and hex_of(65) == "de1e5fa0be70df6d2be8fffd0e99ceaa8eb6e8c93a63f2d8d1c30ecb6b263dee" and hex_of(128) == "f17e570564b26578c33bb7f44643f539624b05df1a76c81f30acd548c44b45ef" and hex_of(1023) == "10108970eeda3eb932baac1428c7a2163b0e924c9a9e25b35bba72b28f70bd11" and hex_of(1024) == "42214739f095a406f3fc83deb889744ac00df831c10daa55189b5d121c855af7" and hex_of(1025) == "d00278ae47eb27b34faecf67b4fe263f82d5412916c1ffd97c8cb7fb814b8444"
+
+
+public func test_multi_chunk_inputs_build_the_tree() -> bool:
+    return hex_of(8192) == "aae792484c8efe4f19e2ca7d371d8c467ffb10748d8a5a1ae579948f718a2a63" and hex_of(31744) == "62b6960e1a44bcc1eb1a611a8d6235b6b4b78f32e7abc4fb4c6cdcce94895c47"
+
+
+public func test_text_hashes_its_utf8_octets() -> bool:
+    return hashes.hex(hashes.blake3_text("abc")) == "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85" and hashes.hex(hashes.blake3_text("λ€")) == "aa346fcae42cf8908392afb19e9e07e852ca67335d8322fd87fc6a1172f1affd" and hashes.blake3_text("λ€") == hashes.blake3(strings.encode("λ€"))
+
+
+# A `bytes` parameter is a borrowed view; the digest reads exactly its octets.
+func of_view(data: bytes) -> hashes.Digest:
+    return hashes.blake3(data)
+
+
+public func test_views_and_slices_hash_only_their_own_octets() -> bool:
+    const data = b"xxabcxx"
+    return of_view(data[2:5]) == hashes.blake3(b"abc") and hashes.blake3(data[2:5]) == hashes.blake3(b"abc") and of_view(data) != hashes.blake3(b"abc")
+
+
+public func test_the_method_returns_the_32_raw_octets() -> bool:
+    const raw = hashes.blake3_bytes(b"abc")
+    return len(raw) == 32 and hex.encode(raw) == "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85" and hashes.blake3_text_bytes("abc") == raw
+
+
+public func test_a_digest_compares_with_equality() -> bool:
+    return hashes.blake3(b"a") == hashes.blake3(b"a") and hashes.blake3(b"a") != hashes.blake3(b"b")
+
+
+record Entry:
+    name: str
+    digest: hashes.Digest
+
+
+public func test_a_digest_keys_a_dictionary_and_sits_in_a_record() -> bool:
+    mut seen: dict[hashes.Digest, int] = {}
+    seen[hashes.blake3(b"a")] = 1
+    seen[hashes.blake3(b"b")] = 2
+    seen[hashes.blake3(b"a")] = 3
+    const entry = Entry(name="a", digest=hashes.blake3(b"a"))
+    return len(seen) == 2 and seen[hashes.blake3(b"a")] == 3 and seen[entry.digest] == 3 and entry == Entry(name="a", digest=hashes.blake3(b"a"))
+
+
+public func test_a_digest_round_trips_through_bytes_and_hex() -> bool:
+    const digest = hashes.blake3(b"abc")
+    const octets = hashes.to_bytes(digest)
+    if len(octets) != 32 or octets != hashes.blake3_bytes(b"abc"):
+        return False
+    match hashes.from_bytes(octets):
+        case Ok(again):
+            if again != digest:
+                return False
+        case Err(_):
+            return False
+    match hashes.from_hex("6437B3AC38465133FFB63B75273A8DB548C558465D79DB03FD359C6CD5BD9D85"):
+        case Ok(again):
+            return again == digest and hashes.hex(again) == "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+        case Err(_):
+            return False
+
+
+public func test_malformed_digest_input_fails() -> bool:
+    mut failures = 0
+    match hashes.from_bytes(b"abc"):
+        case Ok(_):
+            failures += 0
+        case Err(message):
+            if message == "a digest is exactly 32 octets":
+                failures += 1
+    match hashes.from_hex("6437b3ac"):
+        case Ok(_):
+            failures += 0
+        case Err(_):
+            failures += 1
+    match hashes.from_hex("zz37b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"):
+        case Ok(_):
+            failures += 0
+        case Err(_):
+            failures += 1
+    match hashes.from_hex("6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d8"):
+        case Ok(_):
+            failures += 0
+        case Err(_):
+            failures += 1
+    return failures == 4

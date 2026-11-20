@@ -1,0 +1,91 @@
+# The binary32 domain `f32`: arithmetic and comparisons round to binary32, conversions are
+# explicit, storage takes four bytes per element, text is the shortest round-trip decimal,
+# and the bit patterns read and write exactly.
+import math
+
+const SCALE: f32 = 2.5f32
+
+
+const DOUBLED: f32 = SCALE * 2.0
+
+
+record Pair:
+    narrow: f32
+    wide: float
+
+
+public func test_literal_suffix_and_adoption_round_to_binary32() -> bool:
+    const direct: f32 = 0.1f32
+    const adopted: f32 = 0.1
+    return direct == adopted and float(direct) != 0.1 and float(direct) == 0.10000000149011612
+
+
+public func test_point_sums_round_per_operation() -> bool:
+    const sum = 0.1f32 + 0.2f32
+    return sum == 0.3f32 and float(sum) == 0.30000001192092896
+
+
+public func test_overflow_and_underflow_follow_ieee() -> bool:
+    const big = 3.0e38f32 * 10.0f32
+    const tiny = 1.0e-45f32
+    return math.is_inf(float(big)) and tiny > 0.0f32 and tiny / 2.0f32 == 0.0f32
+
+
+public func test_nan_compares_unordered() -> bool:
+    const nan = 0.0f32 / 0.0f32
+    return nan != nan and not (nan == nan) and not (nan < 1.0f32) and not (nan >= 1.0f32)
+
+
+public func test_unary_minus_and_compound_assignment() -> bool:
+    mut value = 1.5f32
+    value += 0.25f32
+    value *= 2.0
+    return -value == -3.5f32 and value == 3.5f32
+
+
+public func test_conversions_are_explicit_and_checked() -> bool:
+    const widened = float(SCALE)
+    const narrowed = f32(0.1)
+    const from_int = f32(7)
+    return widened == 2.5 and narrowed == 0.1f32 and from_int == 7.0f32 and int(f32(7.9)) == 7 and i8(f32(-128.5)) == -128i8
+
+
+public func test_module_constants_fold_in_binary32() -> bool:
+    return SCALE == 2.5f32 and DOUBLED == 5.0f32
+
+
+public func test_min_max_abs_and_prelude_roots() -> bool:
+    return abs(-2.5f32) == 2.5f32 and min(1.0f32, -4.0f32) == -4.0f32 and max(1.0f32, 3.0f32) == 3.0f32 and sqrt(6.25f32) == 2.5f32 and floor(-1.5f32) == -2.0f32 and ceil(-1.5f32) == -1.0f32 and trunc(-1.9f32) == -1.0f32
+
+
+public func test_storage_holds_values_in_lists_arrays_and_records() -> bool:
+    mut items: f32[] = []
+    append(mut items, 1.5f32)
+    append(mut items, SCALE)
+    const fixed = FixedArray[f32, 3]([0.25f32, 0.5f32, 1.0f32])
+    const pair = Pair(narrow=0.5f32, wide=2.0)
+    return items == [1.5f32, 2.5f32] and fixed[2] == 1.0f32 and pair.narrow == 0.5f32 and pair.wide == 2.0
+
+
+public func test_text_is_the_shortest_binary32_decimal() -> bool:
+    return str(0.1f32) == "0.1" and str(float(0.1f32)) == "0.10000000149011612" and str(1.5f32) == "1.5" and str(0.0f32 / 0.0f32) == "nan"
+
+
+public func test_format_specifications_apply_to_binary32() -> bool:
+    const value = 1.25f32
+    return f"{value}" == "1.25" and f"{value:.3f}" == "1.250" and f"{value:>6}" == "  1.25" and f"{SCALE:08.2f}" == "00002.50"
+
+
+public func test_parse_f32_rounds_straight_to_binary32() -> bool:
+    const parsed = parse_f32("0.1")
+    const two_and_a_half = parse_f32("2.5")
+    return parsed == Some(0.1f32) and parsed is not None and two_and_a_half == Some(2.5f32) and parse_f32("x") is None
+
+
+public func test_bits_round_trip_and_canonical_nan() -> bool:
+    const one = math.f32_bits(1.5f32)
+    return one == 1069547520u32 and math.f32_from_bits(one) == 1.5f32 and math.f32_bits(0.0f32 / 0.0f32) == 2143289344u32
+
+
+public func test_float_bits_are_the_binary64_pattern() -> bool:
+    return math.bits(1.5) == 4609434218613702656u64 and math.from_bits(4609434218613702656u64) == 1.5 and math.bits(0.0 / 0.0) == 9221120237041090560u64

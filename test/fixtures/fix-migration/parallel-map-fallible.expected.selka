@@ -1,0 +1,20 @@
+import parallel
+
+func attempt(value: int) -> str fails str:
+    if value % 2 == 0:
+        return "ok-" + str(value)
+    fail "bad-" + str(value)
+
+func main(out: Stream) -> int:
+    mut values = parallel.map_results([0, 1, 2, 3], attempt)
+    mut total = len(values)
+    for value in values:
+        match value:
+            case Ok(text):
+                total += len(text)
+            case Err(text):
+                total += len(text)
+    _ = values
+    _ = parallel.map_results([4, 5], attempt)
+    print(out, total)
+    return 0

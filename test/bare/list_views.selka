@@ -1,0 +1,22 @@
+# List slices and views passed to functions, of integers and of text.
+func total_of(xs: int[]) -> int:
+    mut total = 0
+    for x in xs:
+        total += x
+    return total
+
+
+func lengths(words: str[]) -> int:
+    mut total = 0
+    for w in words:
+        total += len(w)
+    return total
+
+
+func main() -> int:
+    mut xs: int[] = []
+    mut words: str[] = []
+    for i in range(30):
+        append(mut xs, i * 3)
+        append(mut words, f"w{i}")
+    return (total_of(xs[4:20]) + lengths(words[10:25]) + total_of(xs) + lengths(words[:3])) % 256

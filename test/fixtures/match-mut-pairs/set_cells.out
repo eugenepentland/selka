@@ -1,0 +1,176 @@
+cell_add_add_none
+  at
+  after {1, 2, 3, 11, 12}
+cell_add_add_between
+  at
+  read {1, 2, 3, 11}
+  after {1, 2, 3, 11, 12}
+cell_add_add_after
+  at
+  read {1, 2, 3, 11, 12}
+  after {1, 2, 3, 11, 12}
+cell_add_include_none
+  at
+  after {1, 2, 3, 11, 22}
+cell_add_include_between
+  at
+  read {1, 2, 3, 11}
+  after {1, 2, 3, 11, 22}
+cell_add_include_after
+  at
+  read {1, 2, 3, 11, 22}
+  after {1, 2, 3, 11, 22}
+cell_add_discard_none
+  at
+  after {1, 3, 11}
+cell_add_discard_between
+  at
+  read {1, 2, 3, 11}
+  after {1, 3, 11}
+cell_add_discard_after
+  at
+  read {1, 3, 11}
+  after {1, 3, 11}
+cell_add_remove_none
+  at
+  after {1, 3, 11}
+cell_add_remove_between
+  at
+  read {1, 2, 3, 11}
+  after {1, 3, 11}
+cell_add_remove_after
+  at
+  read {1, 3, 11}
+  after {1, 3, 11}
+cell_include_add_none
+  at
+  after {1, 2, 3, 21, 12}
+cell_include_add_between
+  at
+  read {1, 2, 3, 21}
+  after {1, 2, 3, 21, 12}
+cell_include_add_after
+  at
+  read {1, 2, 3, 21, 12}
+  after {1, 2, 3, 21, 12}
+cell_include_include_none
+  at
+  after {1, 2, 3, 21, 22}
+cell_include_include_between
+  at
+  read {1, 2, 3, 21}
+  after {1, 2, 3, 21, 22}
+cell_include_include_after
+  at
+  read {1, 2, 3, 21, 22}
+  after {1, 2, 3, 21, 22}
+cell_include_discard_none
+  at
+  after {1, 3, 21}
+cell_include_discard_between
+  at
+  read {1, 2, 3, 21}
+  after {1, 3, 21}
+cell_include_discard_after
+  at
+  read {1, 3, 21}
+  after {1, 3, 21}
+cell_include_remove_none
+  at
+  after {1, 3, 21}
+cell_include_remove_between
+  at
+  read {1, 2, 3, 21}
+  after {1, 3, 21}
+cell_include_remove_after
+  at
+  read {1, 3, 21}
+  after {1, 3, 21}
+cell_discard_add_none
+  at
+  after {2, 3, 12}
+cell_discard_add_between
+  at
+  read {2, 3}
+  after {2, 3, 12}
+cell_discard_add_after
+  at
+  read {2, 3, 12}
+  after {2, 3, 12}
+cell_discard_include_none
+  at
+  after {2, 3, 22}
+cell_discard_include_between
+  at
+  read {2, 3}
+  after {2, 3, 22}
+cell_discard_include_after
+  at
+  read {2, 3, 22}
+  after {2, 3, 22}
+cell_discard_discard_none
+  at
+  after {3}
+cell_discard_discard_between
+  at
+  read {2, 3}
+  after {3}
+cell_discard_discard_after
+  at
+  read {3}
+  after {3}
+cell_discard_remove_none
+  at
+  after {3}
+cell_discard_remove_between
+  at
+  read {2, 3}
+  after {3}
+cell_discard_remove_after
+  at
+  read {3}
+  after {3}
+cell_remove_add_none
+  at
+  after {2, 3, 12}
+cell_remove_add_between
+  at
+  read {2, 3}
+  after {2, 3, 12}
+cell_remove_add_after
+  at
+  read {2, 3, 12}
+  after {2, 3, 12}
+cell_remove_include_none
+  at
+  after {2, 3, 22}
+cell_remove_include_between
+  at
+  read {2, 3}
+  after {2, 3, 22}
+cell_remove_include_after
+  at
+  read {2, 3, 22}
+  after {2, 3, 22}
+cell_remove_discard_none
+  at
+  after {3}
+cell_remove_discard_between
+  at
+  read {2, 3}
+  after {3}
+cell_remove_discard_after
+  at
+  read {3}
+  after {3}
+cell_remove_remove_none
+  at
+  after {3}
+cell_remove_remove_between
+  at
+  read {2, 3}
+  after {3}
+cell_remove_remove_after
+  at
+  read {3}
+  after {3}

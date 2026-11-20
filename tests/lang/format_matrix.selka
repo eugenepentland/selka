@@ -1,0 +1,225 @@
+# The f-string matrix (`PY-FSTRING-1`): every hole family a format string
+# renders, crossed with the specifications that apply to it, and used both ways,
+# printed to a stream and stored in a `str`. Each expected value is the exact
+# text the specification asks for, so a changed byte fails the row that changed
+# it. The printed rows are the same values, written through the other lowering:
+# `print` writes the pieces and `f"{...}"` in a binding fills one buffer, and
+# both must spell a value the same way.
+import strings
+
+record Point:
+    x: int
+    y: int
+
+
+func greeting() -> str:
+    return "héllo"
+
+
+func octets() -> bytes:
+    return b"it's"
+
+
+func point() -> Point:
+    return Point(x=1, y=2)
+
+
+func pair() -> int[]:
+    return [1, 2]
+
+
+# spec: PY-FSTRING-1
+public func test_signed_and_unsigned_holes_with_every_legal_specification() -> bool:
+    mut n = 42
+    mut neg = -42
+    mut big: u64 = 18446744073709551615
+    mut small: u8 = 7
+    mut rows: str[] = [
+        f"{n}",
+        f"{n:d}",
+        f"{n:6}",
+        f"{n:>6}",
+        f"{n:<6}|",
+        f"{n:^7}",
+        f"{n:*^9}",
+        f"{n:05d}",
+        f"{n:+}",
+        f"{n: }",
+        f"{neg:=+8}",
+        f"{n:x}",
+        f"{n:X}",
+        f"{n:#x}",
+        f"{n:o}",
+        f"{n:#o}",
+        f"{n:b}",
+        f"{n:#b}",
+        f"{n:,}",
+        f"{n:_}",
+        f"{big:,}",
+        f"{big:_x}",
+        f"{small}",
+        f"{small:03}",
+        f"n={n} neg={neg}",
+    ]
+    if rows != [
+        "42",
+        "42",
+        "    42",
+        "    42",
+        "42    |",
+        "  42   ",
+        "***42****",
+        "00042",
+        "+42",
+        " 42",
+        "-     42",
+        "2a",
+        "2A",
+        "0x2a",
+        "52",
+        "0o52",
+        "101010",
+        "0b101010",
+        "42",
+        "42",
+        "18,446,744,073,709,551,615",
+        "ffff_ffff_ffff_ffff",
+        "7",
+        "007",
+        "n=42 neg=-42",
+    ]:
+        return False
+    return True
+
+
+# spec: PY-FSTRING-1
+public func test_float_holes_with_every_legal_specification() -> bool:
+    mut x = 3.14159
+    mut rows: str[] = [
+        f"{x}",
+        f"{x:f}",
+        f"{x:.2f}",
+        f"{x:^10.3f}",
+        f"{x:010.2f}",
+        f"{x:>10}",
+        f"{-x:+.3f}",
+        f"{x:e}",
+        f"{x:.2E}",
+        f"{x:g}",
+        f"{x:.3g}",
+        f"{0.5:%}",
+        f"{1234.5678:,.2f}",
+        f"{1e20:g}",
+        f"{-0.0:z.1f}",
+        f"total {x:.1f} units",
+    ]
+    if rows != [
+        "3.14159",
+        "3.141590",
+        "3.14",
+        "  3.142   ",
+        "0000003.14",
+        "   3.14159",
+        "-3.142",
+        "3.141590e+00",
+        "3.14E+00",
+        "3.14159",
+        "3.14",
+        "50.000000%",
+        "1,234.57",
+        "1e+20",
+        "0.0",
+        "total 3.1 units",
+    ]:
+        return False
+    return True
+
+
+# spec: PY-FSTRING-1
+public func test_text_boolean_byte_aggregate_and_bare_holes() -> bool:
+    mut rows: str[] = [
+        f"{greeting()}",
+        f"{greeting():>8}",
+        f"{greeting():<8}|",
+        f"{greeting():*^9}",
+        f"{greeting():.3}",
+        f"{greeting():>8.3}",
+        f"{greeting():s}",
+        f"{'ab':05}",
+        f"{True}",
+        f"{not True}",
+        f"{octets()}",
+        f"{b'ab'}",
+        f"{b''}",
+        f"{b'a\nb'}",
+        f"{point()}",
+        f"{pair()}",
+        f"",
+        f"plain",
+        f"{{literal}}",
+        f"[{greeting()}] {True} {octets()} {point()} {pair()}",
+    ]
+    if rows != [
+        "héllo",
+        "   héllo",
+        "héllo   |",
+        "**héllo**",
+        "hél",
+        "     hél",
+        "héllo",
+        "ab000",
+        "True",
+        "False",
+        "b\"it's\"",
+        "b'ab'",
+        "b''",
+        "b'a\\nb'",
+        "Point(x=1, y=2)",
+        "[1, 2]",
+        "",
+        "plain",
+        "{literal}",
+        "[héllo] True b\"it's\" Point(x=1, y=2) [1, 2]",
+    ]:
+        return False
+    return True
+
+
+# spec: PY-FSTRING-1
+public func test_the_printed_matrix_spells_each_value_the_same_way(out: Stream) -> bool:
+    mut big: u64 = 18446744073709551615
+    mut raw = b"it's"
+    print(out, f"{42}", f"{42:04d}", f"{-42:=+8}", f"{big:,}", f"{3.14159:.2f}")
+    print(out, f"{True}", f"{not True}", f"{'héllo':>8}", f"{raw}", f"{b''}")
+    print(out, f"{point()}", f"{pair()}", f"{{literal}}", f"", f"[{greeting()}]")
+    print(out, f"{42:o}", f"{42:#x}", f"{42:_b}", f"{42:*^9}", f"{3.14159:e}")
+    print(out, f"n={42} x={42:05d}", f"{'héllo':.3}")
+    write(out, f"row {7}: value={7 * 3}")
+    return len(f"row {7}: value={7 * 3}") == 15
+
+
+# spec: PY-FSTRING-1
+public func test_a_hole_of_a_bound_slice_stored_and_printed(out: Stream) -> bool:
+    mut text = "hello"
+    mut raw = b"abcdef"
+    mut start = 1
+    mut end = 3
+    mut piece = copy(text[start:end])
+    const stored = f"<{piece}>"
+    print(out, stored, f"<{raw[start:end]}>", f"<{text[start:end]}>")
+    if stored != "<el>":
+        return False
+    return f"{raw[start:end]}" == "b'bc'" and f"{text[0:2]}" == "he"
+
+
+# spec: PY-FSTRING-1
+public func test_a_stored_string_keeps_its_scalar_count_with_non_ascii_text() -> bool:
+    const name = "héllo"
+    const number = f"héllo {7}"
+    const flag = f"héllo {True}"
+    const text = f"héllo {name}"
+    if strings.char_count(number) != 7 or strings.char_count(flag) != 10:
+        return False
+    if strings.char_count(text) != 11 or len(number) != 8:
+        return False
+    return strings.char_count(f"{name}") == 5 and strings.char_count(f"{b'ab'}") == 5

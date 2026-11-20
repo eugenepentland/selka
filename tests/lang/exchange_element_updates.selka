@@ -1,0 +1,58 @@
+# The exchange idiom (C2): an element of a list of union records is taken out
+# with exchange, its payload is updated in place as an owned value, and the
+# updated element is stored back. No copy of the element or its fields is made.
+import lists
+
+record Account:
+    balance: int
+    holds: int[]
+
+
+enum Slot:
+    empty
+    account(value: Account)
+    tally(value: int)
+
+
+# Moves the account in slot `index` out, adds `amount` to its balance and a hold, and stores it back.
+func credit(mut slots: Slot[], index: int, amount: int):
+    match lists.exchange(mut slots, index, Slot.empty):
+        case account(value=payload):
+            mut updated = own payload
+            updated.balance = updated.balance + amount
+            append(mut updated.holds, amount)
+            slots[index] = Slot.account(value=own updated)
+        case _:
+            assert False, "slot is not an account"
+
+
+public func test_exchange_updates_union_record_element_in_place() -> bool:
+    mut slots = [Slot.empty, Slot.account(value=Account(balance=10, holds=[])), Slot.tally(value=4)]
+    credit(mut slots, 1, 5)
+    credit(mut slots, 1, 7)
+    match slots[1]:
+        case account(value=payload):
+            return payload.balance == 22 and len(payload.holds) == 2 and payload.holds[1] == 7
+        case _:
+            return False
+
+
+public func test_exchange_returns_former_element_and_keeps_order() -> bool:
+    mut slots = [Slot.empty, Slot.account(value=Account(balance=1, holds=[])), Slot.tally(value=4)]
+    mut former = lists.exchange(mut slots, 1, Slot.tally(value=9))
+    mut kept = len(slots) == 3
+    match former:
+        case account(value=payload):
+            kept = kept and payload.balance == 1
+        case _:
+            kept = False
+    match slots[2]:
+        case tally(value=count):
+            kept = kept and count == 4
+        case _:
+            kept = False
+    match slots[1]:
+        case tally(value=count):
+            return kept and count == 9
+        case _:
+            return False

@@ -1,0 +1,344 @@
+# `match mut` on a `mut` local of a union whose payloads are all scalars (FX5). Such a union holds no managed value, so the
+# ownership check keeps no state for its local, and it used to refuse the match as if the local were `const`
+# (`E_SINGLE_OWNER_BORROW`), while the same match through a `mut` parameter, or on a local of a union with a record payload,
+# was accepted. Each test writes through a payload binding and reads the value back from the local. The refusal for a
+# `const` local is pinned in src/match_mut_test.zig.
+enum Num:
+    none
+    n8(v: i8)
+    n16(v: i16)
+    n32(v: i32)
+    n64(v: int)
+    u8v(v: u8)
+    u16v(v: u16)
+    u32v(v: u32)
+    u64v(v: u64)
+    flag(v: bool)
+    real(v: float)
+    pair(a: int, b: u8)
+
+
+enum Sh:
+    empty
+    rad(value: int)
+
+
+record Holder:
+    tag: int
+    shape: Sh
+
+
+func read_i8(n: Num) -> i8:
+    match n:
+        case n8(v=v):
+            return v
+        case _:
+            return 0i8
+
+
+public func test_i8_payload_written_back() -> bool:
+    mut n = Num.n8(v=-7i8)
+    match mut n:
+        case n8(v=v):
+            v = wrapping_sub(v, 100i8)
+        case _:
+            return False
+    return read_i8(n) == -107i8
+
+
+public func test_i16_payload_written_back() -> bool:
+    mut n = Num.n16(v=300i16)
+    match mut n:
+        case n16(v=v):
+            v = v * 100i16
+        case _:
+            return False
+    match n:
+        case n16(v=v):
+            return v == 30000i16
+        case _:
+            return False
+
+
+public func test_i32_payload_written_back() -> bool:
+    mut n = Num.n32(v=-2147483647i32)
+    match mut n:
+        case n32(v=v):
+            v = v - 1i32
+        case _:
+            return False
+    match n:
+        case n32(v=v):
+            return v == -2147483647i32 - 1i32
+        case _:
+            return False
+
+
+public func test_int_payload_written_back() -> bool:
+    mut n = Num.n64(v=1)
+    match mut n:
+        case n64(v=v):
+            v = 9223372036854775807
+        case _:
+            return False
+    match n:
+        case n64(v=v):
+            return v == 9223372036854775807
+        case _:
+            return False
+
+
+public func test_u8_payload_written_back() -> bool:
+    mut n = Num.u8v(v=0u8)
+    match mut n:
+        case u8v(v=v):
+            v = wrapping_sub(v, 1u8)
+        case _:
+            return False
+    match n:
+        case u8v(v=v):
+            return v == 255u8
+        case _:
+            return False
+
+
+public func test_u16_payload_written_back() -> bool:
+    mut n = Num.u16v(v=65000u16)
+    match mut n:
+        case u16v(v=v):
+            v = v + 535u16
+        case _:
+            return False
+    match n:
+        case u16v(v=v):
+            return v == 65535u16
+        case _:
+            return False
+
+
+public func test_u32_payload_written_back() -> bool:
+    mut n = Num.u32v(v=7u32)
+    match mut n:
+        case u32v(v=v):
+            v = shift_left(v, 29u32)
+        case _:
+            return False
+    match n:
+        case u32v(v=v):
+            return v == 3758096384u32
+        case _:
+            return False
+
+
+public func test_u64_payload_written_back() -> bool:
+    mut n = Num.u64v(v=18446744073709551614u64)
+    match mut n:
+        case u64v(v=v):
+            v = v + 1u64
+        case _:
+            return False
+    match n:
+        case u64v(v=v):
+            return v == 18446744073709551615u64
+        case _:
+            return False
+
+
+public func test_bool_payload_written_back() -> bool:
+    mut n = Num.flag(v=False)
+    match mut n:
+        case flag(v=v):
+            v = True
+        case _:
+            return False
+    match n:
+        case flag(v=v):
+            return v
+        case _:
+            return False
+
+
+public func test_float_payload_written_back() -> bool:
+    mut n = Num.real(v=1.5)
+    match mut n:
+        case real(v=v):
+            v = v * -2.0
+        case _:
+            return False
+    match n:
+        case real(v=v):
+            return v == -3.0
+        case _:
+            return False
+
+
+public func test_two_payload_fields_written_back() -> bool:
+    mut n = Num.pair(a=1, b=2u8)
+    match mut n:
+        case pair(a=x, b=y):
+            x = x + 40
+            y = y * 100u8
+        case _:
+            return False
+    match n:
+        case pair(a=x, b=y):
+            assert x == 41
+            return y == 200u8
+        case _:
+            return False
+
+
+public func test_other_case_left_unchanged() -> bool:
+    mut n = Num.none
+    match mut n:
+        case n64(v=v):
+            v = 5
+        case _:
+            n = Num.n8(v=3i8)
+    return read_i8(n) == 3i8
+
+
+public func test_nested_match_mut_on_another_local() -> bool:
+    mut a = Sh.rad(value=1)
+    mut b = Sh.rad(value=2)
+    match mut a:
+        case rad(value=x):
+            match mut b:
+                case rad(value=y):
+                    y = y + x + 10
+                case empty:
+                    return False
+            x = x + 4
+        case empty:
+            return False
+    match a:
+        case rad(value=x):
+            assert x == 5
+        case empty:
+            return False
+    match b:
+        case rad(value=y):
+            return y == 13
+        case empty:
+            return False
+
+
+public func test_option_local_written_back() -> bool:
+    mut o: int? = Some(5)
+    match mut o:
+        case Some(v):
+            v = v * 2
+        case None:
+            return False
+    match o:
+        case Some(v):
+            return v == 10
+        case None:
+            return False
+
+
+record Limits:
+    tag: int
+    limit: int?
+
+
+public func test_option_field_written_back() -> bool:
+    mut b = Limits(tag=1, limit=Some(3))
+    match mut b.limit:
+        case Some(v):
+            v = v + 40
+        case None:
+            return False
+    match b.limit:
+        case Some(v):
+            return v == 43
+        case None:
+            return False
+
+
+public func test_match_mut_in_a_loop_accumulates() -> bool:
+    mut s = Sh.rad(value=0)
+    for k in range(5):
+        match mut s:
+            case rad(value=v):
+                v = v + k
+            case empty:
+                return False
+    match s:
+        case rad(value=v):
+            return v == 10
+        case empty:
+            return False
+
+
+public func test_local_declared_in_an_inner_block() -> bool:
+    mut total = 0
+    if len([1]) == 1:
+        mut s = Sh.rad(value=4)
+        match mut s:
+            case rad(value=v):
+                v = v * 3
+            case empty:
+                return False
+        match s:
+            case rad(value=v):
+                total = v
+            case empty:
+                return False
+    return total == 12
+
+
+public func test_field_of_a_mut_local_record() -> bool:
+    mut h = Holder(tag=1, shape=Sh.rad(value=2))
+    match mut h.shape:
+        case rad(value=v):
+            v = v + h.tag + 20
+        case empty:
+            return False
+    match h.shape:
+        case rad(value=v):
+            return v == 23
+        case empty:
+            return False
+
+
+func doubled(k: int) -> int fails str:
+    if k < 0:
+        fail "negative"
+    mut s = Sh.rad(value=k)
+    match mut s:
+        case rad(value=v):
+            v = v * 2
+        case empty:
+            fail "empty"
+    match s:
+        case rad(value=v):
+            return v
+        case empty:
+            fail "empty"
+
+
+public func test_match_mut_in_a_fails_function() -> bool:
+    match doubled(21):
+        case Ok(n):
+            return n == 42
+        case Err(_):
+            return False
+
+
+func bumped(start: int) -> Sh:
+    mut s = Sh.rad(value=start)
+    match mut s:
+        case rad(value=v):
+            v = v + 1
+        case empty:
+            return Sh.empty
+    return s
+
+
+public func test_written_local_returned() -> bool:
+    match bumped(6):
+        case rad(value=v):
+            return v == 7
+        case empty:
+            return False

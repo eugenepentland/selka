@@ -1,0 +1,24 @@
+# A server helper that keeps its listener: a plain parameter would take it
+# without saying so, so the parameter must be `own`, and every call site gives
+# the listener away with `own`.
+import network
+
+
+record Holder:
+    listener: network.Listener
+
+
+func keep(listener: network.Listener) -> Holder:
+    return Holder(listener=listener)
+
+
+func main(net: Network) -> int:
+    with net.host("127.0.0.1:0") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut live = owned
+                const held = keep(live)
+                _ = held
+                return 0
+            case err(code):
+                return 0 - code

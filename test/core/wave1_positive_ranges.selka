@@ -1,0 +1,84 @@
+import buffers
+import bytes
+import strings
+
+@noalloc
+func find_text(text: str, start: int, end: int) -> int:
+    return strings.char_find(text, "", start, end)
+
+
+@noalloc
+func parse_bytes(data: bytes, start: int, end: int) -> int?:
+    return bytes.parse_int_range(data, start, end)
+
+
+func mark(mut state: int[], value: int) -> int:
+    state[0] = state[0] * 10 + value
+    return value
+
+
+func main() -> int:
+    const text = "abc"
+    const data = b"123"
+    assert find_text(text, 0, 99) == 0
+    _ = parse_bytes(data, 0, 99)
+    assert strings.char_find(text, "b") == 1
+    assert strings.char_rfind(text, "", 0, 99) == 3
+    assert strings.char_count_of(text, "", 99) == 0
+    assert not strings.char_startswith(text, "", 99)
+    assert not strings.char_endswith(text, "", 99)
+    assert strings.char_find(text, "", 99) == -1
+    assert strings.char_find(text, "", 2, 1) == -1
+    assert bytes.find(data, b"2") == 1
+    assert bytes.rfind(data, b"", 0, 99) == 3
+    assert bytes.count(data, b"", 99) == 0
+    assert not bytes.starts_with(data, b"", 99)
+    assert not bytes.ends_with(data, b"", 99)
+    assert bytes.find(data, b"", 99) == -1
+    assert bytes.find(data, b"", 2, 1) == -1
+    mut order = [0]
+    assert strings.char_find(text, "", mark(mut order, 1), mark(mut order, 2)) == 1
+    assert order[0] == 12
+    match bytes.parse_int_range(data, 0, 99):
+        case Some(value):
+            assert value == 123
+        case None:
+            return 1
+    match bytes.parse_float_range(data, 0, 99):
+        case Some(value):
+            assert value == 123.0
+        case None:
+            return 2
+    match bytes.parse_int_range(data, 2, 1):
+        case Some(_):
+            return 3
+        case None:
+            pass
+    match bytes.parse_int_range(b"9223372036854775808", 0, 99):
+        case Some(_):
+            return 4
+        case None:
+            pass
+    match bytes.parse_float_range(b"x", 0, 99):
+        case Some(_):
+            return 5
+        case None:
+            pass
+    match bytes.scalar_count_range(data, 0, 99):
+        case Ok(value):
+            assert value == 3
+        case Err(_):
+            return 6
+    match bytes.scalar_count_range(b"\xff", 0, 99):
+        case Ok(_):
+            return 7
+        case Err(_):
+            pass
+    assert bytes.find_any(data, b"1", 0) == 0
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    assert not buffers.append_range(mut buffer, data, len(data) + 1, len(data) + 2)
+    assert len(buffer) == 0
+    assert buffers.append_range(mut buffer, data, 1, 1)
+    assert len(buffer) == 0
+    return 0

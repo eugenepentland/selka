@@ -1,0 +1,38 @@
+# F-76: a call written as a statement with `else Err(e):` or `else None:`. `else` unwraps the value of a declaration or
+# of `_ =`, and a statement that is only a call has none to bind; `selka fix` writes `if CALL is Err(e):`, the test of
+# a call that gives nothing back (the bare `else:` has no case to carry over and stays, with its message).
+func check(n: int) fails str:
+    if n < 0:
+        fail "negative"
+
+
+func parse(n: int) -> int fails str:
+    if n < 0:
+        fail "negative"
+    return n
+
+
+func find(n: int) -> int?:
+    if n == 0:
+        return None
+    return Some(n)
+
+
+func total(values: int[]) -> int:
+    mut sum = 0
+    for value in values:
+        check(value) else Err(_):
+            continue
+        sum += value
+    return sum
+
+
+func main(out: Stream) -> int:
+    check(-1) else Err(reason):
+        print(out, "check:", reason)
+    parse(-2) else Err(reason):
+        print(out, "parse:", reason)
+    find(0) else None:
+        print(out, "find: nothing")
+    print(out, total([1, -2, 3]))
+    return 0

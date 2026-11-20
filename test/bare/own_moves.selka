@@ -1,0 +1,23 @@
+# `match own` and `for x in own xs`: payloads and elements moved, not copied.
+func maybe(i: int) -> str?:
+    if i % 2 == 0:
+        return Some(f"even{i}")
+    return None
+
+
+func main() -> int:
+    mut words: str[] = []
+    for i in range(10):
+        const name = maybe(i)
+        match own name:
+            case Some(text):
+                append(mut words, own text)
+            case None:
+                pass
+    mut moved: str[] = []
+    for w in own words:
+        append(mut moved, own w)
+    mut total = 0
+    for m in moved:
+        total += len(m)
+    return total + len(moved)

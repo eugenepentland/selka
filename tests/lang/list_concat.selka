@@ -1,0 +1,115 @@
+# `a + b` on two lists of one element type builds a new list holding copies of the elements of `a`, then of `b`
+# (G32), as `str + str` builds new text. Neither operand changes, the result is independent storage, and a
+# managed element is copied.
+record Label:
+    text: str
+    tags: str[]
+
+
+func labels(prefix: str) -> Label[]:
+    mut out: Label[] = []
+    for position in range(0, 2):
+        append(mut out, Label(text=prefix + str(position), tags=[copy(prefix), "x"]))
+    return out
+
+
+func ints(count: int, start: int) -> int[]:
+    mut out: int[] = []
+    for position in range(0, count):
+        append(mut out, start + position)
+    return out
+
+
+func total(values: int[]) -> int:
+    mut sum = 0
+    for value in values:
+        sum += value
+    return sum
+
+
+public func test_concatenation_keeps_the_order_of_both_operands() -> bool:
+    const joined = [1, 2, 3] + [4, 5]
+    assert len(joined) == 5
+    assert joined == [1, 2, 3, 4, 5]
+    const strings_joined = ["a", "b"] + ["c"]
+    assert strings_joined == ["a", "b", "c"]
+    const floats = [0.5] + [1.5, 2.5]
+    assert floats == [0.5, 1.5, 2.5]
+    const flags = [True] + [False]
+    assert flags == [True, False]
+    return True
+
+
+public func test_empty_operands_give_a_copy_of_the_other() -> bool:
+    const none: int[] = []
+    const some = [7, 8]
+    assert (none + some) == [7, 8]
+    assert (some + none) == [7, 8]
+    assert len(none + none) == 0
+    return True
+
+
+public func test_operands_are_unchanged_and_the_result_is_independent() -> bool:
+    mut left = [1, 2]
+    const right = [3, 4]
+    mut joined = left + right
+    joined[0] = 99
+    append(mut joined, 5)
+    assert left == [1, 2]
+    assert right == [3, 4]
+    assert joined == [99, 2, 3, 4, 5]
+    append(mut left, 6)
+    assert joined == [99, 2, 3, 4, 5]
+    assert left == [1, 2, 6]
+    return True
+
+
+public func test_concatenation_chains_and_adds_to_the_result_of_a_call() -> bool:
+    const joined = [1] + [2] + [3] + ints(3, 10)
+    assert joined == [1, 2, 3, 10, 11, 12]
+    assert total(ints(3, 1) + ints(2, 100)) == 6 + 201
+    assert len(ints(0, 0) + ints(4, 0) + ints(0, 0)) == 4
+    return True
+
+
+public func test_the_same_list_may_be_both_operands() -> bool:
+    const base = [1, 2]
+    const doubled = base + base
+    assert doubled == [1, 2, 1, 2]
+    assert base == [1, 2]
+    return True
+
+
+public func test_managed_elements_are_copied_not_shared() -> bool:
+    const first = labels("a")
+    const second = labels("b")
+    mut joined = first + second
+    assert len(joined) == 4
+    assert joined[0].text == "a0" and joined[1].text == "a1"
+    assert joined[2].text == "b0" and joined[3].text == "b1"
+    assert joined[3].tags == ["b", "x"]
+    append(mut joined[0].tags, "changed")
+    joined[2].text = "edited"
+    assert first[0].tags == ["a", "x"]
+    assert second[0].text == "b0"
+    assert joined[0].tags == ["a", "x", "changed"]
+    return True
+
+
+public func test_nested_lists_are_copied_deeply() -> bool:
+    const grid = [[1, 2], [3]] + [[4, 5, 6]]
+    assert len(grid) == 3
+    assert grid[0] == [1, 2] and grid[1] == [3] and grid[2] == [4, 5, 6]
+    mut pieces: int[][] = []
+    append(mut pieces, [1])
+    const more = pieces + pieces
+    append(mut pieces[0], 2)
+    assert more[0] == [1] and more[1] == [1]
+    assert pieces[0] == [1, 2]
+    return True
+
+
+public func test_text_and_byte_strings_still_concatenate() -> bool:
+    assert "ab" + "cd" == "abcd"
+    assert b"ab" + b"cd" == b"abcd"
+    return True

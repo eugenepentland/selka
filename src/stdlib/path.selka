@@ -1,0 +1,128 @@
+import lists
+import strings
+
+# A path split into everything before its final suffix and that suffix.
+public record Split:
+    root: str
+    extension: str
+
+
+# The single path separator these operations understand.
+public func separator() -> str:
+    return "/"
+
+
+# Whether a path starts at the root rather than at the working directory.
+public func is_absolute(value: str) -> bool:
+    return strings.starts_with(value, separator())
+
+
+# Two path pieces joined; an absolute right side replaces the left one.
+public func join(left: str, right: str) -> str:
+    if strings.char_count(right) == 0:
+        return copy(left)
+    if strings.char_count(left) == 0 or is_absolute(right):
+        return copy(right)
+    if strings.ends_with(left, separator()):
+        return left + right
+    return left + separator() + right
+
+
+# Every piece joined from left to right under the same rules as join.
+public func join_all(parts: str[]) -> str:
+    mut out = ""
+    for part in parts:
+        out = join(out, part)
+    return out
+
+
+# The final component of a path; a trailing separator yields the empty text.
+public func basename(value: str) -> str from value:
+    mut index = strings.char_count(value)
+    while index > 0 and strings.char_at(value, index - 1) != separator():
+        index -= 1
+    return strings.char_slice(value, index, strings.char_count(value))
+
+
+# Everything before the final component, without its trailing separator.
+public func dirname(value: str) -> str from value:
+    mut index = strings.char_count(value)
+    while index > 0 and strings.char_at(value, index - 1) != separator():
+        index -= 1
+    while index > 1 and strings.char_at(value, index - 1) == separator():
+        index -= 1
+    return strings.char_slice(value, 0, index)
+
+
+# A path split at the final dot of its last component.
+public func splitext(value: str) -> Split:
+    mut name = copy(basename(value))
+    mut cut = strings.char_count(name)
+    while cut > 0 and strings.char_at(name, cut - 1) != ".":
+        cut -= 1
+    if cut <= 1:
+        return Split(root=copy(value), extension="")
+    mut boundary = strings.char_count(value) - (strings.char_count(name) - cut) - 1
+    return Split(root=copy(strings.char_slice(value, 0, boundary)), extension=copy(strings.char_slice(value, boundary, strings.char_count(value))))
+
+
+# The final component without its suffix.
+public func stem(value: str) -> str:
+    return copy(basename(splitext(value).root))
+
+
+# The final suffix of a path, including its leading dot, or the empty text.
+public func extension(value: str) -> str:
+    const parts = splitext(value)
+    return copy(parts.extension)
+
+
+# Nonempty components of a path, with separators and single dots removed.
+public func components(value: str) -> str[]:
+    mut out: str[] = []
+    for piece in strings.split(value, separator()):
+        if strings.char_count(piece) > 0 and piece != ".":
+            append(mut out, copy(piece))
+    return out
+
+
+# A path with duplicate separators, single dots and resolvable parents removed.
+public func normalize(value: str) -> str:
+    if strings.char_count(value) == 0:
+        return "."
+    mut absolute = is_absolute(value)
+    mut parts: str[] = []
+    for piece in components(value):
+        if piece != "..":
+            append(mut parts, copy(piece))
+        elif len(parts) > 0 and parts[len(parts) - 1] != "..":
+            _ = lists.pop(mut parts)
+        elif not absolute:
+            append(mut parts, copy(piece))
+    mut body = strings.join(parts, separator())
+    if absolute:
+        return separator() + body
+    if strings.char_count(body) == 0:
+        return "."
+    return body
+
+
+# `target` as a path from the folder `base`, both normalized first: `relative("/a/b", "/a/b/c.selka")` is `c.selka`,
+# `relative("/a/b", "/a/x")` is `../x`, and a path from itself is `.`. When one is absolute and the other is not, no path
+# leads from one to the other, and `target` comes back normalized and whole.
+public func relative(base: str, target: str) -> str:
+    if is_absolute(base) != is_absolute(target):
+        return normalize(target)
+    const from_parts = components(normalize(base))
+    const to_parts = components(normalize(target))
+    mut shared = 0
+    while shared < len(from_parts) and shared < len(to_parts) and from_parts[shared] == to_parts[shared]:
+        shared += 1
+    mut parts: str[] = []
+    for _ in range(shared, len(from_parts)):
+        append(mut parts, "..")
+    for index in range(shared, len(to_parts)):
+        append(mut parts, copy(to_parts[index]))
+    if len(parts) == 0:
+        return "."
+    return strings.join(parts, separator())

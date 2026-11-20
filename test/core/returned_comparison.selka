@@ -1,0 +1,72 @@
+# R3-TESTMSG: a `bool` test whose last line is `return LEFT op RIGHT` and fails names the two values and the line when they
+# are integers, floats or texts; a long text is cut as an assert's is. A comparison of two constants is left as it was (the
+# source shows both values), so each test below compares something it computes. Any other false (a bool, a record, an `and`
+# of two facts) is reported as before, with the advice to write one `assert` for each fact.
+import strings
+
+func label(n: int) -> str:
+    return "item " + str(n)
+
+
+func double(n: int) -> int:
+    return n * 2
+
+
+func half(n: float) -> float:
+    return n / 2.0
+
+
+func top() -> u64:
+    return 18446744073709551615
+
+
+public func test_ints() -> bool:
+    return double(3) == 5
+
+
+public func test_text_from_a_call() -> bool:
+    return label(2) == "item 3"
+
+
+public func test_float_greater() -> bool:
+    const x = half(3.0)
+    const y = half(5.0)
+    return x > y
+
+
+public func test_unsigned() -> bool:
+    const big = top()
+    return big < 1
+
+
+public func test_long_text() -> bool:
+    const long = strings.repeat("x", 300)
+    return long == "y"
+
+
+public func test_bool_names_no_values() -> bool:
+    const flag = False
+    return flag == True
+
+
+record Point:
+    x: int
+    y: int
+
+
+public func test_record_names_no_values() -> bool:
+    const p = Point(x=1, y=2)
+    const q = Point(x=1, y=3)
+    return p == q
+
+
+public func test_two_facts() -> bool:
+    return double(2) == 4 and double(3) == 5
+
+
+public func test_passes() -> bool:
+    return double(2) == 4
+
+
+public func test_passes_with_text() -> bool:
+    return label(1) == "item 1"

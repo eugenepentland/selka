@@ -1,0 +1,149 @@
+import enum_case_names_support as support
+
+# `case_name(value)` is the name of the case a value holds, `Kind.cases()` the list of every case of an enum without payloads in
+# declaration order, and `Kind.from_name(text)` the case a `str` or `bytes` name spells, or `None`. They replace Zig's `@tagName`,
+# `std.enums.values` and `std.meta.stringToEnum`, which were a hand-written `match` over every case here.
+enum Cooling:
+    natural
+    fan
+    sealed_conduction
+
+
+enum Token:
+    word(text: str)
+    number(value: int)
+    end
+
+
+record Row:
+    token: Token
+    label: str
+
+
+enum Plain:
+    first
+    cases
+    from_name
+
+
+func make(index: int) -> Token:
+    if index == 0:
+        return Token.word(text="a word long enough that it lives on the heap, not in a small buffer")
+    if index == 1:
+        return Token.number(value=4)
+    return Token.end
+
+
+func joined(rows: Row[]) -> str:
+    mut text = ""
+    for row in rows:
+        text = text + case_name(row.token) + ","
+    return text
+
+
+func parsed(text: str) -> int:
+    const found = Cooling.from_name(text)
+    match found:
+        case Some(value=cooling):
+            if cooling == Cooling.fan:
+                return 2
+            return 1
+        case None:
+            return 0
+
+
+func parsed_bytes(text: bytes) -> bool:
+    return Cooling.from_name(text) is Some
+
+
+func generic_name[T](value: T, cooling: Cooling) -> str:
+    _ = value
+    return case_name(cooling)
+
+
+func generic_cases[T](value: T) -> int:
+    _ = value
+    return len(Cooling.cases())
+
+
+func generic_parse[T](value: T, text: str) -> bool:
+    _ = value
+    return Cooling.from_name(text) is Some
+
+
+public func test_a_case_name_is_its_declared_identifier() -> bool:
+    return case_name(Cooling.natural) == "natural" and case_name(Cooling.fan) == "fan" and case_name(Cooling.sealed_conduction) == "sealed_conduction"
+
+
+public func test_a_case_name_is_read_from_a_value_in_a_variable() -> bool:
+    mut cooling = Cooling.fan
+    const first = case_name(cooling)
+    cooling = Cooling.natural
+    return first == "fan" and case_name(cooling) == "natural"
+
+
+public func test_a_payload_is_ignored_and_a_fresh_value_is_released() -> bool:
+    return case_name(make(0)) == "word" and case_name(make(1)) == "number" and case_name(make(2)) == "end"
+
+
+public func test_a_case_name_reads_a_field_and_an_element() -> bool:
+    const rows = [Row(token=make(0), label="a"), Row(token=make(2), label="b")]
+    const tokens = [make(1), make(0)]
+    return joined(rows) == "word,end," and case_name(tokens[0]) == "number" and case_name(rows[1].token) == "end"
+
+
+public func test_a_case_name_takes_an_imported_enum() -> bool:
+    return case_name(support.Level.mid) == "mid" and case_name(support.Level.high) == "high"
+
+
+public func test_cases_lists_every_case_in_declaration_order() -> bool:
+    const all = Cooling.cases()
+    return len(all) == 3 and all[0] == Cooling.natural and all[1] == Cooling.fan and all[2] == Cooling.sealed_conduction
+
+
+public func test_cases_of_an_imported_enum() -> bool:
+    const levels = support.Level.cases()
+    return len(levels) == 3 and case_name(levels[0]) == "low" and case_name(levels[2]) == "high"
+
+
+public func test_cases_and_case_name_cover_an_enum_without_a_list_kept_by_hand() -> bool:
+    mut names = ""
+    for cooling in Cooling.cases():
+        names = names + case_name(cooling) + " "
+    return names == "natural fan sealed_conduction "
+
+
+public func test_from_name_finds_the_case_a_name_spells() -> bool:
+    return parsed("fan") == 2 and parsed("natural") == 1 and parsed("sealed_conduction") == 1
+
+
+public func test_from_name_answers_none_for_any_other_text() -> bool:
+    return parsed("") == 0 and parsed("Fan") == 0 and parsed("fa") == 0 and parsed("fans") == 0 and parsed("sealed-conduction") == 0
+
+
+public func test_from_name_reads_bytes_and_slices() -> bool:
+    const text = "xfanx"
+    const octets = b"natural"
+    return parsed_bytes(b"fan") and parsed_bytes(octets) and not parsed_bytes(b"nope") and parsed(text[1:4]) == 2 and parsed_bytes(octets[0:3]) == False
+
+
+public func test_a_name_survives_the_round_trip_for_every_case() -> bool:
+    for cooling in Cooling.cases():
+        const back = Cooling.from_name(case_name(cooling))
+        match back:
+            case Some(value=found):
+                if found != cooling:
+                    return False
+            case None:
+                return False
+    return True
+
+
+public func test_a_generic_function_may_use_them_on_a_concrete_enum() -> bool:
+    return generic_name(7, Cooling.fan) == "fan" and generic_cases("x") == 3 and generic_parse(1, "fan") and not generic_parse(1, "none")
+
+
+public func test_a_case_called_cases_or_from_name_keeps_its_meaning() -> bool:
+    const a = Plain.cases
+    const b = Plain.from_name
+    return case_name(a) == "cases" and case_name(b) == "from_name" and a != b and case_name(Plain.first) == "first"

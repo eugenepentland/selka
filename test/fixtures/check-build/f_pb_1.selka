@@ -1,0 +1,55 @@
+# F-PB-1 (port repro, lane PB): `check` accepted it and the build refused it (E_CORE_UNSUPPORTED, rule Z3). Both accept it
+# now: a loop variable read again after a write to its record passes its place on to `r.checks` (lane CB).
+enum Kind:
+    a
+    b
+    c
+
+
+record Check:
+    kind: Kind
+    ok: bool
+
+
+record Row:
+    ok: bool
+    checks: Check[]
+
+
+record Counts:
+    a: int = 0
+    b: int = 0
+    c: int = 0
+
+
+record Roll:
+    checked: int = 0
+    filled: Counts = Counts()
+    expected: Counts = Counts()
+    items: Row[] = []
+
+
+func roll_up(own items: Row[]) -> Roll:
+    mut sc = Roll(items=own items)
+    for r in sc.items:
+        sc.checked += 1
+        for c in r.checks:
+            if c.kind == Kind.a:
+                sc.expected.a += 1
+                if c.ok:
+                    sc.filled.a += 1
+            elif c.kind == Kind.b:
+                sc.expected.b += 1
+                if c.ok:
+                    sc.filled.b += 1
+            else:
+                sc.expected.c += 1
+                if c.ok:
+                    sc.filled.c += 1
+    return sc
+
+
+public func test_roll_up() -> bool:
+    const rows: Row[] = [Row(ok=True, checks=[Check(kind=Kind.a, ok=True), Check(kind=Kind.c, ok=False)])]
+    const sc = roll_up(own rows)
+    return sc.checked == 1 and sc.filled.a == 1 and sc.expected.c == 1

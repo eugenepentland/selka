@@ -1,0 +1,7 @@
+# A task: `parallel.map` lends each value to `label`, a function of another module, read-only.
+import lib
+import parallel
+
+func main() -> int:
+    const names = parallel.map([1, 2, 3], lib.label)
+    return len(names)

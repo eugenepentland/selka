@@ -1,0 +1,3383 @@
+record Item:
+    name: str
+    count: int
+
+
+record Rec:
+    name: str
+    items: int[]
+    item: Item
+    raw: bytes
+
+
+record TextBox:
+    value: str
+
+
+record ItemBox:
+    value: Item
+
+
+record BytesBox:
+    value: bytes
+
+
+record IntsBox:
+    value: int[]
+
+
+func make_bytes(n: int) -> bytes:
+    if n > 100:
+        return b"long" + b"er"
+    return b"ab" + b"cd"
+
+
+func make_ints(n: int) -> int[]:
+    return [n, n + 1]
+
+
+func first_bytes(r: Rec) -> bytes from r:
+    return r.raw
+
+
+func first_ints(r: Rec) -> int[] from r:
+    return r.items
+
+
+func read_bytes(s: bytes) -> int:
+    return len(s)
+
+
+func read_ints(s: int[]) -> int:
+    return len(s)
+
+
+func keep_bytes(own s: bytes) -> int:
+    return len(s)
+
+
+func keep_ints(own s: int[]) -> int:
+    return len(s)
+
+
+func make_text(n: int) -> str:
+    return f"text{n}"
+
+
+func make_item(n: int) -> Item:
+    return Item(name=f"item{n}", count=n)
+
+
+func first_text(r: Rec) -> str from r:
+    return r.name
+
+
+func first_item(r: Rec) -> Item from r:
+    return r.item
+
+
+func read_text(s: str) -> int:
+    return len(s)
+
+
+func read_item(i: Item) -> int:
+    return i.count
+
+
+func keep_text(own s: str) -> int:
+    return len(s)
+
+
+func keep_item(own i: Item) -> int:
+    return i.count
+
+
+func probe_ints__local__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const a = make_ints(n)
+    mut c = own a
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__local__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const a = make_ints(n)
+    mut c = copy(a)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__local__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    const a = make_ints(n)
+    return IntsBox(value=a)
+
+
+func call_ints__local__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__local__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__local__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    const a = make_ints(n)
+    mut l: int[][] = []
+    append(mut l, a)
+    return l
+
+
+func call_ints__local__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__local__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__local__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const a = make_ints(n)
+    return read_ints(own a)
+
+
+func call_ints__local__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const a = make_ints(n)
+    return keep_ints(a)
+
+
+func call_ints__local__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    const a = make_ints(n)
+    return own a
+
+
+func call_ints__local__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__local__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__local__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const a = make_ints(n)
+    append(mut out, a)
+    return len(out)
+
+
+func call_ints__local__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const a = make_ints(n)
+    mr.items = a
+    return n
+
+
+func call_ints__local__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own p
+    return read_ints(c)
+
+
+func call_ints__param__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own p
+    return read_ints(c)
+
+
+func call_ints__param__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own p
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(p)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own p)
+    return read_ints(b.value)
+
+
+func call_ints__param__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=p)
+
+
+func call_ints__param__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own p)
+
+
+func call_ints__param__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own p)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__param__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own p)
+    return len(l)
+
+
+func call_ints__param__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, p)
+    return l
+
+
+func call_ints__param__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own p)
+    return l
+
+
+func call_ints__param__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own p
+    return len(d)
+
+
+func call_ints__param__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own p)
+
+
+func call_ints__param__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(p)
+
+
+func call_ints__param__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own p)
+
+
+func call_ints__param__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return p
+
+
+func call_ints__param__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own p
+
+
+func call_ints__param__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from p:
+    return own p
+
+
+func call_ints__param__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from p:
+    return copy(p)
+
+
+func call_ints__param__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, p)
+    return len(out)
+
+
+func call_ints__param__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own p)
+    return len(out)
+
+
+func call_ints__param__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = p
+    return n
+
+
+func call_ints__param__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own p
+    return n
+
+
+func call_ints__param__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__own_param__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own o
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__own_param__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__own_param__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__own_param__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(o)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__own_param__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__own_param__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__own_param__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=o)
+
+
+func call_ints__own_param__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__own_param__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__own_param__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, o)
+    return l
+
+
+func call_ints__own_param__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__own_param__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__own_param__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own o)
+
+
+func call_ints__own_param__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__own_param__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__own_param__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(o)
+
+
+func call_ints__own_param__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__own_param__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__own_param__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own o
+
+
+func call_ints__own_param__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__own_param__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__own_param__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, o)
+    return len(out)
+
+
+func call_ints__own_param__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__own_param__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__own_param__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = o
+    return n
+
+
+func call_ints__own_param__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__own_param__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own r.items
+    return read_ints(c)
+
+
+func call_ints__param_field__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own r.items
+    return read_ints(c)
+
+
+func call_ints__param_field__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own r.items
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param_field__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(r.items)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param_field__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own r.items)
+    return read_ints(b.value)
+
+
+func call_ints__param_field__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=r.items)
+
+
+func call_ints__param_field__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own r.items)
+
+
+func call_ints__param_field__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own r.items)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__param_field__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own r.items)
+    return len(l)
+
+
+func call_ints__param_field__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, r.items)
+    return l
+
+
+func call_ints__param_field__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own r.items)
+    return l
+
+
+func call_ints__param_field__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own r.items
+    return len(d)
+
+
+func call_ints__param_field__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own r.items)
+
+
+func call_ints__param_field__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(r.items)
+
+
+func call_ints__param_field__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own r.items)
+
+
+func call_ints__param_field__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return r.items
+
+
+func call_ints__param_field__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own r.items
+
+
+func call_ints__param_field__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from r:
+    return own r.items
+
+
+func call_ints__param_field__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from r:
+    return copy(r.items)
+
+
+func call_ints__param_field__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_field__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_field__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, r.items)
+    return len(out)
+
+
+func call_ints__param_field__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own r.items)
+    return len(out)
+
+
+func call_ints__param_field__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = r.items
+    return n
+
+
+func call_ints__param_field__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_field__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own r.items
+    return n
+
+
+func call_ints__param_field__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_field__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own ts[0]
+    return read_ints(c)
+
+
+func call_ints__param_element__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own ts[0]
+    return read_ints(c)
+
+
+func call_ints__param_element__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own ts[0]
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param_element__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(ts[0])
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param_element__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own ts[0])
+    return read_ints(b.value)
+
+
+func call_ints__param_element__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=ts[0])
+
+
+func call_ints__param_element__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own ts[0])
+
+
+func call_ints__param_element__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own ts[0])
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__param_element__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own ts[0])
+    return len(l)
+
+
+func call_ints__param_element__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, ts[0])
+    return l
+
+
+func call_ints__param_element__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own ts[0])
+    return l
+
+
+func call_ints__param_element__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own ts[0]
+    return len(d)
+
+
+func call_ints__param_element__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own ts[0])
+
+
+func call_ints__param_element__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(ts[0])
+
+
+func call_ints__param_element__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own ts[0])
+
+
+func call_ints__param_element__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return ts[0]
+
+
+func call_ints__param_element__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own ts[0]
+
+
+func call_ints__param_element__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from ts:
+    return own ts[0]
+
+
+func call_ints__param_element__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from ts:
+    return copy(ts[0])
+
+
+func call_ints__param_element__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_element__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_element__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, ts[0])
+    return len(out)
+
+
+func call_ints__param_element__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own ts[0])
+    return len(out)
+
+
+func call_ints__param_element__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = ts[0]
+    return n
+
+
+func call_ints__param_element__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_element__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own ts[0]
+    return n
+
+
+func call_ints__param_element__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_element__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own first_ints(r)
+    return read_ints(c)
+
+
+func call_ints__from_call__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own first_ints(r)
+    return read_ints(c)
+
+
+func call_ints__from_call__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own first_ints(r)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__from_call__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(first_ints(r))
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__from_call__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__record_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=first_ints(r))
+    return read_ints(b.value)
+
+
+func call_ints__from_call__record_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own first_ints(r))
+    return read_ints(b.value)
+
+
+func call_ints__from_call__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=first_ints(r))
+
+
+func call_ints__from_call__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own first_ints(r))
+
+
+func call_ints__from_call__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__some_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(first_ints(r))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__from_call__some_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own first_ints(r))
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__from_call__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__list_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, first_ints(r))
+    return len(l)
+
+
+func call_ints__from_call__list_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own first_ints(r))
+    return len(l)
+
+
+func call_ints__from_call__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, first_ints(r))
+    return l
+
+
+func call_ints__from_call__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own first_ints(r))
+    return l
+
+
+func call_ints__from_call__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__dict_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = first_ints(r)
+    return len(d)
+
+
+func call_ints__from_call__dict_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own first_ints(r)
+    return len(d)
+
+
+func call_ints__from_call__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own first_ints(r))
+
+
+func call_ints__from_call__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(first_ints(r))
+
+
+func call_ints__from_call__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own first_ints(r))
+
+
+func call_ints__from_call__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return first_ints(r)
+
+
+func call_ints__from_call__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own first_ints(r)
+
+
+func call_ints__from_call__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from r:
+    return own first_ints(r)
+
+
+func call_ints__from_call__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from r:
+    return copy(first_ints(r))
+
+
+func call_ints__from_call__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__from_call__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__from_call__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, first_ints(r))
+    return len(out)
+
+
+func call_ints__from_call__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own first_ints(r))
+    return len(out)
+
+
+func call_ints__from_call__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = first_ints(r)
+    return n
+
+
+func call_ints__from_call__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__from_call__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own first_ints(r)
+    return n
+
+
+func call_ints__from_call__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__from_call__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local_field__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut c = own loc.items
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__local_field__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local_field__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local_field__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut c = copy(loc.items)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__local_field__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local_field__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local_field__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return IntsBox(value=loc.items)
+
+
+func call_ints__local_field__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__local_field__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__local_field__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mut l: int[][] = []
+    append(mut l, loc.items)
+    return l
+
+
+func call_ints__local_field__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__local_field__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__local_field__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return read_ints(own loc.items)
+
+
+func call_ints__local_field__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local_field__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local_field__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return keep_ints(loc.items)
+
+
+func call_ints__local_field__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local_field__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local_field__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    return loc.items
+
+
+func call_ints__local_field__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__local_field__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__local_field__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    append(mut out, loc.items)
+    return len(out)
+
+
+func call_ints__local_field__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local_field__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__local_field__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const loc = Rec(name=make_text(n), items=[n], item=make_item(n), raw=make_bytes(n))
+    mr.items = loc.items
+    return n
+
+
+func call_ints__local_field__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__local_field__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own m
+    return read_ints(c)
+
+
+func call_ints__mut_param__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own m
+    return read_ints(c)
+
+
+func call_ints__mut_param__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own m
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__mut_param__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(m)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__mut_param__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own m)
+    return read_ints(b.value)
+
+
+func call_ints__mut_param__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=m)
+
+
+func call_ints__mut_param__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own m)
+
+
+func call_ints__mut_param__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own m)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__mut_param__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own m)
+    return len(l)
+
+
+func call_ints__mut_param__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, m)
+    return l
+
+
+func call_ints__mut_param__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own m)
+    return l
+
+
+func call_ints__mut_param__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own m
+    return len(d)
+
+
+func call_ints__mut_param__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own m)
+
+
+func call_ints__mut_param__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(m)
+
+
+func call_ints__mut_param__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own m)
+
+
+func call_ints__mut_param__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return m
+
+
+func call_ints__mut_param__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own m
+
+
+func call_ints__mut_param__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from m:
+    return own m
+
+
+func call_ints__mut_param__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from m:
+    return copy(m)
+
+
+func call_ints__mut_param__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, m)
+    return len(out)
+
+
+func call_ints__mut_param__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own m)
+    return len(out)
+
+
+func call_ints__mut_param__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = m
+    return n
+
+
+func call_ints__mut_param__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own m
+    return n
+
+
+func call_ints__mut_param__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own mr.items
+    return read_ints(c)
+
+
+func call_ints__mut_param_field__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own mr.items
+    return read_ints(c)
+
+
+func call_ints__mut_param_field__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own mr.items
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__mut_param_field__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(mr.items)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__mut_param_field__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own mr.items)
+    return read_ints(b.value)
+
+
+func call_ints__mut_param_field__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=mr.items)
+
+
+func call_ints__mut_param_field__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own mr.items)
+
+
+func call_ints__mut_param_field__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own mr.items)
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__mut_param_field__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own mr.items)
+    return len(l)
+
+
+func call_ints__mut_param_field__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, mr.items)
+    return l
+
+
+func call_ints__mut_param_field__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own mr.items)
+    return l
+
+
+func call_ints__mut_param_field__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own mr.items
+    return len(d)
+
+
+func call_ints__mut_param_field__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own mr.items)
+
+
+func call_ints__mut_param_field__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(mr.items)
+
+
+func call_ints__mut_param_field__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own mr.items)
+
+
+func call_ints__mut_param_field__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return mr.items
+
+
+func call_ints__mut_param_field__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own mr.items
+
+
+func call_ints__mut_param_field__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from mr:
+    return own mr.items
+
+
+func call_ints__mut_param_field__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from mr:
+    return copy(mr.items)
+
+
+func call_ints__mut_param_field__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__mut_param_field__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__mut_param_field__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, mr.items)
+    return len(out)
+
+
+func call_ints__mut_param_field__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own mr.items)
+    return len(out)
+
+
+func call_ints__mut_param_field__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = mr.items
+    return n
+
+
+func call_ints__mut_param_field__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__mut_param_field__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own mr.items
+    return n
+
+
+func call_ints__mut_param_field__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__mut_param_field__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__fresh_call__mut_rebind__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = make_ints(n)
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__fresh_call__mut_rebind__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__fresh_call__mut_rebind__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__const_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const c = own p[0:2]
+    return read_ints(c)
+
+
+func call_ints__param_slice__const_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__const_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__mut_bind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own p[0:2]
+    return read_ints(c)
+
+
+func call_ints__param_slice__mut_bind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__mut_bind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__mut_rebind__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = own p[0:2]
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param_slice__mut_rebind__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__mut_rebind__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__mut_rebind__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut c = copy(p[0:2])
+    if n > 3:
+        c = r.items
+    return read_ints(c)
+
+
+func call_ints__param_slice__mut_rebind__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__mut_rebind__copy(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__record_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=p[0:2])
+    return read_ints(b.value)
+
+
+func call_ints__param_slice__record_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__record_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__record_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const b = IntsBox(value=own p[0:2])
+    return read_ints(b.value)
+
+
+func call_ints__param_slice__record_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__record_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__record_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=p[0:2])
+
+
+func call_ints__param_slice__record_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__record_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__record_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> IntsBox:
+    return IntsBox(value=own p[0:2])
+
+
+func call_ints__param_slice__record_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__record_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__some_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(p[0:2])
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__param_slice__some_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__some_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__some_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    const s: int[]? = Some(own p[0:2])
+    mut total = 0
+    match s:
+        case Some(v):
+            total = read_ints(v)
+        case None:
+            total = 0
+    return total
+
+
+func call_ints__param_slice__some_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__some_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__list_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, p[0:2])
+    return len(l)
+
+
+func call_ints__param_slice__list_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__list_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__list_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut l: int[][] = []
+    append(mut l, own p[0:2])
+    return len(l)
+
+
+func call_ints__param_slice__list_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__list_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__list_returned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, p[0:2])
+    return l
+
+
+func call_ints__param_slice__list_returned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__list_returned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__list_returned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[][]:
+    mut l: int[][] = []
+    append(mut l, own p[0:2])
+    return l
+
+
+func call_ints__param_slice__list_returned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__list_returned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__dict_local__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = p[0:2]
+    return len(d)
+
+
+func call_ints__param_slice__dict_local__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__dict_local__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__dict_local__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mut d: dict[int, int[]] = {}
+    d[n] = own p[0:2]
+    return len(d)
+
+
+func call_ints__param_slice__dict_local__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__dict_local__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__arg_plain__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return read_ints(own p[0:2])
+
+
+func call_ints__param_slice__arg_plain__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__arg_plain__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__arg_own__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(p[0:2])
+
+
+func call_ints__param_slice__arg_own__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__arg_own__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__arg_own__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    return keep_ints(own p[0:2])
+
+
+func call_ints__param_slice__arg_own__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__arg_own__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__return_owned__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return p[0:2]
+
+
+func call_ints__param_slice__return_owned__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__return_owned__bare(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__return_owned__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[]:
+    return own p[0:2]
+
+
+func call_ints__param_slice__return_owned__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__return_owned__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__return_from__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from p:
+    return own p[0:2]
+
+
+func call_ints__param_slice__return_from__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__return_from__own(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__return_from__copy(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int[] from p:
+    return copy(p[0:2])
+
+
+func call_ints__param_slice__return_from__copy() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    const kept = probe_ints__param_slice__return_from__copy(p, own o, r, ts, mut m, mut out, mut mr, 7)
+    return len(out) % 2
+
+
+func probe_ints__param_slice__list_out_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, p[0:2])
+    return len(out)
+
+
+func call_ints__param_slice__list_out_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__list_out_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__list_out_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    append(mut out, own p[0:2])
+    return len(out)
+
+
+func call_ints__param_slice__list_out_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__list_out_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__field_of_mut_param__bare(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = p[0:2]
+    return n
+
+
+func call_ints__param_slice__field_of_mut_param__bare() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__field_of_mut_param__bare(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2
+
+
+func probe_ints__param_slice__field_of_mut_param__own(p: int[], own o: int[], r: Rec, ts: int[][], mut m: int[], mut out: int[][], mut mr: Rec, n: int) -> int:
+    mr.items = own p[0:2]
+    return n
+
+
+func call_ints__param_slice__field_of_mut_param__own() -> int:
+    const p = make_ints(1)
+    const o = make_ints(2)
+    const r = Rec(name=make_text(3), items=[3], item=make_item(3), raw=make_bytes(3))
+    const ts = [make_ints(4)]
+    mut m = make_ints(5)
+    mut out: int[][] = []
+    mut mr = Rec(name=make_text(6), items=[6], item=make_item(6), raw=make_bytes(6))
+    return probe_ints__param_slice__field_of_mut_param__own(p, own o, r, ts, mut m, mut out, mut mr, 7) % 2

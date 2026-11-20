@@ -1,0 +1,7 @@
+"" '' "a" 'a' "a'b" 'a"b' "tab\there" "quote\"inside" 'quote\'inside' "back\\slash"
+b"" b'' b"bytes" b'\x00\xff' f"" f'' f"{x}" f"{x:>5}" f"{{literal}}" f"{x!r}"
+"unicode café € 😀" b"raw é"
+"""triple""" '''triple''' """multi
+line
+docstring""" """has "quotes" inside""" """ends with escaped \"""" 
+b + f + bb + ff + b_ + f_ + b1 + f1

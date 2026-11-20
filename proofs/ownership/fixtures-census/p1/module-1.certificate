@@ -1,0 +1,9 @@
+ownership-certificate-v2
+class call Call
+class record_get Project
+class list_new Fresh
+class drop Drop
+function ok result scalar from - unchecked -
+block b0 preds -
+term ret -
+end

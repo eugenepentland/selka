@@ -1,0 +1,12 @@
+# The rename `collide_len` is already taken here, so the repair takes `collide_len2`.
+func collide_len2(values: int[]) -> int:
+    _ = values
+    return 5
+
+
+func collide_len() -> int:
+    return 1
+
+
+public func count(values: int[]) -> int:
+    return collide_len2(values) + collide_len()

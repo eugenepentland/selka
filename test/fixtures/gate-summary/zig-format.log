@@ -1,0 +1,20 @@
+build-slot: gate slot 1, FIFO ticket 3126 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 42e5838afdb0)
+guardian: diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1: 0/1298 source file(s) in scope for the 50 per-file check(s); 36 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 37 finding(s), none in scope — report-only (--verbose for detail)
+guardian: repeated-string-literal: 272 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 86 checks — 0 blocking, 1 report-only — diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1, 0 file(s) in scope
+verification-zig-format
++- verification action zig-format member 0 failure
+error: test/fix_cli_test.zig: non-conforming formatting
+error: process exited with code 1
+failed command: /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig fmt --check build.zig build_env.zig build_identity.zig build_test_inputs.zig build_verification.zig src tests test selfhost
+
+----------------------------------------------------------------------
+Ran 46 tests in 3.917s
+
+OK (skipped=2)
+Build Summary: 117/119 steps succeeded (1 failed); 6482/72188 tests passed (65706 skipped)
+verification-zig-format transitive failure
++- verification action zig-format member 0 failure
+

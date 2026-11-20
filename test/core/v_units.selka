@@ -1,0 +1,26 @@
+import lists
+
+func counts(value: Unit, n: int) -> int:
+    mut values = [value, value]
+    for i in range(n):
+        append(mut values, value)
+    values[1] = value
+    mut seen = 0
+    for item in values:
+        seen += 1
+    mut first = values[0]
+    mut last = lists.pop(mut values)
+    mut saved = copy(values)
+    append(mut saved, value)
+    mut manual_prefix = len(values) * 100 + len(saved) * 10 + seen
+    mut manual_bonus = 0
+    if values == saved:
+        manual_bonus = 1
+    return manual_prefix + manual_bonus
+
+
+func main(out: Stream) -> int:
+    print(out, counts((), 3), counts((), 0))
+    mut empty: Unit[] = []
+    print(out, len(empty), empty == [])
+    return 0

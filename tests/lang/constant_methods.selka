@@ -1,0 +1,85 @@
+import bytes
+import constant_methods_support as support
+import strings
+
+# A `str` or `bytes` module constant takes the same methods as a local bound to it:
+# `NAME.split(...)`, `NAME.upper()`, `NAME.startswith(...)`, and the same through an
+# import and for an embedded file.
+const GREETING: str = "Hello, World"
+
+
+const TABLE: bytes = b"a=1\nb=2\nc=3"
+
+
+const LINES: bytes = embed_bytes("embed_fixtures/lines.txt")
+
+
+const TEXT: str = embed_str("embed_fixtures/multi.txt")
+
+
+const EMPTY: str = ""
+
+
+func loud() -> str:
+    return strings.upper(GREETING)
+
+
+func rows() -> int:
+    return len(bytes.split(TABLE, b"\n"))
+
+
+func generic_pieces[T](value: T) -> int:
+    return len(strings.split(GREETING, ", ")) + strings.char_count(strings.upper(GREETING))
+
+
+func piece_length(text: str) -> int:
+    return strings.char_count(text)
+
+
+# spec: CONST-METHOD-1
+public func test_a_str_constant_takes_str_methods() -> bool:
+    return strings.upper(GREETING) == "HELLO, WORLD" and strings.lower(GREETING) == "hello, world" and strings.starts_with(GREETING, "Hello") and strings.ends_with(GREETING, "World") and not strings.starts_with(GREETING, "World")
+
+
+# spec-case: CONST-METHOD-1
+public func test_a_bytes_constant_is_split_on_its_delimiter() -> bool:
+    mut lines = bytes.split(TABLE, b"\n")
+    return len(lines) == 3 and lines[0] == b"a=1" and lines[2] == b"c=3" and rows() == 3
+
+
+# spec-case: CONST-METHOD-1
+public func test_a_constant_method_result_feeds_a_call_and_an_expression() -> bool:
+    return piece_length(strings.upper(GREETING)) == 12 and len(strings.split(GREETING, ", ")) + len(bytes.split(TABLE, b"=")) == 6
+
+
+# spec-case: CONST-METHOD-1
+public func test_a_constant_method_agrees_with_the_same_method_on_a_local() -> bool:
+    mut copy = GREETING
+    return strings.replace(GREETING, "l", "L") == strings.replace(copy, "l", "L") and strings.find(GREETING, "World") == Some(strings.char_find(copy, "World")) and strings.strip(GREETING) == strings.strip(copy)
+
+
+# spec-case: CONST-METHOD-1
+public func test_an_embedded_constant_takes_methods() -> bool:
+    mut lines = bytes.split(LINES, b"\n")
+    return len(lines) == 4 and lines[1] == b"beta" and strings.starts_with(TEXT, "h") and len(strings.split(TEXT, " ")) == 3
+
+
+# spec-case: CONST-METHOD-1
+public func test_an_imported_constant_takes_methods() -> bool:
+    mut words = strings.split(support.WORDS, " ")
+    return len(words) == 4 and strings.upper(support.WORDS) == "ONE TWO  THREE" and bytes.split(support.LINES, b"\n")[2] == b"gamma" and bytes.find(support.OCTETS, b"\x02") == 1
+
+
+# spec-case: CONST-METHOD-1
+public func test_an_empty_constant_takes_methods() -> bool:
+    return strings.upper(EMPTY) == "" and len(strings.split(EMPTY, ",")) == 1 and not strings.starts_with(EMPTY, "a")
+
+
+# spec-case: CONST-METHOD-1
+public func test_a_generic_body_calls_methods_on_constants() -> bool:
+    return generic_pieces[int](3) == 14 and loud() == "HELLO, WORLD"
+
+
+# spec-case: CONST-METHOD-1
+public func test_indexing_a_constant_still_works_beside_its_methods() -> bool:
+    return strings.char_at(GREETING, 0) == "H" and TABLE[0] == 97 and strings.char_count(GREETING) == 12 and strings.char_at(strings.upper(GREETING), 0) == "H"

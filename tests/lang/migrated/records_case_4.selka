@@ -1,0 +1,7 @@
+record Pair:
+    x: i64
+    y: i64
+
+
+public func program() -> i64:
+    return -Pair(x=4, y=2).x + 10

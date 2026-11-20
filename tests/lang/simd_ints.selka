@@ -1,0 +1,50 @@
+# Integer `Simd` lanes: checked `+ - *` and negation act on each lane and trap when any lane
+# overflows; the wrapping forms and the bit operators act lane by lane; integer comparisons
+# answer a mask of the same length, and signed lanes compare as signed.
+public func test_checked_arithmetic_is_elementwise() -> bool:
+    const a = Simd[int, 4]([1, 2, 3, 4])
+    const b = Simd[int, 4]([10, 20, 30, 40])
+    const sum = a + b
+    const difference = b - a
+    const product = a * b
+    return sum[0] == 11 and sum[3] == 44 and difference[1] == 18 and product[2] == 90
+
+
+public func test_negation_flips_each_integer_lane() -> bool:
+    const a = Simd[int, 4]([1, -2, 3, 4])
+    const negated = -a
+    return negated[0] == -1 and negated[1] == 2 and negated[3] == -4
+
+
+public func test_wrapping_add_wraps_each_lane_instead_of_trapping() -> bool:
+    const top = Simd[u8, 4]([255, 1, 128, 0])
+    const wrapped = wrapping_add(top, Simd[u8, 4]([1, 1, 128, 0]))
+    return wrapped[0] == 0 and wrapped[1] == 2 and wrapped[2] == 0 and wrapped[3] == 0
+
+
+public func test_wrapping_sub_and_mul_wrap_per_lane() -> bool:
+    const a = Simd[u8, 4]([0, 10, 200, 3])
+    const b = Simd[u8, 4]([1, 20, 2, 4])
+    const difference = wrapping_sub(a, b)
+    const product = wrapping_mul(a, b)
+    return difference[0] == 255 and difference[1] == 246 and product[2] == 144 and product[3] == 12
+
+
+public func test_bit_operators_act_on_each_lane() -> bool:
+    const a = Simd[int, 4]([12, 10, 7, 0])
+    const b = Simd[int, 4]([10, 12, 5, 1])
+    const both = bit_and(a, b)
+    const either = bit_or(a, b)
+    const differ = bit_xor(a, b)
+    return both[0] == 8 and both[1] == 8 and either[2] == 7 and differ[0] == 6 and differ[3] == 1
+
+
+public func test_integer_comparisons_answer_a_mask_and_signed_lanes_compare_signed() -> bool:
+    const a = Simd[int, 4]([1, -5, 3, 4])
+    const b = Simd[int, 4]([2, -6, 3, 0])
+    const less: Simd[bool, 4] = a < b
+    const same: Simd[bool, 4] = a == b
+    const neg = Simd[int, 4]([-1, 0, 0, 0])
+    const zero = Simd[int, 4]([0, 0, 0, 0])
+    const below: Simd[bool, 4] = neg < zero
+    return less[0] and not less[1] and same[2] and not same[3] and below[0]

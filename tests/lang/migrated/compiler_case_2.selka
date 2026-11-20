@@ -1,0 +1,8 @@
+public func program() -> i64:
+    mut x = 48
+    mut y = 18
+    while y != 0:
+        mut remainder = remtrunc(x, y)
+        x = y
+        y = remainder
+    return x

@@ -1,0 +1,9 @@
+import kicad.shape as sh
+
+
+public func count(units: sh.ShapeUnit[]) -> int:
+    return len(units)
+
+
+public func build() -> sh.ShapeUnit:
+    return sh.ShapeUnit(number=2)

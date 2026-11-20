@@ -1,0 +1,245 @@
+# `try` as the value of an assignment to a field, an element or a nested place (TRYFIELD, docs/results-and-options.md,
+# "Postfix error propagation"). The order is an ordinary assignment's: for `=` the value (the call under `try`) runs first,
+# then the place's own index and key expressions left to right; for a compound form (`+=`) the place's expressions run
+# first, then the value. A failing `try` leaves before the write, so the place keeps what it held, and what the program
+# made on the way is destroyed once (the suite runs with the leak check on). The refusals (a `@linear` owner held across
+# the `try`, a `@linear` field replaced, an armed `on fail:`, a read-only place) are in src/advice_messages_test.zig.
+@linear
+record Token:
+    id: int
+
+
+record Inner:
+    v: int = 0
+    name: str = ""
+
+
+record Rec:
+    a: int = 0
+    name: str = ""
+    tags: int[]
+    inner: Inner
+
+
+enum Slot:
+    empty
+    full(value: Rec)
+
+
+# Fails when `n` is `at`, after noting `n` in the log: the failure each test moves along the statements.
+func step(mut log: int[], n: int, at: int) -> int fails str:
+    append(mut log, n)
+    if n == at:
+        fail "step"
+    return n
+
+
+func text_of(mut log: int[], n: int, at: int) -> str fails str:
+    const k = try step(mut log, n, at)
+    return f"t{k}"
+
+
+func list_of(mut log: int[], n: int, at: int) -> int[] fails str:
+    const k = try step(mut log, n, at)
+    return [k, k]
+
+
+# Notes an index or a key in the log as a negative number, so the order of a place's expressions shows.
+func at_index(mut log: int[], i: int) -> int:
+    append(mut log, -1 - i)
+    return i
+
+
+func fresh() -> Rec:
+    return Rec(name="old", tags=[9], inner=Inner(name="in"))
+
+
+func outcome(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func set_places(mut r: Rec, mut rows: Rec[], mut log: int[], at: int) -> Unit fails str:
+    r.a = try step(mut log, 1, at)
+    r.name = try text_of(mut log, 2, at)
+    r.inner.v = try step(mut log, 3, at)
+    r.tags[0] = try step(mut log, 4, at)
+    rows[at_index(mut log, 1)].inner.name = try text_of(mut log, 5, at)
+    rows[at_index(mut log, 0)].tags = try list_of(mut log, 6, at)
+
+
+public func test_a_place_is_written_when_its_try_succeeds() -> bool:
+    mut log: int[] = []
+    mut r = fresh()
+    mut rows = [fresh(), fresh()]
+    const result = outcome(set_places(mut r, mut rows, mut log, 0))
+    return result == "ok" and r.a == 1 and r.name == "t2" and r.inner.v == 3 and r.tags == [4] and rows[1].inner.name == "t5" and rows[0].tags == [6, 6] and log == [1, 2, 3, 4, 5, -2, 6, -1]
+
+
+public func test_a_failing_try_leaves_its_place_and_the_later_ones_unwritten() -> bool:
+    mut all_kept = True
+    for at in [1, 2, 3, 4, 5, 6]:
+        mut log: int[] = []
+        mut r = fresh()
+        mut rows = [fresh(), fresh()]
+        all_kept = all_kept and outcome(set_places(mut r, mut rows, mut log, at)) == "step"
+        # Every place from the failing statement on keeps what `fresh` gave it.
+        all_kept = all_kept and (at <= 1 or r.a == 1) and (at > 1 or r.a == 0)
+        all_kept = all_kept and (at <= 2 or r.name == "t2") and (at > 2 or r.name == "old")
+        all_kept = all_kept and (at <= 3 or r.inner.v == 3) and (at > 3 or r.inner.v == 0)
+        all_kept = all_kept and (at <= 4 or r.tags == [4]) and (at > 4 or r.tags == [9])
+        all_kept = all_kept and (at <= 5 or rows[1].inner.name == "t5") and (at > 5 or rows[1].inner.name == "in")
+        all_kept = all_kept and rows[0].tags == [9]
+    return all_kept
+
+
+# The value runs before the place's index for `=`; for a compound form the place's index runs first.
+func ordered(mut grid: int[][], mut d: dict[str, int], mut log: int[], at: int) -> Unit fails str:
+    grid[at_index(mut log, 0)][at_index(mut log, 1)] = try step(mut log, 1, at)
+    grid[at_index(mut log, 0)][at_index(mut log, 1)] += try step(mut log, 2, at)
+    d["k"] = try step(mut log, 3, at)
+
+
+func plain_ordered(mut grid: int[][], mut log: int[]):
+    grid[at_index(mut log, 0)][at_index(mut log, 1)] = at_index(mut log, 7)
+    grid[at_index(mut log, 0)][at_index(mut log, 1)] += at_index(mut log, 8)
+
+
+public func test_the_order_is_an_ordinary_assignments() -> bool:
+    mut plain_log: int[] = []
+    mut plain_grid = [[0, 0]]
+    plain_ordered(mut plain_grid, mut plain_log)
+    mut log: int[] = []
+    mut grid = [[0, 0]]
+    mut d: dict[str, int] = {}
+    const result = outcome(ordered(mut grid, mut d, mut log, 0))
+    return plain_log == [-8, -1, -2, -1, -2, -9] and result == "ok" and log == [1, -1, -2, -1, -2, 2, 3] and grid == [[0, 3]] and d["k"] == 3
+
+
+public func test_a_compound_assignment_reads_its_place_but_does_not_write_it_when_the_try_fails() -> bool:
+    mut log: int[] = []
+    mut grid = [[0, 5]]
+    mut d: dict[str, int] = {}
+    const result = outcome(ordered(mut grid, mut d, mut log, 2))
+    return result == "step" and log == [1, -1, -2, -1, -2, 2] and grid == [[0, 1]] and len(d) == 0
+
+
+func rec_of(mut log: int[], n: int, at: int) -> Rec fails str:
+    const a = try step(mut log, n, at)
+    return Rec(a=a, name="new", tags=[], inner=Inner())
+
+
+# The slot is a record's field, not a list element: a `match` on a list element reads its payload in the shape the IR
+# verifier's union-tag rule does not justify (shape M, scripts/verify_ir_proof.py), and this test is not about that shape.
+record Shelf:
+    slot: Slot
+
+
+func fill_slot(mut shelf: Shelf, mut log: int[], at: int) -> Unit fails str:
+    match mut shelf.slot:
+        case full(value=payload):
+            payload.a = try step(mut log, 1, at)
+            payload.inner.name = try text_of(mut log, 2, at)
+            payload = try rec_of(mut log, 3, at)
+        case empty:
+            return
+
+
+public func test_a_match_mut_binding_is_a_place_a_try_writes() -> bool:
+    mut failed: int[] = []
+    mut kept = Shelf(slot=Slot.full(value=fresh()))
+    const first = outcome(fill_slot(mut kept, mut failed, 2))
+    mut ok_log: int[] = []
+    mut written = Shelf(slot=Slot.full(value=fresh()))
+    const second = outcome(fill_slot(mut written, mut ok_log, 0))
+    mut good = first == "step" and second == "ok"
+    match kept.slot:
+        case full(value=v):
+            good = good and v.a == 1 and v.inner.name == "in"
+        case empty:
+            good = False
+    match written.slot:
+        case full(value=v):
+            good = good and v.a == 3 and v.name == "new"
+        case empty:
+            good = False
+    return good
+
+
+# A `mut` borrow of the record in the call under `try`: what the call wrote stays written, the assignment does not happen.
+func bump(mut r: Rec, mut log: int[], at: int) -> int fails str:
+    r.a += 10
+    append(mut r.tags, r.a)
+    return try step(mut log, r.a, at)
+
+
+func bumped(mut r: Rec, mut log: int[], at: int) -> Unit fails str:
+    r.a = try bump(mut r, mut log, at)
+    r.tags[0] = try bump(mut r, mut log, at)
+
+
+public func test_a_mut_borrow_of_the_record_in_the_try_is_as_in_two_statements() -> bool:
+    mut log: int[] = []
+    mut r = fresh()
+    const failed = outcome(bumped(mut r, mut log, 10))
+    mut ok = fresh()
+    const passed = outcome(bumped(mut ok, mut log, 0))
+    return failed == "step" and r.a == 10 and r.tags == [9, 10] and passed == "ok" and ok.a == 20 and ok.tags == [20, 10, 20]
+
+
+# A `@linear` value given `own` to the call under `try` is consumed by that call whether it fails or not.
+func spend(own token: Token, mut log: int[], at: int) -> int fails str:
+    const id = own token.id
+    return try step(mut log, id, at)
+
+
+func spent(mut r: Rec, mut log: int[], at: int) -> Unit fails str:
+    const token = Token(id=4)
+    r.inner.v = try spend(own token, mut log, at)
+
+
+public func test_a_linear_value_given_to_the_try_is_consumed_on_both_paths() -> bool:
+    mut log: int[] = []
+    mut r = fresh()
+    const failed = outcome(spent(mut r, mut log, 4))
+    const passed = outcome(spent(mut r, mut log, 0))
+    return failed == "step" and passed == "ok" and r.inner.v == 4 and log == [4, 4]
+
+
+# The shape of a generated decoder (selka-protobuf F-PB-2): each field of a `mut` record read with `try`.
+record Message:
+    id: int = 0
+    label: str = ""
+    values: int[]
+
+
+func read_int(data: int[], mut pos: int[]) -> int fails str:
+    if pos[0] >= len(data):
+        fail "truncated"
+    const value = data[pos[0]]
+    pos[0] += 1
+    return value
+
+
+func read_label(data: int[], mut pos: int[]) -> str fails str:
+    const n = try read_int(data, mut pos)
+    return f"label{n}"
+
+
+func decode(data: int[], mut m: Message) -> Unit fails str:
+    mut pos = [0]
+    m.id = try read_int(data, mut pos)
+    m.label = try read_label(data, mut pos)
+    append(mut m.values, try read_int(data, mut pos))
+    m.values[0] += try read_int(data, mut pos)
+
+
+public func test_a_decoder_reads_each_field_with_try() -> bool:
+    mut whole = Message(values=[])
+    const ok = outcome(decode([7, 3, 5, 1], mut whole))
+    mut cut = Message(values=[])
+    const truncated = outcome(decode([7, 3], mut cut))
+    return ok == "ok" and whole.id == 7 and whole.label == "label3" and whole.values == [6] and truncated == "truncated" and cut.id == 7 and cut.label == "label3" and len(cut.values) == 0

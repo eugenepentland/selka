@@ -1,0 +1,26 @@
+import errors
+
+func load(text: str) -> int fails errors.AppErr:
+    const n = try errors.parse(text)
+    return n + 1
+
+func show(out: Stream, name: str):
+    match errors.check_name(name):
+        case Ok(value):
+            print(out, value)
+        case Err(error):
+            print(out, error)
+
+func main(out: Stream) -> int:
+    show(out, "")
+    show(out, "abcdefghij")
+    show(out, "zero")
+    show(out, "abc")
+    match load(""):
+        case Ok(value):
+            print(out, value)
+        case Err(error):
+            print(out, error)
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

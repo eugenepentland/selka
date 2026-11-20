@@ -1,0 +1,82 @@
+import lists
+import strings
+import byte_builder
+
+func mark_unit(mut log: int[], value: int) -> Unit:
+    append(mut log, value)
+    return ()
+
+
+func main() -> int:
+    mut values = lists.filled(3, [7])
+    append(mut values[0], 8)
+    if len(values[0]) != 2 or len(values[1]) != 1:
+        return 1
+    if len(lists.filled(0, 7)) != 0 or len(lists.filled(0 - 1, 7)) != 0:
+        return 2
+    if not lists.contains([1, 2, 3], 2) or lists.contains([1, 2, 3], 4):
+        return 3
+    const empty: int[] = []
+    if lists.last(empty) is not None or lists.last([1, 2, 3]) != Some(3):
+        return 4
+    if strings.repeat("ab", 3) != "ababab" or strings.repeat("ab", 0 - 1) != "":
+        return 5
+    if byte_builder.repeat(b"ab", 3) != b"ababab" or byte_builder.repeat(b"ab", 0 - 1) != b"":
+        return 6
+    if strings.repeat("é", 3) != "ééé" or byte_builder.repeat(b"ab", 0) != b"":
+        return 7
+    if "a" not in "cat" or b"a" not in b"cat" or 1 not in {1: 2}:
+        return 8
+    for count in range(0 - 3, 4):
+        mut expected = count
+        if expected < 0:
+            expected = 0
+        if len(lists.filled(count, 7)) != expected or strings.char_count(strings.repeat("ab", count)) != expected * 2 or len(byte_builder.repeat(b"ab", count)) != expected * 2:
+            return 9
+    if byte_builder.repeat(b"", 1000000000) != b"" or len(byte_builder.repeat(b"abc", 100000)) != 300000:
+        return 10
+    const empty_units: Unit[] = []
+    if not lists.contains([()], ()) or lists.contains(empty_units, ()):
+        return 11
+    mut unit_log: int[] = []
+    if not (mark_unit(mut unit_log, 1) == mark_unit(mut unit_log, 2)) or mark_unit(mut unit_log, 3) != mark_unit(mut unit_log, 4):
+        return 12
+    if unit_log != [1, 2, 3, 4]:
+        return 13
+    # The list module's own words take the list first: the in-place writes carry
+    # their `mut` marker at the call site, and each answers what the method answers.
+    mut items = [1, 2, 3]
+    if lists.exchange(mut items, 1, 9) != 2 or items != [1, 9, 3]:
+        return 14
+    lists.extend(mut items, [7, 8])
+    if items != [1, 9, 3, 7, 8]:
+        return 15
+    lists.insert(mut items, 1, 4)
+    if items != [1, 4, 9, 3, 7, 8]:
+        return 16
+    lists.insert(mut items, 99, 5)
+    if items != [1, 4, 9, 3, 7, 8, 5]:
+        return 17
+    if lists.pop(mut items) != 5 or lists.pop_at(mut items, 0) != 1 or items != [4, 9, 3, 7, 8]:
+        return 18
+    mut words = ["b", "a"]
+    lists.clear(mut words)
+    if words != []:
+        return 19
+    mut order = [1, 2, 3, 4]
+    lists.reverse(mut order)
+    if order != [4, 3, 2, 1]:
+        return 21
+    mut single = [7]
+    lists.reverse(mut single)
+    mut none: int[] = []
+    lists.reverse(mut none)
+    if single != [7] or none != []:
+        return 22
+    mut original = [[1]]
+    # lint: allow copy-in-loop reason="the test checks that the copy stays independent of later writes to the original"
+    mut independent = copy(original)
+    append(mut original[0], 2)
+    if original[0] != [1, 2] or independent[0] != [1]:
+        return 20
+    return 42

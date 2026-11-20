@@ -1,0 +1,39 @@
+enum Shape:
+    circle(radius: int)
+    rect(width: int, height: int)
+
+
+func area(shape: Shape) -> int:
+    match shape:
+        case circle(radius):
+            return radius * radius * 3
+        case rect(height, width):
+            return width * height
+
+
+func renamed(shape: Shape) -> int:
+    match shape:
+        case circle(radius=r):
+            return r
+        case rect(width=w, height=h):
+            return w + h
+
+
+func mixed(shape: Shape) -> int:
+    match shape:
+        case rect(width, height=h):
+            return width + h
+        case circle(radius):
+            return radius
+
+
+public func test_bare_field_names_bind_their_fields() -> bool:
+    return area(Shape.circle(radius=2)) == 12 and area(Shape.rect(width=3, height=4)) == 12
+
+
+public func test_rename_still_binds_to_the_given_name() -> bool:
+    return renamed(Shape.circle(radius=5)) == 5 and renamed(Shape.rect(width=2, height=3)) == 5
+
+
+public func test_field_names_mix_with_renames() -> bool:
+    return mixed(Shape.rect(width=2, height=7)) == 9 and mixed(Shape.circle(radius=4)) == 4

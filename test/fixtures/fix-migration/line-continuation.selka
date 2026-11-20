@@ -1,0 +1,20 @@
+# A line continued the Python way is refused: an expression continues on the next line only inside parentheses, and a backslash
+# does not continue a line. `selka fix` writes the parentheses and removes the backslashes, one statement at a time.
+func main(out: Stream) -> int:
+    mut total = 0
+    mut i = 0
+    while i < 3 and
+            total < 100:
+        total += i * 2 +  # the comment stays where it is
+            i
+        i += 1
+    if total > 1 or \
+            i == 7:
+        total = total +
+            1 -
+            2
+    for k in range(2):
+        total = total + k * \
+            3
+    print(out, f"{total}")
+    return 0

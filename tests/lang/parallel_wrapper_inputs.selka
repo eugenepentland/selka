@@ -1,0 +1,120 @@
+# Generated range workers read standard wrapper payloads without copying them.
+import parallel
+
+record Label:
+    text: str
+    values: int[]
+
+
+record Node:
+    value: int
+    next: Node??
+
+
+func result_size(value: Result[str, str]) -> int:
+    match value:
+        case Ok(text):
+            return len(text)
+        case Err(text):
+            return len(text) + 10
+
+
+func option_size(value: int[]?) -> int:
+    match value:
+        case Some(values):
+            return len(values)
+        case None:
+            return 7
+
+
+func label_size(value: Label?) -> int:
+    match value:
+        case Some(label):
+            return len(label.text) + len(label.values)
+        case None:
+            return 11
+
+
+func nested_size(value: Result[int[]?, Label]) -> int:
+    match value:
+        case Ok(optional):
+            return option_size(optional)
+        case Err(label):
+            return len(label.text) + len(label.values) + 20
+
+
+func with_option(value: int, extra: int[]?) -> int:
+    return value + option_size(extra)
+
+
+func with_option_units(value: int, before: Unit, extra: int[]?, after: Unit) -> int:
+    _ = before
+    _ = after
+    return value + option_size(extra)
+
+
+func node_size(value: Node??) -> int:
+    match value:
+        case Some(inner):
+            match inner:
+                case Some(node):
+                    return node.value
+                case None:
+                    return 7
+        case None:
+            return 11
+
+
+public func test_result_inputs_preserve_success_and_error() -> bool:
+    mut values: Result[str, str][] = [Ok("ok-" + str(7)), Err("bad-" + str(8))]
+    const sizes = parallel.map(values, result_size)
+    return sizes[0] == 4 and sizes[1] == 15
+
+
+public func test_optional_list_inputs_preserve_empty_and_present() -> bool:
+    mut values: int[]?[] = [Some([1, 2, 3]), None]
+    const sizes = parallel.map(values, option_size)
+    return sizes[0] == 3 and sizes[1] == 7
+
+
+public func test_optional_record_inputs_borrow_whole_layout() -> bool:
+    mut values: Label?[] = [Some(Label(text="abc", values=[1, 2])), None]
+    const sizes = parallel.map(values, label_size)
+    return sizes[0] == 5 and sizes[1] == 11
+
+
+public func test_nested_wrappers_keep_every_tag_and_error_layout() -> bool:
+    mut values: Result[int[]?, Label][] = [Ok(Some([1, 2])), Ok(None), Err(Label(text="error", values=[3]))]
+    const sizes = parallel.map(values, nested_size)
+    return sizes[0] == 2 and sizes[1] == 7 and sizes[2] == 26
+
+
+public func test_optional_trailing_argument_joins_before_owner_changes() -> bool:
+    mut extra: int[]? = Some([1, 2, 3, 4])
+    const sizes = parallel.map([2, 5], with_option, extra)
+    extra = None
+    return sizes[0] == 6 and sizes[1] == 9 and extra is None
+
+
+public func test_units_before_and_after_optional_argument_preserve_callback_abi() -> bool:
+    mut extra: int[]? = Some([1, 2, 3, 4])
+    const sizes = parallel.map([2, 5], with_option_units, (), extra, ())
+    extra = None
+    return sizes[0] == 6 and sizes[1] == 9 and extra is None
+
+
+public func test_recursive_nested_wrapper_direct_calls_preserve_each_case() -> bool:
+    mut first: Node?? = Some(Some(Node(value=5, next=None)))
+    mut middle: Node?? = Some(None)
+    mut empty: Node?? = None
+    const a = node_size(first)
+    const b = node_size(middle)
+    const c = node_size(empty)
+    first = None
+    return a == 5 and b == 7 and c == 11 and first is None
+
+
+public func test_recursive_nested_wrapper_map_preserves_each_case() -> bool:
+    mut values: Node??[] = [Some(Some(Node(value=13, next=None))), Some(None), None]
+    const sizes = parallel.map(values, node_size)
+    return sizes[0] == 13 and sizes[1] == 7 and sizes[2] == 11

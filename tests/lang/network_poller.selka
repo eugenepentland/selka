@@ -1,0 +1,136 @@
+# The event loop's pure surface and its stand-in refusal (NETWORK-POLL-1 to
+# NETWORK-POLL-5). A guest test holds no real network, so everything that needs
+# a socket is covered by the loopback tests in test/network_poller_cli_test.zig and
+# src/network_poller_test.zig; these cover the values a server builds its loop on.
+import network
+
+# spec-case: NETWORK-POLL-4
+public func test_format_address_spells_a_dotted_quad_and_port() -> bool:
+    return network.format_address(2130706433, 8080) == "127.0.0.1:8080"
+
+
+# spec-case: NETWORK-POLL-4
+public func test_format_address_spells_every_octet() -> bool:
+    return network.format_address(3232235777, 0) == "192.168.1.1:0" and network.format_address(0, 65535) == "0.0.0.0:65535" and network.format_address(4294967295, 1) == "255.255.255.255:1"
+
+
+# spec-case: NETWORK-POLL-2
+public func test_event_flags_are_distinct_bits_that_combine() -> bool:
+    const both = network.EVENT_READABLE + network.EVENT_HANGUP
+    return network.has(both, network.EVENT_READABLE) and network.has(both, network.EVENT_HANGUP) and not network.has(both, network.EVENT_WRITABLE) and not network.has(both, network.EVENT_ERROR) and not network.has(both, network.EVENT_IDLE)
+
+
+# spec-case: NETWORK-POLL-2
+public func test_event_flag_values_are_the_documented_bits() -> bool:
+    return network.EVENT_READABLE == 1 and network.EVENT_WRITABLE == 2 and network.EVENT_HANGUP == 4 and network.EVENT_ERROR == 8 and network.EVENT_IDLE == 16 and network.LISTENER == 0
+
+
+# spec-case: NETWORK-POLL-3
+public func test_outcome_codes_are_the_documented_values() -> bool:
+    return network.OUTCOME_OK == 0 and network.OUTCOME_WOULD_BLOCK == 1 and network.OUTCOME_CLOSED == 2 and network.OUTCOME_FAILED == 3 and network.OUTCOME_UNKNOWN == 4 and network.OUTCOME_FULL == 5 and network.OUTCOME_BAD == 6
+
+
+# spec-case: NETWORK-POLL-3
+public func test_transfer_limits_match_the_runtime() -> bool:
+    return network.TRANSFER_LIMIT == 65536 and network.RECV_LIMIT == 16384
+
+
+# spec-case: NETWORK-POLL-5
+public func test_new_ready_and_outcome_start_empty() -> bool:
+    const ready = network.new_ready()
+    const outcome = network.new_outcome()
+    return ready.count == 0 and len(ready.ids) == 0 and len(ready.flags) == 0 and outcome.code == 0 and outcome.value == 0 and outcome.extra == 0
+
+
+# spec-case: NETWORK-POLL-5
+public func test_ready_and_outcome_live_in_collections_by_id() -> bool:
+    mut seen: dict[int, network.Outcome] = {}
+    seen[1024] = network.new_outcome()
+    seen[2049] = network.new_outcome()
+    return len(seen) == 2 and 1024 in seen and 2049 in seen and 7 not in seen
+
+
+# spec-case: NETWORK-POLL-1
+public func test_denied_network_refuses_a_poller() -> bool:
+    mut net = network.denied()
+    with net.host("127.0.0.1:0") as scoped:
+        match network.open_poller(scoped):
+            case ok(_):
+                return False
+            case err(code):
+                return code == network.denied_here() and network.describe(code) == "network access is denied in this context: this Network is a deterministic stand-in"
+
+
+# spec-case: NETWORK-POLL-1
+public func test_runner_network_stand_in_refuses_a_poller(net: Network) -> bool:
+    with net.host("127.0.0.1:0") as scoped:
+        match network.open_poller(scoped):
+            case ok(_):
+                return False
+            case err(code):
+                return code == network.denied_here()
+
+
+# The code a client poller's open fails with through `net`, or 0 when it opened.
+func client_poller_code(net: Network) -> int:
+    match network.open_client_poller(net):
+        case ok(_):
+            return 0
+        case err(code):
+            return code
+
+
+# spec-case: NETWORK-POLL-6
+public func test_denied_network_refuses_a_client_poller() -> bool:
+    mut net = network.denied()
+    return client_poller_code(net) == network.denied_here()
+
+
+# spec-case: NETWORK-POLL-6
+public func test_memory_network_offers_no_client_poller() -> bool:
+    mut net = network.memory()
+    return client_poller_code(net) == 2
+
+
+# spec-case: NETWORK-POLL-6
+public func test_runner_network_stand_in_refuses_a_client_poller(net: Network) -> bool:
+    return client_poller_code(net) == network.denied_here()
+
+
+# FR7: a dialled connection's events and the dial's refusal have values of their own, and the `Timeouts` of
+# `connect_within` takes a receive buffer beside its limits, 0 by default, so an older spelling means what it meant.
+public func test_the_dial_event_and_outcome_are_new_values() -> bool:
+    const others = network.EVENT_READABLE + network.EVENT_WRITABLE + network.EVENT_HANGUP + network.EVENT_ERROR + network.EVENT_IDLE
+    return network.EVENT_CONNECTED == 32 and bit_and(others, network.EVENT_CONNECTED) == 0 and network.OUTCOME_DENIED == 7
+
+
+public func test_a_receive_buffer_sits_beside_the_time_limits() -> bool:
+    const older = network.Timeouts(read_ms=1500)
+    const sized = network.Timeouts(read_ms=1500, receive_buffer_bytes=4096)
+    return older.read_ms == 1500 and older.receive_buffer_bytes == 0 and sized.receive_buffer_bytes == 4096 and sized.connect_ms == 0
+
+
+# RES-ORIGIN-2 (FR90): a step that returns the poller may take a Filesystem or a Network beside it, and an open may read a
+# Filesystem beside its Network: the `own` poller is the step's origin and a Filesystem is never a poller's (rule P3). The
+# stand-in refuses the poller, so the steps are checked here and run in the Zig-side and probe programs.
+func step_beside_files(own live: network.Poller, root: Filesystem, net: Network) -> network.Poller:
+    if root.exists("missing"):
+        mut outcome = network.new_outcome()
+        network.dial_to(mut live, net, "127.0.0.1:9", mut outcome)
+    return live
+
+
+func open_beside_files(net: Network, root: Filesystem) -> network.Polling:
+    _ = root.exists("config")
+    return network.open_client_poller(net)
+
+
+public func test_a_poller_step_takes_a_filesystem_beside_the_poller(net: Network, root: Filesystem) -> bool:
+    match open_beside_files(net, root):
+        case ok(opened):
+            mut live = own opened
+            live = step_beside_files(own live, root, net)
+            _ = own live
+            return False
+        case err(code):
+            return code == network.denied_here()

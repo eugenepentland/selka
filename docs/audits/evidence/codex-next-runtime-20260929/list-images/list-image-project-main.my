@@ -1,0 +1,18 @@
+module main
+import constant_list_image
+
+def main(out: Stream) -> int:
+    if not constant_list_image.test_constant_list_image_arena_escape():
+        return 1
+    if not constant_list_image.test_constant_list_image_detaches_before_write_and_growth():
+        return 2
+    if not constant_list_image.test_constant_list_image_mut_parameter_preserves_snapshot():
+        return 3
+    if not constant_list_image.test_immortal_list_elements_detach_and_preserve_empty_values():
+        return 4
+    if not constant_list_image.test_immortal_list_elements_survive_arena_escape_and_reads():
+        return 5
+    if not constant_list_image.test_nonconstant_list_elements_keep_order_and_run_once():
+        return 6
+    out.print("list-image-ok")
+    return 0

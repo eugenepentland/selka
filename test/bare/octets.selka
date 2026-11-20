@@ -1,0 +1,11 @@
+# Bytes: literals, length, slices, reads of single octets.
+import bytes
+
+func main() -> int:
+    const data = b"hello, bare cpu"
+    mut total = len(data)
+    for i in range(len(data)):
+        total += int(bytes.read_u8(data, i))
+    const tail = data[7:]
+    total += len(tail) * 3
+    return total % 256

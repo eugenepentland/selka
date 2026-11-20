@@ -1,0 +1,82 @@
+# A single-threaded HTTP/1.1 server: one connection at a time over the codec.
+#
+#   selka run examples/http-server/main.selka --restrict --allow-listen=127.0.0.1:8080
+#
+# Then open http://127.0.0.1:8080/ in a browser.
+import byte_builder
+import http
+import network
+
+func main(net: Network, out: Stream) -> int:
+    with net.host("127.0.0.1:8080") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                print(out, "listening on http://127.0.0.1:8080/")
+                return serve(mut listener, out)
+            case err(code):
+                print(out, "listen failed", code, network.describe(code))
+                return 1
+
+
+func serve(mut listener: network.Listener, out: Stream) -> int:
+    while True:
+        # FR-203: a `mut` resource parameter is an exclusive borrow, so the listener
+        # stays usable here and the caller's binding survives the call; each accepted
+        # connection is handed on to `handle`.
+        match accept_resource[network.Accepted](listener):
+            case Ok(connection):
+                if handle(own connection, out) != 0:
+                    print(out, "request failed")
+            case Err(code):
+                print(out, "accept failed", code, network.describe(code))
+                return 2
+
+
+func handle(own connection: network.Connection, out: Stream) -> int:
+    mut live = own connection
+    mut raw = byte_builder.create()
+    while True:
+        match read_resource[network.Read[65536]](live):
+            case Ok(chunk):
+                if not byte_builder.append_array(mut raw, chunk.bytes, int(chunk.length)):
+                    return 3
+                match http.parse_request(byte_builder.finish(raw)):
+                    case Ok(request):
+                        if http.path(request) != "/":
+                            return reply(mut live, 404, "Not Found", b"not found\n", out)
+                        return reply(mut live, 200, "OK", b"hello from selka\n", out)
+                    case Err(error):
+                        match error:
+                            case Incomplete:
+                                if chunk.eof:
+                                    return reply(mut live, 400, "Bad Request", b"incomplete request\n", out)
+                            case Malformed(value=_):
+                                return reply(mut live, 400, "Bad Request", b"bad request\n", out)
+                            case BodyTooLarge(value=_):
+                                return reply(mut live, http.status(error), "Content Too Large", b"body too large\n", out)
+                            case HeaderTooLarge(value=_):
+                                return reply(mut live, http.status(error), "Request Header Fields Too Large", b"headers too large\n", out)
+                            case Unsupported(value=_):
+                                return reply(mut live, 501, "Not Implemented", b"unsupported request\n", out)
+                            case UnsupportedVersion(value=_):
+                                return reply(mut live, http.status(error), "HTTP Version Not Supported", b"unsupported version\n", out)
+            case Err(code):
+                print(out, "read failed", code)
+                return 4
+
+
+func reply(mut connection: network.Connection, status: int, reason: str, body: bytes, out: Stream) -> int:
+    mut headers: http.Header[] = [http.Header(name="Content-Type", value="text/plain"), http.Header(name="Connection", value="close")]
+    mut response = http.Response(version="HTTP/1.1", status=status, reason=copy(reason), headers=own headers, body=copy(body))
+    match http.write_response(response):
+        case Ok(wire):
+            match write_resource[network.Written](connection, wire):
+                case Ok(_):
+                    return 0
+                case Err(code):
+                    print(out, "write failed", code)
+                    return 5
+        case Err(error):
+            print(out, "encode failed", http.message(error))
+            return 6

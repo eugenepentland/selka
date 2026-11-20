@@ -1,0 +1,13 @@
+func lookup(key: int) -> int?:
+    return Some(key + 1)
+
+func get(key: int) -> int?:
+    mut found = try lookup(key)
+    return Some(found + 1)
+
+func main() -> int:
+    match get(0):
+        case Some(value):
+            return value + 40
+        case None:
+            return 0

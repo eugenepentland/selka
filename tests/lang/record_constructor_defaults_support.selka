@@ -1,0 +1,25 @@
+# The declaring module of record_constructor_defaults.selka: records whose fields default to an enum case or a record
+# value. The importer names none of `Kind`, `Turn` or `Spec`, so each default resolves where it was written.
+public enum Kind:
+    ground
+    supply
+    tagged(code: int)
+
+
+public record Turn:
+    angle: int = 0
+    flip: bool = False
+
+
+public record Spec:
+    names: str[] = []
+    counts: int[] = []
+
+
+public record Rail:
+    net: str
+    kind: Kind = Kind.ground
+    turn: Turn = Turn()
+    spec: Spec = Spec()
+    mark: Kind = Kind.tagged(code=7)
+    far: Turn = Turn(angle=90, flip=True)

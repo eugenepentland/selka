@@ -1,0 +1,67 @@
+import sets
+
+
+record Entry:
+    key: str
+    value: int
+
+
+record Holder:
+    seen: set[str]
+
+
+# A value a set stores that something else lends: a field of a loop variable, a loop variable, a plain parameter,
+# an element and a set that a `mut` parameter or a field holds. One round writes `sets.include` for each.
+func by_loop(entries: Entry[]) -> int:
+    mut seen: set[str] = set()
+    for e in entries:
+        sets.add(mut seen, e.key)
+    return len(seen)
+
+
+func by_loop_text(names: str[]) -> int:
+    mut seen: set[str] = set()
+    for name in names:
+        sets.add(mut seen, name)
+    return len(seen)
+
+
+func by_param(word: str) -> int:
+    mut seen: set[str] = set()
+    sets.add(mut seen, word)
+    return len(seen)
+
+
+func by_index(names: str[]) -> int:
+    mut seen: set[str] = set()
+    for i in range(len(names)):
+        sets.add(mut seen, names[i])
+    return len(seen)
+
+
+func by_field_target(names: str[]) -> int:
+    mut h = Holder(seen=set())
+    for e in names:
+        sets.add(mut h.seen, e)
+    return len(h.seen)
+
+
+func by_mut_param(mut seen: set[str], entries: Entry[]) -> int:
+    for e in entries:
+        sets.add(mut seen, e.key)
+    return len(seen)
+
+
+func by_const_local(entries: Entry[]) -> int:
+    mut seen: set[str] = set()
+    const first = entries[0]
+    sets.add(mut seen, first.key)
+    return len(seen)
+
+
+func main() -> int:
+    const entries = [Entry(key="a", value=1), Entry(key="b", value=2), Entry(key="a", value=3)]
+    const names = ["x", "y", "x", "z"]
+    mut shared: set[str] = set()
+    const total = by_loop(entries) + by_loop_text(names) + by_param("w") + by_index(names) + by_field_target(names)
+    return total + by_mut_param(mut shared, entries) + by_const_local(entries) + len(shared)

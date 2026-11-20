@@ -1,0 +1,35 @@
+# A capturing stream (streams.memory): what a program prints to it is kept and read back with streams.text, with no
+# grant and no output. Each stream keeps only its own text.
+import streams
+
+# Print a labelled count to a stream and return the count.
+func report(out: Stream, label: str, count: int) -> int:
+    print(out, label, count)
+    return count
+
+
+public func test_a_capturing_stream_keeps_what_is_printed_and_reads_it_back() -> bool:
+    const capture = streams.memory()
+    _ = report(capture, "count:", 7)
+    print(capture, True)
+    return streams.text(capture) == "count: 7\nTrue\n"
+
+
+public func test_each_capturing_stream_keeps_only_its_own_text() -> bool:
+    const first = streams.memory()
+    const second = streams.memory()
+    _ = report(first, "first", 1)
+    _ = report(second, "second", 2)
+    return streams.text(first) == "first 1\n" and streams.text(second) == "second 2\n"
+
+
+public func test_an_empty_capturing_stream_reads_back_as_the_empty_string() -> bool:
+    const quiet = streams.memory()
+    return streams.text(quiet) == ""
+
+
+public func test_a_capturing_stream_grows_past_one_buffer() -> bool:
+    const capture = streams.memory()
+    for i in range(0, 3000):
+        print(capture, "0123456789")
+    return len(streams.text(capture)) == 3000 * 11

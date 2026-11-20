@@ -1,0 +1,53 @@
+ownership-certificate-v2
+class call Call
+class drop Drop
+class iconst Constant
+class list_new Fresh
+class list_push Update
+class list_view_of View
+class record_make Construct
+function bad_loan_lost_through_update result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 list_push Update reads - consumes %2,%9 state owned parents -
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function ok_loan_through_update result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 list_push Update reads - consumes %2,%9 state owned parents -
+inst - drop Drop reads - consumes %3 state none parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end
+function bad_loan_lost_through_call result scalar from - unchecked -
+callee 0 call runtime take scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 call Call reads - consumes %2 state owned parents - from - callee 0
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function bad_holder_with_its_root result scalar from - unchecked -
+callee 0 call runtime take,take scalar -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_view_of View reads %0 consumes - state borrowed parents %0
+inst %2 record_make Construct reads %1 consumes - state owned parents %1 views %1
+inst %3 call Call reads - consumes %2,%0 state owned parents - from - callee 0
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end

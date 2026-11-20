@@ -1,0 +1,502 @@
+# The standard `sort` module's sorts by a comparison function the caller names, `sort_by_compare` and
+# `sort_by_compare_with` (a context value as the comparison's third argument). Both are stable, in place, and move
+# elements without copying them. The tests cover every input shape and the lengths around the empty and one-element
+# lists, a comparison that is not an order, a direction and a lookup table as the context, and the two orders that
+# a single `key=` cannot give: jq's order across types of value and an SQL `ORDER BY` of several keys with a direction
+# each. Each test stays inside the runner's default step budget.
+import sort
+import strings
+
+record Keyed:
+    key: int
+    position: int
+
+
+# A context that carries what one comparison needs: here only a direction.
+record Direction:
+    descending: bool
+
+
+func next_state(x: u64) -> u64:
+    mut state = bit_xor(x, shift_left(x, 13u64))
+    state = bit_xor(state, shift_right(state, 7u64))
+    return bit_xor(state, shift_left(state, 17u64))
+
+
+# `count` keys in one input shape: 0 random, 1 ascending, 2 descending, 3 all equal, 4 sawtooth, 5 organ pipe,
+# 6 alternating runs, 7 few distinct. Each element remembers its input position.
+func shaped(count: int, shape: int, seed: u64) -> Keyed[]:
+    mut items: Keyed[] = []
+    mut state = seed
+    for i in range(count):
+        state = next_state(state)
+        const noise = int(shift_right(state, 40u64))
+        mut value = noise % 5
+        match shape:
+            case 0:
+                value = noise % 211
+            case 1:
+                value = i
+            case 2:
+                value = count - i
+            case 3:
+                value = 7
+            case 4:
+                value = i % 37
+            case 5:
+                if i < count // 2:
+                    value = i
+                else:
+                    value = count - i
+            case 6:
+                if (i // 50) % 2 == 0:
+                    value = i
+                else:
+                    value = count - i
+            case _:
+                pass
+        append(mut items, Keyed(key=value, position=i))
+    return items
+
+
+func keyed_order(first: Keyed, second: Keyed) -> int:
+    if first.key < second.key:
+        return 0 - 1
+    if first.key > second.key:
+        return 1
+    return 0
+
+
+func keyed_direction(first: Keyed, second: Keyed, way: Direction) -> int:
+    const order = keyed_order(first, second)
+    if way.descending:
+        return 0 - order
+    return order
+
+
+# Whether `after` is the stable order of `before` by key, the key falling when `descending`: every position once, no
+# element altered, keys in order, equal keys in input order.
+func stable_by_key(before: Keyed[], after: Keyed[], descending: bool) -> bool:
+    if len(after) != len(before):
+        return False
+    mut seen: bool[] = []
+    for _ in range(len(before)):
+        append(mut seen, False)
+    for at in range(len(after)):
+        const item = after[at]
+        if item.position < 0 or item.position >= len(before) or seen[item.position]:
+            return False
+        seen[item.position] = True
+        if before[item.position].key != item.key:
+            return False
+        if at > 0:
+            const previous = after[at - 1]
+            if keyed_order(previous, item) != 0 and (keyed_order(previous, item) > 0) != descending:
+                return False
+            if keyed_order(previous, item) == 0 and previous.position > item.position:
+                return False
+    return True
+
+
+# Sort each shape at each length both ways and check the order, once without and once with a context.
+func shapes_sort(first_shape: int, last_shape: int, lengths: int[]) -> bool:
+    mut shape = first_shape
+    while shape <= last_shape:
+        for count in lengths:
+            const before = shaped(count, shape, u64(count * 8 + shape + 1))
+            mut plain = copy(before)
+            sort.sort_by_compare(mut plain, keyed_order)
+            mut falling = copy(before)
+            sort.sort_by_compare_with(mut falling, keyed_direction, Direction(descending=True))
+            if not stable_by_key(before, plain, False) or not stable_by_key(before, falling, True):
+                return False
+        shape += 1
+    return True
+
+
+# spec: SORT-COMPARE-1
+public func test_a_comparison_sort_is_stable_for_short_lists_of_every_shape() -> bool:
+    return shapes_sort(0, 7, [0, 1, 2, 3, 4, 5, 7, 8, 9, 15, 16, 17, 31, 32, 33])
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_is_stable_for_long_random_ascending_and_descending_lists() -> bool:
+    return shapes_sort(0, 3, [63, 65, 257, 700])
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_is_stable_for_long_sawtooth_and_pipe_lists() -> bool:
+    return shapes_sort(4, 5, [64, 65, 257, 700])
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_is_stable_for_long_run_and_few_valued_lists() -> bool:
+    return shapes_sort(6, 7, [64, 65, 257, 700])
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_orders_a_large_list_and_agrees_with_the_keyed_sort() -> bool:
+    const before = shaped(5000, 0, 88172645463325252u64)
+    mut ordered = copy(before)
+    sort.sort_by_compare(mut ordered, keyed_order)
+    mut keys: int[] = []
+    for item in before:
+        append(mut keys, item.key)
+    const reference = sorted(keys)
+    for at in range(len(ordered)):
+        if ordered[at].key != reference[at]:
+            return False
+    return len(ordered) == 5000 and stable_by_key(before, ordered, False)
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_leaves_an_empty_list_and_a_single_element_alone() -> bool:
+    mut nothing: Keyed[] = []
+    sort.sort_by_compare(mut nothing, keyed_order)
+    mut one = [Keyed(key=3, position=0)]
+    sort.sort_by_compare(mut one, keyed_order)
+    mut other: Keyed[] = []
+    sort.sort_by_compare_with(mut other, keyed_direction, Direction(descending=False))
+    return len(nothing) == 0 and len(other) == 0 and len(one) == 1 and one[0].key == 3
+
+
+# Whether the positions of `items` run first to last from `first` in steps of `step`.
+func positions_run(items: Keyed[], first: int, step: int) -> bool:
+    for at in range(len(items)):
+        if items[at].position != first + step * at:
+            return False
+    return True
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_keeps_sorted_input_reverses_descending_input_and_keeps_equal_input() -> bool:
+    mut kept = shaped(40, 1, 5u64)
+    sort.sort_by_compare(mut kept, keyed_order)
+    mut turned = shaped(40, 2, 5u64)
+    const falling = copy(turned)
+    sort.sort_by_compare(mut turned, keyed_order)
+    mut equal = shaped(40, 3, 5u64)
+    sort.sort_by_compare(mut equal, keyed_order)
+    return positions_run(kept, 0, 1) and positions_run(equal, 0, 1) and positions_run(turned, 39, 0 - 1) and stable_by_key(falling, turned, False)
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_orders_text_by_a_comparison_of_its_length() -> bool:
+    mut words = ["pear", "fig", "apple", "kiwi", "plum", "date", "lime", "banana"]
+    sort.sort_by_compare(mut words, by_length)
+    return words == ["fig", "pear", "kiwi", "plum", "date", "lime", "apple", "banana"]
+
+
+func by_length(first: str, second: str) -> int:
+    return len(first) - len(second)
+
+
+# The table a lookup comparison reads: an element is an index into `rank`, and the order is the table's.
+record Table:
+    rank: int[]
+
+
+func by_rank(first: int, second: int, table: Table) -> int:
+    return table.rank[first] - table.rank[second]
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_reads_a_lookup_table_given_as_its_context() -> bool:
+    mut indexes = [0, 1, 2, 3, 4, 5]
+    sort.sort_by_compare_with(mut indexes, by_rank, Table(rank=[30, 10, 20, 10, 5, 20]))
+    return indexes == [4, 1, 3, 2, 5, 0]
+
+
+func always_before(first: Keyed, second: Keyed) -> int:
+    _ = first
+    _ = second
+    return 0 - 1
+
+
+func always_after(first: Keyed, second: Keyed) -> int:
+    _ = first
+    _ = second
+    return 1
+
+
+# Rock, paper and scissors: each key goes before the next one and after the one before it, so the comparison is no order.
+func around(first: Keyed, second: Keyed) -> int:
+    const gap = (second.key - first.key + 3) % 3
+    if gap == 0:
+        return 0
+    if gap == 1:
+        return 0 - 1
+    return 1
+
+
+# Whether `after` holds the same elements as `before`, each once, in some order.
+func same_elements(before: Keyed[], after: Keyed[]) -> bool:
+    if len(before) != len(after):
+        return False
+    mut seen: bool[] = []
+    for _ in range(len(before)):
+        append(mut seen, False)
+    for item in after:
+        if item.position < 0 or item.position >= len(before) or seen[item.position]:
+            return False
+        seen[item.position] = True
+    return True
+
+
+# Sort lists of each length by the three comparisons that are no order, and check what is left of the elements.
+func bad_orders_leave_every_element(counts: int[]) -> bool:
+    for count in counts:
+        const before = shaped(count, 0, u64(count))
+        mut before_all = copy(before)
+        sort.sort_by_compare(mut before_all, always_before)
+        mut after_all = copy(before)
+        sort.sort_by_compare(mut after_all, always_after)
+        mut cyclic = copy(before)
+        sort.sort_by_compare(mut cyclic, around)
+        if not same_elements(before, before_all) or not same_elements(before, after_all) or not same_elements(before, cyclic):
+            return False
+        for at in range(count):
+            if after_all[at].position != at:
+                return False
+    return True
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_that_is_not_an_order_ends_and_leaves_every_element_once() -> bool:
+    return bad_orders_leave_every_element([2, 3, 5, 8, 33, 100, 257])
+
+
+# Whether the positions of `items` run from the last to the first.
+func positions_reversed(items: Keyed[]) -> bool:
+    for at in range(len(items)):
+        if items[at].position != len(items) - 1 - at:
+            return False
+    return True
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_that_always_says_before_reverses_a_list_whose_length_is_a_power_of_two() -> bool:
+    mut items = shaped(16, 3, 1u64)
+    sort.sort_by_compare(mut items, always_before)
+    return positions_reversed(items)
+
+
+# A list element is moved too: rows of cells are sorted by their first cell, falling.
+func by_first_cell(first: int[], second: int[]) -> int:
+    return second[0] - first[0]
+
+
+# Whether `rows` is the stable order of what `list_rows` built, by first cell falling, with every row whole.
+func rows_whole_and_ordered(rows: int[][]) -> bool:
+    for at in range(len(rows)):
+        if rows[at][2] != rows[at][1] * 2:
+            return False
+        if at > 0 and rows[at - 1][0] < rows[at][0]:
+            return False
+        if at > 0 and rows[at - 1][0] == rows[at][0] and rows[at - 1][1] > rows[at][1]:
+            return False
+    return True
+
+
+func list_rows(count: int) -> int[][]:
+    mut rows: int[][] = []
+    for at in range(count):
+        append(mut rows, [(at * 7) % 31, at, at * 2])
+    return rows
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_moves_elements_that_are_lists() -> bool:
+    mut rows = list_rows(300)
+    sort.sort_by_compare(mut rows, by_first_cell)
+    return len(rows) == 300 and rows_whole_and_ordered(rows)
+
+
+# jq's order across types: null, false, true, numbers, texts, arrays.
+enum Json:
+    null
+    boolean(on: bool)
+    number(n: int)
+    text(s: str)
+    array(items: Json[])
+
+
+func rank(value: Json) -> int:
+    match value:
+        case null:
+            return 0
+        case boolean(on):
+            if on:
+                return 2
+            return 1
+        case number(n=_):
+            return 3
+        case text(s=_):
+            return 4
+        case array(items=_):
+            return 5
+
+
+func json_order(first: Json, second: Json) -> int:
+    const left = rank(first)
+    const right = rank(second)
+    if left != right:
+        return left - right
+    match first:
+        case number(n=x):
+            match second:
+                case number(n=y):
+                    return x - y
+                case _:
+                    return 0
+        case text(s=x):
+            match second:
+                case text(s=y):
+                    if x < y:
+                        return 0 - 1
+                    if x > y:
+                        return 1
+                    return 0
+                case _:
+                    return 0
+        case array(items=xs):
+            match second:
+                case array(items=ys):
+                    for at in range(min(len(xs), len(ys))):
+                        const inner = json_order(xs[at], ys[at])
+                        if inner != 0:
+                            return inner
+                    return len(xs) - len(ys)
+                case _:
+                    return 0
+        case _:
+            return 0
+
+
+func describe(value: Json) -> str:
+    match value:
+        case null:
+            return "null"
+        case boolean(on):
+            if on:
+                return "true"
+            return "false"
+        case number(n=x):
+            return f"{x}"
+        case text(s=x):
+            return f'"{x}"'
+        case array(items=xs):
+            mut parts: str[] = []
+            for part in xs:
+                append(mut parts, describe(part))
+            return "[" + strings.join(parts, ", ") + "]"
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_gives_the_order_of_values_of_mixed_type() -> bool:
+    mut values = [
+        Json.array(items=[Json.number(n=2)]),
+        Json.text(s="b"),
+        Json.number(n=10),
+        Json.boolean(on=True),
+        Json.null,
+        Json.text(s="a"),
+        Json.array(items=[Json.number(n=1), Json.null]),
+        Json.number(n=3),
+        Json.boolean(on=False),
+        Json.array(items=[Json.number(n=1)]),
+        Json.null,
+    ]
+    sort.sort_by_compare(mut values, json_order)
+    mut parts: str[] = []
+    for value in values:
+        append(mut parts, describe(value))
+    return strings.join(parts, ", ") == 'null, null, false, true, 3, 10, "a", "b", [1], [1, null], [2]'
+
+
+# A cell of an SQL row: NULL sorts before numbers, and numbers before text.
+enum Cell:
+    nothing
+    integer(n: int)
+    words(s: str)
+
+
+# The context of an ORDER BY: the columns that order the rows, and whether each one falls.
+record OrderBy:
+    columns: int[]
+    falling: bool[]
+
+
+func cell_order(first: Cell, second: Cell) -> int:
+    match first:
+        case nothing:
+            match second:
+                case nothing:
+                    return 0
+                case _:
+                    return 0 - 1
+        case integer(n=x):
+            match second:
+                case nothing:
+                    return 1
+                case integer(n=y):
+                    return x - y
+                case words(s=_):
+                    return 0 - 1
+        case words(s=x):
+            match second:
+                case words(s=y):
+                    if x < y:
+                        return 0 - 1
+                    if x > y:
+                        return 1
+                    return 0
+                case _:
+                    return 1
+
+
+func row_order(first: Cell[], second: Cell[], spec: OrderBy) -> int:
+    for at in range(len(spec.columns)):
+        const order = cell_order(first[spec.columns[at]], second[spec.columns[at]])
+        if order != 0:
+            if spec.falling[at]:
+                return 0 - order
+            return order
+    return 0
+
+
+func word_cell(row: int, column: int) -> Cell:
+    if (row * 5 + column) % 7 == 0:
+        return Cell.nothing
+    if column == 1:
+        return Cell.words(s=f"w{(row * 3) % 5}")
+    return Cell.integer(n=(row * 11 + column) % 4)
+
+
+func table_rows(count: int) -> Cell[][]:
+    mut rows: Cell[][] = []
+    for row in range(count):
+        append(mut rows, [word_cell(row, 0), word_cell(row, 1), Cell.integer(n=row)])
+    return rows
+
+
+# Whether neighbouring rows are in the order of `spec`, equal rows in input order (column 2 holds the input position).
+func rows_ordered(rows: Cell[][], spec: OrderBy) -> bool:
+    for at in range(1, len(rows)):
+        const order = row_order(rows[at - 1], rows[at], spec)
+        if order > 0:
+            return False
+        if order == 0 and cell_order(rows[at - 1][2], rows[at][2]) > 0:
+            return False
+    return True
+
+
+# spec-case: SORT-COMPARE-1
+public func test_a_comparison_sort_orders_rows_by_several_keys_with_a_direction_each() -> bool:
+    mut rows = table_rows(200)
+    const spec = OrderBy(columns=[1, 0], falling=[False, True])
+    sort.sort_by_compare_with(mut rows, row_order, spec)
+    mut other = table_rows(200)
+    const second = OrderBy(columns=[0, 1], falling=[True, True])
+    sort.sort_by_compare_with(mut other, row_order, second)
+    return len(rows) == 200 and rows_ordered(rows, spec) and rows_ordered(other, second)

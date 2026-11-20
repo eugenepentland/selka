@@ -1,0 +1,16 @@
+# Defect 4's generic case (lane HC): `none_of[T]` lends for `T = bytes` and not for `T = Inst`, whose only source is a plain
+# bytes parameter, a view that cannot lend a record. `check` accepted it and the instance's IR was invalid (a Debug or
+# `--verify-facts` build refused it). `check` now refuses the instance with E_BORROW_SOURCE (R4) at the call that made it,
+# with the certain removal of the clause.
+record Inst:
+    ref_des: bytes
+
+
+func none_of[T](name: bytes, tag: T) -> T? from name:
+    if len(name) > 100:
+        return None
+    return None
+
+
+public func test_none_of() -> bool:
+    return none_of(b"U1", Inst(ref_des=b"R1")) is None

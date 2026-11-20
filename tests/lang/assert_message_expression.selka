@@ -1,0 +1,98 @@
+import strings
+
+# The message of an `assert` is any `str` expression (F-72): a quoted text, two texts joined with `+`, a call, a format
+# string and a join in brackets all check and run. The message is evaluated only when the condition fails, so a passing
+# assertion pays nothing for it.
+func describe(n: int) -> str:
+    return "number " + str(n)
+
+
+func joined_with_a_name(item: str) -> int:
+    assert len(item) == 6, "failed for: " + item
+    return len(item)
+
+
+func joined_in_three_parts(item: str, limit: int) -> int:
+    assert len(item) <= limit, "item " + item + " is longer than " + str(limit)
+    return len(item)
+
+
+func joined_with_a_call(n: int) -> int:
+    assert n < 100, "too big: " + describe(n)
+    return n
+
+
+func after_a_call(n: int) -> int:
+    assert n < 100, describe(n) + " is too big"
+    return n
+
+
+func in_brackets(item: str) -> int:
+    assert len(item) == 6, ("failed for: " + item)
+    return len(item)
+
+
+func as_a_format_string(item: str) -> int:
+    assert len(item) == 6, f"failed for: {item}"
+    return len(item)
+
+
+func a_quoted_text_alone(item: str) -> int:
+    assert len(item) == 6, "a literal"
+    return len(item)
+
+
+func a_text_with_a_comma_inside(item: str) -> int:
+    assert len(item) == 6, "first, second, third"
+    return len(item)
+
+
+func a_call_with_two_arguments(item: str) -> int:
+    assert len(item) == 6, strings.repeat("x", 2)
+    return len(item)
+
+
+func joined_in_a_generic[T](value: T, text: str) -> T from value:
+    assert text != "", "empty text for " + text + "."
+    return value
+
+
+func in_a_nested_block(items: str[]) -> int:
+    mut total = 0
+    for item in items:
+        if len(item) > 0:
+            assert len(item) < 10, "item too long: " + item
+            total += len(item)
+    return total
+
+
+public func test_a_joined_message_checks_and_a_passing_assertion_runs() -> bool:
+    assert joined_with_a_name("second") == 6
+    assert joined_in_three_parts("abc", 5) == 3
+    assert joined_with_a_call(7) == 7
+    assert after_a_call(8) == 8
+    return True
+
+
+public func test_every_other_message_spelling_still_runs() -> bool:
+    assert in_brackets("second") == 6
+    assert as_a_format_string("second") == 6
+    assert a_quoted_text_alone("second") == 6
+    assert a_text_with_a_comma_inside("second") == 6
+    assert a_call_with_two_arguments("second") == 6
+    return True
+
+
+public func test_a_joined_message_in_a_generic_body_and_a_nested_block() -> bool:
+    assert joined_in_a_generic(5, "x") == 5
+    assert joined_in_a_generic("v", "x") == "v"
+    assert in_a_nested_block(["a", "bc", "", "def"]) == 6
+    return True
+
+
+public func test_a_message_is_not_evaluated_while_the_condition_holds() -> bool:
+    mut calls: int[] = []
+    assert len(calls) == 0, "calls: " + str(len(calls))
+    append(mut calls, 1)
+    assert len(calls) == 1, f"calls: {len(calls)}"
+    return True

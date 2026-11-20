@@ -1,0 +1,43 @@
+record Millimeters:
+    value: u32
+
+
+func raw(value: u32) -> Millimeters:
+    return Millimeters(value=value)
+
+
+func Millimeters_from(value: u32) -> Millimeters:
+    # Clamp to the range this domain promises to represent.
+    if value > 1000u32:
+        return raw(1000u32)
+    return raw(value)
+
+
+func Millimeters_number(value: Millimeters) -> u32:
+    return (value).value
+
+
+func add(a: Millimeters, b: Millimeters) -> Millimeters:
+    return Millimeters_from((a).value + (b).value)
+
+
+record Seconds:
+    value: u32
+
+
+func Seconds_from(value: u32) -> Seconds:
+    return Seconds(value=value)
+
+
+func Seconds_number(value: Seconds) -> u32:
+    return (value).value
+
+
+record Measurement:
+    distance: Millimeters
+    elapsed: Seconds
+
+
+func main() -> int:
+    mut sample = Measurement(distance=add(Millimeters_from(700u32), Millimeters_from(500u32)), elapsed=Seconds_from(3u32))
+    return int(Millimeters_number(sample.distance)) + int(Seconds_number(sample.elapsed))

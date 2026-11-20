@@ -1,0 +1,31 @@
+# Proof steps, lane C: a comparison chain in a condition is lowered as one branch per link. An operand that traps does so
+# where it is written, once every earlier link held, and not at all when an earlier link failed.
+func bump(value: int) -> int:
+    return value + 1
+
+
+func overflow(top: int) -> int:
+    mut hits = 0
+    if 0 <= top <= bump(top):
+        hits += 1
+    return hits
+
+
+func index(xs: int[], i: int) -> int:
+    mut hits = 0
+    if 0 <= i < xs[i]:
+        hits += 1
+    return hits
+
+
+func main(args: str[], out: Stream) -> int:
+    const xs: int[] = [5, 6, 7]
+    const name = args[0]
+    if name == "overflow":
+        print(out, overflow(9223372036854775806))
+        print(out, overflow(9223372036854775807))
+    if name == "index":
+        print(out, index(xs, -1))
+        print(out, index(xs, 2))
+        print(out, index(xs, 3))
+    return 0

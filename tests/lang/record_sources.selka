@@ -1,0 +1,245 @@
+# Records that hold borrows, stage 1 (lane RB1): every read-only place is a source. A borrowed record (1A) may hold:
+# - a bare plain dictionary or set parameter, which arrives as the caller's block (no copy; returnable under `from`);
+# - `Some(place)` of a projection (a field, an element, a dictionary value) of a named block-backed binding (no copy;
+#   returnable under `from`);
+# - a bare plain text, bytes or list parameter, which arrives as a view: the record holds the caller's block when the
+#   argument was a whole text or list, else one copy per call made at the first use (a slice, or any bytes argument) and
+#   freed when the call returns. Such a record never leaves the call.
+# The refusals are in src/core/record_sources_test.zig.
+import sets
+
+record Inner:
+    a: bytes
+    b: int
+
+
+record Table:
+    counts: dict[bytes, int]
+    tag: bytes
+
+
+record Members:
+    names: set[bytes]
+    counts: dict[bytes, int]
+
+
+record Opt:
+    ref: bytes?
+    n: int
+
+
+record Pair:
+    left: Opt
+    right: bytes
+
+
+record Spot:
+    net: bytes
+    x: int
+
+
+record Line:
+    text: str
+    n: int
+
+
+record Names:
+    names: bytes[]
+    tag: str
+
+
+func spot_len(s: Spot) -> int:
+    return len(s.net) + s.x
+
+
+func line_len(l: Line) -> int:
+    return len(l.text) * 10 + l.n
+
+
+func names_len(n: Names) -> int:
+    mut total = 0
+    for name in n.names:
+        total += len(name)
+    return total + len(n.tag)
+
+
+# A bytes parameter held bare: an argument in a loop (one copy for the call) and a `const`.
+func by_bytes(net: bytes) -> int:
+    mut total = 0
+    for i in range(3):
+        total += spot_len(Spot(net=net, x=i))
+    const s = Spot(net=net, x=100)
+    return total + spot_len(s)
+
+
+# A text parameter held by a borrowed `mut` local (4f) rebuilt in a loop.
+func by_text(text: str) -> int:
+    mut current = Line(text=text, n=0)
+    for i in range(4):
+        current = Line(text=text, n=i)
+    return line_len(current)
+
+
+func by_list(names: bytes[], tag: str) -> int:
+    return names_len(Names(names=names, tag=tag))
+
+
+# A view parameter passed on to a callee that holds it.
+func onward(text: str, names: bytes[]) -> int:
+    return by_text(text) + by_list(names, text)
+
+
+# The record is built only on one path: a call that takes the other path copies nothing.
+func maybe(net: bytes, build: bool) -> int:
+    if build:
+        return spot_len(Spot(net=net, x=1))
+    return len(net)
+
+
+func fresh_text(n: int) -> str:
+    mut out = ""
+    for i in range(n):
+        out = out + "ab"
+    return out
+
+
+func table_size(t: Table) -> int:
+    return len(t.counts) + len(t.tag)
+
+
+func member_count(m: Members) -> int:
+    mut total = len(m.names)
+    for name in m.names:
+        total += dicts_get(m.counts, name)
+    return total
+
+
+func dicts_get(counts: dict[bytes, int], key: bytes) -> int:
+    if key in counts:
+        return counts[key]
+    return 0
+
+
+func olen(o: Opt) -> int:
+    match o.ref:
+        case None:
+            return o.n
+        case Some(r):
+            return len(r) + o.n
+
+
+# A dictionary parameter held bare by a borrowed record argument, beside a field of a record parameter.
+func table_argument(counts: dict[bytes, int], inner: Inner) -> int:
+    return table_size(Table(counts=counts, tag=inner.a))
+
+
+# The same record as a `const`, read twice.
+func table_const(counts: dict[bytes, int], inner: Inner) -> int:
+    const t = Table(counts=counts, tag=inner.a)
+    return table_size(t) + len(t.counts)
+
+
+# Returned under `from`: the record lends the caller's dictionary.
+func table_of(counts: dict[bytes, int], inner: Inner) -> Table from counts, inner:
+    return Table(counts=counts, tag=inner.a)
+
+
+func members_argument(names: set[bytes], counts: dict[bytes, int]) -> int:
+    return member_count(Members(names=names, counts=counts))
+
+
+func opt_of(inner: Inner) -> Opt from inner:
+    return Opt(ref=Some(inner.a), n=1)
+
+
+func element_opts(xs: bytes[], table: dict[bytes, bytes]) -> int:
+    mut total = 0
+    for i in range(len(xs)):
+        total += olen(Opt(ref=Some(xs[i]), n=0))
+    total += olen(Opt(ref=Some(table[b"k"]), n=0))
+    return total
+
+
+func pair_len(p: Pair) -> int:
+    return olen(p.left) + len(p.right)
+
+
+func counts_of() -> dict[bytes, int]:
+    mut counts: dict[bytes, int] = {}
+    counts[b"a"] = 2
+    counts[b"b"] = 3
+    return counts
+
+
+public func test_dictionary_parameter_in_a_borrowed_record() -> bool:
+    const counts = counts_of()
+    const inner = Inner(a=b"xyz", b=1)
+    return table_argument(counts, inner) == 5 and table_const(counts, inner) == 7
+
+
+public func test_borrowed_record_of_a_dictionary_parameter_returned_from() -> bool:
+    const counts = counts_of()
+    const inner = Inner(a=b"xy", b=1)
+    const t = table_of(counts, inner)
+    return table_size(t) == 4 and t.counts[b"b"] == 3
+
+
+public func test_set_and_dictionary_parameters_in_one_record() -> bool:
+    mut names: set[bytes] = set()
+    sets.add(mut names, b"a")
+    sets.add(mut names, b"c")
+    const counts = counts_of()
+    return members_argument(names, counts) == 4
+
+
+public func test_some_of_a_field_of_a_local() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    return olen(Opt(ref=Some(owner.a), n=0)) == 3
+
+
+public func test_some_of_a_field_returned_from() -> bool:
+    const owner = Inner(a=b"abcd", b=1)
+    const o = opt_of(owner)
+    return olen(o) == 5
+
+
+public func test_some_of_an_element_and_a_dictionary_value() -> bool:
+    const xs = [b"a", b"bb"]
+    mut table: dict[bytes, bytes] = {}
+    table[b"k"] = b"vvvv"
+    return element_opts(xs, table) == 7
+
+
+public func test_some_of_a_projection_in_a_nested_borrowed_record() -> bool:
+    const owner = Inner(a=b"abc", b=1)
+    return pair_len(Pair(left=Opt(ref=Some(owner.a), n=1), right=owner.a)) == 7
+
+
+public func test_bytes_parameter_whole_and_slice() -> bool:
+    const big = b"abcdefgh"
+    return by_bytes(big) == 135 and by_bytes(big[2:5]) == 115 and maybe(big, True) == 9 and maybe(big, False) == 8
+
+
+public func test_text_parameter_whole_and_slice() -> bool:
+    const words = "hello world"
+    return by_text(words) == 113 and by_text(words[0:3]) == 33 and by_text("") == 3
+
+
+public func test_list_parameter_whole_and_slice() -> bool:
+    const words = "hello world"
+    const xs = [b"aa", b"bbb", b"c"]
+    return by_list(xs, words) == 17 and by_list(xs[1:3], words[6:11]) == 9
+
+
+public func test_view_parameters_passed_on() -> bool:
+    const words = "hello world"
+    const xs = [b"aa", b"bbb", b"c"]
+    return onward(words[0:2], xs[0:1]) == 27 and onward(words, xs) == 130
+
+
+# The owner is a fresh value the caller drops after the call: the record's block is the owner itself, read before the drop.
+public func test_owner_dropped_after_the_call() -> bool:
+    mut total = 0
+    for i in range(50):
+        total += by_text(fresh_text(i % 5))
+    return total == 50 * 3 + 10 * (0 + 20 + 40 + 60 + 80)

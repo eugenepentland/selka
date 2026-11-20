@@ -1,0 +1,44 @@
+# W13 slices 2 and 5: the spellings W13 removed whose rewrite is not certain. Each is refused with the reason it has
+# no edit, and `selka fix` leaves the file as it is.
+import math
+import strings
+
+# A module function named for a prelude parser captures the bare call (F48's rule); this one is never called bare.
+func parse_float(text: str) -> float?:
+    return text.parse_float()
+
+
+# The import `hex.encode` needs would hide the parameter named `hex`.
+func describe(hex: str, data: bytes) -> str:
+    return hex + data.hex()
+
+
+func separator() -> str:
+    return ", "
+
+
+func parts() -> str[]:
+    return ["a", "b"]
+
+
+func checks(out: Stream, stop: Stop, small: u8) -> Unit:
+    # Both operands of the join are calls, which the function form evaluates in the other order.
+    print(out, separator().join(parts()))
+    # A bounded search answers `int?` as a function; here its answer is kept, not compared with a literal.
+    const at = "a,b".find(",", 0)
+    # The literals take `u8` from the call; the prelude's `min` would read them as `int` (a lone literal takes the suffix).
+    print(out, at, math.min[u8](small, 2 + 1))
+    # `math.abs` fails on the most negative `int`, `abs` does not.
+    const magnitude = math.abs(len(parts()) - 6) else Err(_):
+        return
+    print(out, magnitude)
+    # `strings.starts_with_at` is no duplicate (it does not trap inside a multi-byte character) and is not refused.
+    print(out, strings.starts_with_at("aé", "", 2))
+    # The standard library's own channel to a `Stop`.
+    print(out, stop_control(stop, 0))
+
+
+func main(out: Stream, stop: Stop) -> int:
+    print(out, describe("x", b"ab"))
+    checks(out, stop, 7u8)
+    return 0

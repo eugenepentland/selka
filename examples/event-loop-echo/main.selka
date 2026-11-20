@@ -1,0 +1,92 @@
+# An echo server on one thread: a Poller waits on the listener and every client at
+# once, so a slow or silent client never blocks the others.
+#
+#   selka run examples/event-loop-echo/main.selka --restrict --allow-listen=127.0.0.1:0
+#
+# The kernel picks the port and the server announces it on stderr, which is flushed
+# line by line. Connect with `nc 127.0.0.1 PORT`; a client silent for ten seconds is
+# disconnected. The poller is a resource, so every call takes it and hands it
+# back, and the clients are kept by id in a dictionary.
+import byte_builder
+import dicts
+import network
+
+# What the server remembers about one client between wake-ups: the bytes it still
+# owes the client and how many of them the kernel has taken.
+record Client:
+    pending: bytes
+    sent: int
+
+
+func main(net: Network, err: Stream) -> int:
+    with net.host("127.0.0.1:0") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return serve(own poller, err)
+            case err(code):
+                print(err, "cannot listen:", network.describe(code))
+                return 1
+
+
+func serve(own poller: network.Poller, err: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut clients: dict[int, Client] = {}
+    live = network.port(own live, network.LISTENER, mut outcome)
+    print(err, "listening on 127.0.0.1:" + str(outcome.value))
+    live = network.set_idle_timeout(own live, 10000, mut outcome)
+    while True:
+        live = network.wait(own live, -1, mut ready)
+        for index in range(ready.count):
+            const id = ready.ids[index]
+            if id == network.LISTENER:
+                live = accept_all(own live, mut clients, mut outcome, err)
+            elif id in clients:
+                live = serve_client(own live, id, ready.flags[index], mut clients, mut outcome)
+    return 0
+
+
+# Take every connection that is waiting; the first would-block ends the batch.
+func accept_all(own poller: network.Poller, mut clients: dict[int, Client], mut outcome: network.Outcome, err: Stream) -> network.Poller:
+    mut live = own poller
+    while True:
+        live = network.accept(own live, mut outcome)
+        if outcome.code != network.OUTCOME_OK:
+            return live
+        const id = outcome.value
+        clients[id] = Client(pending=b"", sent=0)
+        live = network.peer(own live, id, mut outcome)
+        print(err, "accepted", network.format_address(outcome.value, outcome.extra))
+    return live
+
+
+# React to one client: read what arrived, write what is owed, and close the
+# connection when the client finished, went idle or broke.
+func serve_client(own poller: network.Poller, id: int, flags: int, mut clients: dict[int, Client], mut outcome: network.Outcome) -> network.Poller:
+    mut live = own poller
+    mut client = dicts.pop(mut clients, id)
+    mut keep = not network.has(flags, network.EVENT_IDLE) and not network.has(flags, network.EVENT_ERROR)
+    if keep and network.has(flags, network.EVENT_READABLE) and client.sent >= len(client.pending):
+        mut raw = byte_builder.create()
+        live = network.recv(own live, id, mut raw, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            client.pending = byte_builder.finish(raw)
+            client.sent = 0
+        elif outcome.code != network.OUTCOME_WOULD_BLOCK:
+            keep = False
+    if keep and client.sent < len(client.pending):
+        live = network.send(own live, id, client.pending, client.sent, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            client.sent += outcome.value
+        elif outcome.code != network.OUTCOME_WOULD_BLOCK:
+            keep = False
+    if not keep:
+        return network.close_connection(own live, id, mut outcome)
+    # While output is owed, hear when the socket can take more instead of reading.
+    if client.sent < len(client.pending):
+        live = network.set_interest(own live, id, network.EVENT_WRITABLE, mut outcome)
+    else:
+        live = network.set_interest(own live, id, network.EVENT_READABLE, mut outcome)
+    clients[id] = own client
+    return live

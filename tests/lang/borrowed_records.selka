@@ -1,0 +1,189 @@
+# A record built only from borrows of block-backed places is a borrowed value (1A), as a `from` result is: no field is
+# copied or moved. It may be a temporary argument, a `const` local, a `mut` local whose every assignment borrows, or a
+# value returned under `from`; its loans are its fields' owners, held to its last use. Storing it in a list or an owned
+# field, moving it, returning it without `from`, a change of an owner while it is live, and a record that mixes a borrow
+# with a fresh value stay refused, with the repair they had before (src/core/borrowed_record_test.zig).
+record Spot:
+    net: bytes
+    x: int
+
+
+record Bank:
+    power: bytes
+    gnd: bytes
+    labels: bytes[]
+
+
+record Edge:
+    names: bytes[]
+    top: int
+
+
+record Pair:
+    left: Spot
+    right: Spot
+
+
+record Placement:
+    net: bytes
+    label: bytes
+    x: int
+    y: int
+    angle: int
+    side: int
+    mirrored: bool
+
+
+func placement_len(p: Placement) -> int:
+    mut total = len(p.net) * 1000 + len(p.label) * 100 + p.x + p.y + p.angle + p.side
+    if p.mirrored:
+        total += 1
+    return total
+
+
+func placed(b: Bank) -> int:
+    const wide = Placement(net=b.power, label=b.gnd, x=1, y=2, angle=3, side=4, mirrored=True)
+    return placement_len(wide) + placement_len(Placement(net=b.gnd, label=b.labels[2], x=0, y=0, angle=0, side=0, mirrored=False))
+
+
+func bank() -> Bank:
+    return Bank(power=b"VCC_3V3", gnd=b"GND", labels=[b"a", b"bb", b"ccc"])
+
+
+func spot_len(s: Spot) -> int:
+    return len(s.net) * 10 + s.x
+
+
+func edge_len(e: Edge) -> int:
+    mut total = e.top
+    for name in e.names:
+        total += len(name)
+    return total
+
+
+func pair_len(p: Pair) -> int:
+    return spot_len(p.left) + spot_len(p.right)
+
+
+func rails(b: Bank) -> int:
+    return spot_len(Spot(net=b.power, x=1)) + spot_len(Spot(net=b.gnd, x=2))
+
+
+func owned_net() -> int:
+    const net = b"NET" + b"_A"
+    const wired = [b"x", b"yy"]
+    const first = spot_len(Spot(net=net, x=0)) + edge_len(Edge(names=wired, top=1))
+    return first + len(net) + len(wired)
+
+
+func local_spot(b: Bank) -> int:
+    const s = Spot(net=b.power, x=3)
+    return spot_len(s) + len(s.net)
+
+
+func chosen(b: Bank, ground: bool) -> int:
+    mut s = Spot(net=b.power, x=1)
+    if ground:
+        s = Spot(net=b.gnd, x=2)
+    return spot_len(s)
+
+
+func per_label(b: Bank) -> int:
+    mut total = 0
+    for label in b.labels:
+        total += spot_len(Spot(net=label, x=0))
+    return total
+
+
+func nested(b: Bank) -> int:
+    const right = Spot(net=b.gnd, x=2)
+    return pair_len(Pair(left=Spot(net=b.power, x=1), right=right))
+
+
+func with_literal(b: Bank) -> int:
+    return spot_len(Spot(net=b"lit", x=0)) + edge_len(Edge(names=b.labels, top=0))
+
+
+func power_spot(b: Bank) -> Spot from b:
+    return Spot(net=b.power, x=7)
+
+
+func ground_spot(b: Bank, present: bool) -> Spot? from b:
+    if present:
+        return Some(Spot(net=b.gnd, x=8))
+    return None
+
+
+func returned(b: Bank) -> int:
+    mut total = spot_len(power_spot(b))
+    match ground_spot(b, True):
+        case Some(s):
+            total += spot_len(s)
+        case None:
+            total += 1000
+    match ground_spot(b, False):
+        case Some(s):
+            total += spot_len(s)
+        case None:
+            pass
+    return total
+
+
+func change_after_last_use() -> int:
+    mut b = bank()
+    const s = Spot(net=b.power, x=0)
+    const n = spot_len(s)
+    b.power = b"changed"
+    return n + len(b.power)
+
+
+func owner_outlives_drop() -> int:
+    const net = b"abc" + b"d"
+    const s = Spot(net=net, x=0)
+    const junk = b"zzzzzzzz" + b"y"
+    return spot_len(s) * 100 + len(junk)
+
+
+public func test_a_temporary_argument_borrows_a_parameter_field() -> bool:
+    return rails(bank()) == 71 + 32
+
+
+public func test_a_temporary_argument_borrows_owned_locals_that_stay_usable() -> bool:
+    return owned_net() == 50 + 4 + 5 + 2
+
+
+public func test_a_const_local_holds_a_borrowed_record() -> bool:
+    return local_spot(bank()) == 73 + 7
+
+
+public func test_a_mut_local_borrows_either_record() -> bool:
+    const b = bank()
+    return chosen(b, True) == 32 and chosen(b, False) == 71
+
+
+public func test_a_record_of_a_loop_variable() -> bool:
+    return per_label(bank()) == 10 + 20 + 30
+
+
+public func test_nested_borrowed_records_and_a_borrowed_record_local_as_a_field() -> bool:
+    return nested(bank()) == 71 + 32
+
+
+public func test_a_literal_field_beside_the_borrows() -> bool:
+    return with_literal(bank()) == 30 + 6
+
+
+public func test_a_borrowed_record_returned_under_from_and_inside_some() -> bool:
+    return returned(bank()) == 77 + 38
+
+
+public func test_the_owner_may_change_after_the_last_use() -> bool:
+    return change_after_last_use() == 70 + 7
+
+
+public func test_the_owner_lives_to_the_records_last_use() -> bool:
+    return owner_outlives_drop() == 4000 + 9
+
+
+public func test_a_record_passed_in_memory_borrows_too() -> bool:
+    return placed(bank()) == 7000 + 300 + 10 + 1 + 3000 + 300

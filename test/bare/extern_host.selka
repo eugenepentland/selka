@@ -1,0 +1,15 @@
+# C interop on a device (MCU-EXT): `main` takes the `Host`, and each `extern func` call is a plain AAPCS call of the C
+# symbol in `extern_host.c`, linked after the platform's file. square_plus(7) is 50 and mix(1, 2, 3, 4) is 1234, so
+# `main` answers 1234 - 20 * 50 = 234.
+# bare-status: 234
+# bare-link: extern_host.c
+extern func square_plus(host: Host, x: i32) -> i32
+
+
+extern func mix(host: Host, a: i32, b: i64, c: u8, d: i32) -> i32
+
+
+func main(host: Host) -> int:
+    const computed = square_plus(host, 7)
+    const mixed = mix(host, 1, 2, 3, 4)
+    return int(mixed) - 20 * int(computed)

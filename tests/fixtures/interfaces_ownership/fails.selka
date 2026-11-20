@@ -1,0 +1,11 @@
+# In a `fails` function: returning `head`'s loan of a plain parameter without `from` is refused.
+import lib
+
+func take_first(xs: str[]) -> str fails i64:
+    if len(xs) == 0:
+        fail 1
+    return lib.head(xs)
+
+
+func main() -> int:
+    return 0

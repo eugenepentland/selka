@@ -1,0 +1,17 @@
+# A list of lists, a loop that carries an owner, a branch that drops on one arm.
+func rows(n: int, wide: bool) -> int:
+    mut table: int[][] = []
+    for i in range(n):
+        mut row: int[] = [i]
+        if wide:
+            append(mut row, i + 1)
+        append(mut table, own row)
+    mut seen = 0
+    for row in table:
+        seen += len(row)
+    return seen
+
+
+func main(out: Stream) -> int:
+    print(out, rows(3, True), rows(2, False))
+    return 0

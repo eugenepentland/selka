@@ -1,0 +1,9 @@
+# Bounded RC borrowed-entry proof — 2026-09-26
+
+The first integrated physical-borrow sweep at `2aea83f4` passed 677 actual QBE assertions but dropped three programs (`element_access`, `option_niche`, `rc_call_lifetimes`) when repeated recursive certificate queries exhausted compiler memory. That run is not acceptance. Its stderr, full JSON and failed combined main gate are retained in `experiments/d9-rc-borrow-bounds-20260926/`.
+
+A root proof now tracks active instruction slices and declines recursive call chains immediately. It permits at most 16 active functions and budgets 65,536 abstract state cells across the root query, including callees. The conservative cell estimate bounds instruction-count times maximum stack-plus-locals width; exceeding it chooses the ordinary owned ABI. External allocator failure continues to propagate normally. Certificate identity version advances to v3 because the accepted proof grammar is resource-bounded.
+
+New direct/mutual recursion and oversized-proof checks pass (12 tests including imports); the existing RC-BORROW selection passes 21/21. All three formerly dropped guest files execute uncached on QBE and LLVM: 14 element-access, 12 option-niche, and 3 call-lifetime tests per backend, all passing. The Debug compiler hash and full verdicts are retained in the evidence directory. Whole-tree Guardian passes 88 checks; combined full validation follows integration.
+
+The same prior combined gate finished 92/94 build steps, with one failure among 2,207 executed tests: the ownership-plan negative fixture still used `rc-v2` as an invalid ABI after the runtime ABI upgrade. It now deliberately mismatches current-v2 contracts with old-v1 policy. Its focused test passes (12 including imports). The ten-scenario arena wrapper now completes in 3.62 seconds within the full run, compared with 576 seconds before the memo hash fix.

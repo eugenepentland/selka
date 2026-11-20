@@ -1,0 +1,97 @@
+# A plain text, bytes or list parameter stored bare in a local list or dictionary is held as its frame block, as a borrowed
+# record holds one (lane OC's H5, plan Part B stage O3; RB1's `block_frame`): the caller's own value for a whole argument,
+# else one copy per call, made at the first store and freed when the call returns, in a loop too. The collection lends its
+# elements and never leaves its call. A store of one, a return or a `mut` out-parameter keeps its refusal (R1 and R5, with
+# `copy(...)`; src/core/frame_block_collections_test.zig).
+func total(names: str[]) -> int:
+    mut n = 0
+    for name in names:
+        n = n + len(name)
+    return n
+
+
+func text_in_list(p: str, k: int) -> int:
+    mut l: str[] = []
+    for i in range(k):
+        append(mut l, p)
+    return total(l)
+
+
+func text_in_dict(p: str, k: int) -> int:
+    mut d: dict[int, str] = {}
+    for i in range(k):
+        d[i] = p
+    mut n = 0
+    for i in range(k):
+        n = n + len(d[i])
+    return n
+
+
+func bytes_in_list(p: bytes, k: int) -> int:
+    mut l: bytes[] = []
+    for i in range(k):
+        append(mut l, p)
+    mut n = 0
+    for x in l:
+        n = n + len(x)
+    return n
+
+
+func bytes_in_dict(p: bytes, q: bytes) -> int:
+    mut d: dict[bytes, bytes] = {}
+    d[b"p"] = p
+    d[b"q"] = q
+    return len(d[b"p"]) * 10 + len(d[b"q"])
+
+
+func ints_in_list(p: int[], k: int) -> int:
+    mut l: int[][] = []
+    for i in range(k):
+        append(mut l, p)
+    mut n = 0
+    for x in l:
+        n = n + x[0]
+    return n
+
+
+func ints_written(p: int[], q: int[]) -> int:
+    mut l: int[][] = [q]
+    l[0] = p
+    return l[0][0]
+
+
+func two_params(a: str, b: str) -> int:
+    mut l: str[] = []
+    append(mut l, a)
+    append(mut l, b)
+    append(mut l, a)
+    return total(l)
+
+
+func early_return(p: str, k: int) -> int:
+    mut l: str[] = []
+    for i in range(k):
+        append(mut l, p)
+        if i == 1:
+            return total(l)
+    return 0
+
+
+public func test_a_text_parameter_in_a_local_list_or_dictionary_is_its_frame_block() -> bool:
+    const s = "abcdefghijklmnopqrstuvwxyz"
+    return text_in_list(s, 4) == 104 and text_in_list(s[2:12], 3) == 30 and text_in_dict(s, 5) == 130 and text_in_dict(s[0:3], 5) == 15
+
+
+public func test_a_bytes_parameter_is_copied_once_per_call_and_freed() -> bool:
+    const b = b"0123456789" + b"ab"
+    return bytes_in_list(b, 3) == 36 and bytes_in_list(b[1:4], 2) == 6 and bytes_in_dict(b, b[0:2]) == 122
+
+
+public func test_a_list_parameter_in_a_local_list_whole_or_sliced() -> bool:
+    const xs = [7, 8, 9]
+    return ints_in_list(xs, 2) == 14 and ints_in_list(xs[1:3], 2) == 16 and ints_written(xs, [1]) == 7 and ints_written(xs[2:], [1]) == 9
+
+
+public func test_two_parameters_and_an_early_return_free_their_frame_blocks() -> bool:
+    const s = "abcdefghijklmnopqrstuvwxyz"
+    return two_params(s, s[0:4]) == 56 and early_return(s[0:5], 4) == 10 and early_return(s, 1) == 0

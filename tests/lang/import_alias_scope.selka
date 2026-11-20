@@ -1,0 +1,16 @@
+import bytes
+
+record Chunk:
+    body: bytes
+
+
+func size(chunk: Chunk) -> int:
+    return len(chunk.body)
+
+
+# A module import is not a type declaration, so importing a module whose name
+# matches a built-in type leaves that type visible in the importing unit (L18).
+# spec-case: IMPORT-ALIAS-SCOPE-1
+public func test_a_module_import_named_like_a_builtin_type_leaves_the_type_visible() -> bool:
+    const chunk = Chunk(body=b"  x ")
+    return size(chunk) == 4 and len(bytes.strip(chunk.body)) == 1

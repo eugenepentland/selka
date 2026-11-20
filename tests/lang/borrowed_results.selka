@@ -1,0 +1,326 @@
+# Borrowed results (borrowed returns R3b and R4): a function returns a borrow of its parameters, and the caller reads
+# it in place, binds it with `const`, or returns it onward. Each accepted shape below checks and runs; no copy is
+# written. The refusals (a store, a `mut` or `own` use, an overlap, a mixed return) are pinned in
+# src/core/borrowed_return_test.zig.
+import dicts
+import testing
+
+record Node:
+    label: str
+    tags: str[]
+
+
+record Refs:
+    defs: dict[str, str]
+
+
+enum Item:
+    atom(text: str)
+    empty
+
+
+func first_items(table: dict[str, str[]], key: str) -> str[] from table:
+    return table[key]
+
+
+func maybe_items(table: dict[str, str[]], key: str) -> str[]? from table:
+    if key in table:
+        return Some(table[key])
+    return None
+
+
+func label_of(node: Node) -> str from node:
+    return node.label
+
+
+func find_def(refs: Refs, key: str) -> str? from refs:
+    if key in refs.defs:
+        return Some(refs.defs[key])
+    return None
+
+
+# A declared source can lend its managed enum payload. The empty branch returns a static string, which adds no owner.
+func text_or(item: Item) -> str from item:
+    match item:
+        case atom(text):
+            return text
+        case empty:
+            return "none"
+
+
+func onward(node: Node) -> str from node:
+    const got = label_of(node)
+    return got
+
+
+public func test_direct_return() -> bool:
+    mut table: dict[str, str[]] = {"a": ["x", "y"]}
+    return len(first_items(table, "a")) == 2
+
+
+public func test_option_return() -> bool:
+    mut table: dict[str, str[]] = {"a": ["x", "y"]}
+    const found = maybe_items(table, "a")
+    match found:
+        case Some(items):
+            return len(items) == 2
+        case None:
+            return False
+
+
+public func test_option_return_missing() -> bool:
+    mut table: dict[str, str[]] = {"a": ["x", "y"]}
+    const missing = maybe_items(table, "b")
+    match missing:
+        case Some(items):
+            return False
+        case None:
+            return True
+
+
+public func test_label_of() -> bool:
+    const node = Node(label="x", tags=["t"])
+    const got = label_of(node)
+    return got == "x"
+
+
+public func test_find_def() -> bool:
+    mut refs = Refs(defs={"k": "v"})
+    const found = find_def(refs, "k")
+    match found:
+        case Some(text):
+            return text == "v"
+        case None:
+            return False
+
+
+public func test_text_or() -> bool:
+    const item = Item.atom(text="a")
+    const other = Item.empty
+    return text_or(item) == "a" and text_or(other) == "none"
+
+
+public func test_onward() -> bool:
+    const node = Node(label="z", tags=[])
+    return onward(node) == "z"
+
+
+public func test_read_in_place_argument() -> bool:
+    const node = Node(label="q", tags=["t"])
+    return len(label_of(node)) == 1
+
+
+func row_of(rows: str[][], i: int) -> str[] from rows:
+    return rows[i]
+
+
+func direct_work(n: int) -> int:
+    mut table: dict[str, str[]] = {"a": ["x", "y"]}
+    mut total = 0
+    for i in range(n):
+        total += len(first_items(table, "a"))
+    return total
+
+
+func label_work(n: int) -> int:
+    const node = Node(label="xyz", tags=["t"])
+    mut total = 0
+    for i in range(n):
+        total += len(label_of(node))
+    return total
+
+
+func find_work(n: int) -> int:
+    mut refs = Refs(defs={"k": "vv"})
+    mut total = 0
+    for i in range(n):
+        const found = find_def(refs, "k")
+        match found:
+            case Some(text):
+                total += len(text)
+            case None:
+                total += 0
+    return total
+
+
+func row_work(n: int) -> int:
+    mut rows: str[][] = [["a", "b"], ["c"]]
+    mut total = 0
+    for i in range(n):
+        total += len(row_of(rows, 1))
+    return total
+
+
+public func test_direct_return_reads_the_table_in_place() -> bool:
+    return direct_work(3) == 6 and testing.allocations(direct_work, 200) - testing.allocations(direct_work, 100) == 0
+
+
+public func test_label_of_reads_the_field_in_place() -> bool:
+    return label_work(2) == 6 and testing.allocations(label_work, 200) - testing.allocations(label_work, 100) == 0
+
+
+public func test_row_of_reads_the_element_in_place() -> bool:
+    return row_work(2) == 2 and testing.allocations(row_work, 200) - testing.allocations(row_work, 100) == 0
+
+
+public func test_find_def_reads_the_dictionary_value_in_place() -> bool:
+    return find_work(2) == 4 and testing.allocations(find_work, 200) - testing.allocations(find_work, 100) == 0
+
+
+func least(words: str[]) -> str from words:
+    return min(words)
+
+
+func dict_key(values: dict[str, int]) -> str from values:
+    for key, value in dicts.items(values):
+        return key
+    return "empty"
+
+
+func option_of(value: str?) -> str from value:
+    match value:
+        case Some(text):
+            return text
+        case None:
+            return "none"
+
+
+public func test_least_returns_the_selected_element() -> bool:
+    return least(["zz", "aa"]) == "aa"
+
+
+public func test_dict_items_key_is_returned_in_place() -> bool:
+    return dict_key({"k": 1}) == "k"
+
+
+public func test_option_payload_is_returned_in_place() -> bool:
+    return option_of(Some("q")) == "q" and option_of(None) == "none"
+
+
+func make_table() -> dict[str, str[]]:
+    return {"a": ["x", "y"]}
+
+
+public func test_a_temporary_argument_lives_as_long_as_the_borrowed_result() -> bool:
+    return len(first_items(make_table(), "a")) == 2
+
+
+func as_bytes(values: int[]) -> bytes:
+    return bytes(values)
+
+
+public func test_a_conversion_to_bytes_is_a_copy_not_a_borrow() -> bool:
+    const values = [97, 98]
+    mut kept = as_bytes(values)
+    return len(kept) == 2
+
+
+func number_row(n: int) -> int[]:
+    return [n, n + 1]
+
+
+func logged_first(rows: int[][], mut log: int[]) -> int[] from rows:
+    append(mut log, len(rows))
+    return rows[0]
+
+
+func discard_borrowed_first(n: int) -> int:
+    const rows = [number_row(n)]
+    mut log: int[] = []
+    _ = logged_first(rows, mut log)
+    return len(log)
+
+
+# The borrowed result comes back beside the `mut` argument's list and nothing reads it. Its root `rows` lives until the
+# borrow is taken from the call's result, not only until the call (ownership matrix, cell ints__param_element__return_from).
+public func test_an_unread_borrowed_result_beside_a_mut_list_keeps_its_root_until_it_is_taken() -> bool:
+    return discard_borrowed_first(4) == 1
+
+
+# FX16: an accessor returns a part of another accessor's lent result under the same `from` contract: a field, a nested
+# field, an element, a slice, an option's payload, a whole record field, through a chain of two accessors, in a loop and in
+# a `match` arm. The callee lends from `nets`, so every part of what it lends is `nets`'s; no copy is written.
+record Leaf:
+    text: str
+    data: bytes
+
+
+record Net:
+    name: str
+    data: bytes
+    tags: str[]
+    leaf: Leaf
+    note: str?
+
+
+func make_nets() -> Net[]:
+    const first = Net(name="alpha", data=b"alpha", tags=["alpha", "t"], leaf=Leaf(text="alpha!", data=b"ab"), note=Some("alpha?"))
+    const second = Net(name="b", data=b"b", tags=["b"], leaf=Leaf(text="b!", data=b""), note=None)
+    return [own first, own second]
+
+
+func pick_net(nets: Net[]) -> Net from nets:
+    return nets[0]
+
+
+func leaf_of(net: Net) -> Leaf from net:
+    return net.leaf
+
+
+func net_name(nets: Net[]) -> str from nets:
+    return pick_net(nets).name
+
+
+func bound_net_name(nets: Net[]) -> str from nets:
+    const net = pick_net(nets)
+    return net.name
+
+
+func chained_leaf_text(nets: Net[]) -> str from nets:
+    return leaf_of(pick_net(nets)).text
+
+
+func net_data_tail(nets: Net[]) -> bytes from nets:
+    return pick_net(nets).data[1:]
+
+
+func second_tag_in_loop(nets: Net[]) -> str from nets:
+    for i in range(2):
+        if i == 1:
+            return pick_net(nets).tags[i]
+    return ""
+
+
+func name_from_in_arm(nets: Net[], start: int?) -> str from nets:
+    match start:
+        case Some(i):
+            return pick_net(nets).name[i:]
+        case None:
+            return pick_net(nets).name
+
+
+func net_note(nets: Net[]) -> str from nets:
+    if pick_net(nets).note is Some(text):
+        return text
+    return ""
+
+
+func net_leaf(nets: Net[]) -> Leaf from nets:
+    return pick_net(nets).leaf
+
+
+func net_tags(nets: Net[]) -> str[] from nets:
+    return pick_net(nets).tags
+
+
+public func test_a_field_of_a_lent_call_result_is_returned_under_the_same_contract() -> bool:
+    const nets = make_nets()
+    return net_name(nets) == "alpha" and bound_net_name(nets) == "alpha" and chained_leaf_text(nets) == "alpha!"
+
+
+public func test_a_slice_element_payload_and_record_of_a_lent_call_result_are_returned_as_borrows() -> bool:
+    const nets = make_nets()
+    mut ok = net_data_tail(nets) == b"lpha" and second_tag_in_loop(nets) == "t"
+    ok = ok and name_from_in_arm(nets, Some(2)) == "pha" and name_from_in_arm(nets, None) == "alpha"
+    ok = ok and net_note(nets) == "alpha?" and net_leaf(nets).text == "alpha!" and len(net_tags(nets)) == 2
+    return ok

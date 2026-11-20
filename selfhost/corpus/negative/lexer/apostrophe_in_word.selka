@@ -1,0 +1,4 @@
+# A single-quoted text ends at the apostrophe inside a word; the quote after it opens a text that never closes (F-61).
+func main(out: Stream) -> int:
+    print(out, 'the script's path')
+    return 0

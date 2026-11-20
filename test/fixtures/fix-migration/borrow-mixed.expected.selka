@@ -1,0 +1,47 @@
+# Returns that borrow a parameter on one path and build a new value on another
+# (borrowed returns, R3a). Each is refused as E_BORROW_MIXED, once per function,
+# with `copy(...)` on every borrowed return. The repaired program checks clean
+# and prints the same lines.
+
+
+func make_list() -> str[]:
+    mut out: str[] = []
+    append(mut out, "x")
+    return out
+
+
+func make_text() -> str:
+    return "abcdefgh"
+
+
+# A dictionary value on one path and a new list on another.
+func pick(table: dict[str, str[]], key: str) -> str[]:
+    if key in table:
+        return copy(table[key])
+    return make_list()
+
+
+# Two borrowed returns and one new value: one refusal, two repairs.
+func pick_either(table: dict[str, str[]], key: str, other: str) -> str[]:
+    if key in table:
+        return copy(table[key])
+    if other in table:
+        return copy(table[other])
+    return make_list()
+
+
+# A view on one path and a new text on another.
+func head_or_make(source: str, n: int) -> str:
+    if n > len(source):
+        return make_text()
+    return copy(source[0:n])
+
+
+func main(out: Stream) -> int:
+    mut table: dict[str, str[]] = {"a": ["x", "y"]}
+    print(out, len(pick(table, "a")))
+    print(out, len(pick(table, "b")))
+    print(out, len(pick_either(table, "b", "a")))
+    print(out, head_or_make("abcdef", 3))
+    print(out, head_or_make("abcdef", 9))
+    return 0

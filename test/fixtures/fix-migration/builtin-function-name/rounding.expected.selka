@@ -1,0 +1,25 @@
+# N4: the four float operations. `sqrt` (public) and `floor` (private) are called bare here, `ceil` is passed as a value,
+# and `trunc` is reached only as `rounding.trunc(...)` from other modules, so it is accepted.
+public func rounding_sqrt(x: float) -> float:
+    return x * 2.0
+
+
+func rounding_floor(x: float) -> float:
+    return x - 0.5
+
+
+func apply(f: func(float) -> float, x: float) -> float:
+    return f(x)
+
+
+public func rounding_ceil(x: float) -> float:
+    return x + 0.5
+
+
+public func trunc(x: float) -> float:
+    _ = x
+    return 9.0
+
+
+public func total(x: float) -> float:
+    return rounding_sqrt(x) + rounding_floor(x) + apply(rounding_ceil, x)

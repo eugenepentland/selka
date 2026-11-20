@@ -1,0 +1,38 @@
+record ComponentId:
+    value: u64
+
+
+func component_id(raw: u64) -> ComponentId:
+    return ComponentId(value=raw)
+
+
+record NetId:
+    value: u64
+
+
+func net_id(raw: u64) -> NetId:
+    return NetId(value=raw)
+
+
+func pair[T](first: T, second: T) -> FixedArray[T, 2]:
+    return FixedArray[T, 2]([copy(first), copy(second)])
+
+
+func contains[T: equality](items: FixedArray[T, 2], needle: T) -> bool:
+    mut index = 0
+    while index < int(len(items)):
+        if items[index] == needle:
+            return True
+        index += 1
+    return False
+
+
+func main() -> int:
+    mut components = pair[ComponentId](component_id(1u64), component_id(2u64))
+    mut nets = pair[NetId](net_id(8u64), net_id(9u64))
+    mut score = 0
+    if contains[ComponentId](components, component_id(2u64)):
+        score += 1
+    if contains[NetId](nets, net_id(9u64)):
+        score += 2
+    return score

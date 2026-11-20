@@ -1,0 +1,9 @@
+record Holder[T]:
+    value: T
+
+
+public func program() -> i64:
+    mut holder = Holder[i64[]](value=[])
+    mut values = take(mut holder.value)
+    append(mut values, 42)
+    return values[0]

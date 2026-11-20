@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Change review</title>
+<style>
+/* One reading column, top to bottom in the order a reviewer decides: what needs judgment,
+   why, what changed in the public interface, what behaves differently, what changed inside. */
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --ink: #1b2126;
+  --muted: #5b6770;
+  --rule: #d9dfe3;
+  --accent: #0d6a6a;
+  --accent-soft: #e0efee;
+  --code-bg: #eef2f3;
+  --ok: #2e7a3a;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --bad: #b02a22;
+  --add-bg: #e5f3e8;
+  --del-bg: #fbe7e5;
+  --display: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.45rem;
+  --step-3: 1.9rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111518; --surface: #181d21; --ink: #e2e7ea; --muted: #97a3ab; --rule: #2a3238;
+    --accent: #62c3bd; --accent-soft: #15302f; --code-bg: #1f262b; --ok: #79c784; --warn: #e2a64f; --warn-soft: #2d2416; --bad: #f08c82;
+    --add-bg: #16301d; --del-bg: #3a1c1a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111518; --surface: #181d21; --ink: #e2e7ea; --muted: #97a3ab; --rule: #2a3238;
+  --accent: #62c3bd; --accent-soft: #15302f; --code-bg: #1f262b; --ok: #79c784; --warn: #e2a64f; --warn-soft: #2d2416; --bad: #f08c82;
+  --add-bg: #16301d; --del-bg: #3a1c1a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, pre, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 0.05em 0.35em; border-radius: 3px; overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--code-bg); padding: 0.6rem 0.8rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-3); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+.label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.small { font-size: 0.78rem; }
+
+.bar { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--rule);
+  padding-block: 0.6rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.2rem; max-width: 920px; margin: 0 auto; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); overflow-wrap: anywhere; }
+.brand span { color: var(--muted); font-weight: 500; }
+
+main { max-width: 920px; margin: 0 auto; display: grid; gap: 2rem;
+  padding-block: 1.4rem 3rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+section { display: grid; gap: 0.8rem; min-width: 0; }
+.head { display: grid; gap: 0.55rem; }
+.meta { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; color: var(--muted); font-size: 0.86rem; align-items: center; }
+.meta .mono { overflow-wrap: anywhere; }
+.lead { font-size: var(--step-1); max-width: 68ch; margin: 0; line-height: 1.5; }
+.pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.02rem 0.55rem; font-size: 0.76rem; font-weight: 600; border: 1px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); }
+.pill.warn { color: var(--warn); }
+.pill.muted { color: var(--muted); }
+.pill.added { color: var(--ok); }
+.pill.changed { color: var(--accent); }
+.pill.removed { color: var(--bad); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.fact { background: var(--surface); padding: 0.6rem 0.8rem; display: grid; gap: 0.1rem; align-content: start; }
+.fact .v { font-family: var(--display); font-size: var(--step-2); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; overflow-wrap: anywhere; }
+.fact .s { font-size: 0.8rem; color: var(--muted); }
+.fact.warn .v { color: var(--warn); }
+.fact.ok .v { color: var(--ok); }
+
+.attention { display: grid; gap: 0.5rem; }
+.item { display: grid; gap: 0.3rem; background: var(--surface); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; padding: 0.7rem 0.9rem; }
+.item.warn { border-left-color: var(--warn); background: linear-gradient(90deg, var(--warn-soft), var(--surface) 40%); }
+.item .t { font-weight: 600; }
+.item ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.15rem; font-size: 0.88rem; }
+.quiet { color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem 1rem; display: grid; gap: 0.55rem; min-width: 0; }
+.card .top { display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; justify-content: space-between; align-items: baseline; }
+.card .field { display: grid; gap: 0.1rem; max-width: 72ch; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.chip { font-family: var(--mono); font-size: 0.78rem; border: 1px solid var(--rule); border-radius: 4px; padding: 0.05rem 0.4rem; background: var(--bg); overflow-wrap: anywhere; }
+.prose-text { max-width: 72ch; }
+
+.module-group { display: grid; gap: 0.45rem; }
+.decl { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 0.65rem 0.9rem; display: grid; gap: 0.35rem; min-width: 0; }
+.decl .top { display: flex; flex-wrap: wrap; gap: 0.35rem 0.7rem; align-items: center; justify-content: space-between; }
+.decl .name { font-family: var(--mono); font-weight: 500; overflow-wrap: anywhere; }
+.decl .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.decl ul { margin: 0; padding-left: 1.1rem; }
+ul.sentences { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.15rem; }
+.why-chip { font-size: 0.8rem; color: var(--ok); }
+.why-chip.none { color: var(--warn); }
+details summary { cursor: pointer; color: var(--muted); font-size: 0.84rem; }
+details[open] summary { margin-bottom: 0.35rem; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--bg); }
+tr:last-child td { border-bottom: none; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grow { color: var(--warn); font-weight: 600; }
+.shrink { color: var(--ok); font-weight: 600; }
+.note-line { color: var(--warn); font-size: 0.84rem; overflow-wrap: anywhere; }
+
+.diff { font-family: var(--mono); font-size: 0.8rem; line-height: 1.45; background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; overflow-x: auto; padding: 0.3rem 0; max-width: 100%; }
+.diff div { white-space: pre; padding: 0 0.7rem; min-width: max-content; }
+.diff .add { background: var(--add-bg); }
+.diff .del { background: var(--del-bg); }
+.diff .hunk { color: var(--muted); }
+.example-change { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem; }
+.example-change .label { margin-bottom: 0.15rem; }
+footer { color: var(--muted); font-size: 0.8rem; max-width: 80ch; }
+@media (max-width: 640px) {
+  .example-change { grid-template-columns: minmax(0, 1fr); }
+  h1 { font-size: var(--step-2); }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-inner">
+    <div class="brand" id="brand">Change review</div>
+  </div>
+</header>
+<main id="main"></main>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function () {
+  'use strict';
+  const DATA = JSON.parse(document.getElementById('data').textContent);
+  const iface = DATA.interface || [];
+  const notes = DATA.notes || [];
+  const decisions = DATA.decisions || [];
+  const verdict = DATA.verdict || { ok: true, refusals: [] };
+  const behaviour = DATA.behaviour || { examples_changed: [], tests_added: [], tests_changed: [], tests_removed: [] };
+  const inside = DATA.inside || [];
+  const attention = DATA.attention || [];
+  const generated = DATA.generated || [];
+  const citations = DATA.citations || { added: [], removed: [] };
+  const testRun = DATA.tests_run || null;
+  const range = DATA.range || { base: '', head: '', working_tree: false };
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const md = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : (many || one + 's')}`;
+  const testSentence = name => name.replace(/^test_/, '').replace(/_/g, ' ');
+  const shortName = name => { const k = name.indexOf('::'); return k >= 0 ? name.slice(k + 2) : name; };
+  const shortRef = s => (s && s.length > 12 ? s.slice(0, 12) : (s || ''));
+  const isTest = file => /_test\.selka$/.test(file || '');
+  const isValid = d => d.valid !== false;
+  const explained = iface.filter(i => i.decision).length;
+  const testFns = inside.filter(f => !isTest(f.file));
+  const helpers = inside.filter(f => isTest(f.file));
+
+  function title() {
+    const note = notes.find(n => n.title);
+    if (note) return note.title;
+    const decision = decisions.find(d => d.title);
+    if (decision) return decision.title;
+    return `${shortRef(range.base)}..${shortRef(range.head)}`;
+  }
+
+  function lead() {
+    const n = iface.length;
+    const added = iface.filter(i => i.change === 'added').length;
+    const changed = iface.filter(i => i.change === 'changed').length;
+    const removed = iface.filter(i => i.change === 'removed').length;
+    let s = n
+      ? `${plural(n, 'public declaration')} ${n === 1 ? 'changes' : 'change'} here (${added} added, ${changed} changed, ${removed} removed), and ${explained === n ? (n === 1 ? 'it is' : 'all of them are') : (explained ? `${explained} of them ${explained === 1 ? 'is' : 'are'}` : 'none of them is')} explained by a decision.`
+      : 'No public declaration changes.';
+    const tc = behaviour.tests_changed.length;
+    const ta = behaviour.tests_added.length;
+    s += ` ${tc ? `${plural(tc, 'existing test')} ${tc === 1 ? 'now expects' : 'now expect'} something different` : 'No existing test changed what it expects'}${ta ? `, and ${plural(ta, 'test')} ${ta === 1 ? 'is' : 'are'} new` : ''}.`;
+    const ec = behaviour.examples_changed.length;
+    if (ec) s += ` ${plural(ec, 'docstring example')} now ${ec === 1 ? 'shows' : 'show'} a different result.`;
+    return s;
+  }
+
+  function facts() {
+    const tr = testRun;
+    const cells = [
+      ['Public changes', String(iface.length), `${explained} explained by a decision`, explained < iface.length ? 'warn' : 'ok'],
+      ['Decisions', String(decisions.filter(isValid).length), decisions.length ? 'recorded with this change' : 'none recorded', decisions.length ? '' : 'warn'],
+      ['Tests at the head', tr ? (tr.found ? `${tr.passed} passed` : 'no summary') : 'not run', tr ? (tr.failed ? `${tr.failed} failed` : `${tr.cached} cached, ${tr.skipped} skipped`) : 'run the review with --test', tr ? (tr.failed ? 'warn' : 'ok') : ''],
+      ['Test changes', `+${behaviour.tests_added.length} ~${behaviour.tests_changed.length} −${behaviour.tests_removed.length}`, 'added, changed, removed', behaviour.tests_changed.length || behaviour.tests_removed.length ? 'warn' : ''],
+      ['Functions edited', String(testFns.length), 'public and private, outside tests', ''],
+    ];
+    return '<div class="facts">' + cells.map(([k, v, s, cls]) => `<div class="fact ${cls}"><div class="label">${k}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('') + '</div>';
+  }
+
+  function head() {
+    const ok = verdict.ok;
+    return `<section class="head">
+        <div class="meta"><span class="mono">${esc(shortRef(range.base))}..${esc(shortRef(range.head))}</span><span class="pill ${ok ? 'ok' : 'warn'}">${ok ? 'passes the gate' : 'refused by the gate'}</span></div>
+        <h1>${md(title())}</h1>
+        <p class="lead">${md(lead())}</p>
+        ${facts()}
+      </section>`;
+  }
+
+  function refusalPlaces() {
+    const places = new Map();
+    for (const r of verdict.refusals || []) {
+      if (r.path) places.set(`${r.code}: ${r.message}`, r.line ? `${r.path}:${r.line}` : r.path);
+    }
+    return places;
+  }
+
+  function attentionHTML() {
+    if (!attention.length) return '<p class="quiet">Nothing stands out: every public change is explained and no test changed what it expects.</p>';
+    const places = refusalPlaces();
+    return '<div class="attention">' + attention.map(a => `<div class="item ${a.level === 'warn' ? 'warn' : ''}"><div class="t">${md(a.text)}</div>
+      <ul>${a.items.slice(0, 12).map(x => `<li>${md(x)}${places.has(x) ? ` <span class="quiet mono">${esc(places.get(x))}</span>` : ''}</li>`).join('')}${a.items.length > 12 ? `<li class="quiet">and ${a.items.length - 12} more</li>` : ''}</ul></div>`).join('') + '</div>';
+  }
+
+  function noteCard(n) {
+    return `<article class="card"><div class="top"><h3>${md(n.title || n.path)}</h3><span class="pill ${isValid(n) ? 'ok' : 'warn'}">${isValid(n) ? 'change note' : 'invalid note'}</span></div>
+      <div class="prose-text">${md(n.summary || '')}</div>
+      <div class="quiet mono small">${esc(n.path)}</div></article>`;
+  }
+
+  function decisionCard(d) {
+    return `<article class="card"><div class="top"><h3>${md(d.title)}</h3><span class="pill ${isValid(d) ? 'ok' : 'warn'}">${isValid(d) ? 'decision' : 'invalid decision'}</span></div>
+      <div class="field"><div class="label">Explains</div><div class="chips">${d.changes.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div></div>
+      ${d.why ? `<div class="field"><div class="label">Why</div><div>${md(d.why)}</div></div>` : ''}
+      ${d.rejected ? `<div class="field"><div class="label">Rejected</div><div>${md(d.rejected)}</div></div>` : ''}
+      <div class="quiet mono small">${esc(d.path)}</div></article>`;
+  }
+
+  function whyHTML() {
+    const parts = notes.map(noteCard).concat(decisions.map(decisionCard));
+    if (!parts.length) {
+      return '<div class="item warn"><div class="t">No change note or decision was recorded for this change, so the review cannot say why it was made.</div>' +
+        '<p class="quiet" style="margin:0">Write a change note with <code>selka review draft</code>, and a decision when a public declaration changes.</p></div>';
+    }
+    return parts.join('');
+  }
+
+  function sigDiff(before, after) {
+    const x = before.split('\n');
+    const y = after.split('\n');
+    const out = [];
+    const n = Math.max(x.length, y.length);
+    for (let k = 0; k < n; k++) {
+      if (x[k] === y[k]) out.push(`<div>  ${esc(x[k])}</div>`);
+      else {
+        if (x[k] !== undefined) out.push(`<div class="del">- ${esc(x[k])}</div>`);
+        if (y[k] !== undefined) out.push(`<div class="add">+ ${esc(y[k])}</div>`);
+      }
+    }
+    return out.join('');
+  }
+
+  function diffHTML(lines) {
+    return '<div class="diff">' + lines.map(l => {
+      const cls = l.startsWith('+') ? 'add' : l.startsWith('-') ? 'del' : l.startsWith('@@') ? 'hunk' : '';
+      return `<div class="${cls}">${esc(l)}</div>`;
+    }).join('') + '</div>';
+  }
+
+  function interfaceHTML() {
+    if (!iface.length) return '<p class="quiet">No public function or type changed.</p>';
+    const groups = new Map();
+    for (const i of iface) {
+      if (!groups.has(i.module)) groups.set(i.module, []);
+      groups.get(i.module).push(i);
+    }
+    let html = '';
+    for (const [mod, items] of groups) {
+      html += `<div class="module-group"><div class="label">${esc(mod)}</div>` + items.map(i => {
+        const why = i.decision ? `<span class="why-chip">explained: ${esc(i.decision)}</span>` : '<span class="why-chip none">no decision</span>';
+        const signature = i.old_signature
+          ? `<details><summary>Signature before and after</summary><div class="diff">${sigDiff(i.old_signature, i.signature)}</div></details>`
+          : `<details><summary>Signature</summary><pre><code>${esc(i.signature)}</code></pre></details>`;
+        return `<div class="decl"><div class="top"><span class="name">${esc(shortName(i.name))}</span>
+            <span class="row"><span class="pill ${esc(i.change)}">${esc(i.change)}</span>${why}</span></div>
+          <ul class="sentences">${i.sentences.map(s => `<li>${md(s)}</li>`).join('')}</ul>
+          ${signature}</div>`;
+      }).join('') + '</div>';
+    }
+    return html;
+  }
+
+  function behaviourHTML() {
+    let html = '';
+    if (behaviour.examples_changed.length) {
+      html += '<h3>Examples that now show a different result</h3>' + behaviour.examples_changed.map(e => `<div class="card"><div class="label">${esc(e.name)}</div><pre><code>&gt;&gt;&gt; ${esc(e.source)}</code></pre>
+        <div class="example-change"><div><div class="label">Before</div><pre><code>${esc(e.old)}</code></pre></div><div><div class="label">After</div><pre><code>${esc(e.new)}</code></pre></div></div></div>`).join('');
+    }
+    if (behaviour.tests_changed.length) {
+      html += '<h3>Existing tests that now expect something different</h3>' + behaviour.tests_changed.map(t => `<div class="card"><div><b>${esc(testSentence(t.name))}</b> <span class="quiet mono small">${esc(t.module)}::${esc(t.name)}</span></div>${diffHTML(t.diff)}</div>`).join('');
+    }
+    if (behaviour.tests_removed.length) {
+      html += '<h3>Tests removed</h3><ul class="sentences">' + behaviour.tests_removed.map(t => `<li>${esc(testSentence(t.name))} <span class="quiet mono">${esc(t.module)}</span></li>`).join('') + '</ul>';
+    }
+    if (behaviour.tests_added.length) {
+      const by = new Map();
+      for (const t of behaviour.tests_added) {
+        if (!by.has(t.module)) by.set(t.module, []);
+        by.get(t.module).push(t);
+      }
+      html += '<h3>New tests: what they say the code now does</h3>' + [...by].map(([m, ts]) => `<div class="card"><div class="label">${esc(m)}</div><ul class="sentences">${ts.map(t => `<li>${esc(testSentence(t.name))}</li>`).join('')}</ul></div>`).join('');
+    }
+    return html || '<p class="quiet">No test or example changed.</p>';
+  }
+
+  function insideHTML() {
+    if (!testFns.length) return '<p class="quiet">No function body changed outside the tests.</p>';
+    const trend = (a, b) => (a === b ? `${b}` : `${a} → <span class="${b > a ? 'grow' : 'shrink'}">${b}</span>`);
+    const rows = testFns.map(f => `<tr><td><code>${esc(f.name)}</code>${f.public ? '' : ' <span class="quiet small">private</span>'}
+          ${(f.signals || []).map(s => `<div class="note-line"><span class="mono">${esc(s.kind)}</span> ${md(s.text)}</div>`).join('')}</td>
+        <td>${f.state === 'added' ? 'new' : f.state === 'removed' ? 'deleted' : 'edited'}</td>
+        <td class="num">${trend(f.lines[0], f.lines[1])}</td><td class="num">${trend(f.decision_points[0], f.decision_points[1])}</td></tr>`).join('');
+    const table = '<div class="table-wrap"><table><thead><tr><th>Function</th><th>What happened</th><th>Lines</th><th>Decision points</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+    const diffs = testFns.filter(f => f.state === 'changed' && f.diff && f.diff.length)
+      .map(f => `<details><summary><code>${esc(f.name)}</code>: the edit</summary>${diffHTML(f.diff)}</details>`).join('');
+    const helperLine = helpers.length ? `<p class="quiet" style="margin:0">Test helpers changed: ${helpers.map(f => `<code>${esc(f.name)}</code>`).join(', ')}.</p>` : '';
+    return table + (diffs ? `<div class="label">The edits, line by line</div>${diffs}` : '') + helperLine;
+  }
+
+  function extrasHTML() {
+    let html = '';
+    if (citations.added.length || citations.removed.length) {
+      html += '<h3>Issue ids in comments</h3><ul class="sentences">' +
+        citations.added.map(c => `<li>added <code>${esc(c.id)}</code> in <code>${esc(c.path)}</code></li>`).join('') +
+        citations.removed.map(c => `<li>removed <code>${esc(c.id)}</code> from <code>${esc(c.path)}</code></li>`).join('') + '</ul>';
+    }
+    if (generated.length) {
+      html += '<h3>Generated files</h3><ul class="sentences">' + generated.map(g => `<li><code>${esc(g.path)}</code>: ${g.lines_before} → ${g.lines_after} lines. Its first line says <code>${esc(g.first_line)}</code>; review the generator rather than the output.</li>`).join('') + '</ul>';
+    }
+    if (testRun) {
+      const counts = testRun.found ? `${testRun.passed} passed, ${testRun.cached} cached, ${testRun.failed} failed, ${testRun.skipped} skipped.` : 'The run printed no summary line.';
+      html += `<h3>Tests at the head</h3><p style="margin:0">${esc(counts)}</p>` +
+        (testRun.output_tail ? `<details><summary>Output, last lines</summary><pre><code>${esc(testRun.output_tail)}</code></pre></details>` : '');
+    }
+    return html;
+  }
+
+  function render() {
+    const extras = extrasHTML();
+    document.getElementById('main').innerHTML = `${head()}
+      <section><h2>Needs your judgment</h2>${attentionHTML()}</section>
+      <section><h2>Why, in the author's words</h2>${whyHTML()}</section>
+      <section><h2>Public functions and types</h2>${interfaceHTML()}</section>
+      <section><h2>What behaves differently</h2>${behaviourHTML()}</section>
+      <section><h2>Inside the code</h2>${insideHTML()}</section>
+      ${extras ? `<section><h2>Also in this change</h2>${extras}</section>` : ''}
+      <footer>Generated by <code>selka review</code> from the two trees of this change (review-v1). The possible-patching lines are heuristics and never block a merge.</footer>`;
+    document.getElementById('brand').textContent = `${DATA.project} change review`;
+    window.scrollTo(0, 0);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

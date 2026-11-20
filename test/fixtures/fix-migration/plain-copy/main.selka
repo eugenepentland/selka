@@ -1,0 +1,38 @@
+record Colour:
+    red: float
+    green: float
+    blue: float
+
+
+record Ink:
+    name: str
+    fill: Colour
+
+
+func parse_hex(text: str) -> Colour fails str:
+    if len(text) != 6:
+        fail "not a colour: " + text
+    return Colour(red=1.0, green=0.5, blue=0.25)
+
+
+func lightness(colour: Colour) -> float:
+    return colour.red + colour.green + colour.blue
+
+
+func collect(texts: str[]) -> Colour[] fails str:
+    mut fills: Colour[] = []
+    mut total = 0.0
+    for text in texts:
+        const fill = try parse_hex(text)
+        total = total + lightness(fill)
+        append(mut fills, copy(fill))
+    return fills
+
+
+func main(out: Stream) -> int:
+    match collect(["ff8040", "00ff00"]):
+        case Ok(fills):
+            print(out, f"{len(fills)}")
+        case Err(message):
+            print(out, message)
+    return 0

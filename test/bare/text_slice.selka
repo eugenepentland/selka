@@ -1,0 +1,10 @@
+# A text slice: the runtime returns its span as a two-word result.
+func main() -> int:
+    mut s = ""
+    for i in range(25):
+        s = s + f"<{i}:{i * i}>"
+    const head = s[0:10]
+    mut total = len(head)
+    if head == "<0:0><1:1>":
+        total += 7
+    return total

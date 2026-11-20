@@ -1,0 +1,33 @@
+# Pre-5C capability threading: every capability that reaches a record is taken with `own`, as the G3 port's
+# `commands.new_evaluator` takes its filesystem and entropy.
+import random
+
+public record Evaluator:
+    fs: Filesystem
+    entropy: Entropy
+    log_lines: str[]
+    project_dir: str
+
+
+public record Session:
+    fs: Filesystem
+    runs: int
+
+
+public func new_evaluator(fs: Filesystem, entropy: Entropy, project_dir: str) -> Evaluator:
+    return Evaluator(fs=fs, log_lines=[], entropy=entropy, project_dir=copy(project_dir))
+
+
+public func new_session(fs: Filesystem) -> Session:
+    return Session(fs=fs, runs=0)
+
+
+public func draw(evaluator: Evaluator) -> u64:
+    match random.from_entropy(evaluator.entropy):
+        case Ok(generator):
+            mut drawn = copy(generator)
+            return random.next_word(mut drawn) % 1000u64
+        case Err(_):
+            return 0u64
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

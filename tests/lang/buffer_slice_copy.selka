@@ -1,0 +1,93 @@
+# A slice of a `byte_buffer` is a new `byte_buffer` holding that range (FR27, 15 November 2026). The checker types it a
+# buffer, and it used to be lowered as `bytes`: `mut o = copy(buf[1:3])` followed by `buffers.append(mut o, b"x")` passed the
+# check and stopped the build with `internal error[E_CORE_INVALID_IR]`, as did the slice passed to a `byte_buffer` parameter,
+# returned as one, or stored in a record or a list. A buffer is lowered as a buffer now, so each of those builds, writes and
+# grows without touching the buffer it came from, and a comparison with a buffer builds. A slice beside octets, and
+# `bytes(buf[a:b])`, still read the range with one copy (`src/core/written_copy_test.zig`). A name cannot hold a bare slice
+# (`E_BUFFER_SLICE_NAME`); `copy(...)` names the buffer.
+import buffers
+
+record Holder:
+    data: byte_buffer = byte_buffer([])
+    tag: int = 0
+
+
+func source() -> byte_buffer:
+    return byte_buffer([97, 98, 99, 100, 101])
+
+
+func first_of(piece: byte_buffer) -> int:
+    return piece[0]
+
+
+func grow(mut piece: byte_buffer, own count: int) -> int:
+    mut left = count
+    while left > 0:
+        _ = buffers.append(mut piece, b"xy")
+        left = left - 1
+    return len(piece)
+
+
+func middle(buffer: byte_buffer) -> byte_buffer:
+    return copy(buffer[1:4])
+
+
+public func test_a_copy_of_a_slice_is_a_buffer_that_grows_beside_its_source() -> bool:
+    mut buffer = source()
+    mut piece = copy(buffer[1:3])
+    _ = buffers.append(mut piece, b"zz")
+    const same = bytes(piece) == b"bczz" and bytes(buffer) == b"abcde"
+    _ = buffers.append(mut buffer, b"!")
+    return same and bytes(piece) == b"bczz" and bytes(buffer) == b"abcde!" and len(piece) == 4
+
+
+public func test_a_slice_is_clamped_and_a_reversed_one_is_an_empty_buffer_that_grows() -> bool:
+    const buffer = source()
+    mut late = copy(buffer[3:99])
+    mut empty = copy(buffer[4:1])
+    mut whole = copy(buffer[0:99])
+    _ = buffers.append(mut empty, b"q")
+    return bytes(late) == b"de" and bytes(empty) == b"q" and bytes(whole) == b"abcde"
+
+
+public func test_a_slice_is_passed_to_a_buffer_parameter_and_a_copy_to_a_mut_one() -> bool:
+    const buffer = source()
+    mut piece = copy(buffer[2:5])
+    const grown = grow(mut piece, 3)
+    return first_of(buffer[1:3]) == 98 and len(piece) == 9 and grown == 9 and bytes(buffer) == b"abcde"
+
+
+public func test_a_slice_is_returned_and_stored_in_a_record_and_a_list_as_a_buffer() -> bool:
+    const buffer = source()
+    const kept = middle(buffer)
+    mut held = Holder(data=copy(buffer[0:2]), tag=1)
+    _ = buffers.append(mut held.data, b"+")
+    mut pieces: byte_buffer[] = []
+    append(mut pieces, copy(buffer[3:5]))
+    _ = buffers.append(mut pieces[0], b"-")
+    return bytes(kept) == b"bcd" and bytes(held.data) == b"ab+" and bytes(pieces[0]) == b"de-"
+
+
+public func test_a_slice_is_compared_with_a_buffer_octets_and_another_slice() -> bool:
+    const buffer = source()
+    const other = byte_buffer([98, 99])
+    const against_buffer = buffer[1:3] == other and other == buffer[1:3] and other != buffer[2:4]
+    const against_octets = buffer[1:3] == b"bc" and b"bc" == buffer[1:3]
+    return against_buffer and against_octets and buffer[0:2] == buffer[0:2] and buffer[0:2] != buffer[1:3]
+
+
+public func test_bytes_of_a_slice_is_the_octets_of_the_range() -> bool:
+    mut buffer = source()
+    const octets = bytes(buffer[1:3])
+    _ = buffers.append(mut buffer, b"tail")
+    return octets == b"bc" and len(octets) == 2 and len(buffer[7:9]) == 2
+
+
+func main() -> int:
+    assert test_a_copy_of_a_slice_is_a_buffer_that_grows_beside_its_source()
+    assert test_a_slice_is_clamped_and_a_reversed_one_is_an_empty_buffer_that_grows()
+    assert test_a_slice_is_passed_to_a_buffer_parameter_and_a_copy_to_a_mut_one()
+    assert test_a_slice_is_returned_and_stored_in_a_record_and_a_list_as_a_buffer()
+    assert test_a_slice_is_compared_with_a_buffer_octets_and_another_slice()
+    assert test_bytes_of_a_slice_is_the_octets_of_the_range()
+    return 0

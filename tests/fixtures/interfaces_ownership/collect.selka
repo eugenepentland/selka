@@ -1,0 +1,11 @@
+# A local list that receives `head`'s loans borrows them; a fresh element appended later makes the earlier append an
+# error (goal G7's exception W2, inferred from this function's own body, not from `head`'s).
+import lib
+
+func main() -> int:
+    const rows: str[][] = [["a"], ["b"]]
+    mut heads: str[] = []
+    for row in rows:
+        append(mut heads, lib.head(row))
+    append(mut heads, lib.label(3))
+    return len(heads)

@@ -1,0 +1,21 @@
+name = "ownership"
+version = "0.1.0"
+defaultTargets = ["OwnershipModel", "certcheck", "selftest"]
+
+[leanOptions]
+autoImplicit = false
+
+# The Lean model: syntax, semantics, checker and soundness proof (core Lean 4 only).
+[[lean_lib]]
+name = "OwnershipModel"
+roots = ["Syntax", "Semantics", "Checker", "Link", "Facts", "Invariant", "Entry", "InstBase", "InstGuards", "InstCtx", "InstSlots", "InstPres", "SlotEnds", "EdgeBase", "EdgeStep", "Abandon", "SoundBlock", "SoundFacts", "SoundRet", "StaticFacts", "Soundness", "Parse", "Render", "Certcheck", "CheckerTests", "ParseTests", "SoundnessExample", "ProgramExample", "ProgramDefs", "ProgramSite", "ProgramCall", "ProgramLink", "Program"]
+
+# `lake exe certcheck DIR_OR_FILE` reads ownership-certificate-v1 files.
+[[lean_exe]]
+name = "certcheck"
+root = "Main"
+
+# `lake exe selftest` compares `certcheck fixtures` with `fixtures/expected.txt`.
+[[lean_exe]]
+name = "selftest"
+root = "Selftest"

@@ -1,0 +1,17 @@
+import catalog
+import reader
+
+"""A small catalog with checked project documentation.
+
+`catalog::value` reads the default item; `catalog::Item` carries its amount.
+"""
+
+
+# lint: allow missing-example reason="writes a stream; covered by catalog_test::test_report"
+public func report(out: Stream) -> Unit:
+    """Print the current catalog amount."""
+    print(out, catalog.value())
+
+
+func main() -> int:
+    return 0

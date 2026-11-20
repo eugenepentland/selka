@@ -1,0 +1,44 @@
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+record CycleA:
+    child: CycleB
+
+
+record CycleB:
+    items: FixedArray[int[], 1]
+    tail: FixedArray[CycleA, 0]
+
+
+func capture(value: FixedArray[CycleA, 1], mut saved: FixedArray[CycleA, 1][]) -> int:
+    append(mut saved, copy(value))
+    return 0
+
+
+public func test_boxed_writeback_keeps_completed_callback_copies_independent() -> bool:
+    mut original: FixedArray[CycleA, 1] = FixedArray[CycleA, 1]([CycleA(child=CycleB(items=FixedArray[int[], 1]([[1]]), tail=FixedArray[CycleA, 0]([])))])
+    mut changed = copy(original)
+    mut saved: FixedArray[CycleA, 1][] = []
+    append(mut changed[0].child.items[capture(changed, mut saved)], 2)
+    return len(original[0].child.items[0]) == 1 and len(changed[0].child.items[0]) == 2 and len(saved[0][0].child.items[0]) == 1 and changed[0].child.items[0][1] == 2
+
+
+record WordTable:
+    words: str[]
+    count: int
+
+
+func word_count(table: WordTable) -> int:
+    return len(table.words)
+
+
+public func test_discarded_field_updates_do_not_keep_an_extra_owner() -> bool:
+    mut table = WordTable(words=["one-" + str(1), "two-" + str(2)], count=2)
+    const saved = copy(table)
+    const count = word_count(table)
+    table.words[1] = "discarded"
+    return count == 2 and saved.words[1] == "two-2"
+
+
+func main(out: Stream) -> int:
+    print(out, test_boxed_writeback_keeps_completed_callback_copies_independent())
+    print(out, test_discarded_field_updates_do_not_keep_an_extra_owner())
+    return 0

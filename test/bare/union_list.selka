@@ -1,0 +1,35 @@
+# A union with payloads of different sizes, held in a list.
+enum Item:
+    tiny(n: int)
+    named(label: str, n: int)
+    pair(a: str, b: str, weight: int)
+    nothing
+
+
+func weigh(x: Item) -> int:
+    match x:
+        case tiny(n):
+            return n
+        case named(label, n):
+            return len(label) + n
+        case pair(a, b, weight):
+            return len(a) + len(b) * weight
+        case nothing:
+            return 1
+
+
+func main() -> int:
+    mut items: Item[] = []
+    for i in range(16):
+        if i % 4 == 0:
+            append(mut items, Item.tiny(n=i))
+        elif i % 4 == 1:
+            append(mut items, Item.named(label=f"l{i}", n=i))
+        elif i % 4 == 2:
+            append(mut items, Item.pair(a=f"a{i}", b=f"bb{i}", weight=2))
+        else:
+            append(mut items, Item.nothing)
+    mut total = 0
+    for x in items:
+        total += weigh(x)
+    return total % 256

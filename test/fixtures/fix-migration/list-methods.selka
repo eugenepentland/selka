@@ -1,0 +1,31 @@
+record Shelf:
+    items: int[]
+
+
+func drain(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        total += value
+    return total
+
+
+func drop_last[T: copy + storable](mut values: T[]) -> T:
+    return values.pop()
+
+
+func main(out: Stream) -> int:
+    mut values = [3, 1, 2]
+    values.extend([7, 8])
+    values.insert(1, 9)
+    values.insert(40, 4)
+    values.reverse()
+    const removed = values.remove(1)
+    const at = values.index(8)
+    const tail = drop_last(mut values)
+    const head = values.pop(0)
+    mut shelf = Shelf(items=[5, 6])
+    const from_shelf = shelf.items.pop(1)
+    const shelf_at = shelf.items.index(5)
+    values.clear()
+    out.print(removed, at, tail, head, from_shelf, shelf_at, drain(values), len(values), len(shelf.items))
+    return 0

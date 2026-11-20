@@ -1,0 +1,122 @@
+import lists
+
+record PlainPair:
+    left: int
+    right: int
+
+
+record FlaggedItem:
+    number: int
+    flag: bool
+
+
+public func test_room_and_growth_preserve_every_scalar_width() -> bool:
+    mut small: u8[] = []
+    mut medium: u16[] = []
+    mut wide: i32[] = []
+    mut flags: bool[] = []
+    mut numbers: float[] = []
+    for index in range(65):
+        append(mut small, u8(index))
+        append(mut medium, u16(index + 256))
+        append(mut wide, i32(index - 256))
+        append(mut flags, index % 2 == 0)
+        append(mut numbers, float(index) + 0.5)
+    return len(small) == 65 and small[64] == u8(64) and medium[64] == u16(320) and wide[64] == i32(-192) and flags[64] and not flags[63] and numbers[64] == 64.5
+
+
+public func test_aliasing_reads_and_named_snapshots_survive_growth() -> bool:
+    mut items = [7]
+    mut saved = copy(items)
+    for index in range(80):
+        append(mut items, items[len(items) - 1] + 1)
+    return saved == [7] and len(items) == 81 and items[80] == 87
+
+
+func callback(mut items: int[]) -> int:
+    lists.clear(mut items)
+    append(mut items, 9)
+    return 7
+
+
+public func test_callback_changes_receiver_before_append_publication() -> bool:
+    mut items = [1]
+    mut saved = copy(items)
+    mut mutation_result_36 = callback(mut items)
+    append(mut items, mutation_result_36)
+    return items == [9, 7] and saved == [1]
+
+
+func grow(mut items: int[]) -> unit:
+    for index in range(40):
+        append(mut items, index)
+
+
+public func test_plain_and_managed_elements_preserve_snapshots() -> bool:
+    mut row = [7]
+    mut rows: int[][] = []
+    mut pairs: PlainPair[] = []
+    for index in range(9):
+        # lint: allow copy-in-loop reason="snapshot test: row changes after it is appended, so each appended row must be a copy"
+        append(mut rows, copy(row))
+        append(mut pairs, PlainPair(left=index, right=index + 1))
+    append(mut row, 8)
+    append(mut rows[0], 9)
+    return rows[0] == [7, 9] and rows[8] == [7] and row == [7, 8] and pairs[8] == PlainPair(left=8, right=9)
+
+
+func main() -> int:
+    assert test_room_and_growth_preserve_every_scalar_width()
+    assert test_aliasing_reads_and_named_snapshots_survive_growth()
+    assert test_callback_changes_receiver_before_append_publication()
+    assert test_plain_and_managed_elements_preserve_snapshots()
+    return 0
+
+
+enum PlainValue:
+    integer(value: int)
+    boolean(value: bool)
+
+
+func plain_score(value: PlainValue) -> int:
+    match value:
+        case integer(value=n):
+            return n
+        case boolean(value=flag):
+            if (flag):
+                return (1)
+            else:
+                return (0)
+
+
+public func test_plain_variant_stack_room_growth_and_shared_snapshot() -> bool:
+    mut values: PlainValue[] = []
+    for index in range(65):
+        append(mut values, PlainValue.integer(value=index))
+    mut saved = copy(values)
+    for _ in range(64):
+        mut old = lists.pop(mut values)
+        append(mut values, PlainValue.boolean(value=plain_score(old) % 2 == 0))
+    return len(values) == 65 and plain_score(saved[len(saved) - 1]) == 64 and plain_score(values[len(values) - 1]) == 0
+
+
+public func test_plain_tuple_append_reads_same_backing_across_growth() -> bool:
+    mut pairs = [PlainPair(left=3, right=4)]
+    mut saved = copy(pairs)
+    for _ in range(129):
+        append(mut pairs, pairs[0])
+    return len(pairs) == 130 and pairs[len(pairs) - 1] == PlainPair(left=3, right=4) and saved == [PlainPair(left=3, right=4)]
+
+
+public func test_plain_tail_removal_clears_and_reuses_every_slot() -> bool:
+    mut items: FlaggedItem[] = []
+    for index in range(129):
+        append(mut items, FlaggedItem(number=index, flag=index % 2 == 0))
+    mut total = 0
+    for index in range(129):
+        mut value = lists.pop(mut items)
+        assert value == FlaggedItem(number=128 - index, flag=index % 2 == 0)
+        const head = value.number
+        total += head
+    append(mut items, FlaggedItem(number=999, flag=True))
+    return total == 8256 and lists.pop(mut items) == FlaggedItem(number=999, flag=True) and len(items) == 0

@@ -1,0 +1,61 @@
+name: Release
+# On a tag `vX.Y.Z`: build the release bundle (the compiler with the official Zig inside), prove it installs and runs with no Zig
+# on PATH, and attach selka-X.Y.Z-x86_64-linux.tar.xz and its .sha256 to the GitHub release of that tag.
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+env:
+  # The Zig the bundle carries. `.zigversion` names the release the repository builds with; the check below holds the two together.
+  ZIG_VERSION: 0.17.1
+  # SHA-256 of zig-x86_64-linux-0.17.1.tar.xz, as ziglang.org/download/index.json publishes it for 0.17.1 (x86_64-linux).
+  ZIG_TARBALL_SHA256: 3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: The tag, build.zig.zon and .zigversion agree
+        run: |
+          version=$(sed -n 's/^ *\.version = "\(.*\)",$/\1/p' build.zig.zon)
+          test -n "$version"
+          test "$GITHUB_REF_NAME" = "v$version" || { echo "tag $GITHUB_REF_NAME is not v$version (build.zig.zon)"; exit 1; }
+          test "$(cat .zigversion)" = "$ZIG_VERSION" || { echo ".zigversion is $(cat .zigversion), this workflow bundles $ZIG_VERSION"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - name: Verify exact toolchain
+        run: test "$(zig version)" = "$ZIG_VERSION"
+      - name: Download the official Zig distribution and check its SHA-256
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/zig.tar.xz" "https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz"
+          echo "$ZIG_TARBALL_SHA256  $RUNNER_TEMP/zig.tar.xz" | sha256sum -c -
+          mkdir "$RUNNER_TEMP/bundle-zig"
+          tar -xJf "$RUNNER_TEMP/zig.tar.xz" -C "$RUNNER_TEMP/bundle-zig" --strip-components=1
+      - name: Build the release bundle
+        # -Dcpu=x86_64_v3: the compiler runs on machines other than this runner, so it is not built for this runner's CPU.
+        run: zig build release -Doptimize=ReleaseFast -Dcpu=x86_64_v3 -Dbundle-zig="$RUNNER_TEMP/bundle-zig" --summary all
+      - name: The download installs and runs with no Zig on PATH
+        run: |
+          name="selka-$VERSION-x86_64-linux"
+          (cd zig-out/release && sha256sum -c "$name.tar.xz.sha256")
+          mkdir "$RUNNER_TEMP/unpacked" "$RUNNER_TEMP/home"
+          tar -xJf "zig-out/release/$name.tar.xz" -C "$RUNNER_TEMP/unpacked"
+          env -i HOME="$RUNNER_TEMP/home" PATH=/usr/bin:/bin PREFIX="$RUNNER_TEMP/prefix" sh "$RUNNER_TEMP/unpacked/$name/install.sh"
+          printf 'func main(out: Stream) -> int:\n    print(out, "hello")\n    return 0\n' > "$RUNNER_TEMP/hello.selka"
+          cd "$RUNNER_TEMP"
+          bundled() { env -i HOME="$RUNNER_TEMP/home" PATH=/usr/bin:/bin "$RUNNER_TEMP/prefix/bin/selka" "$@"; }
+          test "$(bundled run hello.selka)" = hello
+          bundled native show | grep -x 'reuse: on'
+      - name: Attach the download to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          name="selka-$VERSION-x86_64-linux"
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "Selka $VERSION" --notes "Selka $VERSION for Linux on x86-64, with the Zig it needs inside. Download, unpack, run ./install.sh."
+          gh release upload "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --clobber "zig-out/release/$name.tar.xz" "zig-out/release/$name.tar.xz.sha256"

@@ -1,0 +1,34 @@
+# A probe program that passes `check` as it stands: copy it, then change it. `scripts/lane/probe.sh FILE.selka` runs it.
+#
+# The slips lanes make in probe programs (each line was checked against the compiler on 15 November 2026):
+#
+#   - A capability parameter the body never uses is refused, `main(out: Stream)` included: E_UNUSED_CAPABILITY. Print through
+#     `out`, or delete it (`main` must name its Streams `out` or `err`, so `_out` is E_MAIN; `selka fix` deletes it).
+#   - Booleans are `True` and `False`. `true` is E_UNKNOWN_NAME.
+#   - A module function needs its `import`: `strings.join(...)` without `import strings` is E_MODULE_NOT_IMPORTED.
+#   - Operations are functions, not methods: `append(mut xs, 3)`, not `xs.append(3)` (E_METHOD_REMOVED, which names the rewrite).
+#   - `/` divides floats; `//` divides integers (E_TYPE: expected int, found float).
+#   - A named value stored into a record or a list needs `copy(x)` or `own x`: `Row(items=items)` is E_OWN_MARKER when `items`
+#     is read again, and E_SINGLE_OWNER_BORROW when `items` is a parameter.
+#   - `try f()` is a value anywhere at run time (`g(try f())`, `try f() + 1`, `if try ok(n):`); not in a module constant or a default.
+#   - An enum pattern names the case alone and names its fields: `case some(ns=xs):`. `case Nums.some(xs):` is
+#     E_PATTERN_QUALIFIED, and `case some(xs):` is E_FRONTEND_VARIANT.
+#   - There is no `str()` of an enum: `case_name(color)` or an `f"{color}"` hole (E_TEXT_CONVERSION).
+#   - A call whose value you drop needs `_ = f()` (E_EXPLICIT_DISCARD_REQUIRED).
+#   - `take` and `list` are prelude functions: your own function with either name is E_BUILTIN_FUNCTION_NAME (`selka fix`
+#     renames it), and a local named `list` hides the call `list(range(3))`.
+
+
+record Item:
+    name: str
+    count: int
+
+
+func describe(item: Item) -> str:
+    return f"{item.name}={item.count}"
+
+
+func main(out: Stream) -> int:
+    const item = Item(name="probe", count=1)
+    print(out, describe(item))
+    return 0

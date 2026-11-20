@@ -1,0 +1,136 @@
+# `for x in own xs:` (4a), the consuming loop: the loop takes the list an owned local or an `own` parameter holds, and
+# each element is the body's to move. An element the body does not move is dropped at the end of its iteration, and an
+# early `break`, `return` or `fail` drops the rest; the list's name is moved from the loop on.
+import testing
+
+record Pin:
+    pad: bytes
+    ref: bytes
+
+
+record Net:
+    name: str
+    pins: Pin[]
+
+
+func pads_of(own pins: Pin[]) -> bytes[]:
+    mut out: bytes[] = []
+    for pin in own pins:
+        append(mut out, own pin.pad)
+    return out
+
+
+public func test_a_consuming_loop_moves_each_element_in_order() -> bool:
+    const pins = [Pin(pad=b"1", ref=b"U1"), Pin(pad=b"22", ref=b"U2"), Pin(pad=b"333", ref=b"U3")]
+    const pads = pads_of(own pins)
+    return pads == [b"1", b"22", b"333"]
+
+
+public func test_a_consuming_loop_over_a_local_stores_into_a_dictionary_and_a_record() -> bool:
+    const names = ["vcc", "gnd", "sda"]
+    mut seen: dict[str, int] = {}
+    mut nets: Net[] = []
+    mut position = 0
+    for name in own names:
+        seen[copy(name)] = position
+        append(mut nets, Net(name=own name, pins=[]))
+        position += 1
+    return len(seen) == 3 and seen["sda"] == 2 and len(nets) == 3 and nets[1].name == "gnd"
+
+
+func first_long(own words: str[]) -> str:
+    for word in own words:
+        if len(word) > 2:
+            return word
+    return ""
+
+
+public func test_a_return_from_a_consuming_loop_drops_the_rest() -> bool:
+    return first_long(["a", "bcd", "efgh", "ij"]) == "bcd" and first_long(["a"]) == ""
+
+
+func kept_until_stop(own words: str[]) -> str[]:
+    mut kept: str[] = []
+    for word in own words:
+        if word == "stop":
+            break
+        if word == "skip":
+            continue
+        append(mut kept, own word)
+    return kept
+
+
+public func test_break_and_continue_in_a_consuming_loop() -> bool:
+    return kept_until_stop(["a", "skip", "b", "stop", "c"]) == ["a", "b"] and len(kept_until_stop([])) == 0
+
+
+public func test_a_discarded_name_drops_every_element() -> bool:
+    const rows = [[1], [2, 3], [4]]
+    mut count = 0
+    for _ in own rows:
+        count += 1
+    return count == 3
+
+
+func total_length(own grid: int[][][]) -> int:
+    mut total = 0
+    for plane in own grid:
+        mut rows = own plane
+        for row in own rows:
+            total += len(row)
+    return total
+
+
+public func test_consuming_loops_nest() -> bool:
+    return total_length([[[1, 2], [3]], [[4]], []]) == 4
+
+
+func drained[T](own values: T[]) -> T[]:
+    mut out: T[] = []
+    for value in own values:
+        append(mut out, own value)
+    return out
+
+
+public func test_a_generic_consuming_loop() -> bool:
+    const words = drained(["x", "y"])
+    const numbers = drained([3, 4, 5])
+    return words == ["x", "y"] and numbers == [3, 4, 5]
+
+
+public func test_a_mut_local_is_reinitialized_after_a_consuming_loop() -> bool:
+    mut rows = [[1], [2]]
+    mut count = 0
+    for row in own rows:
+        count += len(row)
+    rows = [[9]]
+    return count == 2 and rows == [[9]]
+
+
+func rows_of(n: int) -> int[][]:
+    mut rows: int[][] = []
+    for i in range(n):
+        append(mut rows, [i])
+    return rows
+
+
+func moved(n: int) -> int:
+    const rows = rows_of(n)
+    mut out: int[][] = []
+    for row in own rows:
+        append(mut out, own row)
+    return len(out)
+
+
+func copied(n: int) -> int:
+    const rows = rows_of(n)
+    mut out: int[][] = []
+    for row in rows:
+        append(mut out, copy(row))
+    return len(out)
+
+
+public func test_a_consuming_loop_copies_no_element() -> bool:
+    const moving = testing.allocations(moved, 1000)
+    const copying = testing.allocations(copied, 1000)
+    return moved(1000) == 1000 and copied(1000) == 1000 and copying - moving >= 1000

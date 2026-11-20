@@ -1,0 +1,70 @@
+{
+ "version": 1,
+ "success": false,
+ "status": 75,
+ "stage": "execution",
+ "error": "inputs changed while awaiting admitted work",
+ "stability_diagnostics": {
+  "reasons": [
+   {
+    "facet": "authority",
+    "name": "None",
+    "reason": "snapshot watcher closed",
+    "role": "configuration"
+   },
+   {
+    "facet": "authority",
+    "name": "None",
+    "reason": "snapshot watcher closed",
+    "role": "coordinator"
+   },
+   {
+    "facet": "watch",
+    "name": "tests/lang/README.md",
+    "reason": "inotify:modify",
+    "role": "preparation_sources"
+   },
+   {
+    "facet": "watch",
+    "name": "tests/lang/README.md",
+    "reason": "inotify:close-write",
+    "role": "preparation_sources"
+   },
+   {
+    "facet": "authority",
+    "name": "None",
+    "reason": "snapshot watcher closed",
+    "role": "preparation_sources"
+   },
+   {
+    "facet": "authority",
+    "name": "None",
+    "reason": "snapshot watcher closed",
+    "role": "prepared_artifacts"
+   },
+   {
+    "facet": "watch",
+    "name": "tests/lang/README.md",
+    "reason": "inotify:modify",
+    "role": "action_inputs"
+   },
+   {
+    "facet": "watch",
+    "name": "tests/lang/README.md",
+    "reason": "inotify:close-write",
+    "role": "action_inputs"
+   },
+   {
+    "facet": "authority",
+    "name": "None",
+    "reason": "snapshot watcher closed",
+    "role": "action_inputs"
+   }
+  ],
+  "status": "observed",
+  "truncated": false,
+  "unknown": true,
+  "version": 1
+ },
+ "actions": []
+}

@@ -1,0 +1,6 @@
+public func program() -> i64:
+    mut a = {1: 10, 2: 20}
+    mut b = {2: 20, 1: 10}
+    if a == b:
+        return 42
+    return 0

@@ -1,0 +1,15 @@
+# Defect 4 (lane SK's D-SK-5): a `from` clause whose only source is a plain bytes parameter, which arrives as a view and cannot
+# lend a record. `check` accepted it and the IR it declared was invalid (a Debug or `--verify-facts` build refused it). `check`
+# now refuses it with E_BORROW_SOURCE (R4) and the certain removal of the clause (lane CB).
+record Inst:
+    ref_des: bytes
+
+
+func none_of(name: bytes) -> Inst? from name:
+    if len(name) > 100:
+        return None
+    return None
+
+
+public func test_none_of() -> bool:
+    return none_of(b"U1") is None

@@ -1,0 +1,6 @@
+# A `-> bytes` extern whose C side returns a null pointer with a positive length: the call traps R_FOREIGN_RESULT (D-FFI-3).
+extern func ffi_give(host: Host, mode: i64) -> bytes
+
+
+func main(host: Host) -> int:
+    return len(ffi_give(host, 4))

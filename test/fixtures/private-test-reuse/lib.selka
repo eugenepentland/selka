@@ -1,0 +1,21 @@
+# FX10: a private function, `page`, with callers in its own module, and a test file beside it that calls it directly.
+# test/private_test_reuse_cli_test.zig edits this file's bodies between runs.
+record Answer:
+    status: int
+    body: str
+
+
+func answer(status: int, body: str) -> Answer:
+    return Answer(status=status, body=copy(body))
+
+
+func page(body: str) -> Answer:
+    mut out = answer(200, body)
+    out.body = out.body + "!"
+    return out
+
+
+public func serve(path: str) -> int:
+    if path == "/":
+        return page("home").status
+    return page("other").status + 1

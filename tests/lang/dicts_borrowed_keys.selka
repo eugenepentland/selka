@@ -1,0 +1,161 @@
+import dicts
+import testing
+
+# `dicts.add` and `dicts.append_to` borrow their key: it is copied into the mapping only when it is new, so a call that
+# finds its key allocates nothing, and the caller still holds the key it passed. They took the key `own` before, so
+# every call with a key the caller still needed wrote `copy(key)` and paid for it on every hit.
+record Pair:
+    name: str
+    count: int
+
+
+func tally(names: str[]) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for name in names:
+        dicts.add(mut counts, name, 1)
+    return counts
+
+
+func tally_pairs(pairs: Pair[]) -> dict[Pair, int]:
+    mut counts: dict[Pair, int] = {}
+    for pair in pairs:
+        dicts.add(mut counts, pair, pair.count)
+    return counts
+
+
+func group_by_name(pairs: Pair[]) -> dict[str, int[]]:
+    mut groups: dict[str, int[]] = {}
+    for pair in pairs:
+        dicts.append_to(mut groups, pair.name, pair.count)
+    return groups
+
+
+func group_pairs(pairs: Pair[]) -> dict[Pair, str[]]:
+    mut groups: dict[Pair, str[]] = {}
+    for pair in pairs:
+        dicts.append_to(mut groups, pair, pair.name + "!")
+    return groups
+
+
+public func test_add_counts_hits_and_misses_of_a_borrowed_str_key() -> bool:
+    const counts = tally(["a", "b", "a", "c", "b", "a"])
+    return len(counts) == 3 and counts["a"] == 3 and counts["b"] == 2 and counts["c"] == 1
+
+
+public func test_add_with_a_record_key() -> bool:
+    const pairs: Pair[] = [Pair(name="x", count=1), Pair(name="y", count=2), Pair(name="x", count=1)]
+    const counts = tally_pairs(pairs)
+    return len(counts) == 2 and counts[Pair(name="x", count=1)] == 2 and counts[Pair(name="y", count=2)] == 2
+
+
+public func test_append_to_with_a_str_key_and_a_record_key() -> bool:
+    const pairs: Pair[] = [Pair(name="x", count=1), Pair(name="y", count=2), Pair(name="x", count=1), Pair(name="x", count=3)]
+    const by_name = group_by_name(pairs)
+    const by_pair = group_pairs(pairs)
+    return len(by_name) == 2 and by_name["x"] == [1, 1, 3] and by_name["y"] == [2] and len(by_pair) == 3 and by_pair[Pair(name="x", count=1)] == ["x!", "x!"]
+
+
+public func test_the_caller_keeps_the_key_it_passed() -> bool:
+    mut counts: dict[str, int] = {}
+    mut key: str = "ab"
+    dicts.add(mut counts, key, 1)
+    key = key + "c"
+    dicts.add(mut counts, key, 2)
+    dicts.add(mut counts, key, 3)
+    mut groups: dict[str, str[]] = {}
+    dicts.append_to(mut groups, key, "p")
+    dicts.append_to(mut groups, key, "q")
+    return key == "abc" and counts["ab"] == 1 and counts["abc"] == 5 and groups["abc"] == ["p", "q"]
+
+
+public func test_a_key_stored_by_a_miss_is_its_own_copy() -> bool:
+    mut counts: dict[str, int] = {}
+    mut key: str = "k"
+    dicts.add(mut counts, key, 1)
+    key = "other"
+    dicts.add(mut counts, "k", 10)
+    return counts["k"] == 11 and len(counts) == 1 and key == "other"
+
+
+public func test_a_key_read_from_another_dictionary_or_a_nested_list() -> bool:
+    const names: dict[str, str] = {"a": "x", "b": "y"}
+    const rows: str[][] = [["x", "y"], ["x"]]
+    mut counts: dict[str, int] = {}
+    mut groups: dict[str, int[]] = {}
+    dicts.add(mut counts, names["a"], 1)
+    dicts.add(mut counts, names["a"], 1)
+    dicts.add(mut counts, rows[0][1], 4)
+    dicts.append_to(mut groups, names["b"], 7)
+    dicts.append_to(mut groups, rows[0][1], 8)
+    return counts["x"] == 2 and counts["y"] == 4 and groups["y"] == [7, 8] and len(groups) == 1
+
+
+public func test_a_field_and_an_element_are_keys_too() -> bool:
+    const pairs: Pair[] = [Pair(name="u", count=1), Pair(name="v", count=2), Pair(name="u", count=3)]
+    mut counts: dict[str, int] = {}
+    for i in range(len(pairs)):
+        dicts.add(mut counts, pairs[i].name, pairs[i].count)
+    return counts["u"] == 4 and counts["v"] == 2
+
+
+public func test_int_keys_still_work_through_the_generic_body() -> bool:
+    mut counts: dict[int, int] = {}
+    mut groups: dict[int, int[]] = {}
+    for i in range(10):
+        dicts.add(mut counts, i % 3, i)
+        dicts.append_to(mut groups, i % 3, i)
+    return counts[0] == 18 and counts[1] == 12 and counts[2] == 15 and groups[1] == [1, 4, 7]
+
+
+public func test_add_grows_the_table_across_many_new_keys() -> bool:
+    mut counts: dict[str, int] = {}
+    mut names: str[] = []
+    for i in range(300):
+        append(mut names, str(i))
+    for round in range(3):
+        for name in names:
+            dicts.add(mut counts, name, round)
+    return len(counts) == 300 and counts["0"] == 3 and counts["299"] == 3
+
+
+func add_hits(n: int) -> int:
+    mut counts: dict[Pair, int] = {}
+    const key = Pair(name="a" + "b", count=1)
+    dicts.add(mut counts, key, 0)
+    for i in range(n):
+        dicts.add(mut counts, key, i)
+    return counts[key]
+
+
+func append_hits(n: int) -> int:
+    mut groups: dict[Pair, int[]] = {}
+    const key = Pair(name="a" + "b", count=1)
+    dicts.append_to(mut groups, key, 0)
+    for i in range(n):
+        dicts.append_to(mut groups, key, i)
+    return len(groups[key])
+
+
+# A key the mapping already holds is neither copied nor dropped. The values of `append_to` grow the stored list, so its
+# per-call allocation count is the list's growth, which `append_growth` below keeps out of the difference by comparing
+# a hit that adds to a hit that adds nothing new to a list that is already sized.
+public func test_an_add_hit_allocates_nothing() -> bool:
+    const hits = testing.allocations(add_hits, 200) - testing.allocations(add_hits, 100)
+    return add_hits(5) == 10 and hits == 0
+
+
+func append_pair_hits(n: int) -> int:
+    mut groups: dict[Pair, str[]] = {}
+    const key = Pair(name="a" + "b", count=1)
+    const item = "item"
+    dicts.append_to(mut groups, key, copy(item))
+    for i in range(n):
+        dicts.append_to(mut groups, key, copy(item))
+    return len(groups)
+
+
+# Only the key is under test here: the one allocation each call makes is the item's own copy, and it is the same for a hit
+# as for the first call, so the difference between 200 and 100 hits is exactly 100 items, with no key copy in it.
+public func test_an_append_to_hit_copies_no_key() -> bool:
+    const items = testing.allocations(append_pair_hits, 200) - testing.allocations(append_pair_hits, 100)
+    return append_hits(5) == 6 and append_pair_hits(5) == 1 and items == 100

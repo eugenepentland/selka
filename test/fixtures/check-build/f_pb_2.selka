@@ -1,0 +1,22 @@
+# F-PB-2 (port repro, lane PB): `check` accepted it and the build refused it. Both refuse it now: a borrowed dictionary
+# (RB2) owns its keys, so the slice key is E_SLICE_ESCAPES (V2) with the copy(...) repair, as for any dictionary (lane CB).
+import bytes
+import dicts
+
+func text() -> bytes:
+    return b"a :1\nb :2\nc :3"
+
+
+public func test_heads(out: Stream) -> bool:
+    const lines = bytes.split(text(), b"\n")
+    mut by_head: dict[bytes, bytes] = {}
+    for line in lines:
+        const at = bytes.find(line, b" :")
+        by_head[line[:at]] = line
+    mut ok = True
+    for pattern in [b"a", b"b", b"c"]:
+        const want = pattern + b" :" + b"1"
+        if dicts.get(by_head, pattern, b"") != want:
+            print(out, "differs:", pattern)
+            ok = False
+    return ok or len(by_head) == 3

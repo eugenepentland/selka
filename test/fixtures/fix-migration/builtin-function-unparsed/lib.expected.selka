@@ -1,0 +1,6 @@
+public func lib_len(n: int) -> int:
+    return n + 1
+
+
+public func twice(n: int) -> int:
+    return lib_len(n) * 2

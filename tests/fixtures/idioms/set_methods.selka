@@ -1,0 +1,12 @@
+# An idiom probe of the Python spelling: `seen.remove("b")` is refused since W13-S5 (`sets.remove(mut seen, "b")`).
+import sets
+
+func main() -> int:
+    mut seen: set[str] = set()
+    for word in ["a", "b", "a", "c"]:
+        sets.add(mut seen, copy(word))
+    sets.discard(mut seen, "z")
+    seen.remove("b")
+    if sets.subset(seen, {"a", "c", "d"}) and "a" in seen:
+        return len(seen) + len(sets.union(seen, ["x", "y"])) * 10
+    return 0

@@ -1,0 +1,49 @@
+# A device `main` whose `@freestanding(ram)` function holds interrupts off itself around its register writes (MCU-NOC2F): the
+# `cpu` functions are instructions inline in the RAM code (`mrs`/`cpsid i`, `msr`, `dsb sy`/`isb sy`), so the routine needs no
+# wrapper in flash to hold interrupts off, as the board's flash routines need while flash cannot be read. It writes QEMU's
+# UART0 (as `uart_qemu.selka` does): `send_held` answers PRIMASK as it found it, 0 on its own and 1 inside the outer hold
+# `greet` makes, and a plain `@freestanding` function sends and waits for an event (`sev`, `wfe`, which returns because
+# the event is pending). `main` answers 41 + 0 + 1 = 42.
+# bare-platform: qemu
+# bare-status: 42
+# bare-serial: OK
+import cpu
+import registers
+
+const UART_DATA: u32 = 0x40004000
+const UART_CONTROL: u32 = 0x40004008
+
+
+const UART_BAUD: u32 = 0x40004010
+
+
+@freestanding(ram)
+func send_held(reg: Registers, byte: u32) -> u32:
+    const state = cpu.interrupts_off(reg)
+    const found = state.primask
+    registers.write32(reg, UART_DATA, byte)
+    cpu.barrier(reg)
+    cpu.interrupts_restore(reg, own state)
+    return found
+
+
+@freestanding(ram)
+func greet(reg: Registers) -> u32:
+    registers.write32(reg, UART_BAUD, 16)
+    registers.write32(reg, UART_CONTROL, 1)
+    const alone = send_held(reg, 0x4F)
+    const outer = cpu.interrupts_off(reg)
+    const inside = send_held(reg, 0x4B)
+    cpu.interrupts_restore(reg, own outer)
+    return alone + inside
+
+
+@freestanding
+func rest(reg: Registers):
+    cpu.send_event(reg)
+    cpu.wait_for_event(reg)
+
+
+func main(reg: Registers) -> int:
+    rest(reg)
+    return 41 + int(greet(reg))

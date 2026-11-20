@@ -1,0 +1,146 @@
+# Rename, stat, file locks and path metadata on the Filesystem a test receives. The in-memory stand-in answers the whole
+# durable family from its own entries (the details, refusals and every lock exit are in filesystem_memory_durable.selka; the
+# real-directory behaviour is pinned by src/io_paths_test.zig); `is_lock_busy` recognises the text a held lock fails with.
+import filesystem
+
+func locked(fs: Filesystem, wait: bool) -> bool fails str:
+    if wait:
+        with try fs.lock_file("store.lock") as lease:
+            return True
+    with try fs.try_lock_file("store.lock") as lease:
+        return True
+
+
+func second_lock(fs: Filesystem, wait: bool) -> str fails str:
+    with try fs.lock_file("store.lock") as first:
+        match locked(fs, wait):
+            case Ok(_):
+                return "granted"
+            case Err(message):
+                return copy(message)
+
+
+public func test_the_memory_filesystem_renames() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "payload")
+    match fs.rename_path("a", "b"):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    match fs.read_text("b"):
+        case Ok(text):
+            return text == "payload" and not fs.exists("a")
+        case Err(_):
+            return False
+
+
+public func test_the_memory_filesystem_stats_a_file_and_reports_a_missing_path_as_missing() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("x", "abc")
+    match filesystem.stat(fs, "x"):
+        case Ok(info):
+            if info.size != 3 or info.mode != 0o644:
+                return False
+        case Err(_):
+            return False
+    match filesystem.stat(fs, "absent"):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Missing:
+                    return True
+                case Failed(message=_):
+                    return False
+
+
+public func test_the_memory_filesystem_locks_and_a_held_lock_excludes_the_second() -> bool:
+    const fs = filesystem.memory()
+    match locked(fs, True):
+        case Ok(granted):
+            if not granted:
+                return False
+        case Err(_):
+            return False
+    match locked(fs, False):
+        case Ok(granted):
+            if not granted:
+                return False
+        case Err(_):
+            return False
+    match second_lock(fs, False):
+        case Ok(text):
+            return text == "try lock file 'store.lock': the lock is held by another holder" and filesystem.is_lock_busy(text)
+        case Err(_):
+            return False
+
+
+public func test_is_lock_busy_reads_the_held_lock_text() -> bool:
+    return filesystem.is_lock_busy("try lock file 'a': the lock is held by another holder") and not filesystem.is_lock_busy("try lock file 'a': permission denied") and not filesystem.is_lock_busy("")
+
+
+func refusal(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "accepted"
+        case Err(message):
+            return copy(message)
+
+
+public func test_the_memory_filesystem_answers_realpath_and_cwd() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("x", "1")
+    match filesystem.realpath(fs, "x"):
+        case Ok(name):
+            if name != "x":
+                return False
+        case Err(_):
+            return False
+    match filesystem.realpath(fs, "absent"):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "realpath 'absent': the path does not exist":
+                return False
+    match filesystem.cwd(fs):
+        case Ok(name):
+            return name == ""
+        case Err(_):
+            return False
+
+
+public func test_the_memory_filesystem_chmods_touches_and_sets_the_modification_time() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("x", "1")
+    if refusal(filesystem.chmod(fs, "x", 0o600)) != "accepted":
+        return False
+    if refusal(filesystem.touch(fs, "x")) != "accepted":
+        return False
+    if refusal(filesystem.set_modified(fs, "x", 5)) != "accepted":
+        return False
+    match filesystem.stat(fs, "x"):
+        case Ok(info):
+            return info.mode == 0o600 and info.modified == 5
+        case Err(_):
+            return False
+
+
+public func test_the_memory_filesystem_writes_atomically_with_a_mode_and_follows_stat() -> bool:
+    const fs = filesystem.memory()
+    match fs.atomic_write_file_mode("x", b"data", 0o644):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    match filesystem.stat_follow(fs, "x"):
+        case Ok(info):
+            return info.size == 4 and info.mode == 0o644
+        case Err(_):
+            return False
+
+
+public func test_a_stat_constructor_may_leave_the_mode_out() -> bool:
+    const info = filesystem.Stat(kind=filesystem.PathKind.Regular, size=3, modified=4, inode=5u64)
+    const full = filesystem.Stat(kind=filesystem.PathKind.Directory, size=0, modified=0, inode=1u64, mode=0o755)
+    return info.mode == 0 and full.mode == 0o755

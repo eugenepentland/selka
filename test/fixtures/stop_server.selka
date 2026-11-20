@@ -1,0 +1,42 @@
+# A server that hears a stop (FR5b, STOP-1): the probe of lane FR5b's write-up, the shape of the proposal's 3A. It prints its
+# process number on standard error and its kernel-chosen port on standard output, greets each client, serves until it hears
+# a stop (at most 60 s), sends each client a last line, says so on standard error and returns 0.
+import filesystem
+import network
+import process
+
+func main(net: Network, fs: Filesystem, out: Stream, err: Stream, stop: Stop) -> int:
+    match filesystem.realpath(fs, "/proc/self"):
+        case Ok(path):
+            print(err, "guest " + path)
+        case Err(_):
+            return 1
+    match network.open_poller_at(net, "127.0.0.1:0"):
+        case ok(poller):
+            mut polled = own poller
+            mut outcome = network.new_outcome()
+            polled = network.port(own polled, network.LISTENER, mut outcome)
+            print(out, "port " + str(outcome.value))
+            mut ready = network.new_ready()
+            mut clients: int[] = []
+            mut turns = 0
+            while not process.stop_requested(stop) and turns < 600:
+                polled = network.wait(own polled, 100, mut ready)
+                turns += 1
+                for index in range(ready.count):
+                    if ready.ids[index] == network.LISTENER:
+                        polled = network.accept(own polled, mut outcome)
+                        if outcome.code == network.OUTCOME_OK:
+                            const id = outcome.value
+                            append(mut clients, id)
+                            polled = network.send(own polled, id, b"hello\n", 0, mut outcome)
+            for id in clients:
+                polled = network.send(own polled, id, b"bye\n", 0, mut outcome)
+                polled = network.close_connection(own polled, id, mut outcome)
+            print(err, "stopped on request, " + str(len(clients)) + " clients told")
+            _ = own polled
+            if turns >= 600:
+                return 3
+            return 0
+        case err(_):
+            return 2

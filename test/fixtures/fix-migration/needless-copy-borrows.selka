@@ -1,0 +1,22 @@
+record Node:
+    label: str
+
+
+func show(out: Stream, words: str[]) -> int:
+    const copied = copy(words)
+    print(out, len(copied))
+    print(out, copied[0])
+    return 0
+
+
+func label_of(node: Node) -> str:
+    return copy(node.label)
+
+
+func main(out: Stream) -> int:
+    mut words: str[] = []
+    append(mut words, "a")
+    print(out, show(out, words))
+    const node = Node(label="abc")
+    print(out, label_of(node))
+    return 0

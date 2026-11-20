@@ -1,0 +1,396 @@
+enum TokenKind:
+    identifier,
+    keyword,
+    integer,
+    string,
+    newline,
+    lparen,
+    rparen,
+    lbracket,
+    rbracket,
+    comma,
+    plus,
+    minus,
+    star,
+    slash,
+    equal,
+    equal_equal,
+    less,
+    eof
+
+
+record Token:
+    kind: TokenKind
+    start: int
+    end: int
+    line: int
+
+
+record ParseError:
+    line: int
+    column: int
+    expected: str
+
+
+enum NodeKind:
+    integer,
+    string,
+    name,
+    binary,
+    call,
+    index,
+    argument,
+    assign,
+    return_stmt,
+    expression_stmt
+
+
+record Node:
+    kind: NodeKind
+    start: int
+    end: int
+    left: int
+    right: int
+    value: int
+
+
+record Parser:
+    source: str
+    tokens: list[Token]
+    cursor: list[int]
+    nodes: list[Node]
+    errors: list[ParseError]
+
+
+def is_letter(char: str) -> bool:
+    return char.isalpha() or char == "_"
+
+
+def add_token(tokens: list[Token], kind: TokenKind, start: int, end: int, line: int) -> None:
+    tokens.append(Token(kind=kind, start=start, end=end, line=line))
+
+
+def lex(source: str) -> list[Token]:
+    tokens: list[Token] = []
+    index = 0
+    line = 1
+    while index < len(source):
+        char = source[index]
+        if char == " " or char == "\t" or char == "\r":
+            index += 1
+            continue
+        if char == "\n":
+            add_token(tokens, TokenKind.newline, index, index + 1, line)
+            index += 1
+            line += 1
+            continue
+        if char == "#":
+            while index < len(source) and source[index] != "\n":
+                index += 1
+            continue
+        if is_letter(char):
+            start = index
+            index += 1
+            while index < len(source) and (is_letter(source[index]) or source[index].isdigit()):
+                index += 1
+            kind = TokenKind.identifier
+            word = source[start:index]
+            if word == "return" or word == "if" or word == "else":
+                kind = TokenKind.keyword
+            add_token(tokens, kind, start, index, line)
+            continue
+        if char.isdigit():
+            start = index
+            index += 1
+            while index < len(source) and source[index].isdigit():
+                index += 1
+            add_token(tokens, TokenKind.integer, start, index, line)
+            continue
+        if char == "'":
+            start = index
+            index += 1
+            while index < len(source) and source[index] != "'" and source[index] != "\n":
+                if source[index] == "\\" and index + 1 < len(source):
+                    index += 2
+                else:
+                    index += 1
+            if index < len(source) and source[index] == "'":
+                index += 1
+            add_token(tokens, TokenKind.string, start, index, line)
+            continue
+        start = index
+        index += 1
+        if char == "(":
+            add_token(tokens, TokenKind.lparen, start, index, line)
+        elif char == ")":
+            add_token(tokens, TokenKind.rparen, start, index, line)
+        elif char == "[":
+            add_token(tokens, TokenKind.lbracket, start, index, line)
+        elif char == "]":
+            add_token(tokens, TokenKind.rbracket, start, index, line)
+        elif char == ",":
+            add_token(tokens, TokenKind.comma, start, index, line)
+        elif char == "+":
+            add_token(tokens, TokenKind.plus, start, index, line)
+        elif char == "-":
+            add_token(tokens, TokenKind.minus, start, index, line)
+        elif char == "*":
+            add_token(tokens, TokenKind.star, start, index, line)
+        elif char == "/":
+            add_token(tokens, TokenKind.slash, start, index, line)
+        elif char == "=":
+            if index < len(source) and source[index] == "=":
+                index += 1
+                add_token(tokens, TokenKind.equal_equal, start, index, line)
+            else:
+                add_token(tokens, TokenKind.equal, start, index, line)
+        elif char == "<":
+            add_token(tokens, TokenKind.less, start, index, line)
+    add_token(tokens, TokenKind.eof, len(source), len(source), line)
+    return tokens
+
+
+def current(parser: Parser) -> Token:
+    return parser.tokens[parser.cursor[0]]
+
+
+def token_text(parser: Parser, token: Token) -> str:
+    return parser.source[token.start:token.end]
+
+
+def advance(parser: Parser) -> Token:
+    token = current(parser)
+    if token.kind != TokenKind.eof:
+        parser.cursor[0] += 1
+    return token
+
+
+def column_at(source: str, offset: int) -> int:
+    line_start = 0
+    index = 0
+    while index < offset:
+        if source[index] == "\n":
+            line_start = index + 1
+        index += 1
+    return offset - line_start + 1
+
+
+def fail(parser: Parser, expected: str) -> int:
+    token = current(parser)
+    if len(parser.errors) == 0:
+        parser.errors.append(ParseError(
+            line=token.line,
+            column=column_at(parser.source, token.start),
+            expected=expected,
+        ))
+    return -1
+
+
+def add_node(parser: Parser, node: Node) -> int:
+    parser.nodes.append(node)
+    return len(parser.nodes) - 1
+
+
+def make_binary(parser: Parser, left: int, operator: Token, right: int) -> int:
+    return add_node(parser, Node(
+        kind=NodeKind.binary,
+        start=parser.nodes[left].start,
+        end=parser.nodes[right].end,
+        left=left,
+        right=right,
+        value=operator.start,
+    ))
+
+
+def parse_primary(parser: Parser) -> int:
+    token = current(parser)
+    if token.kind == TokenKind.integer:
+        _ = advance(parser)
+        value = 0
+        match int(token_text(parser, token)):
+            case Some(number):
+                value = number
+            case None:
+                return fail(parser, "an in-range integer")
+        return add_node(parser, Node(
+            kind=NodeKind.integer, start=token.start, end=token.end,
+            left=-1, right=-1, value=value,
+        ))
+    if token.kind == TokenKind.string:
+        _ = advance(parser)
+        return add_node(parser, Node(
+            kind=NodeKind.string, start=token.start, end=token.end,
+            left=-1, right=-1, value=token.end - token.start - 2,
+        ))
+    if token.kind == TokenKind.identifier:
+        _ = advance(parser)
+        return add_node(parser, Node(
+            kind=NodeKind.name, start=token.start, end=token.end,
+            left=-1, right=-1, value=token.start,
+        ))
+    if token.kind == TokenKind.lparen:
+        _ = advance(parser)
+        inner = parse_expression(parser)
+        if inner < 0:
+            return inner
+        if current(parser).kind != TokenKind.rparen:
+            return fail(parser, "')'")
+        _ = advance(parser)
+        return inner
+    return fail(parser, "an integer, string, name, or '('")
+
+
+def parse_postfix(parser: Parser) -> int:
+    result = parse_primary(parser)
+    while result >= 0 and (current(parser).kind == TokenKind.lparen or current(parser).kind == TokenKind.lbracket):
+        opener = advance(parser)
+        if opener.kind == TokenKind.lbracket:
+            index_node = parse_expression(parser)
+            if index_node < 0:
+                return index_node
+            if current(parser).kind != TokenKind.rbracket:
+                return fail(parser, "']'")
+            closer = advance(parser)
+            result = add_node(parser, Node(
+                kind=NodeKind.index, start=parser.nodes[result].start, end=closer.end,
+                left=result, right=index_node, value=0,
+            ))
+            continue
+        first_argument = -1
+        argument_count = 0
+        if current(parser).kind != TokenKind.rparen:
+            argument = parse_expression(parser)
+            if argument < 0:
+                return argument
+            first_argument = add_node(parser, Node(
+                kind=NodeKind.argument,
+                start=parser.nodes[argument].start,
+                end=parser.nodes[argument].end,
+                left=argument,
+                right=-1,
+                value=0,
+            ))
+            argument_count = 1
+            while current(parser).kind == TokenKind.comma:
+                _ = advance(parser)
+                argument = parse_expression(parser)
+                if argument < 0:
+                    return argument
+                first_argument = add_node(parser, Node(
+                    kind=NodeKind.argument,
+                    start=parser.nodes[argument].start,
+                    end=parser.nodes[argument].end,
+                    left=argument,
+                    right=first_argument,
+                    value=argument_count,
+                ))
+                argument_count += 1
+        if current(parser).kind != TokenKind.rparen:
+            return fail(parser, "')'")
+        closer = advance(parser)
+        result = add_node(parser, Node(
+            kind=NodeKind.call, start=parser.nodes[result].start, end=closer.end,
+            left=result, right=first_argument, value=argument_count,
+        ))
+    return result
+
+
+def parse_factor(parser: Parser) -> int:
+    left = parse_postfix(parser)
+    while left >= 0 and (current(parser).kind == TokenKind.star or current(parser).kind == TokenKind.slash):
+        operator = advance(parser)
+        right = parse_postfix(parser)
+        if right < 0:
+            return right
+        left = make_binary(parser, left, operator, right)
+    return left
+
+
+def parse_term(parser: Parser) -> int:
+    left = parse_factor(parser)
+    while left >= 0 and (current(parser).kind == TokenKind.plus or current(parser).kind == TokenKind.minus):
+        operator = advance(parser)
+        right = parse_factor(parser)
+        if right < 0:
+            return right
+        left = make_binary(parser, left, operator, right)
+    return left
+
+
+def parse_expression(parser: Parser) -> int:
+    left = parse_term(parser)
+    while left >= 0 and (current(parser).kind == TokenKind.equal_equal or current(parser).kind == TokenKind.less):
+        operator = advance(parser)
+        right = parse_term(parser)
+        if right < 0:
+            return right
+        left = make_binary(parser, left, operator, right)
+    return left
+
+
+def parse_statement(parser: Parser) -> int:
+    start = current(parser)
+    if start.kind == TokenKind.keyword and token_text(parser, start) == "return":
+        _ = advance(parser)
+        value = parse_expression(parser)
+        if value < 0:
+            return value
+        return add_node(parser, Node(
+            kind=NodeKind.return_stmt, start=start.start, end=parser.nodes[value].end,
+            left=value, right=-1, value=0,
+        ))
+    if start.kind == TokenKind.identifier and parser.tokens[parser.cursor[0] + 1].kind == TokenKind.equal:
+        name = advance(parser)
+        _ = advance(parser)
+        value = parse_expression(parser)
+        if value < 0:
+            return value
+        return add_node(parser, Node(
+            kind=NodeKind.assign, start=name.start, end=parser.nodes[value].end,
+            left=value, right=-1, value=name.start,
+        ))
+    value = parse_expression(parser)
+    if value < 0:
+        return value
+    return add_node(parser, Node(
+        kind=NodeKind.expression_stmt, start=start.start, end=parser.nodes[value].end,
+        left=value, right=-1, value=0,
+    ))
+
+
+def parse(source: str) -> Parser:
+    parser = Parser(source=source, tokens=lex(source), cursor=[0], nodes=[], errors=[])
+    while current(parser).kind != TokenKind.eof and len(parser.errors) == 0:
+        if current(parser).kind == TokenKind.newline:
+            _ = advance(parser)
+            continue
+        _ = parse_statement(parser)
+        if current(parser).kind == TokenKind.newline:
+            _ = advance(parser)
+        elif current(parser).kind != TokenKind.eof and len(parser.errors) == 0:
+            _ = fail(parser, "a newline")
+    return parser
+
+
+def arena_checksum(nodes: list[Node]) -> int:
+    checksum = 0
+    for node in nodes:
+        checksum += node.start + node.end + node.left + node.right + node.value
+    return checksum
+
+
+def main(out: Stream) -> int:
+    valid = "answer = add((1 + 2) * 3, values[4])\nreturn answer == 8\n"
+    parsed = parse(valid)
+    if len(parsed.errors) != 0:
+        error = parsed.errors[0]
+        out.print(f"parser error at {error.line}:{error.column}: expected {error.expected}")
+        return 1
+    out.print(f"parser: tokens={len(parsed.tokens)} nodes={len(parsed.nodes)} checksum={arena_checksum(parsed.nodes)}")
+
+    invalid = parse("answer = add(1, ]\n")
+    if len(invalid.errors) != 1:
+        return 2
+    error = invalid.errors[0]
+    out.print(f"parser error at {error.line}:{error.column}: expected {error.expected}")
+    return 0

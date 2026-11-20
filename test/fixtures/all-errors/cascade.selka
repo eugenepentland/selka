@@ -1,0 +1,17 @@
+# One root cause each: a moved list used three times, and a binding that failed to check used twice. Each is reported once.
+func h(items: int[]) -> int:
+    mut xs = copy(items)
+    const kept = own xs
+    append(mut xs, 1)
+    append(mut xs, 2)
+    return len(xs) + len(kept)
+
+
+func t(n: int) -> int:
+    const total: int = b"x"
+    const doubled = total * 2
+    return doubled + total + n
+
+
+func main() -> int:
+    return h([1]) + t(2)

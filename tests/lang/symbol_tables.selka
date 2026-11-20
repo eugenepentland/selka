@@ -1,0 +1,131 @@
+# Symbol tables: a name is interned once and the program keeps a `Symbol` (one integer) wherever the name is mentioned. The tests pin
+# that equal names are one symbol and different names are different, that a name reads back from the table, that looking a name up
+# does not add it, that a table grows to thousands of names, that a symbol is a dictionary key, and the cache idiom: a table of
+# cached entries addressed by a key that survives later `mut` calls.
+import dicts
+import spans
+import strings
+import symbols
+
+public func test_interning_a_name_twice_answers_one_symbol_and_adds_it_once() -> bool:
+    mut table = symbols.create()
+    const first = symbols.intern(mut table, b"GND")
+    const again = symbols.intern(mut table, b"GND")
+    const other = symbols.intern(mut table, b"VCC")
+    return first == again and first != other and symbols.count(table) == 2
+
+
+public func test_symbols_count_up_from_zero_in_the_order_names_are_first_seen() -> bool:
+    mut table = symbols.create()
+    const a = symbols.intern(mut table, b"a")
+    const b = symbols.intern(mut table, b"b")
+    const a_again = symbols.intern(mut table, b"a")
+    const c = symbols.intern(mut table, b"c")
+    return a.id == 0 and b.id == 1 and a_again.id == 0 and c.id == 2
+
+
+public func test_a_name_reads_back_from_the_table_including_the_empty_name_and_non_ascii_octets() -> bool:
+    mut table = symbols.create()
+    const empty = symbols.intern(mut table, b"")
+    const greek = symbols.intern(mut table, b"\xce\xbb")
+    const plain = symbols.intern(mut table, b"U12")
+    return symbols.name(table, empty) == b"" and symbols.name(table, greek) == b"\xce\xbb" and symbols.name(table, plain) == b"U12"
+
+
+public func test_find_looks_a_name_up_and_never_adds_it() -> bool:
+    mut table = symbols.create()
+    const known = symbols.intern(mut table, b"known")
+    if symbols.find(table, b"known") != Some(known) or symbols.find(table, b"unknown") is not None:
+        return False
+    return symbols.count(table) == 1 and symbols.find(table, b"") is None
+
+
+public func test_valid_says_whether_a_symbol_belongs_to_the_table() -> bool:
+    mut table = symbols.create()
+    const only = symbols.intern(mut table, b"only")
+    return symbols.valid(table, only) and not symbols.valid(table, symbols.Symbol(id=1)) and not symbols.valid(table, symbols.Symbol(id=-1))
+
+
+public func test_a_name_borrowed_from_a_bigger_buffer_is_copied_only_when_new() -> bool:
+    mut table = symbols.create()
+    const big = b"net GND net VCC net GND"
+    const a = symbols.intern(mut table, big[4:7])
+    const b = symbols.intern(mut table, big[12:15])
+    const c = symbols.intern(mut table, big[20:23])
+    return a == c and a != b and symbols.name(table, b) == b"VCC" and symbols.count(table) == 2
+
+
+public func test_a_table_grows_to_thousands_of_names() -> bool:
+    mut table = symbols.create()
+    for index in range(3000):
+        const made = symbols.intern(mut table, strings.encode(str(index)))
+        if made.id != index:
+            return False
+    if symbols.count(table) != 3000:
+        return False
+    for index in range(3000):
+        const again = symbols.intern(mut table, strings.encode(str(index)))
+        if again.id != index or symbols.name(table, again) != strings.encode(str(index)):
+            return False
+    return symbols.count(table) == 3000
+
+
+public func test_the_same_text_in_two_files_and_two_places_is_one_symbol() -> bool:
+    mut sources = spans.create()
+    mut first = b"(net GND) (net GND)"
+    mut second = b"(pin 1 GND)"
+    const a = spans.add(mut sources, "a", own first)
+    const b = spans.add(mut sources, "b", own second)
+    mut table = symbols.create()
+    const one = symbols.intern_span(mut table, sources, spans.of(a, 5, 3))
+    const two = symbols.intern_span(mut table, sources, spans.of(a, 15, 3))
+    const three = symbols.intern_span(mut table, sources, spans.of(b, 7, 3))
+    const net = symbols.intern_span(mut table, sources, spans.of(a, 1, 3))
+    return one == two and two == three and one != net and symbols.count(table) == 2 and symbols.name(table, net) == b"net"
+
+
+public func test_a_symbol_is_a_dictionary_key_and_counts_by_text() -> bool:
+    mut table = symbols.create()
+    mut counts: dict[symbols.Symbol, int] = {}
+    for name in [b"GND", b"VCC", b"GND", b"GND", b"VCC", b"CLK"]:
+        const sym = symbols.intern(mut table, name)
+        counts[sym] = dicts.get(counts, sym, 0) + 1
+    const gnd = symbols.intern(mut table, b"GND")
+    const vcc = symbols.intern(mut table, b"VCC")
+    return len(counts) == 3 and counts[gnd] == 3 and counts[vcc] == 2
+
+
+# The cache idiom. An entry is built when its key is first asked for, and read in place afterwards, through the key, so a caller
+# that asks for two entries holds two integers, not a borrow of the cache that the second call would invalidate.
+record Pinout:
+    pins: int[]
+
+
+record Cache:
+    keys: symbols.Table
+    entries: Pinout[]
+    loads: int
+
+
+func load(name: bytes) -> Pinout:
+    return Pinout(pins=[len(name), 1, 2])
+
+
+func ensure(mut cache: Cache, name: bytes) -> symbols.Symbol:
+    const key = symbols.intern(mut cache.keys, name)
+    if key.id == len(cache.entries):
+        append(mut cache.entries, load(name))
+        cache.loads += 1
+    return key
+
+
+func pin_count(cache: Cache, key: symbols.Symbol) -> int:
+    return len(cache.entries[key.id].pins)
+
+
+public func test_a_cache_hands_out_keys_and_is_read_in_place_after_later_mut_calls() -> bool:
+    mut cache = Cache(keys=symbols.create(), entries=[], loads=0)
+    const first = ensure(mut cache, b"U1")
+    const second = ensure(mut cache, b"J12")
+    const first_again = ensure(mut cache, b"U1")
+    return first == first_again and first != second and cache.loads == 2 and pin_count(cache, first) == 3 and pin_count(cache, second) == 3 and symbols.name(cache.keys, second) == b"J12"

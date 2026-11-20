@@ -1,0 +1,22 @@
+# A dictionary of lists and a list of dictionaries.
+func main() -> int:
+    mut groups: dict[int, str[]] = {}
+    for i in range(40):
+        const key = i % 5
+        if key in groups:
+            append(mut groups[key], f"g{i}")
+        else:
+            groups[key] = [f"first{i}"]
+    mut tables: dict[str, int][] = []
+    for t in range(4):
+        mut d: dict[str, int] = {}
+        for j in range(t + 3):
+            d[f"k{j}"] = j * t
+        append(mut tables, own d)
+    mut total = 0
+    for k in range(5):
+        for word in groups[k]:
+            total += len(word)
+    for d in tables:
+        total += len(d) + d["k2"]
+    return total % 256

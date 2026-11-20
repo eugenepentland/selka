@@ -1,0 +1,358 @@
+# The logging module: leveled events written one to a line on a `Stream` the program already holds.
+#
+# `logging.new(err)` makes a `Logger`; `with_level`, `named`, `with_field`, `with_clock` and `as_json` each answer a changed
+# copy; `debug`, `info`, `warn` and `error` write an event, with its fields as an optional last argument. A logger reads no
+# environment, opens no file and has no clock of its own: it prints a time only when it is given a `Clock`. The guide is
+# `docs/logging.md` (`selka docs logging`).
+#
+import buffers
+import json
+import strings
+import time
+
+# The importance of an event, from the least to the most: a logger writes the events at its level and above.
+public enum Level:
+    debug
+    info
+    warn
+    error
+
+
+# One named, typed value of an event. Make one with `text`, `number`, `real` or `flag`.
+public record Field:
+    key: str
+    value: json.Json
+
+
+# Where events go and how they are written: the stream, an optional clock, the lowest level written, the name, the fields
+# bound to every event, and whether a line is a JSON object. Make one with `new`; a setting answers a changed copy.
+public record Logger:
+    stream: Stream
+    clock: Clock?
+    level: Level
+    name: str
+    fields: Field[]
+    json_lines: bool
+
+
+# One event as a plain value, which a task can build and return: `write` writes it after the task group.
+public record Event:
+    level: Level
+    message: str
+    fields: Field[]
+
+
+# A logger that writes to `stream`, at the info level, with no name, no bound field and no clock, as text.
+public func new(stream: Stream) -> Logger:
+    return Logger(stream=stream, clock=None, level=Level.info, name="", fields=[], json_lines=False)
+
+
+# A copy of `log` that writes the events at `level` and above.
+public func with_level(log: Logger, level: Level) -> Logger:
+    return replace(copy(log), level=level)
+
+
+# A copy of `log` whose lines start with the time `clock` reads when the line is written (UTC, RFC 3339).
+public func with_clock(log: Logger, clock: Clock) -> Logger:
+    return replace(copy(log), clock=clock)
+
+
+# A copy of `log` that names itself `name` on every line; a name set before is replaced.
+public func named(log: Logger, name: str) -> Logger:
+    return replace(copy(log), name=copy(name))
+
+
+# A copy of `log` with `field` added to every event it writes, before the event's own fields.
+public func with_field(log: Logger, field: Field) -> Logger:
+    mut next = copy(log)
+    append(mut next.fields, copy(field))
+    return next
+
+
+# A copy of `log` that writes one JSON object per line instead of text.
+public func as_json(log: Logger) -> Logger:
+    return replace(copy(log), json_lines=True)
+
+
+@noalloc
+func rank(level: Level) -> int:
+    match level:
+        case debug:
+            return 0
+        case info:
+            return 1
+        case warn:
+            return 2
+        case error:
+            return 3
+
+
+# Whether an event at `level` would be written. A message is built before the call, so ask first when building it costs.
+@noalloc
+public func enabled(log: Logger, level: Level) -> bool:
+    return rank(level) >= rank(log.level)
+
+
+# The level named by `wanted`: `debug`, `info`, `warn` or `error`, in any case; any other text is None.
+public func parse_level(wanted: str) -> Level?:
+    const lowered = strings.lower(wanted)
+    if lowered == "debug":
+        return Some(Level.debug)
+    if lowered == "info":
+        return Some(Level.info)
+    if lowered == "warn":
+        return Some(Level.warn)
+    if lowered == "error":
+        return Some(Level.error)
+    return None
+
+
+# A text field: `key` and a `str` value.
+public func text(key: str, value: str) -> Field:
+    return Field(key=copy(key), value=json.text(value))
+
+
+# A number field: `key` and an `int` value.
+public func number(key: str, value: int) -> Field:
+    return Field(key=copy(key), value=json.integer(value))
+
+
+# A real field: `key` and a `float` value (`nan` and infinity are `null` in a JSON line).
+public func real(key: str, value: float) -> Field:
+    return Field(key=copy(key), value=json.number(value))
+
+
+# A flag field: `key` and a `bool` value, written `true` or `false`.
+public func flag(key: str, value: bool) -> Field:
+    return Field(key=copy(key), value=json.boolean(value))
+
+
+# Write a debug event: `message`, then `fields`, if the logger shows debug.
+public func debug(log: Logger, message: str, fields: Field[]? = None):
+    emit(log, Level.debug, message, fields)
+
+
+# Write an info event: `message`, then `fields`, if the logger shows info.
+public func info(log: Logger, message: str, fields: Field[]? = None):
+    emit(log, Level.info, message, fields)
+
+
+# Write a warn event: `message`, then `fields`, if the logger shows warn.
+public func warn(log: Logger, message: str, fields: Field[]? = None):
+    emit(log, Level.warn, message, fields)
+
+
+# Write an error event: `message`, then `fields`, if the logger shows error.
+public func error(log: Logger, message: str, fields: Field[]? = None):
+    emit(log, Level.error, message, fields)
+
+
+# An event as a value: nothing is written, so a task that holds no capability can build and return it.
+public func event(level: Level, message: str, fields: Field[]? = None) -> Event:
+    match fields:
+        case Some(items):
+            return Event(level=level, message=copy(message), fields=copy(items))
+        case None:
+            return Event(level=level, message=copy(message), fields=[])
+
+
+# Write an event built by `event`, with the logger's level, name, bound fields, clock and form.
+public func write(log: Logger, entry: Event):
+    if enabled(log, entry.level):
+        send(log, entry.level, entry.message, entry.fields)
+
+
+func emit(log: Logger, level: Level, message: str, fields: Field[]?):
+    if not enabled(log, level):
+        return
+    match fields:
+        case Some(items):
+            send(log, level, message, items)
+        case None:
+            send(log, level, message, [])
+
+
+# One event is built whole, with its newline, and written in one call; the flush follows it.
+func send(log: Logger, level: Level, message: str, fields: Field[]):
+    mut line = buffers.empty()
+    if log.json_lines:
+        put_json(mut line, log, level, message, fields)
+    else:
+        put_line(mut line, log, level, message, fields)
+    _ = buffers.append_byte(mut line, 10)
+    match strings.decode(line):
+        case Ok(whole):
+            print(log.stream, whole, end="")
+        case Err(_):
+            # Every piece above is a valid str or ASCII, so the line is valid UTF-8.
+            assert False
+    flush(log.stream)
+
+
+# The time the clock reads now, or "" when the logger has no clock or the clock fails: a logger never stops the program.
+func stamp(log: Logger) -> str:
+    const clock = log.clock else:
+        return ""
+    const instant = time.now(clock) else Err(_):
+        return ""
+    return time.format_rfc3339(instant)
+
+
+func label(level: Level) -> str:
+    match level:
+        case debug:
+            return "DEBUG"
+        case info:
+            return "INFO"
+        case warn:
+            return "WARN"
+        case error:
+            return "ERROR"
+
+
+func level_name(level: Level) -> str:
+    match level:
+        case debug:
+            return "debug"
+        case info:
+            return "info"
+        case warn:
+            return "warn"
+        case error:
+            return "error"
+
+
+# The text form: time, level, name, message, then the bound fields and the event's.
+func put_line(mut out: byte_buffer, log: Logger, level: Level, message: str, fields: Field[]):
+    const stamped = stamp(log)
+    if len(stamped) > 0:
+        buffers.append_utf8(mut out, stamped)
+        _ = buffers.append_byte(mut out, 32)
+    buffers.append_utf8(mut out, label(level))
+    _ = buffers.append_byte(mut out, 32)
+    if len(log.name) > 0:
+        put_key(mut out, log.name)
+        _ = buffers.append_byte(mut out, 58)
+        _ = buffers.append_byte(mut out, 32)
+    put_escaped(mut out, message)
+    for field in log.fields:
+        put_field(mut out, field)
+    for field in fields:
+        put_field(mut out, field)
+
+
+func put_field(mut out: byte_buffer, field: Field):
+    _ = buffers.append_byte(mut out, 32)
+    put_key(mut out, field.key)
+    _ = buffers.append_byte(mut out, 61)
+    match field.value:
+        case text(value=body):
+            put_value(mut out, body)
+        case boolean(value=truth):
+            if truth:
+                buffers.append_utf8(mut out, "true")
+            else:
+                buffers.append_utf8(mut out, "false")
+        case integer(value=count):
+            buffers.append_int(mut out, count)
+        case number(value=amount):
+            buffers.append_float(mut out, amount)
+        case null | array(..) | object(..):
+            put_value(mut out, json.dumps(field.value))
+
+
+# A value as it is when nothing in it needs quoting, otherwise in double quotes with its escapes.
+func put_value(mut out: byte_buffer, body: str):
+    if needs_quotes(body):
+        _ = buffers.append_byte(mut out, 34)
+        put_escaped(mut out, body)
+        _ = buffers.append_byte(mut out, 34)
+    else:
+        buffers.append_utf8(mut out, body)
+
+
+# Empty, or holding a space, an `=`, a `"` or a control byte.
+func needs_quotes(body: str) -> bool:
+    if len(body) == 0:
+        return True
+    for code in strings.bytes(body):
+        if code <= 32 or code == 61 or code == 34 or code == 127:
+            return True
+    return False
+
+
+# The bytes a quoted value and a message write as escapes. A multibyte character has no such byte in it.
+func is_escaped(code: int) -> bool:
+    return code < 32 or code == 34 or code == 92 or code == 127
+
+
+func put_escaped(mut out: byte_buffer, body: str):
+    mut span = 0
+    mut at = 0
+    while at < len(body):
+        const code = body[at]
+        if is_escaped(code):
+            buffers.append_utf8(mut out, body[span:at])
+            put_escape(mut out, code)
+            span = at + 1
+        at += 1
+    buffers.append_utf8(mut out, body[span:len(body)])
+
+
+func put_escape(mut out: byte_buffer, code: int):
+    _ = buffers.append_byte(mut out, 92)
+    match code:
+        case 10:
+            _ = buffers.append_byte(mut out, 110)
+        case 13:
+            _ = buffers.append_byte(mut out, 114)
+        case 9:
+            _ = buffers.append_byte(mut out, 116)
+        case 34 | 92:
+            _ = buffers.append_byte(mut out, code)
+        case _:
+            const digits = b"0123456789abcdef"
+            _ = buffers.append_byte(mut out, 120)
+            _ = buffers.append_byte(mut out, digits[code // 16])
+            _ = buffers.append_byte(mut out, digits[code % 16])
+
+
+# A key or a name is written bare: each space, `=`, `"`, `\` and control byte becomes `_`, and an empty one is `_`.
+func put_key(mut out: byte_buffer, key: str):
+    if len(key) == 0:
+        _ = buffers.append_byte(mut out, 95)
+        return
+    mut span = 0
+    mut at = 0
+    while at < len(key):
+        const code = key[at]
+        if code <= 32 or code == 61 or code == 34 or code == 92 or code == 127:
+            buffers.append_utf8(mut out, key[span:at])
+            _ = buffers.append_byte(mut out, 95)
+            span = at + 1
+        at += 1
+    buffers.append_utf8(mut out, key[span:len(key)])
+
+
+# The JSON key of a field: the four the line starts with get a `_` after them, so a field cannot replace them.
+func json_key(key: str) -> str:
+    if key == "time" or key == "level" or key == "logger" or key == "message":
+        return key + "_"
+    return copy(key)
+
+
+# The JSON form: one object with `time`, `level`, `logger` and `message` first (those present), then the fields in order.
+func put_json(mut out: byte_buffer, log: Logger, level: Level, message: str, fields: Field[]):
+    mut object: dict[str, json.Json] = {}
+    const stamped = stamp(log)
+    if len(stamped) > 0:
+        object["time"] = json.text(stamped)
+    object["level"] = json.text(level_name(level))
+    if len(log.name) > 0:
+        object["logger"] = json.text(log.name)
+    object["message"] = json.text(message)
+    for field in log.fields:
+        object[json_key(field.key)] = copy(field.value)
+    for field in fields:
+        object[json_key(field.key)] = copy(field.value)
+    buffers.append_utf8(mut out, json.dumps(json.object(object)))

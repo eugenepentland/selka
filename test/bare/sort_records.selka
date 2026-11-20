@@ -1,0 +1,49 @@
+# Records sorted by a text key, a record key with a text field and a nested record key; a list of text sorted.
+record Person:
+    name: str
+    age: int
+
+
+record NameRank:
+    name: str
+    rank: int
+
+
+record Nested:
+    inner: NameRank
+    tag: bytes
+
+
+func name_of(p: Person) -> str:
+    return copy(p.name)
+
+
+func name_rank(p: Person) -> NameRank:
+    return NameRank(name=copy(p.name), rank=p.age % 3)
+
+
+func nested_key(p: Person) -> Nested:
+    return Nested(inner=NameRank(name=f"{p.age % 4}", rank=0 - p.age), tag=b"t")
+
+
+func weigh(people: Person[]) -> int:
+    mut total = 0
+    for i in range(len(people)):
+        total += people[i].age * (i + 1)
+    return total
+
+
+func main() -> int:
+    mut people: Person[] = []
+    mut names: str[] = []
+    for i in range(12):
+        append(mut people, Person(name=f"n{(i * 7) % 12}", age=i))
+        append(mut names, f"w{(i * 5) % 12}")
+    mut total = weigh(sorted(people, key=name_of))
+    total += weigh(sorted(people, key=name_rank, reverse=True)) * 3
+    total += weigh(sorted(people, key=nested_key)) * 5
+    sort(mut people, key=name_of, reverse=True)
+    total += weigh(people) * 7
+    const ordered = sorted(names)
+    total += len(ordered[0]) + len(ordered[11]) * 11
+    return total % 256

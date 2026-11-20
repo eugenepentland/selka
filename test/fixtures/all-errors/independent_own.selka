@@ -1,0 +1,27 @@
+# Five missing `own` markers in two functions (F-RA-507, F-RA-613): one check reports all five.
+record Triple:
+    a: bytes
+    b: bytes
+    c: bytes
+
+
+record Spec:
+    base: bytes
+    net_base: bytes?
+
+
+func make(name: bytes) -> Triple:
+    const a = name + b"-a"
+    const b = name + b"-b"
+    const c = name + b"-c"
+    return Triple(a=a, b=b, c=c)
+
+
+func spec(base: bytes, nb: bytes) -> Spec:
+    const b = copy(base)
+    const n = copy(nb)
+    return Spec(base=b, net_base=Some(n))
+
+
+func main() -> int:
+    return len(make(b"x").a) + len(spec(b"A", b"B").base)

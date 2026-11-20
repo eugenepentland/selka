@@ -1,0 +1,33 @@
+import dicts
+import nets
+
+func count_words(words: str[]) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for word in words:
+        dicts.add(mut counts, copy(word), 1)
+    return counts
+
+
+func count_owned(own words: str[]) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for word in own words:
+        dicts.add(mut counts, own word, 1)
+    return counts
+
+
+func group_kept(pins: nets.Pin[]) -> dict[str, nets.Pin[]]:
+    mut groups: dict[str, nets.Pin[]] = {}
+    for pin in pins:
+        const net = copy(pin.net)
+        dicts.append_to(mut groups, own net, copy(pin))
+    return groups
+
+
+func main(out: Stream) -> int:
+    const words: str[] = ["a", "b", "a"]
+    const pins = [nets.Pin(net="n1", slot=1), nets.Pin(net="n2", slot=2), nets.Pin(net="n1", slot=3)]
+    const degree = nets.degrees(pins)
+    const slots = nets.slots_by_net(["n1", "n2", "n1"], [1, 2, 3])
+    const groups = group_kept(pins)
+    print(out, count_words(words)["a"], count_owned(copy(words))["b"], degree["n1"], slots["n1"], len(groups["n1"]))
+    return 0

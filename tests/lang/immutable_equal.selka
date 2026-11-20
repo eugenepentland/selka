@@ -1,0 +1,46 @@
+import buffers
+import strings
+
+func retained_text() -> str:
+    mut source = "prefix-λ-日本語-😀-abcdefghijklmnop-suffix" + "!"
+    return copy(strings.char_slice(source, 7, 33))
+
+
+func retained_bytes() -> bytes:
+    mut source = b"prefix-\x00\xff-abcdefghijklmnop-suffix" + b"!"
+    return copy((source[7:26]))
+
+
+# spec-case: UTF8-TEXT-1
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_text_equality_reads_distinct_owned_unicode_slices() -> bool:
+    mut kept = retained_text()
+    mut same = "λ-日本語-😀-abcdefghijklmnop-s"
+    if kept != same or kept == same + "!":
+        return False
+    if "" != "" or "é" == "e\u0301":
+        return False
+    if "abc" == "xbc" or "abc" == "abx" or "abc" == "abcd":
+        return False
+    mut copies = [str(42), str(42)]
+    return copies[0] == copies[1] and kept == kept
+
+
+# spec-case: PY-BYTES-1
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_bytes_equality_reads_owned_slices_and_immutable_copies() -> bool:
+    mut kept = retained_bytes()
+    if kept != b"\x00\xff-abcdefghijklmnop" or kept == b"\x00\xfe-abcdefghijklmnop":
+        return False
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffers.append_range(mut buffer, kept, 0, len(kept))
+    mut snapshot = bytes(buffer)
+    _ = buffers.append_byte(mut buffer, 33)
+    return snapshot == kept and snapshot != buffer and b"" == b"" and kept == kept
+
+
+# spec-case: EQUALITY-SCRATCH-1
+public func test_structural_equality_still_visits_same_object_nan_leaves() -> bool:
+    mut values: float[] = [0.0 / 0.0]
+    return values != values

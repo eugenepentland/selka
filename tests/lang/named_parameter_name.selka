@@ -1,0 +1,79 @@
+# `named` is a parameter modifier (it makes the label required) and also an ordinary name: a `named` followed by `:`
+# is the parameter's own name, as `own` and `mut` are, in a function and in a callback type. The modifier before a name
+# still works, whatever the name is (friction F-78, lane FR29).
+func count(named: int[]) -> int:
+    return len(named)
+
+
+func labelled(named named: int, named total: int) -> int:
+    return named * 10 + total
+
+
+func modifier_after_name(first: int, named: int, named other: int) -> int:
+    return first + named * 10 + other * 100
+
+
+func bump(mut named: int, own other: int[]) -> int:
+    named += len(other)
+    return named
+
+
+func own_name(own: int) -> int:
+    return own
+
+
+func mut_name(mut: int) -> int:
+    return mut
+
+
+func read_label(named: int) -> int:
+    return named + 1
+
+
+func times_ten(named named: int) -> int:
+    return named * 10
+
+
+func call_label(f: func(named: int) -> int) -> int:
+    return f(4)
+
+
+func call_required(f: func(named named: int) -> int) -> int:
+    return f(named=5)
+
+
+func call_both(f: func(own: int) -> int, g: func(mut: int) -> int) -> int:
+    return f(1) + g(2)
+
+
+public func test_a_parameter_called_named_takes_its_argument_by_position() -> bool:
+    return count([1, 2, 3]) == 3
+
+
+public func test_a_parameter_called_named_takes_its_argument_by_keyword() -> bool:
+    return count(named=[1, 2]) == 2
+
+
+public func test_the_modifier_may_precede_a_parameter_called_named() -> bool:
+    return labelled(named=1, total=2) == 12 and labelled(total=3, named=4) == 43
+
+
+public func test_a_parameter_called_named_may_follow_a_positional_one() -> bool:
+    return modifier_after_name(1, named=2, other=3) == 321
+
+
+public func test_mut_and_own_may_precede_a_parameter_called_named() -> bool:
+    mut n = 2
+    return bump(mut n, [1, 2, 3]) == 5 and n == 5
+
+
+public func test_a_callback_parameter_called_named_is_a_label_that_is_not_required() -> bool:
+    return call_label(read_label) == 5
+
+
+public func test_a_callback_parameter_with_the_modifier_may_be_called_named() -> bool:
+    return call_required(times_ten) == 50
+
+
+public func test_own_and_mut_stay_ordinary_parameter_names_at_both_sites() -> bool:
+    return own_name(own=3) == 3 and mut_name(mut=4) == 4 and call_both(own_name, mut_name) == 3

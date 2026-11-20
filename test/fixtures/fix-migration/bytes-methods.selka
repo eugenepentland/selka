@@ -1,0 +1,11 @@
+func width(line: bytes) -> int:
+    const parts = line.split(b",")
+    const joined = b"-".join(parts)
+    if not line.startswith(b"a") or not line.endswith(b"z"):
+        return len(b" left ".lstrip()) + len(b" right ".rstrip())
+    return len(joined) + line.rfind(b"a") + line.count(b",") + len(line.strip())
+
+
+func main(out: Stream) -> int:
+    out.print(width(b"ab,c,z"), width(b"x,y"))
+    return 0

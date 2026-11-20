@@ -1,0 +1,61 @@
+# A recursive box: options of records, copies, projections and the stores back (tests/value_semantics/recursive.selka).
+record Branch:
+    items: int[]
+    next: Branch?
+
+
+func leaf(value: int) -> Branch:
+    return Branch(items=[value], next=None)
+
+
+func copied() -> bool:
+    mut original = Branch(items=[0], next=Some(leaf(1)))
+    mut changed = copy(original)
+    mut child = copy(changed.next)
+    if child is not None:
+        append(mut child.items, 2)
+    changed.next = own child
+    mut old_child = copy(original.next)
+    mut new_child = copy(changed.next)
+    if old_child is None or new_child is None:
+        return False
+    return original.items == [0] and changed.items == [0] and old_child.items == [1] and new_child.items == [1, 2]
+
+
+func child_of(root: Branch) -> Branch:
+    mut child = copy(root.next)
+    if child is None:
+        return leaf(-1)
+    return copy(child)
+
+
+func projected() -> bool:
+    mut original = Branch(items=[0], next=Some(leaf(1)))
+    mut exposed = child_of(original)
+    mut copy_of = copy(original)
+    append(mut exposed.items, 2)
+    mut old = child_of(copy_of)
+    assert old.items == [1]
+    assert exposed.items == [1, 2]
+    return child_of(original).items == [1]
+
+
+func read_child_while_pinned(mut items: int[], root: Branch) -> Branch:
+    mut snapshot = child_of(root)
+    items[0] = 7
+    return snapshot
+
+
+func pinned() -> bool:
+    mut original = Branch(items=[0], next=Some(leaf(1)))
+    mut child = child_of(original)
+    const before_call = copy(child)
+    mut snapshot = read_child_while_pinned(mut child.items, Branch(items=[0], next=Some(own before_call)))
+    assert snapshot.items == [1]
+    assert child.items == [7]
+    return child_of(original).items == [1]
+
+
+func main(out: Stream) -> int:
+    print(out, copied(), projected(), pinned())
+    return 0

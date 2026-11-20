@@ -1,0 +1,42 @@
+# A text or bytes slice given to an `own` parameter is a view of its source, so the parameter would get a hidden copy; since
+# 10 November 2026 (D8) the check refuses it as it refuses a list slice (W4, `E_SLICE_ESCAPES`), with `copy(...)` around the
+# slice as the structured repair. `selka fix` writes each copy.
+func keep(own text: str) -> int:
+    return len(text)
+
+
+func keep_bytes(own data: bytes) -> int:
+    return len(data)
+
+
+func total(left: int, right: int) -> int:
+    return left * 10 + right
+
+
+func head(text: str) -> str:
+    return text + "!"
+
+
+func text_slice(text: str) -> int:
+    return keep(copy(text[0:2]))
+
+
+func bytes_slice(data: bytes) -> int:
+    return keep_bytes(copy(data[1:]))
+
+
+func nested(text: str, data: bytes) -> int:
+    return total(keep(copy(text[1:3])), keep_bytes(copy(data[0:1])))
+
+
+func fresh(text: str) -> int:
+    return keep(copy(head(text)[0:4]))
+
+
+func plain(text: str) -> int:
+    return len(text[0:2])
+
+
+func main(out: Stream) -> int:
+    print(out, text_slice("abcd"), bytes_slice(b"xyz"), nested("abcd", b"xyz"), fresh("abc"), plain("abc"))
+    return 0

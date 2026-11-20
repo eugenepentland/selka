@@ -1,0 +1,9 @@
+def selected(items: mut list[int]) -> int:
+    items.append(3)
+    return 0
+
+
+def main() -> int:
+    items = [1, 2]
+    items[selected(mut items)] = 9
+    return items[0] + len(items)

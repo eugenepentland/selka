@@ -1,0 +1,161 @@
+# A `const` option local of `Some(place)` borrows the place (H2, lane OC, plan Part B stage O3): it is an option of a borrow,
+# as `Box(value=place)` is a record of one, so no `copy(...)` is written and nothing is copied. The place can be an owner,
+# an `own` or `mut` parameter, a field, an element, or a plain text, bytes or list parameter. The escapes keep their
+# refusals; they are pinned in src/core/lent_option_locals_test.zig.
+import parallel
+
+record Item:
+    name: str
+    count: int
+
+
+record Shelf:
+    items: Item[]
+    label: str
+    raw: bytes
+
+
+func make_shelf(n: int) -> Shelf:
+    return Shelf(items=[Item(name=f"item{n}", count=n)], label=f"shelf{n}", raw=b"ab" + b"cd")
+
+
+func text_length(value: str?) -> int:
+    match value:
+        case Some(text):
+            return len(text)
+        case None:
+            return -1
+
+
+func item_count(value: Item?) -> int:
+    match value:
+        case Some(item):
+            return item.count
+        case None:
+            return -1
+
+
+func of_field(shelf: Shelf) -> int:
+    const label: str? = Some(shelf.label)
+    return text_length(label)
+
+
+func of_element(shelf: Shelf) -> int:
+    const first: Item? = Some(shelf.items[0])
+    return item_count(first)
+
+
+func of_text_parameter(text: str) -> int:
+    const held: str? = Some(text)
+    return text_length(held)
+
+
+func of_bytes_parameter(raw: bytes) -> int:
+    const held: bytes? = Some(raw)
+    match held:
+        case Some(octets):
+            return len(octets)
+        case None:
+            return -1
+
+
+func of_list_parameter(values: int[]) -> int:
+    const held: int[]? = Some(values)
+    match held:
+        case Some(found):
+            return len(found)
+        case None:
+            return -1
+
+
+func of_owned_local(n: int) -> int:
+    const shelf = make_shelf(n)
+    const held: Shelf? = Some(shelf)
+    mut total = 0
+    match held:
+        case Some(found):
+            total = len(found.label)
+        case None:
+            total = -1
+    return total
+
+
+func of_own_parameter(own label: str) -> int:
+    const held: str? = Some(label)
+    return text_length(held)
+
+
+func of_mut_parameter(mut shelf: Shelf) -> int:
+    const held: str? = Some(shelf.label)
+    const length = text_length(held)
+    shelf.label = "changed"
+    return length + len(shelf.label)
+
+
+func after_the_borrow(n: int) -> int:
+    mut shelf = make_shelf(n)
+    const held: str? = Some(shelf.label)
+    const before = text_length(held)
+    # The borrow ended at its last use: the owner may change, and then be given away.
+    shelf.label = "x"
+    const kept = take_label(own shelf)
+    return before * 10 + kept
+
+
+func take_label(own shelf: Shelf) -> int:
+    return len(shelf.label)
+
+
+public func test_some_of_a_field_borrows_it() -> bool:
+    return of_field(make_shelf(3)) == 6
+
+
+public func test_some_of_an_element_borrows_it() -> bool:
+    return of_element(make_shelf(4)) == 4
+
+
+public func test_some_of_a_text_bytes_or_list_parameter_borrows_it() -> bool:
+    return of_text_parameter("abc" + "d") == 4 and of_bytes_parameter(b"xy" + b"z") == 3 and of_list_parameter([1, 2]) == 2
+
+
+public func test_some_of_an_owner_or_an_own_parameter_borrows_it() -> bool:
+    return of_owned_local(5) == 6 and of_own_parameter("abc" + "de") == 5
+
+
+public func test_some_of_a_mut_parameter_field_borrows_it_until_its_last_use() -> bool:
+    mut shelf = make_shelf(7)
+    return of_mut_parameter(mut shelf) == 13 and shelf.label == "changed"
+
+
+public func test_the_owner_changes_and_moves_after_the_borrows_last_use() -> bool:
+    return after_the_borrow(2) == 61
+
+
+func task_text_length(value: str?) -> int:
+    return text_length(value)
+
+
+func owned_option_to_a_task(n: int) -> int:
+    const held: str? = Some(f"ab{n}")
+    mut total = 0
+    with parallel.group() as g:
+        const t = g.submit(task_text_length, held)
+        total = t.result()
+    return total
+
+
+func lent_options_to_tasks(shelf: Shelf, text: str) -> int:
+    const label: str? = Some(shelf.label)
+    const whole: str? = Some(text)
+    mut total = 0
+    with parallel.group() as g:
+        const first = g.submit(task_text_length, label)
+        const second = g.submit(task_text_length, whole)
+        total = first.result() * 10 + second.result()
+    return total
+
+
+# A task reads its arguments until the group's block ends, so a lent option's owner cannot change inside the block
+# (E_TASK_LOAN); the option is lent to the task as a borrowed record is.
+public func test_an_option_and_a_lent_option_go_to_tasks() -> bool:
+    return owned_option_to_a_task(7) == 3 and lent_options_to_tasks(make_shelf(2), "xyz" + "w") == 64

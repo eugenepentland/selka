@@ -1,0 +1,11 @@
+"""Money amounts in whole cents."""
+
+
+@invariant(self.value >= 0, "an amount is never negative")
+public record Cents:
+    value: int
+
+
+@requires(value >= 0, "an amount is never negative")
+public func of(value: int) -> Cents:
+    return Cents(value=value)

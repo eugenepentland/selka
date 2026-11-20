@@ -1,0 +1,9 @@
+# The injected provider defines which names it permits; this literal names K.
+func lookup(env: Environment) -> str?:
+    return env.get("K")
+
+
+func main(env: Environment) -> int:
+    const value = lookup(env) else:
+        return -1
+    return strings.char_count(value)

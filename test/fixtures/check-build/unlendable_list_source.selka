@@ -1,0 +1,11 @@
+# A `from` clause whose only source holds no storage of the result (lane HC): a list of bytes cannot lend `int[]`. `check`
+# accepted it, and Core declared a source no IR verifier accepts. The declaration is now E_BORROW_SOURCE (R4) with the
+# clause's removal. Beside a source that lends, such a source is dropped, and the function builds (`lend_beside.selka`).
+func counts(xs: bytes[]) -> int[] from xs:
+    if len(xs) > 100:
+        return []
+    return []
+
+
+public func test_counts() -> bool:
+    return len(counts([b"a"])) == 0

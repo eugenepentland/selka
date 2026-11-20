@@ -1,0 +1,308 @@
+# A plain `T[]` parameter takes a list view (C9 lists): a slice passed to it makes no copy, whether it is an inline
+# argument, a const slice binding passed on, a parameter forwarded through a hop, a function value, a generic
+# instantiated at `T[]`, or a list of `str` or of records. Each shape builds its list from a `const` literal inside
+# the measured function, which costs at most one block per call (`testing.allocations` counts the whole call). A
+# copy per slice would make n = 100 slices allocate at least 100, so `<= 1` says the shape makes no copy.
+import dicts
+import lists
+import parallel
+import testing
+
+record Point:
+    x: int
+    y: int
+
+
+func list_view_params_take(xs: int[]) -> int:
+    mut total = 0
+    for x in xs:
+        total += x
+    return total
+
+
+func forward(xs: int[]) -> int:
+    return list_view_params_take(xs)
+
+
+func apply(f: func(int[]) -> int, xs: int[]) -> int:
+    return f(xs)
+
+
+func generic_len[T](values: T[]) -> int:
+    return len(values)
+
+
+func total_x(points: Point[]) -> int:
+    mut total = 0
+    for point in points:
+        total += point.x
+    return total
+
+
+func word_bytes(words: str[]) -> int:
+    mut total = 0
+    for word in words:
+        total += len(word)
+    return total
+
+
+# An inline slice argument.
+func inline_slice(n: int) -> int:
+    const data = [1, 2, 3, 4, 5, 6]
+    mut total = 0
+    for i in range(n):
+        total += list_view_params_take(data[i % 4:i % 4 + 2])
+    return total
+
+
+# A const slice binding of a parameter, passed on.
+func const_binding(xs: int[], n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        const piece = xs[i % 4:i % 4 + 2]
+        total += list_view_params_take(piece)
+    return total
+
+
+func call_const_binding(n: int) -> int:
+    const data = [1, 2, 3, 4, 5, 6]
+    return const_binding(data, n)
+
+
+# A slice forwarded through a parameter that passes it to an `int[]` parameter.
+func forwarded(n: int) -> int:
+    const data = [1, 2, 3, 4, 5, 6]
+    mut total = 0
+    for i in range(n):
+        total += forward(data[i % 4:i % 4 + 2])
+    return total
+
+
+# A slice passed through a function value whose parameter is `int[]`.
+func function_value(n: int) -> int:
+    const data = [1, 2, 3, 4, 5, 6]
+    mut total = 0
+    for i in range(n):
+        total += apply(list_view_params_take, data[i % 4:i % 4 + 2])
+    return total
+
+
+# A slice passed to a generic instantiated at `int[]`.
+func generic_at_list(n: int) -> int:
+    const data = [1, 2, 3, 4, 5, 6]
+    mut total = 0
+    for i in range(n):
+        total += generic_len(data[i % 4:i % 4 + 2])
+    return total
+
+
+# A slice of a list of records passed to a `Point[]` parameter.
+func records(n: int) -> int:
+    const points = [Point(x=1, y=2), Point(x=3, y=4), Point(x=5, y=6), Point(x=7, y=8)]
+    mut total = 0
+    for i in range(n):
+        total += total_x(points[i % 2:i % 2 + 2])
+    return total
+
+
+# A slice of a list of `str` passed to a `str[]` parameter.
+func strings(n: int) -> int:
+    const words = ["alpha", "beta", "gamma", "delta"]
+    mut total = 0
+    for i in range(n):
+        total += word_bytes(words[i % 2:i % 2 + 2])
+    return total
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_an_inline_slice_argument_makes_no_copy() -> bool:
+    return testing.allocations(inline_slice, 100) <= 1
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_const_slice_binding_passed_on_makes_no_copy() -> bool:
+    return testing.allocations(call_const_binding, 100) <= 1
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_slice_forwarded_through_a_parameter_makes_no_copy() -> bool:
+    return testing.allocations(forwarded, 100) <= 1
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_slice_passed_through_a_function_value_makes_no_copy() -> bool:
+    return testing.allocations(function_value, 100) <= 1
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_slice_passed_to_a_generic_at_a_list_makes_no_copy() -> bool:
+    return testing.allocations(generic_at_list, 100) <= 1
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_slice_of_records_makes_no_copy() -> bool:
+    return testing.allocations(records, 100) <= 1
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_slice_of_strings_makes_no_copy() -> bool:
+    return testing.allocations(strings, 100) <= 1
+
+
+# A parameter that needs its own block (C9 lists): rendering, `parallel.map` and a dictionary default. An owned argument
+# passes its block, so rendering and a dictionary default cost what the same operation costs on a local list. A
+# `parallel.map` input was an owned list until FR59 (CX2, R-B2), so the plain parameter spells `copy(xs)`: an owned
+# argument passed through it pays that one copy per call, and a slice pays the same copy. The map now reads the view
+# in place and the copy is no longer needed; `W_NEEDLESS_COPY` does not name it yet.
+func render_plain(xs: int[]) -> int:
+    return len(f"{xs}")
+
+
+func render_local(n: int) -> int:
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += len(f"{data}")
+    return total
+
+
+func render_owned_argument(n: int) -> int:
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += render_plain(data)
+    return total
+
+
+func render_slice_argument(n: int) -> int:
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += render_plain(data[0:10])
+    return total
+
+
+func double(x: int) -> int:
+    return x * 2
+
+
+func map_plain(xs: int[]) -> int:
+    const ys = parallel.map(copy(xs), double)
+    mut total = 0
+    for y in ys:
+        total += y
+    return total
+
+
+func map_local(n: int) -> int:
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        const ys = parallel.map(data, double)
+        for y in ys:
+            total += y
+    return total
+
+
+func map_owned_argument(n: int) -> int:
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += map_plain(data)
+    return total
+
+
+func map_slice_argument(n: int) -> int:
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += map_plain(data[0:10])
+    return total
+
+
+func default_plain(table: dict[str, int[]], fallback: int[]) -> int:
+    return len(dicts.get(table, "missing", fallback))
+
+
+func default_local(n: int) -> int:
+    const table: dict[str, int[]] = {}
+    const fallback = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += len(dicts.get(table, "missing", fallback))
+    return total
+
+
+func default_owned_argument(n: int) -> int:
+    const table: dict[str, int[]] = {}
+    const fallback = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += default_plain(table, fallback)
+    return total
+
+
+func default_slice_argument(n: int) -> int:
+    const table: dict[str, int[]] = {}
+    const data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    mut total = 0
+    for i in range(n):
+        total += default_plain(table, data[0:10])
+    return total
+
+
+# Per-call growth: the allocations of 200 calls less those of 100, so a shape's one-time setup cancels. A shape with an
+# owned argument grows no faster than the same operation on a local list; a slice argument grows by at most one
+# allocation per call more (its copy). The local shape is warmed first, so the first call of a shape is not charged here.
+# spec: NEW-CORE-C9-LISTS-1
+public func test_render_of_an_owned_argument_costs_what_a_local_list_does() -> bool:
+    return testing.allocations(render_local, 1) >= 0 and testing.allocations(render_owned_argument, 200) - testing.allocations(render_owned_argument, 100) <= testing.allocations(render_local, 200) - testing.allocations(render_local, 100)
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_render_of_a_slice_argument_costs_what_a_local_list_does() -> bool:
+    return testing.allocations(render_local, 1) >= 0 and testing.allocations(render_slice_argument, 200) - testing.allocations(render_slice_argument, 100) <= testing.allocations(render_local, 200) - testing.allocations(render_local, 100)
+
+
+# spec: NEW-CORE-C9-LISTS-1
+# R-B2 (CX2): the spelled `copy(xs)` makes one copy per call, so the owned argument's growth is the local list's plus that copy.
+public func test_parallel_map_of_an_owned_argument_copies_once_per_call_as_spelled() -> bool:
+    return testing.allocations(map_local, 1) >= 0 and testing.allocations(map_owned_argument, 200) - testing.allocations(map_owned_argument, 100) <= testing.allocations(map_local, 200) - testing.allocations(map_local, 100) + 101
+
+
+# The parallel runtime keeps its own bookkeeping, which can move by one allocation between two measurements, so this
+# slice allowance is one more than the copy: the list-copy count is exactly one copy per call (`count.sh`).
+# spec: NEW-CORE-C9-LISTS-1
+public func test_parallel_map_of_a_slice_argument_copies_at_most_once_per_call() -> bool:
+    return testing.allocations(map_local, 1) >= 0 and testing.allocations(map_slice_argument, 200) - testing.allocations(map_slice_argument, 100) <= testing.allocations(map_local, 200) - testing.allocations(map_local, 100) + 101
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_dictionary_default_of_an_owned_argument_costs_what_a_local_default_does() -> bool:
+    return testing.allocations(default_local, 1) >= 0 and testing.allocations(default_owned_argument, 200) - testing.allocations(default_owned_argument, 100) <= testing.allocations(default_local, 200) - testing.allocations(default_local, 100)
+
+
+# spec: NEW-CORE-C9-LISTS-1
+public func test_a_dictionary_default_of_a_slice_argument_copies_nothing() -> bool:
+    return testing.allocations(default_local, 1) >= 0 and testing.allocations(default_slice_argument, 200) - testing.allocations(default_slice_argument, 100) <= testing.allocations(default_local, 200) - testing.allocations(default_local, 100)
+
+
+# Extending a list from a list parameter names the parameter's block through its owner (C9-L1), so the
+# same-block check compiles. A slice has no owner of its own: its extension takes the list sentinel.
+func extend_from(mut target: Point[], pts: Point[]):
+    lists.extend(mut target, pts)
+
+
+public func test_extending_from_a_list_parameter_appends_each_element() -> bool:
+    mut stops: Point[] = []
+    extend_from(mut stops, [Point(x=1, y=2), Point(x=3, y=4)])
+    extend_from(mut stops, [Point(x=5, y=6)])
+    return len(stops) == 3 and stops[2].x == 5
+
+
+public func test_extending_from_a_slice_of_a_list_parameter_appends_the_slice() -> bool:
+    const base = [Point(x=1, y=2), Point(x=3, y=4), Point(x=5, y=6)]
+    mut stops: Point[] = []
+    extend_from(mut stops, base[1:])
+    extend_from(mut stops, base[:1])
+    return len(stops) == 3 and stops[0].x == 3 and stops[2].x == 1

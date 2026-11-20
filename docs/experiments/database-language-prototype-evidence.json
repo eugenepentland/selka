@@ -1,0 +1,1455 @@
+{
+  "version": "database-language-proposal-evidence-v1",
+  "captured_at": "2026-09-09T01:14:10.282507+00:00",
+  "scope": "Read-only descriptive extraction; no application execution, grading, new provider usage collection, or inferential cohort analysis.",
+  "definitions": {
+    "model_responses": "Completed responses in captured provider metadata; not all API requests or tool operations.",
+    "model_output_tokens": "Application-window provider output, including reasoning output.",
+    "store_profile_operations": "All operations retained in each profile, including await-handoff when present; not model rounds.",
+    "dashboard": "Partial four-language projection, with totals over available telemetry and medians over sealed attempts, including failures.",
+    "sealed_pair_totals": "Descriptive sums over pairs for which both arms are sealed. Incomplete cohorts and absent source reviews prevent a completed-cohort speed or quality conclusion."
+  },
+  "completed_my_python": {
+    "source": {
+      "path": "/home/epentland/ai/canopy/application-trials/development-velocity-20260908/reports/provider-development-001-v1/report.json",
+      "sha256": "1f9efee5b1b5bd93f0e77ca0e96b0cb7eeadf8948a19d0be4b422d516f79af5d"
+    },
+    "totals": {
+      "my": {
+        "attempts": 12,
+        "seconds": 2318.419036852,
+        "completed_responses": 154,
+        "output_tokens": 50276,
+        "input_tokens": 5363609,
+        "cached_input_tokens": 4939776
+      },
+      "python": {
+        "attempts": 12,
+        "seconds": 1019.140775042,
+        "completed_responses": 75,
+        "output_tokens": 19681,
+        "input_tokens": 2013220,
+        "cached_input_tokens": 1835904
+      }
+    }
+  },
+  "dashboard": {
+    "source": {
+      "path": "/home/epentland/ai/canopy/benchmark-dashboard/public/progress.json",
+      "sha256": "2f1e59b8fda2357a8b3042f35db46c3dc9c3ae89416e69b53bf69c2a665ae849"
+    },
+    "generated_at": "2026-09-09T01:01:07.275573Z",
+    "languages": [
+      {
+        "name": "my",
+        "color": "#2dd4bf",
+        "total": 12,
+        "started": 12,
+        "completed": 12,
+        "passed": 12,
+        "medianSeconds": 179.8,
+        "inputTokens": 5363609,
+        "outputTokens": 50276,
+        "turns": 154,
+        "status": "complete"
+      },
+      {
+        "name": "python",
+        "color": "#facc15",
+        "total": 12,
+        "started": 12,
+        "completed": 12,
+        "passed": 12,
+        "medianSeconds": 79.1,
+        "inputTokens": 2013220,
+        "outputTokens": 19681,
+        "turns": 75,
+        "status": "complete"
+      },
+      {
+        "name": "zig",
+        "color": "#fb7185",
+        "total": 12,
+        "started": 8,
+        "completed": 7,
+        "passed": 5,
+        "medianSeconds": 231.8,
+        "inputTokens": 1920838,
+        "outputTokens": 30078,
+        "turns": 64,
+        "status": "running"
+      },
+      {
+        "name": "rust",
+        "color": "#fb923c",
+        "total": 12,
+        "started": 8,
+        "completed": 8,
+        "passed": 8,
+        "medianSeconds": 178.9,
+        "inputTokens": 1948027,
+        "outputTokens": 31508,
+        "turns": 64,
+        "status": "complete"
+      }
+    ]
+  },
+  "store_studies": {
+    "declaration-store-astra-20260908": {
+      "planned_tasks": 12,
+      "planned_attempts": 24,
+      "all_slots": [
+        {
+          "task": "ascii-table",
+          "arm": "my-files",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "ascii-table",
+          "arm": "my-store",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "atomic-transfers",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 90.661950731,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/atomic-transfers/pair-01/my-files/session.json",
+            "sha256": "d947ba37a818da6d40699482e1a08c135b39b997ec8e741f92ed79071b1b97da"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/atomic-transfers/pair-01/my-files/grading-summary.json",
+            "sha256": "d0c1a0271bb13345fa430c8cbcc1060b6a83fa9d6898a92b4a12916e179f0a75"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/atomic-transfers/pair-01/my-files/profile.json",
+            "sha256": "4881a20941ae2e80bdf0e6d3d33e2fd4982d59521c69b53e8b2f9133609a7ae8"
+          },
+          "profile_operation_count": 9,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "atomic-transfers",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 93.155339051,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/atomic-transfers/pair-01/my-store/session.json",
+            "sha256": "5defa2842b88902af4c88e011813dc5b9a9c7eb638d0d3d366c4708f55bfd2b1"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/atomic-transfers/pair-01/my-store/grading-summary.json",
+            "sha256": "b1fcddaa7720cf5839974b7a33cb03f942ede2bad614dfcac3e2f7acc59320b4"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/atomic-transfers/pair-01/my-store/profile.json",
+            "sha256": "ede08737dfb5f1834cacb01b4b17881156a09916e9df2f51282a305660104ffc"
+          },
+          "profile_operation_count": 21,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 106358,
+            "context_omitted_total": 78,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 1,
+              "check": 1,
+              "context": 6,
+              "finish": 1,
+              "open": 1
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "config-layers",
+          "arm": "my-files",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "config-layers",
+          "arm": "my-store",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "data-rollup",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 1016.925876699,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/data-rollup/pair-01/my-files/session.json",
+            "sha256": "bfea2edecc593be825ad1131bc5019b6d38779b42100cd849d85e7e898bc21cd"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/data-rollup/pair-01/my-files/grading-summary.json",
+            "sha256": "33741d5e00e4f5b5622ec309a419f8415a4c38028c3a06a667e311c9ebf1c2b8"
+          },
+          "passed": false,
+          "eligible": false,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/data-rollup/pair-01/my-files/profile.json",
+            "sha256": "2a82c77530e67000238d921cba849ae170acaaee488e9801e10a77f2e0aa1996"
+          },
+          "profile_operation_count": 15,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "data-rollup",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "preparing",
+          "seconds": null,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/data-rollup/pair-01/my-store/session.json",
+            "sha256": "38846a76da5e589654ac0dd9036eec0807bd4c9f88a9a21b3326a6a17227ac39"
+          },
+          "passed": null,
+          "eligible": null,
+          "profile_operation_count": null,
+          "review": null
+        },
+        {
+          "task": "inventory-reservations",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 147.497735664,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/inventory-reservations/pair-01/my-files/session.json",
+            "sha256": "8b5aebff30202f7657318a6d7625fa848684add1e9e0dff1a50dc63e44a53e17"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/inventory-reservations/pair-01/my-files/grading-summary.json",
+            "sha256": "93fc32457ab38264bcb9db893ea1ef65dba23f9e70867129faf9e166034ee445"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/inventory-reservations/pair-01/my-files/profile.json",
+            "sha256": "1d7c1d4ef820de4dacd053243f8f7221a7c1dd14caf0dea27bb14600505c4706"
+          },
+          "profile_operation_count": 13,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "inventory-reservations",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 166.766331722,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/inventory-reservations/pair-01/my-store/session.json",
+            "sha256": "697b8451db9eb7afe0c8af88dbe5cf7dc07ef203a638a906e4ee02c135c22887"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/inventory-reservations/pair-01/my-store/grading-summary.json",
+            "sha256": "bdcfd781ba6751382776262d26d35dd38fffc75d2901d2a835d904275fafd19b"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/inventory-reservations/pair-01/my-store/profile.json",
+            "sha256": "28371725e8bfb9bcf64b7a7b0f4db3b3bd5c8f0bacfd6706b0603d858879e5d5"
+          },
+          "profile_operation_count": 22,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 108496,
+            "context_omitted_total": 40,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 12,
+              "batch": 2,
+              "check": 1,
+              "context": 3,
+              "finish": 1,
+              "open": 1,
+              "probe": 1
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "little-endian-read",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 64.235334707,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/little-endian-read/pair-01/my-files/session.json",
+            "sha256": "27d1b4763aa565a8e82f56f50f6adb9e81f26256711ff83239bd007a533379b0"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/little-endian-read/pair-01/my-files/grading-summary.json",
+            "sha256": "640b9cb47e1ec0121b7d7cd7d3b4090eaf0ac2239dbb04cd9719d18aaf7105e4"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/little-endian-read/pair-01/my-files/profile.json",
+            "sha256": "f3b62e0ed1bb66f18af178e2731d491e606831909bbade805c20188ed3d9a0ff"
+          },
+          "profile_operation_count": 7,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "little-endian-read",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 76.194735775,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/little-endian-read/pair-01/my-store/session.json",
+            "sha256": "f0159c85295988aeff94a44f3186e3e729f3cce518e665949ebb1d6cfc7a36db"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/little-endian-read/pair-01/my-store/grading-summary.json",
+            "sha256": "fefa47d4c477df8c9c46f50c00fb51a073657e7e395ea661e74be7dbf3e4f2f6"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/little-endian-read/pair-01/my-store/profile.json",
+            "sha256": "9c951377039755a1e4724d56bc83c38f5a99d33be23213ad76f91deec04d4099"
+          },
+          "profile_operation_count": 20,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 56417,
+            "context_omitted_total": 9,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 1,
+              "check": 1,
+              "context": 1,
+              "error": 4,
+              "finish": 1,
+              "open": 1
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "lru-cache",
+          "arm": "my-files",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "lru-cache",
+          "arm": "my-store",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "mount-routing",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 155.793285756,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/mount-routing/pair-01/my-files/session.json",
+            "sha256": "087cdc429a57a097575bd91d6dad7d50b39d57e194fadef70eb5beb95f0330d5"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/mount-routing/pair-01/my-files/grading-summary.json",
+            "sha256": "708397b9c5d188cce1c0d196f639655d069fd5f6604e6612dd65eccaba34bebc"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/mount-routing/pair-01/my-files/profile.json",
+            "sha256": "c2c59f473afda53458b0fb4d649973becc6931f80af53f89134f658479235983"
+          },
+          "profile_operation_count": 10,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "mount-routing",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 214.234867343,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/mount-routing/pair-01/my-store/session.json",
+            "sha256": "b0d2806c3ce55bfb473a3d69cba69f5592fd57870729be6f75753f4b711a5811"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/mount-routing/pair-01/my-store/grading-summary.json",
+            "sha256": "ef193c0b64a42444c0ee487edcd340f9fa5595862dde430ea88302672d6dfb20"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/mount-routing/pair-01/my-store/profile.json",
+            "sha256": "cc43be1bd8fc114d538f8ea3d189f762ec815eacaf091e57c0f24c4ac0b198c7"
+          },
+          "profile_operation_count": 32,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 107605,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 5,
+              "check": 3,
+              "context": 6,
+              "error": 1,
+              "finish": 1,
+              "open": 1,
+              "probe": 4
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "quota-boundary",
+          "arm": "my-files",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "quota-boundary",
+          "arm": "my-store",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "record-frames",
+          "arm": "my-files",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "record-frames",
+          "arm": "my-store",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "snapshot-diff",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 163.731887017,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/snapshot-diff/pair-01/my-files/session.json",
+            "sha256": "b4059ec504621da2df69982bd8d91dbb589f93c51f04de81fed1bc514ea0f316"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/snapshot-diff/pair-01/my-files/grading-summary.json",
+            "sha256": "c5f658a3051a286c8e056d61a642d253865c76b92e79fc95e4e763d4a4ead3be"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/snapshot-diff/pair-01/my-files/profile.json",
+            "sha256": "7805238bc71628467a6bcc86ceb3fe9f713524fab27363e942e8aa348a3bf44a"
+          },
+          "profile_operation_count": 11,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "snapshot-diff",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 414.643099563,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/snapshot-diff/pair-01/my-store/session.json",
+            "sha256": "b025663220729c816c6c43f18316fa1b6972087034b59edca36192d73f99e4cb"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/snapshot-diff/pair-01/my-store/grading-summary.json",
+            "sha256": "07097b7340e11660ad959a0bbd0791c79dd7af01bf30e3d6a98ba862e7fb4354"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-astra-20260908/development-001/snapshot-diff/pair-01/my-store/profile.json",
+            "sha256": "291812333601dcb1360748e8811442aab890ebacf0efaa92bcf3e2c4228785ce"
+          },
+          "profile_operation_count": 44,
+          "store_metrics": {
+            "batch_rejections": 2,
+            "bytes_returned": 119377,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 15,
+              "check": 2,
+              "context": 9,
+              "error": 1,
+              "finish": 1,
+              "open": 1,
+              "probe": 3,
+              "search": 1
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "ttl-boundary",
+          "arm": "my-files",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        },
+        {
+          "task": "ttl-boundary",
+          "arm": "my-store",
+          "phase": "not-prepared",
+          "seconds": null,
+          "passed": null,
+          "eligible": null,
+          "review": null,
+          "profile_operation_count": null
+        }
+      ],
+      "sealed_pairs": [
+        {
+          "task": "atomic-transfers",
+          "pair": "pair-01"
+        },
+        {
+          "task": "inventory-reservations",
+          "pair": "pair-01"
+        },
+        {
+          "task": "little-endian-read",
+          "pair": "pair-01"
+        },
+        {
+          "task": "mount-routing",
+          "pair": "pair-01"
+        },
+        {
+          "task": "snapshot-diff",
+          "pair": "pair-01"
+        }
+      ],
+      "sealed_pair_sums": {
+        "my-files": {
+          "seconds": 621.920193875,
+          "profile_operations": 50
+        },
+        "my-store": {
+          "seconds": 964.994373454,
+          "profile_operations": 139
+        }
+      },
+      "sealed_pairs_store_verb_counts": {
+        "asset": 52,
+        "batch": 24,
+        "check": 8,
+        "context": 25,
+        "finish": 5,
+        "open": 5,
+        "probe": 8,
+        "error": 6,
+        "search": 1
+      },
+      "unreviewed": true
+    },
+    "declaration-store-dev-20260908": {
+      "planned_tasks": 12,
+      "planned_attempts": 24,
+      "all_slots": [
+        {
+          "task": "ascii-table",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 355.784222412,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ascii-table/pair-01/my-files/session.json",
+            "sha256": "074918d8dbf5bc8a6755292f7a5ceafb2428b51967f61eb4991ae526a656d7de"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ascii-table/pair-01/my-files/grading-summary.json",
+            "sha256": "18de6227e4991c847fa9ba8e64c2f95460212d1638ff0fbae8aba78e451a6119"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ascii-table/pair-01/my-files/profile.json",
+            "sha256": "270b965c2f44045e94176a55b0b030d31bdb366df877de91fdc14691b91e7e41"
+          },
+          "profile_operation_count": 25,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "ascii-table",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 631.083393102,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ascii-table/pair-01/my-store/session.json",
+            "sha256": "e5b1150d1b259f6516e04fb826ab58f114ef39e74fb3a8ec45eaab5bd0772cf9"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ascii-table/pair-01/my-store/grading-summary.json",
+            "sha256": "c9c36e0dccc00f603bb38edc0ac9286d21997996f40ce0ba4fea21a25124226a"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ascii-table/pair-01/my-store/profile.json",
+            "sha256": "599876b3caeaa2e9caf093dec38f653796a3ccc3f631204ecaf8a5dbf924c819"
+          },
+          "profile_operation_count": 33,
+          "store_metrics": {
+            "batch_rejections": 3,
+            "bytes_returned": 106641,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 11,
+              "batch": 9,
+              "check": 1,
+              "context": 2,
+              "finish": 1,
+              "open": 2,
+              "probe": 3,
+              "search": 3
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "atomic-transfers",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 209.18285808,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/atomic-transfers/pair-01/my-files/session.json",
+            "sha256": "3f6d4a77f1608d5bc26f436e6974813a4fab48896eef11c5419f397fbc089c7b"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/atomic-transfers/pair-01/my-files/grading-summary.json",
+            "sha256": "0d872ae847b90de5e6e1c1f98dcbb236a276fbc5d193ebd2b722e4f35a76249f"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/atomic-transfers/pair-01/my-files/profile.json",
+            "sha256": "cfda68a0b4c0f427db7db995aef0c91739ad4e4827b35741c900bfbfbb27c679"
+          },
+          "profile_operation_count": 18,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "atomic-transfers",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 128.241209413,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/atomic-transfers/pair-01/my-store/session.json",
+            "sha256": "fa31fda9e166b09ca12e3c8c6573431da5ae925b633a60140a5704c84b3e4f10"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/atomic-transfers/pair-01/my-store/grading-summary.json",
+            "sha256": "4e4e3c72ecd78628dc95a8857565c3777b718c4641c293a553b4d8dabb82172b"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/atomic-transfers/pair-01/my-store/profile.json",
+            "sha256": "810340a5c0270ba1219dc8f50afcf3c2920b2b4cac6fac169a177eba819ed9b6"
+          },
+          "profile_operation_count": 15,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 63201,
+            "context_omitted_total": 30,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 4,
+              "batch": 1,
+              "check": 1,
+              "context": 3,
+              "finish": 1,
+              "open": 1,
+              "probe": 3
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "config-layers",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 306.709836412,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/config-layers/pair-01/my-files/session.json",
+            "sha256": "36dc90c9aff9b710e998f0b30ffb44a7d02aaddef341f37fb7c405f1375385a0"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/config-layers/pair-01/my-files/grading-summary.json",
+            "sha256": "43b07f4aa5dd57a4b3227bdd0dc4126bdc8bfb870a7a3b20bbc0db8180357173"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/config-layers/pair-01/my-files/profile.json",
+            "sha256": "688c51699582177302bffb4204d66bbef8ee2e64f79f4e7ad2eed6692fe88e39"
+          },
+          "profile_operation_count": 26,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "config-layers",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 737.423435711,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/config-layers/pair-01/my-store/session.json",
+            "sha256": "be51a7ed22fdb529a359eacb2da3adf1f4238fae4d3897303e4a0aa2a19e52fb"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/config-layers/pair-01/my-store/grading-summary.json",
+            "sha256": "b366bc6e74eb271a2c5b97631b197de91586f9ed76746b2cef9fa03364e403e8"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/config-layers/pair-01/my-store/profile.json",
+            "sha256": "ca743471efccb9cd500d31f6f03270abf4519468e2a5e7011e924ffafd978dda"
+          },
+          "profile_operation_count": 32,
+          "store_metrics": {
+            "batch_rejections": 3,
+            "bytes_returned": 100198,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 12,
+              "check": 1,
+              "context": 1,
+              "finish": 1,
+              "open": 1,
+              "probe": 2,
+              "search": 3
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "data-rollup",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 466.444547576,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/data-rollup/pair-01/my-files/session.json",
+            "sha256": "07aa7e8e2685c0772cd32454c926a3c604ee0752ef721962b46f851ac8cb8f07"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/data-rollup/pair-01/my-files/grading-summary.json",
+            "sha256": "ec0060b96fcbb92d14c9f26500de1a0274e7fb2bba20ec71007bbf5df278607d"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/data-rollup/pair-01/my-files/profile.json",
+            "sha256": "ae0c55fd8126e9360163d5a104e1345a90d66d39f32246191c5b5d21b2aef1e0"
+          },
+          "profile_operation_count": 27,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "data-rollup",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 692.631510174,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/data-rollup/pair-01/my-store/session.json",
+            "sha256": "5fb168f9420bc8bb46731c49e72f15e4c4373a83748775f005830a096a2fdda6"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/data-rollup/pair-01/my-store/grading-summary.json",
+            "sha256": "22f0f34c9a7c2389ef23a3b669171e116961345881a9a21ba1b02dd510a269c3"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/data-rollup/pair-01/my-store/profile.json",
+            "sha256": "1388e27dc0e03504bd51835d8396b946a84a2344ff891755fc6f72a082eb0bb5"
+          },
+          "profile_operation_count": 60,
+          "store_metrics": {
+            "batch_rejections": 5,
+            "bytes_returned": 208840,
+            "context_omitted_total": 24,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 21,
+              "check": 1,
+              "context": 12,
+              "finish": 1,
+              "open": 3,
+              "output": 3,
+              "probe": 7,
+              "search": 1
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "inventory-reservations",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 542.51792403,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/inventory-reservations/pair-01/my-files/session.json",
+            "sha256": "d268b5aae213b21c568e29441a81b8f5bce0673d77461822160d8ab7697482f5"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/inventory-reservations/pair-01/my-files/grading-summary.json",
+            "sha256": "628b3058c67e1ef9266d0e65f259909ad166289af984a2fae7f73b188b5a5411"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/inventory-reservations/pair-01/my-files/profile.json",
+            "sha256": "cceff40ebe7db9c6527bee293b774c464f8908c39f19f1ca73221db352bfe968"
+          },
+          "profile_operation_count": 23,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "inventory-reservations",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 349.862834178,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/inventory-reservations/pair-01/my-store/session.json",
+            "sha256": "9d638d5ccc9989a452b152a2b1e4340c857b5c8a07a0726e00fa6597f3d06aa2"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/inventory-reservations/pair-01/my-store/grading-summary.json",
+            "sha256": "17b76b5b3176eb5c639f7fbea11ec2615d537415d79b5a9750cfb705fed7597d"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/inventory-reservations/pair-01/my-store/profile.json",
+            "sha256": "00f41ad4c23d123e092812189cbb4f4e86ed8ab86189066e20addd0cd0796a1e"
+          },
+          "profile_operation_count": 19,
+          "store_metrics": {
+            "batch_rejections": 1,
+            "bytes_returned": 80772,
+            "context_omitted_total": 25,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 8,
+              "batch": 2,
+              "check": 1,
+              "context": 3,
+              "finish": 1,
+              "open": 1,
+              "probe": 2
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "little-endian-read",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 79.085279075,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/little-endian-read/pair-01/my-files/session.json",
+            "sha256": "3e67aa0b0be0aeaa88b18a88fdfdf1f3e2fc2ae69a7d5e4820e91a3187224857"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/little-endian-read/pair-01/my-files/grading-summary.json",
+            "sha256": "2d9054199816639f44dce13f4097fea1b03ab1ef6ca2da47ccc915658d09e6a5"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/little-endian-read/pair-01/my-files/profile.json",
+            "sha256": "ec905b77307ae8bde8b8183f3f560980500d8c9a93365dd155c9509026137e9a"
+          },
+          "profile_operation_count": 10,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "little-endian-read",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 101.953648136,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/little-endian-read/pair-01/my-store/session.json",
+            "sha256": "bc4f40689d5e8ece1d4751bf26108ab1bad6c91f031127ad21eabd1346486e05"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/little-endian-read/pair-01/my-store/grading-summary.json",
+            "sha256": "20717df3ea7d78f9d726f9bb87110b63880d826cce50dd7b2ee744ed50109369"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/little-endian-read/pair-01/my-store/profile.json",
+            "sha256": "20d7e0cfeb420b09a3f77ca2fe6ae719eb3ad4507f8afeb5c857388b62c5ced3"
+          },
+          "profile_operation_count": 14,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 41030,
+            "context_omitted_total": 18,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 6,
+              "batch": 1,
+              "check": 1,
+              "context": 2,
+              "finish": 1,
+              "open": 1,
+              "probe": 1
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "lru-cache",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 531.879246269,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/lru-cache/pair-01/my-files/session.json",
+            "sha256": "9bd65f79a4286be63e10d4f764d3465d45dd22e83d23fd4185aa0cc4b39f5fbb"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/lru-cache/pair-01/my-files/grading-summary.json",
+            "sha256": "efcaa8c42f196df50bed1fce128ea28fffc4d23eefc8a12c3fc9d03d3a0fde7d"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/lru-cache/pair-01/my-files/profile.json",
+            "sha256": "498d8fb76aa4a59c8fa20b5ff7235efaba8d20742a5f5d4ee3e8e9b92ca5010d"
+          },
+          "profile_operation_count": 29,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "lru-cache",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 1101.704599659,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/lru-cache/pair-01/my-store/session.json",
+            "sha256": "96895f2f55cd6fa3b40f59d7ef1d5683c31d21865d5318a27b1a1c4091177059"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/lru-cache/pair-01/my-store/grading-summary.json",
+            "sha256": "4cb3b3a59e808e945a75526a33bd882e883afc35fa595db784d3d3e0c9f51ab8"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/lru-cache/pair-01/my-store/profile.json",
+            "sha256": "d8362c6edbaf37dc7119538e7f92c14b9e4921ed6a1ed314ea2f69a6e275e20d"
+          },
+          "profile_operation_count": 46,
+          "store_metrics": {
+            "batch_rejections": 3,
+            "bytes_returned": 110371,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 11,
+              "batch": 17,
+              "check": 1,
+              "context": 1,
+              "error": 1,
+              "finish": 1,
+              "open": 2,
+              "probe": 8,
+              "search": 3
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "mount-routing",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 871.741694048,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/mount-routing/pair-01/my-files/session.json",
+            "sha256": "913ded80bfdc4360e786323534c26eea44f1405f0c66dd54bbfa7d4adc1a6653"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/mount-routing/pair-01/my-files/grading-summary.json",
+            "sha256": "6d53c264a2764f5146bed67d41a0a7273808e934da25582d228afc7588317eb2"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/mount-routing/pair-01/my-files/profile.json",
+            "sha256": "d52079cb2ea1a9204234e2c7e8ddfb9eba910bbee23fee8c27f83f08e3810d6a"
+          },
+          "profile_operation_count": 41,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "mount-routing",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 566.941825243,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/mount-routing/pair-01/my-store/session.json",
+            "sha256": "8cac685fb2732c67d6a0acb3ef667459a075c845b31cb33e59c86a1e48a6d5d6"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/mount-routing/pair-01/my-store/grading-summary.json",
+            "sha256": "610fb48688b78c0aadaddc43766029cd750a08360a2e4507e2aa54a3d5d8750d"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/mount-routing/pair-01/my-store/profile.json",
+            "sha256": "8c442641535f66674f1943b78d4ba754d24448a5894c422fa0acd2eb835deaf4"
+          },
+          "profile_operation_count": 35,
+          "store_metrics": {
+            "batch_rejections": 3,
+            "bytes_returned": 117723,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 10,
+              "batch": 10,
+              "check": 1,
+              "context": 5,
+              "error": 1,
+              "finish": 1,
+              "open": 2,
+              "probe": 4
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "quota-boundary",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 66.947270151,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/quota-boundary/pair-01/my-files/session.json",
+            "sha256": "3c4920047dbdc90361e6c67bc5dc4fd75927da9f921b3f0f83dda58ba62d3332"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/quota-boundary/pair-01/my-files/grading-summary.json",
+            "sha256": "7548f1904999fc6882ab3ad2d409aa505b9c7d3a443f2098f0154b671fe29839"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/quota-boundary/pair-01/my-files/profile.json",
+            "sha256": "30eba98f73caf35cefac2b1fbadc2c6b072a0cc7e13da4a3a96403b22fb2c799"
+          },
+          "profile_operation_count": 9,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "quota-boundary",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "working",
+          "seconds": null,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/quota-boundary/pair-01/my-store/session.json",
+            "sha256": "ccbc738a75629ffdc4d812a23a64f9fb30e6b78e80f9f058bacead9ccdfd9d89"
+          },
+          "passed": null,
+          "eligible": null,
+          "profile_operation_count": null,
+          "review": null
+        },
+        {
+          "task": "record-frames",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 361.734476176,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/record-frames/pair-01/my-files/session.json",
+            "sha256": "b42955cf21ad88068bbed04d941dfb0c4330e836c1940bc7e1c0ddf70da3eaf8"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/record-frames/pair-01/my-files/grading-summary.json",
+            "sha256": "4fe309a59b147ef965c5f23780b56c88ca75f6f514be072abd03892dab564f8c"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/record-frames/pair-01/my-files/profile.json",
+            "sha256": "40cc85e06a9d8577814990718f0cc900ba2aa4ceb92371bd95aad54ca7d295c6"
+          },
+          "profile_operation_count": 24,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "record-frames",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 720.287847047,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/record-frames/pair-01/my-store/session.json",
+            "sha256": "294bfd7c8d63d26a34cf6f1d37d650f20f002a1b5c586aa7716a54e8405f6045"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/record-frames/pair-01/my-store/grading-summary.json",
+            "sha256": "1cc413eef9f7b5d2d52482f164b19503e603200cf601d143f57fdcfbe0cf7a9d"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/record-frames/pair-01/my-store/profile.json",
+            "sha256": "18536383851f6faf504208ed0d5728b329c46787cbbbb50eddb1bd4411894d88"
+          },
+          "profile_operation_count": 40,
+          "store_metrics": {
+            "batch_rejections": 3,
+            "bytes_returned": 113004,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 16,
+              "batch": 13,
+              "check": 1,
+              "context": 1,
+              "error": 1,
+              "finish": 1,
+              "open": 1,
+              "probe": 5
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "snapshot-diff",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 568.500560839,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/snapshot-diff/pair-01/my-files/session.json",
+            "sha256": "852850c955158d0dc9ece94a23080ef4ad6fcda2c0b74425416e6d8410bae500"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/snapshot-diff/pair-01/my-files/grading-summary.json",
+            "sha256": "e88bfbadd85a4c3dc2a526f0931c4f7197a71afb21b42596b59f079fb8578edf"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/snapshot-diff/pair-01/my-files/profile.json",
+            "sha256": "12c3bfcc5b77cc48f9dbe335f1dac176d584faa32dc09b485431856869e65775"
+          },
+          "profile_operation_count": 27,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "snapshot-diff",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 1135.162031088,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/snapshot-diff/pair-01/my-store/session.json",
+            "sha256": "4dd7a825e747f422615b5df22ad70dadcd8d800b08131f2248b8a8977e0b16bb"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/snapshot-diff/pair-01/my-store/grading-summary.json",
+            "sha256": "64ab201c478fea073dbe08f9187e6bd2b919052b588c33542ea9b56fc9afa103"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/snapshot-diff/pair-01/my-store/profile.json",
+            "sha256": "90d26b1dfde2bb8d8d758da1d825f51f11e6cde0fdd97d367c9019134f7cddc3"
+          },
+          "profile_operation_count": 54,
+          "store_metrics": {
+            "batch_rejections": 5,
+            "bytes_returned": 158867,
+            "context_omitted_total": 5,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 11,
+              "batch": 20,
+              "check": 2,
+              "context": 2,
+              "finish": 1,
+              "open": 2,
+              "probe": 13,
+              "search": 2
+            }
+          },
+          "review": null
+        },
+        {
+          "task": "ttl-boundary",
+          "pair": "pair-01",
+          "arm": "my-files",
+          "phase": "sealed",
+          "seconds": 106.480934924,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ttl-boundary/pair-01/my-files/session.json",
+            "sha256": "ea1be0f8a945fa8a97f844d337e537de45f874204c1fcaf42af2ff74391aa806"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ttl-boundary/pair-01/my-files/grading-summary.json",
+            "sha256": "daa6ff33d050c7be87fad7323e04665b2f0c76f1be45627f2d3bab58a6f713ef"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ttl-boundary/pair-01/my-files/profile.json",
+            "sha256": "b3af6d0bf17decd4a62722ea566845de3575ed4e81ed3d714cc5071aeb8db78a"
+          },
+          "profile_operation_count": 10,
+          "store_metrics": null,
+          "review": null
+        },
+        {
+          "task": "ttl-boundary",
+          "pair": "pair-01",
+          "arm": "my-store",
+          "phase": "sealed",
+          "seconds": 146.780863009,
+          "session_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ttl-boundary/pair-01/my-store/session.json",
+            "sha256": "727e6fcfc36ac0efa2610876171941b17bbf8811cfc7685bc5276ba25d9bb6f0"
+          },
+          "grading_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ttl-boundary/pair-01/my-store/grading-summary.json",
+            "sha256": "893e7e8f64b4104afcb67bb1d08ee6bbb7bb522e224fe57fedaee6edc30aaa19"
+          },
+          "passed": true,
+          "eligible": true,
+          "profile_source": {
+            "path": "/home/epentland/ai/canopy/application-trials/declaration-store-dev-20260908/development-001/ttl-boundary/pair-01/my-store/profile.json",
+            "sha256": "9e3dc2b39282181a386b9e447b8b1446320dd4ada22def54ce0af4f68bfe3577"
+          },
+          "profile_operation_count": 15,
+          "store_metrics": {
+            "batch_rejections": 0,
+            "bytes_returned": 54064,
+            "context_omitted_total": 27,
+            "if_match_conflicts": 0,
+            "verb_counts": {
+              "asset": 5,
+              "batch": 1,
+              "check": 1,
+              "context": 2,
+              "finish": 1,
+              "open": 1,
+              "probe": 3
+            }
+          },
+          "review": null
+        }
+      ],
+      "sealed_pairs": [
+        {
+          "task": "ascii-table",
+          "pair": "pair-01"
+        },
+        {
+          "task": "atomic-transfers",
+          "pair": "pair-01"
+        },
+        {
+          "task": "config-layers",
+          "pair": "pair-01"
+        },
+        {
+          "task": "data-rollup",
+          "pair": "pair-01"
+        },
+        {
+          "task": "inventory-reservations",
+          "pair": "pair-01"
+        },
+        {
+          "task": "little-endian-read",
+          "pair": "pair-01"
+        },
+        {
+          "task": "lru-cache",
+          "pair": "pair-01"
+        },
+        {
+          "task": "mount-routing",
+          "pair": "pair-01"
+        },
+        {
+          "task": "record-frames",
+          "pair": "pair-01"
+        },
+        {
+          "task": "snapshot-diff",
+          "pair": "pair-01"
+        },
+        {
+          "task": "ttl-boundary",
+          "pair": "pair-01"
+        }
+      ],
+      "sealed_pair_sums": {
+        "my-files": {
+          "seconds": 4400.061579841,
+          "profile_operations": 260
+        },
+        "my-store": {
+          "seconds": 6312.07319676,
+          "profile_operations": 363
+        }
+      },
+      "sealed_pairs_store_verb_counts": {
+        "asset": 102,
+        "batch": 107,
+        "check": 12,
+        "context": 34,
+        "finish": 11,
+        "open": 17,
+        "probe": 51,
+        "search": 12,
+        "output": 3,
+        "error": 3
+      },
+      "unreviewed": true
+    }
+  },
+  "additional_sources": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang/scripts/store.py",
+      "sha256": "0a7f8c91f5457e52b3fcd288954c6768cc8e5b89b24235dbf1fe5c5b1a1a9ac3"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang/scripts/store_server.py",
+      "sha256": "291707d77d5f815dec06e7a9242091176c2ed6d4583607346d45ba7be49dd1be"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang/docs/experiments/declaration-store-session.md",
+      "sha256": "8fce4667c11bfe286bfd324a9ced46fe6395a4f18952e11912de5f13601bbc23"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/application-trials/development-velocity-20260908/reports/development-001-v1/report.md",
+      "sha256": "cb793a456829440e38fd9c3bbb057e2357f1808e93d56d363e206a1ee4e6fbcb"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/application-trials/development-velocity-20260908/reports/astra-latest-costs-001/report.md",
+      "sha256": "d97230b855ba4925faaca4fb65ddac4d78a1387c0756fa37df1f4ba92a63e403"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/application-trials/development-velocity-20260908/reports/api-capsule-036/report.md",
+      "sha256": "caa61cd3053a561903be3c5dc1aebf786d2808962f2a89439c028ab1a4d8adf7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/application-trials/development-velocity-20260908/reports/api-batch-037/report.md",
+      "sha256": "97da314e5cfe6b4f573eea235ac5b66a3c18e89c352bb99ee2aaeae6071707e4"
+    }
+  ]
+}

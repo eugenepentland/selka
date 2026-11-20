@@ -1,0 +1,9 @@
+ownership-certificate-v2
+class drop Drop
+class list_new Fresh
+function unchecked_task_group result scalar from - unchecked task-group
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst - drop Drop reads - consumes %0 state none parents -
+term ret -
+end

@@ -1,0 +1,75 @@
+func shared_tail(xs: int[], extra: int) -> int[]:
+    mut ys = copy(xs)
+    append(mut ys, extra)
+    return ys
+
+
+func build(n: int) -> int[]:
+    mut out: int[] = []
+    for i in range(n):
+        append(mut out, i * 2)
+    return out
+
+
+func early(xs: int[], limit: int) -> int:
+    mut temp = build(limit)
+    if len(xs) > limit:
+        return len(temp)
+    mut other = build(2)
+    return len(temp) + len(other)
+
+
+func names(n: int) -> str[]:
+    mut out: str[] = []
+    for i in range(n):
+        if i % 2 == 0:
+            append(mut out, "even")
+        else:
+            append(mut out, "odd")
+    return out
+
+
+func nested(n: int) -> int:
+    mut rows: int[][] = []
+    for i in range(n):
+        mut row = build(i)
+        append(mut rows, copy(row))
+        append(mut rows, own row)
+    mut total = 0
+    for r in rows:
+        total = total + len(r)
+    return total
+
+
+func alias_phi(n: int) -> int:
+    mut a = build(3)
+    mut b = copy(a)
+    if n > 2:
+        b = build(n)
+    append(mut b, 7)
+    return len(a) * 100 + len(b)
+
+
+func keep_first(rows: int[][]) -> int[]:
+    mut first = copy(rows[0])
+    return first
+
+
+func main(args: str[], out: Stream) -> int:
+    mut base = build(4)
+    mut grown = shared_tail(base, 9)
+    print(out, len(base), len(grown), grown[4])
+    print(out, early(base, 2), early(base, 10))
+    mut words = names(5)
+    print(out, len(words), words[0], words[1], len(args))
+    print(out, nested(6), alias_phi(1), alias_phi(5))
+    mut saved = copy(words)
+    append(mut saved, "x")
+    print(out, len(words), len(saved), saved[5])
+    mut grid: int[][] = []
+    append(mut grid, copy(base))
+    append(mut grid, own grown)
+    mut kept = keep_first(grid)
+    append(mut kept, 1)
+    print(out, len(kept), len(base), len(grid[0]))
+    return 0

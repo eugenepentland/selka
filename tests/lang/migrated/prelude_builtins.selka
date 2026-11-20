@@ -1,0 +1,28 @@
+import prelude_builtins_case_1 as c1
+import prelude_builtins_case_2 as c2
+import prelude_builtins_case_3 as c3
+import prelude_builtins_case_4 as c4
+
+# spec: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_1() -> bool:
+    # A module function with a prelude name, called with its module's name, is that function; a bare `sum` stays the builtin.
+    return c1.program() == 7 and c1.sum([1, 2, 3]) == 7 and sum([1, 2, 3]) == 6
+
+
+# spec-case: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_2() -> bool:
+    return c2.program() == 6
+
+
+# spec-case: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_3() -> bool:
+    return c3.program() == 5
+
+
+# spec-case: PRELUDE-SHADOW-1
+public func test_a_declared_function_or_binding_keeps_its_own_4() -> bool:
+    return c4.program() == 9 and c4.list() == 9 and len(list(range(2))) == 2
+
+
+func main() -> int:
+    return 0

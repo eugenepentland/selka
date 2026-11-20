@@ -1,0 +1,40 @@
+# Informational call graph inversion. IDs are local to one immutable snapshot.
+import lists
+
+public record Index:
+    direct: int[][]
+    reached: int[][]
+
+
+public func build(adjacency: int[][], tests: int[]) -> Index fails str:
+    mut direct: int[][] = []
+    mut reached: int[][] = []
+    # A per-node empty row; the pinned seed compiler cannot infer the element
+    # type of a bare `[]` operand, so the source names it once and copies it.
+    const no_targets: int[] = []
+    for node in range(len(adjacency)):
+        append(mut direct, copy(no_targets))
+        append(mut reached, copy(no_targets))
+    mut payload_size = 4 + 8 * len(adjacency)
+    for test in tests:
+        mut visited: bool[] = []
+        for node in range(len(adjacency)):
+            append(mut visited, False)
+        mut pending: int[] = [test]
+        visited[test] = True
+        while len(pending) > 0:
+            mut current = lists.pop(mut pending)
+            payload_size += 4
+            if payload_size > 67108800:
+                fail "response frame exceeds limit"
+            append(mut reached[current], test)
+            for callee in adjacency[current]:
+                if not visited[callee]:
+                    visited[callee] = True
+                    append(mut pending, callee)
+        for callee in adjacency[test]:
+            payload_size += 4
+            if payload_size > 67108800:
+                fail "response frame exceeds limit"
+            append(mut direct[callee], test)
+    return Index(direct=own direct, reached=own reached)

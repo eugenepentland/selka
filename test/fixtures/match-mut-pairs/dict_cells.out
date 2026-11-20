@@ -1,0 +1,200 @@
+cell_store_new_store_new_none
+  at
+  after {'a': 1, 'b': 2, 'c': 3, 'n1': 1, 'n2': 2}
+cell_store_new_store_new_between
+  at
+  read {'a': 1, 'b': 2, 'c': 3, 'n1': 1}
+  after {'a': 1, 'b': 2, 'c': 3, 'n1': 1, 'n2': 2}
+cell_store_new_store_new_after
+  at
+  read {'a': 1, 'b': 2, 'c': 3, 'n1': 1, 'n2': 2}
+  after {'a': 1, 'b': 2, 'c': 3, 'n1': 1, 'n2': 2}
+cell_store_new_store_old_none
+  at
+  after {'a': 12, 'b': 2, 'c': 3, 'n1': 1}
+cell_store_new_store_old_between
+  at
+  read {'a': 1, 'b': 2, 'c': 3, 'n1': 1}
+  after {'a': 12, 'b': 2, 'c': 3, 'n1': 1}
+cell_store_new_store_old_after
+  at
+  read {'a': 12, 'b': 2, 'c': 3, 'n1': 1}
+  after {'a': 12, 'b': 2, 'c': 3, 'n1': 1}
+cell_store_new_add_none
+  at
+  after {'a': 1, 'b': 4, 'c': 3, 'n1': 1}
+cell_store_new_add_between
+  at
+  read {'a': 1, 'b': 2, 'c': 3, 'n1': 1}
+  after {'a': 1, 'b': 4, 'c': 3, 'n1': 1}
+cell_store_new_add_after
+  at
+  read {'a': 1, 'b': 4, 'c': 3, 'n1': 1}
+  after {'a': 1, 'b': 4, 'c': 3, 'n1': 1}
+cell_store_new_pop_none
+  at
+  w2 3
+  after {'a': 1, 'b': 2, 'n1': 1}
+cell_store_new_pop_between
+  at
+  read {'a': 1, 'b': 2, 'c': 3, 'n1': 1}
+  w2 3
+  after {'a': 1, 'b': 2, 'n1': 1}
+cell_store_new_pop_after
+  at
+  w2 3
+  read {'a': 1, 'b': 2, 'n1': 1}
+  after {'a': 1, 'b': 2, 'n1': 1}
+cell_store_old_store_new_none
+  at
+  after {'a': 11, 'b': 2, 'c': 3, 'n2': 2}
+cell_store_old_store_new_between
+  at
+  read {'a': 11, 'b': 2, 'c': 3}
+  after {'a': 11, 'b': 2, 'c': 3, 'n2': 2}
+cell_store_old_store_new_after
+  at
+  read {'a': 11, 'b': 2, 'c': 3, 'n2': 2}
+  after {'a': 11, 'b': 2, 'c': 3, 'n2': 2}
+cell_store_old_store_old_none
+  at
+  after {'a': 12, 'b': 2, 'c': 3}
+cell_store_old_store_old_between
+  at
+  read {'a': 11, 'b': 2, 'c': 3}
+  after {'a': 12, 'b': 2, 'c': 3}
+cell_store_old_store_old_after
+  at
+  read {'a': 12, 'b': 2, 'c': 3}
+  after {'a': 12, 'b': 2, 'c': 3}
+cell_store_old_add_none
+  at
+  after {'a': 11, 'b': 4, 'c': 3}
+cell_store_old_add_between
+  at
+  read {'a': 11, 'b': 2, 'c': 3}
+  after {'a': 11, 'b': 4, 'c': 3}
+cell_store_old_add_after
+  at
+  read {'a': 11, 'b': 4, 'c': 3}
+  after {'a': 11, 'b': 4, 'c': 3}
+cell_store_old_pop_none
+  at
+  w2 3
+  after {'a': 11, 'b': 2}
+cell_store_old_pop_between
+  at
+  read {'a': 11, 'b': 2, 'c': 3}
+  w2 3
+  after {'a': 11, 'b': 2}
+cell_store_old_pop_after
+  at
+  w2 3
+  read {'a': 11, 'b': 2}
+  after {'a': 11, 'b': 2}
+cell_add_store_new_none
+  at
+  after {'a': 1, 'b': 3, 'c': 3, 'n2': 2}
+cell_add_store_new_between
+  at
+  read {'a': 1, 'b': 3, 'c': 3}
+  after {'a': 1, 'b': 3, 'c': 3, 'n2': 2}
+cell_add_store_new_after
+  at
+  read {'a': 1, 'b': 3, 'c': 3, 'n2': 2}
+  after {'a': 1, 'b': 3, 'c': 3, 'n2': 2}
+cell_add_store_old_none
+  at
+  after {'a': 12, 'b': 3, 'c': 3}
+cell_add_store_old_between
+  at
+  read {'a': 1, 'b': 3, 'c': 3}
+  after {'a': 12, 'b': 3, 'c': 3}
+cell_add_store_old_after
+  at
+  read {'a': 12, 'b': 3, 'c': 3}
+  after {'a': 12, 'b': 3, 'c': 3}
+cell_add_add_none
+  at
+  after {'a': 1, 'b': 5, 'c': 3}
+cell_add_add_between
+  at
+  read {'a': 1, 'b': 3, 'c': 3}
+  after {'a': 1, 'b': 5, 'c': 3}
+cell_add_add_after
+  at
+  read {'a': 1, 'b': 5, 'c': 3}
+  after {'a': 1, 'b': 5, 'c': 3}
+cell_add_pop_none
+  at
+  w2 3
+  after {'a': 1, 'b': 3}
+cell_add_pop_between
+  at
+  read {'a': 1, 'b': 3, 'c': 3}
+  w2 3
+  after {'a': 1, 'b': 3}
+cell_add_pop_after
+  at
+  w2 3
+  read {'a': 1, 'b': 3}
+  after {'a': 1, 'b': 3}
+cell_pop_store_new_none
+  at
+  w1 2
+  after {'a': 1, 'c': 3, 'n2': 2}
+cell_pop_store_new_between
+  at
+  w1 2
+  read {'a': 1, 'c': 3}
+  after {'a': 1, 'c': 3, 'n2': 2}
+cell_pop_store_new_after
+  at
+  w1 2
+  read {'a': 1, 'c': 3, 'n2': 2}
+  after {'a': 1, 'c': 3, 'n2': 2}
+cell_pop_store_old_none
+  at
+  w1 2
+  after {'a': 12, 'c': 3}
+cell_pop_store_old_between
+  at
+  w1 2
+  read {'a': 1, 'c': 3}
+  after {'a': 12, 'c': 3}
+cell_pop_store_old_after
+  at
+  w1 2
+  read {'a': 12, 'c': 3}
+  after {'a': 12, 'c': 3}
+cell_pop_add_none
+  at
+  w1 2
+  after {'a': 1, 'c': 3, 'b': 2}
+cell_pop_add_between
+  at
+  w1 2
+  read {'a': 1, 'c': 3}
+  after {'a': 1, 'c': 3, 'b': 2}
+cell_pop_add_after
+  at
+  w1 2
+  read {'a': 1, 'c': 3, 'b': 2}
+  after {'a': 1, 'c': 3, 'b': 2}
+cell_pop_pop_none
+  at
+  w1 2
+  w2 3
+  after {'a': 1}
+cell_pop_pop_between
+  at
+  w1 2
+  read {'a': 1, 'c': 3}
+  w2 3
+  after {'a': 1}
+cell_pop_pop_after
+  at
+  w1 2
+  w2 3
+  read {'a': 1}
+  after {'a': 1}

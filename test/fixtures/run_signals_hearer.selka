@@ -1,0 +1,28 @@
+# A guest that hears a stop (RUN-SIGNALS-1): its C half (`run_signals_hearer.c`) counts SIGINT, SIGTERM and SIGHUP. It prints
+# its own process number, waits for one, lingers so a second delivery would land, prints how many it heard and exits 7.
+import filesystem
+import time
+
+extern func hear_stop(host: Host) -> i64
+
+
+extern func stops_heard(host: Host) -> i64
+
+
+func main(host: Host, fs: Filesystem, clock: Clock, err: Stream) -> int:
+    _ = hear_stop(host)
+    match filesystem.realpath(fs, "/proc/self"):
+        case Ok(path):
+            print(err, "guest " + path)
+        case Err(message):
+            print(err, "no process number: " + message)
+            return 1
+    mut turns = 0
+    while turns < 400:
+        if stops_heard(host) > 0:
+            break
+        time.sleep(clock, 50000000)
+        turns = turns + 1
+    time.sleep(clock, 600000000)
+    print(err, "heard " + str(stops_heard(host)))
+    return 7

@@ -1,0 +1,17 @@
+func first(values: i64[]) -> i64?:
+    if len(values) == 0:
+        return None
+    return Some(values[0])
+
+
+func pick(values: i64[]) -> i64?:
+    mut value = try first(values)
+    return Some(value + 1)
+
+
+public func program() -> i64:
+    match pick([41]):
+        case Some(value):
+            return value
+        case None:
+            return 0

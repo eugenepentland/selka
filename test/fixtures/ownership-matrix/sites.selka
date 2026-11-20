@@ -1,0 +1,65 @@
+func head(text: str) -> str from text:
+    return text[0:2]
+
+
+# cell: site_selection_stored E_SINGLE_OWNER_BORROW R6 escape
+func site_selection_stored() -> int:
+    const first = "a" + str(1)
+    const second = "z" + str(2)
+    mut retained = min(first, second)
+    return keep_text(own retained)
+
+
+# cell: site_selection_binding E_SINGLE_OWNER_BORROW R3 escape
+func site_selection_binding(a: str, b: str) -> int:
+    const selected = min(a, b)
+    mut retained = selected
+    return keep_text(own retained)
+
+
+# cell: site_view_returned E_SLICE_ESCAPES V4 escape
+func site_view_returned() -> bytes:
+    const data = copy(b"local bytes")
+    return data[0:2]
+
+
+# cell: site_view_joined E_SLICE_ESCAPES V5 escape
+func site_view_joined(first: bool) -> int:
+    const left = "abcd"
+    const right = "wxyz"
+    const part: str
+    if first:
+        part = head(left)
+    else:
+        part = right[0:2]
+    return len(part)
+
+
+# cell: site_const_alias E_OWN_MARKER B9 escape
+func site_const_alias() -> int:
+    const owner = [42]
+    const alias = owner
+    mut retained = alias
+    return keep_ints(own retained)
+
+
+# cell: site_written_through E_OWN_MARKER B2 escape
+func site_written_through() -> int:
+    const owner = [41]
+    mut held = owner
+    append(mut held, 1)
+    return len(held)
+
+
+# A `mut` binding stored once from a place borrows it (D4), so each site above gives it away to keep its refusal: the binding
+# is checked as the owner it would have to be, and the refusal is the store's.
+func keep_text(own text: str) -> int:
+    return len(text)
+
+
+func keep_ints(own values: int[]) -> int:
+    return len(values)
+
+
+func main() -> int:
+    return 0

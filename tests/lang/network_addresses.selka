@@ -1,0 +1,183 @@
+import byte_builder
+import network
+import strings
+
+# FR5a (F-4): the `network` operations that take an address at run time, on the stand-ins. `network.memory()` takes any
+# text as an endpoint name, so a test passes the address it wants; a name `listen_at` registers is the same endpoint a
+# `net.host` literal names. A Network narrowed with `net.host` refuses any other address (2), on a stand-in as on the
+# real network, and `network.denied()` refuses every operation with `denied_here()`.
+# Write `data` on `from` and read it back on `to`, as text.
+func carry(mut from: network.Connection, mut to: network.Connection, data: bytes) -> str:
+    match write_resource[network.Written](from, data):
+        case Ok(_):
+            pass
+        case Err(_):
+            return "<write failed>"
+    match read_resource[network.Read[64]](to):
+        case Ok(chunk):
+            mut out = byte_builder.create()
+            _ = byte_builder.append_array(mut out, chunk.bytes, int(chunk.length))
+            match strings.decode(byte_builder.finish(out)):
+                case Ok(text):
+                    return text
+                case Err(_):
+                    return "<not text>"
+        case Err(code):
+            return f"<read failed {code}>"
+
+
+# Listen on `listen` with `listen_at`, connect to `target` with `connect_to` (or `connect_within_to` when `limited`), accept,
+# and carry one message across: the message, or the code of the step that failed.
+func round_trip(net: Network, listen: str, target: str, limited: bool) -> str:
+    match network.listen_at(net, listen):
+        case ok(owned):
+            mut listener = own owned
+            mut code = 0
+            if limited:
+                match network.connect_within_to(net, target, network.Timeouts(connect_ms=50, read_ms=50)):
+                    case ok(made):
+                        return accepted(mut listener, own made)
+                    case err(failed):
+                        code = failed
+            else:
+                match network.connect_to(net, target):
+                    case ok(made):
+                        return accepted(mut listener, own made)
+                    case err(failed):
+                        code = failed
+            return f"connect {code}"
+        case err(code):
+            return f"listen {code}"
+
+
+func accepted(mut listener: network.Listener, own client: network.Connection) -> str:
+    mut near = own client
+    match accept_resource[network.Accepted](listener):
+        case Ok(far):
+            mut server = own far
+            return carry(mut near, mut server, b"hello")
+        case Err(code):
+            return f"accept {code}"
+
+
+# The code `connect_to` answers, 0 when it connected.
+func connect_code(net: Network, address: str) -> int:
+    match network.connect_to(net, address):
+        case ok(made):
+            _ = network.close(own made)
+            return 0
+        case err(code):
+            return code
+
+
+# The code `listen_at` answers, 0 when it listened.
+func listen_code(net: Network, address: str) -> int:
+    match network.listen_at(net, address):
+        case ok(made):
+            _ = own made
+            return 0
+        case err(code):
+            return code
+
+
+# The code `open_poller_at` answers, 0 when it opened a poller.
+func poller_code(net: Network, address: str) -> int:
+    match network.open_poller_at(net, address):
+        case ok(made):
+            _ = own made
+            return 0
+        case err(code):
+            return code
+
+
+public func test_listen_at_and_connect_to_carry_bytes_on_the_memory_network() -> bool:
+    return round_trip(network.memory(), "127.0.0.1:9000", "127.0.0.1:9000", False) == "hello"
+
+
+public func test_an_endpoint_name_is_any_text_on_the_memory_network() -> bool:
+    return round_trip(network.memory(), "wardd", "wardd", False) == "hello"
+
+
+public func test_connect_within_to_connects_as_connect_to_does_on_the_memory_network() -> bool:
+    return round_trip(network.memory(), "127.0.0.1:9001", "127.0.0.1:9001", True) == "hello"
+
+
+# Nobody listens on the other name: the connect fails as `connect` does there, with 3.
+public func test_connect_to_a_name_nobody_listens_on_fails_with_3() -> bool:
+    return round_trip(network.memory(), "127.0.0.1:9002", "127.0.0.1:9003", False) == "connect 3"
+
+
+# A name `listen_at` registered is the endpoint a `net.host` literal of the same text names, and back.
+public func test_a_run_time_address_and_a_literal_name_the_same_endpoint() -> bool:
+    mut net = network.memory()
+    with net.host("127.0.0.1:9004") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                match network.connect_to(net, "127.0.0.1:9004"):
+                    case ok(made):
+                        return accepted(mut listener, own made) == "hello"
+                    case err(_):
+                        return False
+            case err(_):
+                return False
+
+
+# Through a narrowed Network only the narrowing's own address is allowed: another is refused with 2 and is not sent to
+# the narrowing's address, where a listener waits; the same address connects.
+public func test_a_narrowed_network_refuses_another_address() -> bool:
+    mut net = network.memory()
+    with net.host("127.0.0.1:9005") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                if connect_code(scoped, "127.0.0.1:9006") != 2 or listen_code(scoped, "127.0.0.1:9006") != 2:
+                    return False
+                if connect_code(scoped, "") != 2:
+                    return False
+                match accept_resource[network.Accepted](listener):
+                    case Ok(_):
+                        return False
+                    case Err(_):
+                        pass
+                match network.connect_to(scoped, "127.0.0.1:9005"):
+                    case ok(made):
+                        return accepted(mut listener, own made) == "hello"
+                    case err(_):
+                        return False
+            case err(_):
+                return False
+
+
+# The memory network offers no poller, for `open_poller_at` as for `open_poller` (2), and an empty name is no endpoint.
+public func test_the_memory_network_offers_no_poller_and_no_empty_name() -> bool:
+    const net = network.memory()
+    return poller_code(net, "127.0.0.1:9007") == 2 and listen_code(net, "") == 2 and connect_code(net, "") == 2
+
+
+public func test_the_denied_network_refuses_every_addressed_operation() -> bool:
+    const net = network.denied()
+    const here = network.denied_here()
+    return connect_code(net, "127.0.0.1:9008") == here and listen_code(net, "127.0.0.1:9008") == here and poller_code(net, "127.0.0.1:9008") == here
+
+
+# A record holding a Network, as a server's services do: the address comes from its settings.
+record Services:
+    net: Network
+    ward: str
+
+
+func reach(services: Services) -> int fails str:
+    const code = connect_code(services.net, services.ward)
+    if code == 3:
+        fail "nobody answers at " + services.ward
+    return code
+
+
+public func test_an_address_held_in_a_record_reaches_through_a_record_held_network() -> bool:
+    const services = Services(net=network.memory(), ward="127.0.0.1:9009")
+    match reach(services):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "nobody answers at 127.0.0.1:9009"

@@ -1,0 +1,29 @@
+# In a callback type a `named` followed by `,` or `)` is a bare type called `named`, as `own` and `mut` would be: the
+# modifier is always followed by a name. A program that declares such a type is rare; the spelling is accepted because
+# no modifier can end the parameter (friction F-78, lane FR29).
+record named:
+    value: int
+
+
+func over_record(item: named) -> int:
+    return item.value
+
+
+func call_record(f: func(named) -> int) -> int:
+    return f(named(value=6))
+
+
+func call_pair(f: func(named, int) -> int) -> int:
+    return f(named(value=2), 3)
+
+
+func add_record(item: named, extra: int) -> int:
+    return item.value + extra
+
+
+public func test_a_callback_over_a_type_called_named_reads_it_as_the_type() -> bool:
+    return call_record(over_record) == 6
+
+
+public func test_a_type_called_named_may_precede_a_comma_in_a_callback_type() -> bool:
+    return call_pair(add_record) == 5

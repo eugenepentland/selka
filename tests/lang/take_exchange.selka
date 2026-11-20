@@ -1,0 +1,420 @@
+# take(mut place) moves a value out of a mutable place and leaves its empty value behind; exchange(mut place, value)
+# moves the old value out and puts the replacement in. Neither copies the value. A named replacement moves in with
+# `own`, as every other move of a named value does; a fresh value takes no marker.
+import testing
+
+record Holder:
+    items: int[]
+    label: str
+    tags: str[]
+
+
+func take_items(mut holder: Holder) -> int[]:
+    return take(mut holder.items)
+
+
+public func test_take_moves_a_field_out_of_a_mut_parameter() -> bool:
+    mut holder = Holder(items=[1, 2, 3], label="x", tags=[])
+    const got = take_items(mut holder)
+    return len(got) == 3 and len(holder.items) == 0 and holder.label == "x"
+
+
+public func test_take_of_a_local_leaves_its_empty_value() -> bool:
+    mut values = [4, 5]
+    const got = take(mut values)
+    return len(got) == 2 and len(values) == 0
+
+
+public func test_take_of_a_text_field_leaves_the_empty_text() -> bool:
+    mut holder = Holder(items=[], label="name", tags=[])
+    const label = take(mut holder.label)
+    return label == "name" and holder.label == ""
+
+
+public func test_exchange_puts_the_replacement_in_and_returns_the_old_value() -> bool:
+    mut holder = Holder(items=[1], label="a", tags=[])
+    const old = exchange(mut holder.items, [7, 8])
+    return len(old) == 1 and old[0] == 1 and len(holder.items) == 2 and holder.items[0] == 7
+
+
+public func test_the_place_is_usable_after_take() -> bool:
+    mut holder = Holder(items=[1, 2], label="a", tags=[])
+    _ = take(mut holder.items)
+    append(mut holder.items, 9)
+    return len(holder.items) == 1 and holder.items[0] == 9
+
+
+public func test_take_of_a_dictionary_field_leaves_an_empty_dictionary() -> bool:
+    mut table = {"a": 1}
+    const old = take(mut table)
+    return len(old) == 1 and len(table) == 0
+
+
+func take_all(mut values: int[]) -> int[]:
+    return take(mut values)
+
+
+record Outer:
+    holder: Holder
+    count: int
+
+
+public func test_take_of_a_mut_parameter_moves_the_whole_value_out() -> bool:
+    mut values = [1, 2, 3]
+    const got = take_all(mut values)
+    return len(got) == 3 and len(values) == 0
+
+
+public func test_take_reaches_a_field_two_records_down() -> bool:
+    mut outer = Outer(holder=Holder(items=[5, 6], label="h", tags=[]), count=1)
+    const got = take(mut outer.holder.items)
+    return len(got) == 2 and len(outer.holder.items) == 0 and outer.count == 1 and outer.holder.label == "h"
+
+
+public func test_exchange_of_a_local_returns_the_old_value() -> bool:
+    mut values = [1]
+    const old = exchange(mut values, [2, 3])
+    return len(old) == 1 and len(values) == 2 and values[1] == 3
+
+
+public func test_a_taken_value_dropped_early_leaves_the_record_intact() -> bool:
+    mut holder = Holder(items=[8, 9], label="keep", tags=[])
+    _ = take(mut holder.items)
+    return len(holder.items) == 0 and holder.label == "keep"
+
+
+public func test_take_of_a_set_and_of_bytes_leaves_the_empty_value() -> bool:
+    mut seen = set([1, 2, 3])
+    const members = take(mut seen)
+    mut raw = b"abc"
+    const octets = take(mut raw)
+    return len(members) == 3 and len(seen) == 0 and len(octets) == 3 and len(raw) == 0
+
+
+public func test_exchange_takes_a_named_replacement_with_own() -> bool:
+    mut holder = Holder(items=[1, 2], label="a", tags=[])
+    const fresh = [7, 8, 9]
+    const old = exchange(mut holder.items, own fresh)
+    return len(old) == 2 and old[0] == 1 and len(holder.items) == 3 and holder.items[2] == 9
+
+
+public func test_exchange_with_a_copy_keeps_the_source() -> bool:
+    mut values = [1]
+    const kept = [4, 5]
+    const old = exchange(mut values, copy(kept))
+    return len(old) == 1 and len(values) == 2 and len(kept) == 2
+
+
+record Slot:
+    pending: int[]?
+    name: str
+
+
+public func test_take_of_an_optional_leaves_none() -> bool:
+    mut found: int[]? = Some([1, 2])
+    const got = take(mut found)
+    mut total = 0
+    match got:
+        case Some(values):
+            total += len(values)
+        case None:
+            total += 100
+    return total == 2 and found is None
+
+
+public func test_take_of_an_optional_field_and_exchange_with_none() -> bool:
+    mut slot = Slot(pending=Some([4, 5, 6]), name="s")
+    const taken = take(mut slot.pending)
+    mut total = 0
+    match taken:
+        case Some(values):
+            total += len(values)
+        case None:
+            total += 100
+    const again = exchange(mut slot.pending, Some([9]))
+    if again is not None:
+        total += 1000
+    const last = exchange(mut slot.pending, None)
+    match last:
+        case Some(values):
+            total += len(values) * 10
+        case None:
+            total += 100000
+    return total == 13 and slot.pending is None and slot.name == "s"
+
+
+public func test_take_of_a_scalar_optional_and_of_optional_text() -> bool:
+    mut count: int? = Some(3)
+    mut label: str? = Some("hello")
+    const text = take(mut label)
+    const previous = exchange(mut count, Some(9))
+    mut total = 0
+    match text:
+        case Some(value):
+            total += len(value)
+        case None:
+            total += 1000
+    match previous:
+        case Some(value):
+            total += value
+        case None:
+            total += 1000
+    match count:
+        case Some(value):
+            total += value
+        case None:
+            total += 1000
+    return total == 17 and label is None
+
+
+func drain_all[T](mut values: T[]) -> T[]:
+    return take(mut values)
+
+
+func swap_all[T](mut values: T[], own fresh: T[]) -> T[]:
+    return exchange(mut values, own fresh)
+
+
+public func test_take_and_exchange_work_in_a_generic_helper() -> bool:
+    mut numbers = [1, 2, 3]
+    const drained = drain_all(mut numbers)
+    mut words = ["a"]
+    const old = swap_all(mut words, ["b", "c"])
+    return len(drained) == 3 and len(numbers) == 0 and len(old) == 1 and len(words) == 2
+
+
+func take_back(n: int) -> int:
+    mut holder = Holder(items=[1, 2, 3], label="x", tags=[])
+    mut total = 0
+    for i in range(n):
+        const got = take(mut holder.items)
+        total += len(got)
+        holder.items = own got
+    return total
+
+
+# The way a port worked around the missing move: copy the field, clear it in a helper, then store the copy back.
+func clear_items(mut holder: Holder):
+    holder.items = []
+
+
+func copy_back(n: int) -> int:
+    mut holder = Holder(items=[1, 2, 3], label="x", tags=[])
+    mut total = 0
+    for i in range(n):
+        const got = copy(holder.items)
+        clear_items(mut holder)
+        total += len(got)
+        holder.items = copy(got)
+    return total
+
+
+public func test_take_of_a_field_allocates_and_copies_nothing() -> bool:
+    const small = testing.allocations(take_back, 10)
+    const large = testing.allocations(take_back, 1000)
+    return take_back(1000) == 3000 and small == large and testing.allocations(copy_back, 1000) > 1000
+
+
+# G3 3A: the place may be a list element, a field of one, or a `match mut` binding, and the value any type; a record with
+# field defaults is taken leaving those defaults behind.
+record Block:
+    items: int[] = []
+    name: str = "block"
+    count: int = 0
+
+
+record Builder:
+    block: Block = Block()
+    stack: Block[] = []
+
+
+public func test_take_of_a_list_element_leaves_its_empty_value() -> bool:
+    mut rows = [[1, 2], [3]]
+    const got = take(mut rows[0])
+    return len(got) == 2 and len(rows) == 2 and len(rows[0]) == 0 and len(rows[1]) == 1
+
+
+func element_field(mut blocks: Block[], i: int) -> int[]:
+    return exchange(mut blocks[i].items, [7, 7, 7])
+
+
+public func test_exchange_of_an_element_field_reaches_the_caller() -> bool:
+    mut blocks = [Block(items=[1]), Block(items=[2, 3])]
+    const old = element_field(mut blocks, 1)
+    return len(old) == 2 and old[1] == 3 and len(blocks[1].items) == 3 and len(blocks[0].items) == 1 and blocks[1].name == "block"
+
+
+public func test_take_reaches_an_element_of_an_element() -> bool:
+    mut grid = [[[1], [2, 3]], [[4]]]
+    const got = take(mut grid[0][1])
+    return len(got) == 2 and len(grid[0][1]) == 0 and len(grid[0][0]) == 1 and len(grid[1][0]) == 1
+
+
+public func test_a_record_take_leaves_its_field_defaults_behind() -> bool:
+    mut builder = Builder()
+    append(mut builder.block.items, 4)
+    builder.block.count = 9
+    const old = take(mut builder.block)
+    return len(old.items) == 1 and old.count == 9 and len(builder.block.items) == 0 and builder.block.name == "block" and builder.block.count == 0
+
+
+func push_block(mut builder: Builder):
+    const old = exchange(mut builder.block, Block())
+    append(mut builder.stack, own old)
+
+
+public func test_exchange_of_a_record_field_moves_the_record_out() -> bool:
+    mut builder = Builder()
+    append(mut builder.block.items, 1)
+    push_block(mut builder)
+    append(mut builder.block.items, 2)
+    append(mut builder.block.items, 3)
+    push_block(mut builder)
+    return len(builder.stack) == 2 and len(builder.stack[0].items) == 1 and len(builder.stack[1].items) == 2 and len(builder.block.items) == 0
+
+
+public func test_exchange_of_a_scalar_returns_the_old_value() -> bool:
+    mut builder = Builder()
+    builder.block.count = 4
+    const old = exchange(mut builder.block.count, 7)
+    mut n = 1
+    const first = exchange(mut n, 2)
+    return old == 4 and builder.block.count == 7 and first == 1 and n == 2
+
+
+record Ledger:
+    holds: int[] = []
+    balance: int = 0
+
+
+enum Seat:
+    empty
+    account(value: Ledger)
+
+
+func drain_holds(mut slots: Seat[], i: int) -> int[]:
+    match mut slots[i]:
+        case account(value=payload):
+            return take(mut payload.holds)
+        case empty:
+            return []
+
+
+public func test_take_through_a_match_mut_binding_writes_the_matched_element() -> bool:
+    mut slots = [Seat.empty, Seat.account(value=Ledger(holds=[1, 2], balance=5))]
+    const got = drain_holds(mut slots, 1)
+    mut left = 100
+    mut balance = 0
+    match slots[1]:
+        case account(value=account):
+            left = len(account.holds)
+            balance = account.balance
+        case empty:
+            left = 200
+    return len(got) == 2 and left == 0 and balance == 5
+
+
+public func test_a_match_mut_binding_is_taken_whole() -> bool:
+    mut slot = Seat.account(value=Ledger(holds=[3], balance=2))
+    mut taken = 0
+    match mut slot:
+        case account(value=payload):
+            const account = take(mut payload)
+            taken = len(account.holds) * 10 + account.balance
+        case empty:
+            taken = 100
+    mut after = 0
+    match slot:
+        case account(value=account):
+            after = len(account.holds) + account.balance
+        case empty:
+            after = 100
+    return taken == 12 and after == 0
+
+
+# `take` needs a type with a default (a record whose fields have defaults, a collection, an option); no bound says so, so a
+# generic body would be refused at its declaration for `int` (W3 step 2) and the helper names its record.
+func take_whole(mut value: Block) -> Block:
+    return take(mut value)
+
+
+public func test_a_generic_take_of_a_record_uses_its_defaults() -> bool:
+    mut block = Block(items=[1, 2], name="b", count=3)
+    const got = take_whole(mut block)
+    return len(got.items) == 2 and got.name == "b" and len(block.items) == 0 and block.name == "block"
+
+
+public func test_exchange_of_an_optional_element_infers_its_replacement() -> bool:
+    mut pending: int[]?[] = [Some([1]), None]
+    const first = exchange(mut pending[0], None)
+    const second = exchange(mut pending[1], Some([4, 5]))
+    mut total = 0
+    match first:
+        case Some(values):
+            total += len(values)
+        case None:
+            total += 100
+    if second is not None:
+        total += 1000
+    match pending[1]:
+        case Some(values):
+            total += len(values) * 10
+        case None:
+            total += 10000
+    return total == 21 and pending[0] is None
+
+
+func element_back(n: int) -> int:
+    mut rows = [[1, 2, 3], [4]]
+    mut total = 0
+    for i in range(n):
+        const got = take(mut rows[0])
+        total += len(got)
+        rows[0] = own got
+    return total
+
+
+func element_copy_back(n: int) -> int:
+    mut rows = [[1, 2, 3], [4]]
+    mut total = 0
+    for i in range(n):
+        const got = copy(rows[0])
+        rows[0] = []
+        total += len(got)
+        rows[0] = copy(got)
+    return total
+
+
+public func test_take_of_an_element_allocates_and_copies_nothing() -> bool:
+    const small = testing.allocations(element_back, 10)
+    const large = testing.allocations(element_back, 1000)
+    return element_back(1000) == 3000 and small == large and testing.allocations(element_copy_back, 1000) > 1000
+
+
+# The d-shape of the port: an exchange of one field inside a writer's argument whose receiver is another field of the same
+# record. The two places are disjoint, so the receiver is read again after the argument writes the record. (Two elements
+# of one list stay refused, even at different literal indices.)
+func push_nested(mut builder: Builder):
+    append(mut builder.stack, exchange(mut builder.block, Block()))
+
+
+func grown(mut block: Block) -> Block:
+    append(mut block.items, 9)
+    return Block(items=[len(block.items)])
+
+
+public func test_an_exchange_inside_an_append_to_a_sibling_field() -> bool:
+    mut builder = Builder()
+    append(mut builder.block.items, 1)
+    push_nested(mut builder)
+    append(mut builder.block.items, 2)
+    append(mut builder.stack, grown(mut builder.block))
+    push_nested(mut builder)
+    return len(builder.stack) == 3 and builder.stack[0].items == [1] and builder.stack[1].items == [2] and builder.stack[2].items == [2, 9] and len(builder.block.items) == 0
+
+
+public func test_a_field_of_a_taken_record_is_read_from_the_moved_value() -> bool:
+    mut builder = Builder()
+    append(mut builder.block.items, 3)
+    const count = len(take(mut builder.block).items)
+    return count == 1 and len(builder.block.items) == 0

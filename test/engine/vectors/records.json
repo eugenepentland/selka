@@ -1,0 +1,113 @@
+{
+  "format": "selka-engine-vectors-v1",
+  "records": [
+    {
+      "name": "one read of every tag and an inline payload",
+      "kind": "test-exec",
+      "identity_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+      "key_hex": "d025e4be81a93197e2b7641b9a733a687f0b003357d13db0919a755f92a4744b",
+      "argument_hex": "74657374732f6c616e672f737472696e67732e73656c6b613a3a746573745f73706c6974",
+      "result_hex": "cdd9250d875195e5757dbd05e7a1d054c83c61ca882c79267d80515a16caf77a",
+      "payload": {
+        "inline_hex": "766572646963743a706173730a"
+      },
+      "reads": [
+        {
+          "tag": "file",
+          "path": "tests/lang/strings.selka",
+          "present": true,
+          "digest_hex": "7d1aa223722b2aaa89b92fc6b2ef0baa709c01eab9f8494b1de5c335f2750707",
+          "stat": {
+            "inode": 4123,
+            "size": 6,
+            "mtime": 1761800000123456789,
+            "ctime": 1761800000234567890
+          }
+        },
+        {
+          "tag": "file",
+          "path": "tests/lang/missing.selka",
+          "present": false,
+          "digest_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+          "stat": {
+            "inode": 0,
+            "size": 0,
+            "mtime": 0,
+            "ctime": 0
+          }
+        },
+        {
+          "tag": "exists",
+          "path": "tests/lang/selka.json",
+          "present": false
+        },
+        {
+          "tag": "listing",
+          "path": "tests/lang",
+          "opened": true,
+          "filter": 1,
+          "digest_hex": "a4ac3c9b90fa6252bfc5f8b7809b47276afdb251daba7bc4fcf001fcab1ed0dd"
+        },
+        {
+          "tag": "listing",
+          "path": "tests/nowhere",
+          "opened": false,
+          "filter": 0,
+          "digest_hex": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "tag": "variable",
+          "name": "SOURCE_DATE_EPOCH",
+          "set": true,
+          "placement": false,
+          "value": "1761800000"
+        },
+        {
+          "tag": "variable",
+          "name": "TMPDIR",
+          "set": false,
+          "placement": true,
+          "value": ""
+        },
+        {
+          "tag": "tool",
+          "path": "zig",
+          "digest_hex": "dd9765724d63cedb171573e96d87aad8c17ca281055f5b639c94761ea2da5c9e"
+        },
+        {
+          "tag": "query",
+          "kind": "test-plan",
+          "digest_hex": "efd23d49bc08c8f7493338a0703349930decc56e974f50792ccf7591c4591638",
+          "key_hex": "bfcb07da9e5a0c3409bab62a1dfc3af98db55dc6d6c3f7553a417e1fe637a85e"
+        }
+      ],
+      "bytes_hex": "534c4b52454330310100000009000000746573742d657865630102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20d025e4be81a93197e2b7641b9a733a687f0b003357d13db0919a755f92a4744b2400000074657374732f6c616e672f737472696e67732e73656c6b613a3a746573745f73706c6974cdd9250d875195e5757dbd05e7a1d054c83c61ca882c79267d80515a16caf77a000d000000766572646963743a706173730a09000000011800000074657374732f6c616e672f737472696e67732e73656c6b61017d1aa223722b2aaa89b92fc6b2ef0baa709c01eab9f8494b1de5c335f27507071b100000000000000600000000000000154da404c42b7318d2b8430bc42b7318011800000074657374732f6c616e672f6d697373696e672e73656c6b610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000021500000074657374732f6c616e672f73656c6b612e6a736f6e00030a00000074657374732f6c616e670101a4ac3c9b90fa6252bfc5f8b7809b47276afdb251daba7bc4fcf001fcab1ed0dd030d00000074657374732f6e6f776865726500000411000000534f555243455f444154455f45504f4348010a00000031373631383030303030000406000000544d50444952000105030000007a6967dd9765724d63cedb171573e96d87aad8c17ca281055f5b639c94761ea2da5c9e0609000000746573742d706c616ebfcb07da9e5a0c3409bab62a1dfc3af98db55dc6d6c3f7553a417e1fe637a85eefd23d49bc08c8f7493338a0703349930decc56e974f50792ccf7591c459163878b15354cf001d528fa154c8b301a21b7010fd5a2acf7852ef8c2b79c8ef4e44"
+    },
+    {
+      "name": "an object payload and a result identity of its own",
+      "kind": "engine-probe",
+      "identity_hex": "abababababababababababababababababababababababababababababababab",
+      "key_hex": "33937dd2cc7a6d8ae84580e0481a4d512d1bd68082d35de47c6d239766b5bfa7",
+      "argument_hex": "",
+      "result_hex": "74f1b855f7ff05afbe8824c3bec6cfdcbbcdf3c1cfc6bf21c4d593b54549ad20",
+      "payload": {
+        "object_hex": "1ae1de3c933bfbaf93f4a936ee61373ccd393684d01dd889763d2d149cd59ffc"
+      },
+      "reads": [
+        {
+          "tag": "file",
+          "path": "big.bin",
+          "present": true,
+          "digest_hex": "f7d2f8b46dc004c5d91119332e3141ce07813b0473a778332b60d2eb26f26812",
+          "stat": {
+            "inode": 9,
+            "size": 5000,
+            "mtime": 5,
+            "ctime": 6
+          }
+        }
+      ],
+      "bytes_hex": "534c4b5245433031010000000c000000656e67696e652d70726f6265abababababababababababababababababababababababababababababababab33937dd2cc7a6d8ae84580e0481a4d512d1bd68082d35de47c6d239766b5bfa70000000074f1b855f7ff05afbe8824c3bec6cfdcbbcdf3c1cfc6bf21c4d593b54549ad20011ae1de3c933bfbaf93f4a936ee61373ccd393684d01dd889763d2d149cd59ffc0100000001070000006269672e62696e01f7d2f8b46dc004c5d91119332e3141ce07813b0473a778332b60d2eb26f268120900000000000000881300000000000005000000000000000600000000000000f76f1baa35eef311ede91e990f1965fcdfb06efba03299b3a3d1af75fa38c878"
+    }
+  ]
+}

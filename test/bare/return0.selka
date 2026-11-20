@@ -1,0 +1,3 @@
+# The smallest program: what a bare image costs before the program does anything.
+func main() -> int:
+    return 0

@@ -1,0 +1,568 @@
+import sets
+import strings
+
+# A flag: present or absent, never a value. `short` is one character or "".
+public record Flag:
+    name: str
+    short: str
+    help: str
+
+
+# An option: a name followed by a value. `fallback` is the value when it is not given, or None.
+public record Option:
+    name: str
+    short: str
+    value_name: str
+    help: str
+    fallback: str?
+
+
+# A positional argument. `repeated` takes every remaining positional and may be empty.
+public record Positional:
+    name: str
+    help: str
+    required: bool
+    repeated: bool
+
+
+# What a command line may contain. Build it with `new` and the `add_*` functions.
+public record Spec:
+    program: str
+    summary: str
+    flags: Flag[]
+    options: Option[]
+    positionals: Positional[]
+
+
+# One parsed command line.
+public record Parsed:
+    help: bool
+    flags: set[str]
+    given: dict[str, str[]]
+    fallbacks: dict[str, str]
+    positionals: str[]
+
+
+# One mistake in a command line, or in how a value is read.
+public enum Error:
+    UnknownOption(name: str)
+    MissingValue(name: str)
+    UnexpectedValue(name: str)
+    MissingPositional(name: str)
+    UnexpectedPositional(value: str)
+    NotAnInteger(name: str, value: str)
+
+
+# A program with commands: `tasks [--db PATH] COMMAND [ARGS]`. `global` holds the options that come before the command
+# word (declare them with the `add_*` functions on `mut program.global`; its positionals are not used), and each command
+# has a spec of its own. Build it with `new_commands` and `add_command`.
+public record Commands:
+    global: Spec
+    commands: Command[]
+
+
+# One command of a program: its word and its spec, whose program name reads `PROGRAM WORD`.
+public record Command:
+    name: str
+    spec: Spec
+
+
+# One parsed command line of a program with commands: the command word (`""` when only the program's help was asked
+# for), the options before the word, and the flags, options and positionals after it.
+public record Invocation:
+    command: str
+    global: Parsed
+    local: Parsed
+
+
+# One mistake in a command line of a program with commands. `known` lists the command words, `command` is the word whose
+# arguments held the mistake (`""` for the options before the word).
+public enum CommandError:
+    MissingCommand(known: str)
+    UnknownCommand(name: str, known: str)
+    Failed(command: str, error: Error)
+
+
+# The sentence for a mistake, without the program name.
+public func message(error: Error) -> str:
+    match error:
+        case UnknownOption(name):
+            return f"unknown option {name}"
+        case MissingValue(name):
+            return f"option {name} needs a value"
+        case UnexpectedValue(name):
+            return f"flag {name} takes no value"
+        case MissingPositional(name):
+            return f"missing {name}"
+        case UnexpectedPositional(value=text):
+            return f"unexpected argument {text}"
+        case NotAnInteger(name, value=text):
+            return f"option --{name} wants an integer, got {text}"
+
+
+# An empty spec for a program, with the text its help shows under the usage line.
+public func new(program: str, summary: str) -> Spec:
+    mut flags: Flag[] = []
+    mut options: Option[] = []
+    mut positionals: Positional[] = []
+    return Spec(program=copy(program), summary=copy(summary), flags=own flags, options=own options, positionals=own positionals)
+
+
+# Declare a flag `--name` with the one-character `short` (or "" for none).
+public func add_flag(mut spec: Spec, name: str, short: str, help: str):
+    append(mut spec.flags, Flag(name=copy(name), short=copy(short), help=copy(help)))
+
+
+# Declare an option `--name VALUE` that has no value unless it is given.
+public func add_option(mut spec: Spec, name: str, short: str, value_name: str, help: str):
+    append(mut spec.options, Option(name=copy(name), short=copy(short), value_name=copy(value_name), help=copy(help), fallback=None))
+
+
+# Declare an option `--name VALUE` that has `fallback` unless it is given.
+public func add_option_default(mut spec: Spec, name: str, short: str, value_name: str, help: str, fallback: str):
+    append(mut spec.options, Option(name=copy(name), short=copy(short), value_name=copy(value_name), help=copy(help), fallback=Some(copy(fallback))))
+
+
+# Declare a positional that must be given, in the order of declaration.
+public func add_positional(mut spec: Spec, name: str, help: str):
+    append(mut spec.positionals, Positional(name=copy(name), help=copy(help), required=True, repeated=False))
+
+
+# Declare a positional that may be left out.
+public func add_optional_positional(mut spec: Spec, name: str, help: str):
+    append(mut spec.positionals, Positional(name=copy(name), help=copy(help), required=False, repeated=False))
+
+
+# Declare a last positional that takes every remaining argument, possibly none.
+public func add_rest(mut spec: Spec, name: str, help: str):
+    append(mut spec.positionals, Positional(name=copy(name), help=copy(help), required=False, repeated=True))
+
+
+# Whether the flag `name` was given.
+public func has(parsed: Parsed, name: str) -> bool:
+    return name in parsed.flags
+
+
+# Every value given for the option `name`, in order.
+public func get_all(parsed: Parsed, name: str) -> str[]:
+    mut out: str[] = []
+    if name in parsed.given:
+        for text in parsed.given[name]:
+            append(mut out, copy(text))
+    return out
+
+
+# The value of the option `name`: the last one given, else its fallback, else None.
+public func get(parsed: Parsed, name: str) -> str?:
+    if name in parsed.given:
+        const all = parsed.given[name]
+        return Some(copy(all[len(all) - 1]))
+    if name in parsed.fallbacks:
+        return Some(copy(parsed.fallbacks[name]))
+    return None
+
+
+# The value of the option `name` read as an integer.
+public func get_int(parsed: Parsed, name: str) -> int fails Error:
+    match get(parsed, name):
+        case Some(text):
+            match parse_int(text):
+                case Some(number):
+                    return number
+                case None:
+                    fail Error.NotAnInteger(name=copy(name), value=copy(text))
+        case None:
+            fail Error.MissingValue(name=f"--{name}")
+
+
+func flag_index(spec: Spec, name: str) -> int:
+    mut index = 0
+    while index < len(spec.flags):
+        if spec.flags[index].name == name:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func option_index(spec: Spec, name: str) -> int:
+    mut index = 0
+    while index < len(spec.options):
+        if spec.options[index].name == name:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func short_flag_index(spec: Spec, short: str) -> int:
+    mut index = 0
+    while index < len(spec.flags):
+        if spec.flags[index].short == short:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func short_option_index(spec: Spec, short: str) -> int:
+    mut index = 0
+    while index < len(spec.options):
+        if spec.options[index].short == short:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func give(mut parsed: Parsed, name: str, text: str):
+    if name in parsed.given:
+        append(mut parsed.given[name], copy(text))
+    else:
+        mut first: str[] = [copy(text)]
+        parsed.given[copy(name)] = own first
+
+
+# Take the value of an option written as `NAME VALUE`: the word after it, whatever it looks like.
+func next_word(items: str[], at: int, shown: str) -> str fails Error:
+    if at + 1 >= len(items):
+        fail Error.MissingValue(name=copy(shown))
+    return copy(items[at + 1])
+
+
+# Handle one `--name` or `--name=value` word. Returns how many words it used.
+func long_option(spec: Spec, items: str[], at: int, mut parsed: Parsed) -> int fails Error:
+    const word = items[at]
+    mut name = strings_slice(word, 2, len(word))
+    mut inline: str? = None
+    const eq = find_byte(word, 61)
+    if eq >= 2:
+        name = strings_slice(word, 2, eq)
+        inline = Some(strings_slice(word, eq + 1, len(word)))
+    if name == "help":
+        if inline is not None:
+            fail Error.UnexpectedValue(name="--help")
+        parsed.help = True
+        return 1
+    const flag = flag_index(spec, name)
+    if flag >= 0:
+        if inline is not None:
+            fail Error.UnexpectedValue(name=f"--{name}")
+        sets.add(mut parsed.flags, copy(name))
+        return 1
+    const option = option_index(spec, name)
+    if option >= 0:
+        if inline is not None:
+            give(mut parsed, name, inline)
+            return 1
+        const text = try next_word(items, at, f"--{name}")
+        give(mut parsed, name, text)
+        return 2
+    fail Error.UnknownOption(name=f"--{name}")
+
+
+# Handle a cluster of short flags, ending in at most one option that takes the rest of the word or the next word.
+func short_cluster(spec: Spec, items: str[], at: int, mut parsed: Parsed) -> int fails Error:
+    const word = items[at]
+    mut position = 1
+    while position < len(word):
+        const letter = strings_slice(word, position, position + 1)
+        if letter == "h":
+            parsed.help = True
+            position += 1
+            continue
+        const flag = short_flag_index(spec, letter)
+        if flag >= 0:
+            sets.add(mut parsed.flags, copy(spec.flags[flag].name))
+            position += 1
+            continue
+        const option = short_option_index(spec, letter)
+        if option >= 0:
+            const name = spec.options[option].name
+            mut rest = strings_slice(word, position + 1, len(word))
+            if len(rest) > 0 and rest[0] == 61:
+                rest = strings_slice(rest, 1, len(rest))
+            if len(rest) > 0:
+                give(mut parsed, name, rest)
+                return 1
+            const text = try next_word(items, at, f"-{letter}")
+            give(mut parsed, name, text)
+            return 2
+        fail Error.UnknownOption(name=f"-{letter}")
+    return 1
+
+
+func strings_slice(text: str, start: int, end: int) -> str:
+    return copy(text[start:end])
+
+
+func find_byte(text: str, byte: int) -> int:
+    mut index = 0
+    while index < len(text):
+        if text[index] == byte:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func new_parsed(spec: Spec) -> Parsed:
+    mut flags: set[str] = set()
+    mut given: dict[str, str[]] = {}
+    mut fallbacks: dict[str, str] = {}
+    mut positionals: str[] = []
+    for option in spec.options:
+        match option.fallback:
+            case Some(text):
+                fallbacks[copy(option.name)] = copy(text)
+            case None:
+                pass
+    return Parsed(help=False, flags=own flags, given=own given, fallbacks=own fallbacks, positionals=own positionals)
+
+
+# Read the words from `start` into `parsed`. Returns `len(items)`, or with `stop` the index of the first positional
+# word (the word after a `--`), which ends the options: that is where a command word stands.
+func scan(spec: Spec, items: str[], start: int, stop: bool, mut parsed: Parsed) -> int fails Error:
+    mut only_positionals = False
+    mut at = start
+    while at < len(items):
+        const word = items[at]
+        if only_positionals or word == "-" or len(word) == 0 or word[0] != 45:
+            if stop:
+                return at
+            append(mut parsed.positionals, copy(word))
+            at += 1
+        elif word == "--":
+            if stop:
+                return at + 1
+            only_positionals = True
+            at += 1
+        elif len(word) > 1 and word[1] == 45:
+            at += try long_option(spec, items, at, mut parsed)
+        else:
+            at += try short_cluster(spec, items, at, mut parsed)
+    return at
+
+
+# Parse a command line, which is the arguments without the program name.
+public func parse(spec: Spec, items: str[]) -> Parsed fails Error:
+    mut parsed = new_parsed(spec)
+    try scan(spec, items, 0, False, mut parsed)
+    if parsed.help:
+        return parsed
+    try check_positionals(spec, parsed)
+    return parsed
+
+
+func check_positionals(spec: Spec, parsed: Parsed) -> Unit fails Error:
+    mut taken = 0
+    for slot in spec.positionals:
+        if slot.repeated:
+            return
+        if taken >= len(parsed.positionals):
+            if slot.required:
+                fail Error.MissingPositional(name=copy(slot.name))
+        else:
+            taken += 1
+    if taken < len(parsed.positionals):
+        fail Error.UnexpectedPositional(value=copy(parsed.positionals[taken]))
+
+
+func usage_flag(flag: Flag) -> str:
+    if len(flag.short) > 0:
+        return f"[-{flag.short}]"
+    return f"[--{flag.name}]"
+
+
+func usage_option(option: Option) -> str:
+    if len(option.short) > 0:
+        return f"[-{option.short} {option.value_name}]"
+    return f"[--{option.name} {option.value_name}]"
+
+
+func usage_positional(slot: Positional) -> str:
+    if slot.repeated:
+        return f"[{slot.name} ...]"
+    if slot.required:
+        return copy(slot.name)
+    return f"[{slot.name}]"
+
+
+func usage_head(spec: Spec) -> str[]:
+    mut pieces: str[] = [f"usage: {spec.program}", "[-h]"]
+    for flag in spec.flags:
+        append(mut pieces, usage_flag(flag))
+    for option in spec.options:
+        append(mut pieces, usage_option(option))
+    return pieces
+
+
+# The one-line usage: `usage: PROGRAM [-h] [flags] [options] POSITIONALS`.
+public func usage(spec: Spec) -> str:
+    mut pieces = usage_head(spec)
+    for slot in spec.positionals:
+        append(mut pieces, usage_positional(slot))
+    return strings.join(pieces, " ")
+
+
+func flag_label(flag: Flag) -> str:
+    if len(flag.short) > 0:
+        return f"-{flag.short}, --{flag.name}"
+    return f"    --{flag.name}"
+
+
+func option_label(option: Option) -> str:
+    if len(option.short) > 0:
+        return f"-{option.short}, --{option.name} {option.value_name}"
+    return f"    --{option.name} {option.value_name}"
+
+
+func padded(label: str, width: int) -> str:
+    mut out = copy(label)
+    while len(out) < width:
+        out = out + " "
+    return out
+
+
+func widest(spec: Spec) -> int:
+    mut width = len("-h, --help")
+    for slot in spec.positionals:
+        width = max(width, len(slot.name))
+    for flag in spec.flags:
+        width = max(width, len(flag_label(flag)))
+    for option in spec.options:
+        width = max(width, len(option_label(option)))
+    return width
+
+
+func append_option_lines(mut lines: str[], spec: Spec, width: int):
+    append(mut lines, "options:")
+    append(mut lines, f"  {padded('-h, --help', width)}  show this help text and exit")
+    for flag in spec.flags:
+        append(mut lines, f"  {padded(flag_label(flag), width)}  {flag.help}")
+    for option in spec.options:
+        mut line = f"  {padded(option_label(option), width)}  {option.help}"
+        match option.fallback:
+            case Some(text):
+                line = line + f" (default: {text})"
+            case None:
+                pass
+        append(mut lines, own line)
+
+
+# The full help text: usage, summary, positionals and options, ending in a newline.
+public func help_text(spec: Spec) -> str:
+    const width = widest(spec)
+    mut lines: str[] = [usage(spec), "", copy(spec.summary), ""]
+    if len(spec.positionals) > 0:
+        append(mut lines, "positional arguments:")
+        for slot in spec.positionals:
+            append(mut lines, f"  {padded(slot.name, width)}  {slot.help}")
+        append(mut lines, "")
+    append_option_lines(mut lines, spec, width)
+    append(mut lines, "")
+    return strings.join(lines, "\n")
+
+
+# An empty program with commands, with the text its help shows under the usage line. Declare the options that come
+# before the command word on `mut program.global` with `add_flag` and `add_option`, and each command with `add_command`.
+public func new_commands(program: str, summary: str) -> Commands:
+    mut commands: Command[] = []
+    return Commands(global=new(program, summary), commands=own commands)
+
+
+# Declare the command `name` with the spec for what follows its word. The spec is copied and its program name becomes
+# `PROGRAM name`; its summary is the command's line in the program's help.
+public func add_command(mut program: Commands, name: str, spec: Spec):
+    mut own_spec = copy(spec)
+    own_spec.program = f"{program.global.program} {name}"
+    append(mut program.commands, Command(name=copy(name), spec=own own_spec))
+
+
+func command_index(program: Commands, name: str) -> int:
+    mut index = 0
+    while index < len(program.commands):
+        if program.commands[index].name == name:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func command_words(program: Commands) -> str:
+    mut names: str[] = []
+    for command in program.commands:
+        append(mut names, copy(command.name))
+    return strings.join(names, ", ")
+
+
+# Parse a command line of a program with commands: the options before the command word against `program.global`, then
+# the word, then everything after it against that command's spec. `-h` or `--help` before the word asks for the
+# program's help (the command is `""`); after it, for the command's (`local.help`). Options of the program do not
+# follow the word: one there is an unknown option of the command.
+public func parse_command(program: Commands, items: str[]) -> Invocation fails CommandError:
+    mut shared = new_parsed(program.global)
+    const at = scan(program.global, items, 0, True, mut shared) else Err(error):
+        fail CommandError.Failed(command="", error=own error)
+    if shared.help:
+        return Invocation(command="", global=own shared, local=new_parsed(new("", "")))
+    if at >= len(items):
+        fail CommandError.MissingCommand(known=command_words(program))
+    const word = items[at]
+    const index = command_index(program, word)
+    if index < 0:
+        fail CommandError.UnknownCommand(name=copy(word), known=command_words(program))
+    const spec = program.commands[index].spec
+    mut local = new_parsed(spec)
+    _ = scan(spec, items, at + 1, False, mut local) else Err(error):
+        fail CommandError.Failed(command=copy(word), error=own error)
+    if not local.help:
+        if check_positionals(spec, local) is Err(error):
+            fail CommandError.Failed(command=copy(word), error=own error)
+    return Invocation(command=copy(word), global=own shared, local=own local)
+
+
+# The sentence for a mistake of `parse_command`, without the program name: `unknown option --prio for command list`.
+public func command_message(error: CommandError) -> str:
+    match error:
+        case MissingCommand(known):
+            return f"missing command (one of: {known})"
+        case UnknownCommand(name, known):
+            return f"unknown command {name} (one of: {known})"
+        case Failed(command, error=cause):
+            if command == "":
+                return message(cause)
+            return f"{message(cause)} for command {command}"
+
+
+# The command a mistake of `parse_command` names, or "" when it names none: the word to give `command_usage`.
+public func command_of(error: CommandError) -> str:
+    match error:
+        case Failed(command, error=_):
+            return copy(command)
+        case MissingCommand(known=_):
+            return ""
+        case UnknownCommand(name=_, known=_):
+            return ""
+
+
+# The one-line usage of the command `command`, or of the program for "" or a word that is no command.
+public func command_usage(program: Commands, command: str) -> str:
+    const index = command_index(program, command)
+    if index >= 0:
+        return usage(program.commands[index].spec)
+    mut pieces = usage_head(program.global)
+    append(mut pieces, "COMMAND ...")
+    return strings.join(pieces, " ")
+
+
+# The help text of the command `command`, or of the program for "" or a word that is no command: usage, summary, the
+# commands with their summaries, and the options before the command word.
+public func command_help(program: Commands, command: str) -> str:
+    const index = command_index(program, command)
+    if index >= 0:
+        return help_text(program.commands[index].spec)
+    mut width = widest(program.global)
+    for entry in program.commands:
+        width = max(width, len(entry.name))
+    mut lines: str[] = [command_usage(program, ""), "", copy(program.global.summary), "", "commands:"]
+    for entry in program.commands:
+        append(mut lines, f"  {padded(entry.name, width)}  {entry.spec.summary}")
+    append(mut lines, "")
+    append_option_lines(mut lines, program.global, width)
+    append(mut lines, "")
+    return strings.join(lines, "\n")

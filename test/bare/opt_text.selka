@@ -1,0 +1,31 @@
+# Options and results whose payload is text, in a list and returned from functions.
+func pick(i: int) -> str?:
+    if i % 3 == 0:
+        return None
+    return Some(f"v{i * 7}")
+
+
+func parse(i: int) -> str fails str:
+    if i % 4 == 0:
+        fail f"bad{i}"
+    return f"good{i}"
+
+
+func main() -> int:
+    mut kept: str?[] = []
+    for i in range(20):
+        append(mut kept, pick(i))
+    mut total = 0
+    for k in kept:
+        match k:
+            case Some(t):
+                total += len(t)
+            case None:
+                total += 1
+    for i in range(20):
+        match parse(i):
+            case Ok(v):
+                total += len(v) * 2
+            case Err(e):
+                total += len(e)
+    return total % 256

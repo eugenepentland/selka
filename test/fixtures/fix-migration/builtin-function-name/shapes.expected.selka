@@ -1,0 +1,12 @@
+# A public function another module calls qualified, and a private one; this module calls both bare.
+public func shapes_sum(values: int[]) -> int:
+    return len(values) * 10
+
+
+func shapes_abs(n: int) -> int:
+    _ = n
+    return 7
+
+
+public func total(values: int[]) -> int:
+    return shapes_sum(values) + shapes_abs(0 - 1)

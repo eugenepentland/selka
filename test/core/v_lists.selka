@@ -1,0 +1,110 @@
+import lists
+
+record Cell:
+    code: int
+    weight: int
+    flag: bool
+
+
+record Grid:
+    cells: Cell[]
+
+
+enum Value:
+    integer(value: int)
+    boolean(value: bool)
+    cell(value: Cell)
+
+
+func push_one(xs0: int[], v: int) -> int:
+    mut xs = copy(xs0)
+    append(mut xs, v)
+    return len(xs) + xs0[0]
+
+
+func write_cells(cells0: Cell[], v: int) -> int:
+    mut cells = copy(cells0)
+    cells[0].code = v
+    cells[1].flag = not cells[1].flag
+    cells[2] = Cell(code=v + 1, weight=v + 2, flag=True)
+    mut manual_prefix = cells[0].code * 100 + cells0[0].code
+    mut manual_bonus = 0
+    if cells[1].flag:
+        manual_bonus = 1000
+    return manual_prefix + manual_bonus + cells[2].weight
+
+
+func as_integer(value: Value) -> int:
+    match value:
+        case integer(value=n):
+            return n
+        case boolean(value=_):
+            return 0
+        case cell(value=c):
+            return c.code
+
+
+func stack_run(n: int) -> int:
+    mut stack: Value[] = [Value.integer(value=n), Value.boolean(value=False)]
+    mut total = 0
+    for i in range(6):
+        mut popped = lists.pop(mut stack)
+        match popped:
+            case boolean(value=b):
+                mut manual_increment = 1
+                if b:
+                    manual_increment = 3
+                total += manual_increment
+            case integer(value=k):
+                total += k
+            case cell(value=c):
+                total += c.weight
+        append(mut stack, Value.integer(value=i))
+        append(mut stack, Value.boolean(value=i % 2 == 0))
+        if i % 3 == 0:
+            append(mut stack, Value.cell(value=Cell(code=i, weight=i * 7, flag=True)))
+        stack[0] = Value.integer(value=as_integer(stack[0]) + 1)
+    return total + as_integer(stack[0]) * 1000 + len(stack)
+
+
+func peek(vs: Value[], i: int) -> int:
+    match vs[i]:
+        case integer(value=n):
+            return n
+        case boolean(value=b):
+            if (b):
+                return (1)
+            else:
+                return (0)
+        case cell(value=c):
+            return c.code * 10 + c.weight
+
+
+func field_reads(cells: Cell[], i: int) -> int:
+    mut manual_prefix = cells[i].code + cells[i].weight
+    mut manual_bonus = 0
+    if cells[i].flag:
+        manual_bonus = 1
+    return manual_prefix + manual_bonus
+
+
+func drain(xs: int[]) -> int:
+    mut saved = copy(xs)
+    mut total = 0
+    while len(saved) > 0:
+        total = total * 3 + lists.pop(mut saved)
+    return total
+
+
+func main(out: Stream) -> int:
+    print(out, push_one([4, 5, 6], 7))
+    mut cells = [Cell(code=1, weight=2, flag=True), Cell(code=2, weight=3, flag=False), Cell(code=5, weight=6, flag=False)]
+    print(out, write_cells(cells, 55), cells[0].code, cells[2].code)
+    print(out, stack_run(5))
+    mut vs = [Value.integer(value=5), Value.boolean(value=True), Value.cell(value=Cell(code=7, weight=8, flag=True))]
+    print(out, peek(vs, 0), peek(vs, 1), peek(vs, 2))
+    print(out, field_reads(cells, 0), field_reads(cells, 2))
+    print(out, drain([1, 2, 3, 4]))
+    mut g = Grid(cells=own cells)
+    print(out, len(g.cells), g.cells[1].weight)
+    return 0

@@ -1,0 +1,18 @@
+# A program that ends as soon as it hears a stop (FR5b, STOP-1): it sleeps until the stop (each sleep 20 s, at most 3),
+# says goodbye and returns 0 at once, so a signal that reaches `selka run` just after can find the program gone.
+import filesystem
+import process
+import time
+
+func main(fs: Filesystem, clock: Clock, err: Stream, stop: Stop) -> int:
+    match filesystem.realpath(fs, "/proc/self"):
+        case Ok(path):
+            print(err, "guest " + path)
+        case Err(_):
+            return 1
+    mut sleeps = 0
+    while not process.stop_requested(stop) and sleeps < 3:
+        time.sleep(clock, 20000000000)
+        sleeps += 1
+    print(err, "goodbye")
+    return 0

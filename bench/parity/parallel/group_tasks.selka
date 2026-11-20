@@ -1,0 +1,33 @@
+# group_tasks: eight independent tasks in one group, each summing the work of 512 items (PARALLEL.md, program 2).
+import parallel
+
+func work(seed: int, rounds: int) -> int:
+    mut t = seed % 1000003
+    for i in range(rounds):
+        t = (t * 31 + i) % 1000003
+    return t
+
+
+# The work of items first .. first + count - 1, summed.
+func span(first: int, count: int, rounds: int) -> int:
+    mut total = 0
+    for x in range(first, first + count):
+        total += work(x, rounds)
+    return total
+
+
+func main(out: Stream) -> int:
+    const rounds = 100000
+    mut checksum = 0
+    with parallel.group() as g:
+        const t0 = g.submit(span, 0, 512, rounds)
+        const t1 = g.submit(span, 512, 512, rounds)
+        const t2 = g.submit(span, 1024, 512, rounds)
+        const t3 = g.submit(span, 1536, 512, rounds)
+        const t4 = g.submit(span, 2048, 512, rounds)
+        const t5 = g.submit(span, 2560, 512, rounds)
+        const t6 = g.submit(span, 3072, 512, rounds)
+        const t7 = g.submit(span, 3584, 512, rounds)
+        checksum = t0.result() + t1.result() + t2.result() + t3.result() + t4.result() + t5.result() + t6.result() + t7.result()
+    print(out, "group_tasks", 8, 512, rounds, "checksum", checksum)
+    return 0

@@ -1,0 +1,24 @@
+# `main` takes its arguments and capabilities with `own`, stores them in a record and
+# lends the record `mut` to a helper. `main` drops them when the record's lifetime ends,
+# so the C entry must not drop them again after `main` returns (F-G2b-34).
+record Session:
+    fs: Filesystem
+    entropy: Entropy
+    args: str[]
+    reads: int
+
+
+func read_input(mut session: Session) -> int:
+    session.reads = session.reads + 1
+    match session.fs.read_file("input.txt"):
+        case Ok(data):
+            return len(data)
+        case Err(_):
+            return -1
+
+
+func main(own args: str[], own fs: Filesystem, own entropy: Entropy, out: Stream) -> int:
+    mut session = Session(fs=own fs, entropy=own entropy, args=own args, reads=0)
+    const size = read_input(mut session)
+    print(out, f"read {size} bytes in {session.reads} call with {len(session.args)} arguments")
+    return 0

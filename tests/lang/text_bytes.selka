@@ -1,0 +1,96 @@
+import strings
+
+record Held:
+    piece: str
+
+
+func head(text: str) -> str from text:
+    return text[0:2]
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_len_of_text_is_its_octet_count() -> bool:
+    return len("") == 0 and len("abc") == 3 and len("héllo") == 6 and len("日本語") == 9 and len("x" + "🙂") == 5
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_indexing_text_reads_one_octet_as_an_int() -> bool:
+    return "abc"[0] == 97 and "abc"[2] == 99 and "é"[0] == 195 and "é"[1] == 169 and "🙂"[3] == 130
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_slicing_text_copies_octets_between_byte_offsets() -> bool:
+    return "héllo"[0:1] == "h" and "héllo"[1:3] == "é" and "héllo"[3:6] == "llo" and "héllo"[0:0] == "" and "héllo"[2:2] == ""
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_an_end_inside_a_scalar_is_the_whole_boundary_pair() -> bool:
+    const text = "aé中"
+    return text[0:1] == "a" and text[1:3] == "é" and text[3:6] == "中" and len(text[1:3]) == 2 and strings.char_count(text[1:3]) == 1
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_the_scalar_helpers_keep_their_scalar_meaning_beside_bytes() -> bool:
+    const text = "héllo"
+    return strings.char_count(text) == 5 and len(text) == 6 and strings.char_at(text, 1) == "é" and strings.char_slice(text, 1, 3) == "él" and strings.char_count(text[1:3]) == 1
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_byte_slices_index_and_len_over_a_slice() -> bool:
+    const text = "aé中b"
+    const piece = text[3:6]
+    return piece == "中" and len(piece) == 3 and piece[0] == 228 and strings.char_at(piece, 0) == "中" and strings.char_count(text[1:3]) == 1
+
+
+# spec-case: TEXT-BYTES-PHASE-2
+public func test_a_byte_slice_of_a_byte_slice_stays_octets() -> bool:
+    const text = "aé中b"
+    const tail = text[1:]
+    const piece = copy(tail[0:2])
+    return tail == "é中b" and len(tail) == 6 and piece == "é" and len(piece) == 2 and strings.char_count(piece) == 1
+
+
+# spec-case: SLICE-ESCAPES-1
+public func test_a_slice_reaches_owning_storage_as_an_explicit_copy() -> bool:
+    const text = "aé中b"
+    const piece = text[1:3]
+    const kept = [copy((text[6:7])), copy(piece)]
+    return len(kept) == 2 and kept[0] == "b" and kept[1] == "é" and len(kept[1]) == 2
+
+
+# spec-case: SLICE-ESCAPES-1
+public func test_a_record_field_holds_an_explicit_copy_of_a_slice() -> bool:
+    const text = "abc"
+    mut held = Held(piece=copy(text[0:1]))
+    held.piece = copy((text[1:2]))
+    return held.piece == "b" and len(held.piece) == 1
+
+
+# spec-case: SLICE-ESCAPES-1
+public func test_a_slice_of_the_single_borrowable_parameter_may_be_returned() -> bool:
+    const piece = copy(head("abcdef"))
+    return piece == "ab" and len(piece) == 2
+
+
+func main() -> int:
+    if not test_len_of_text_is_its_octet_count():
+        return 1
+    if not test_indexing_text_reads_one_octet_as_an_int():
+        return 2
+    if not test_slicing_text_copies_octets_between_byte_offsets():
+        return 3
+    if not test_an_end_inside_a_scalar_is_the_whole_boundary_pair():
+        return 4
+    if not test_the_scalar_helpers_keep_their_scalar_meaning_beside_bytes():
+        return 5
+    if not test_byte_slices_index_and_len_over_a_slice():
+        return 6
+    if not test_a_byte_slice_of_a_byte_slice_stays_octets():
+        return 7
+    if not test_a_slice_reaches_owning_storage_as_an_explicit_copy():
+        return 8
+    if not test_a_record_field_holds_an_explicit_copy_of_a_slice():
+        return 9
+    if not test_a_slice_of_the_single_borrowable_parameter_may_be_returned():
+        return 10
+    return 0

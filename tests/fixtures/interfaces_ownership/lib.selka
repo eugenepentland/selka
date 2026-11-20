@@ -1,0 +1,61 @@
+# The callees of the interface oracle's ownership fixture (W9, goal G7). Each entry beside this file calls them in
+# one shape; the oracle checks the entry against this module's interface, where every ordinary body is `pass`, and
+# against its source, and Core's refusals must agree.
+import base
+
+public record Bag:
+    names: str[]
+    count: int
+
+
+public enum Slot:
+    empty
+    full(names: str[])
+
+
+public func head(xs: str[]) -> str from xs:
+    return xs[0]
+
+
+public func name_of(bag: Bag) -> str from bag:
+    return bag.names[0]
+
+
+public func grow(mut xs: str[], name: str):
+    append(mut xs, copy(name))
+
+
+public func keep(own xs: str[]) -> str[]:
+    return xs
+
+
+public func first[T](xs: T[]) -> T from xs:
+    const item = xs[0]
+    return item
+
+
+public func count_of(xs: str[]) -> int:
+    const scratch = [len(xs), 1]
+    return scratch[0]
+
+
+public func relay(xs: str[]) -> str from xs:
+    return base.pick(xs)
+
+
+public func fresh_name(xs: str[]) -> str:
+    const name = copy(xs[0])
+    return name
+
+
+public record Pair:
+    left: str
+    right: str
+
+
+public func pair_of(a: str[], b: str[]) -> Pair from a, b:
+    return Pair(left=a[0], right=b[0])
+
+
+public func label(n: int) -> str:
+    return f"n{n}"

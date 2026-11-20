@@ -1,0 +1,293 @@
+# Zero-copy part 1, checker precision (lane O3, item 3): code that is correct and was refused, now accepted with no copy
+# and no run-time cost. (a) After `if x is None: return` (or `continue`), `x` reads as its payload in place.
+# (b) A loop variable names an element of the iterated field, so a `mut` argument naming another field is disjoint; a
+# match arm whose payload is a number holds nothing. (c) A slice of a view binding is a view. (d) A `mut` local that
+# borrows may also take a literal, a `from` call or a field of an element. The refused neighbours are in
+# src/core/zero_copy_precision_test.zig.
+import bytes
+import dicts
+
+record Node:
+    atom: bytes?
+    kids: Node[] = []
+
+
+func lookup(n: int) -> bytes?:
+    if n > 0:
+        return Some(b"x")
+    return None
+
+
+func atom_of(node: Node) -> bytes? from node:
+    return node.atom
+
+
+func list_of(node: Node) -> Node[]? from node:
+    if len(node.kids) == 0:
+        return None
+    return Some(node.kids)
+
+
+func f204(n: int) -> int:
+    const found = lookup(n)
+    if found is None:
+        return 0
+    const id = found.unwrap_or(b"")
+    return len(id)
+
+
+func f308(node: Node) -> int:
+    const atom = atom_of(node)
+    if atom is None:
+        return 0
+    const kind = atom.unwrap_or(b"")
+    if kind == b"a":
+        return 1
+    return 2
+
+
+func f400(children: Node[]) -> int:
+    mut total = 0
+    for child in children:
+        const kids = list_of(child)
+        if kids is None:
+            continue
+        const k = kids.unwrap_or([])
+        total += len(k)
+    return total
+
+
+func frc4(node: Node) -> int:
+    const first = node.kids
+    const at = list_of(node)
+    if at is None:
+        return 0
+    const where = at.unwrap_or([])
+    return len(first) + len(where)
+
+
+public func test_narrowed_owned_option() -> bool:
+    return f204(1) == 1 and f204(0) == 0
+
+
+public func test_narrowed_borrowed_option() -> bool:
+    return f308(Node(atom=Some(b"a"))) == 1 and f308(Node(atom=Some(b"b"))) == 2 and f308(Node(atom=None)) == 0
+
+
+public func test_narrowed_in_a_loop_with_continue() -> bool:
+    const tree = [Node(atom=None, kids=[Node(atom=None), Node(atom=None)]), Node(atom=None)]
+    return f400(tree) == 2
+
+
+public func test_narrowed_beside_another_borrow() -> bool:
+    const node = Node(atom=None, kids=[Node(atom=None)])
+    return frc4(node) == 2 and frc4(Node(atom=None)) == 0
+
+
+record Pin:
+    ref_des: bytes
+    pin: bytes
+    net: bytes = b""
+
+
+record Net:
+    name: bytes
+    pins: Pin[]
+
+
+record Ctx:
+    nets: Net[] = []
+    adj: dict[bytes, bytes[]] = {}
+    names: bytes[] = []
+    pins: Pin[] = []
+
+
+func remember(mut names: bytes[], net: bytes):
+    append(mut names, copy(net))
+
+
+func put(mut m: dict[bytes, bytes[]], key: bytes, own item: bytes):
+    if key not in m:
+        m[key] = []
+    append(mut m[key], own item)
+
+
+func collect(mut ctx: Ctx) -> int:
+    for pn in ctx.pins:
+        remember(mut ctx.names, pn.net)
+    return len(ctx.names)
+
+
+func adjacency(mut ctx: Ctx) -> int:
+    for net in ctx.nets:
+        for pin in net.pins:
+            put(mut ctx.adj, pin.ref_des, copy(pin.pin))
+    return len(ctx.adj)
+
+
+func unadopt(mut attach: int?[], i: int) -> bool:
+    match attach[i]:
+        case None:
+            return False
+        case Some(sec):
+            if sec > 0:
+                attach[i] = None
+            return True
+
+
+record Intent:
+    net: bytes
+    step: float? = None
+
+
+func clear_step(raw: float) -> bool:
+    mut out = Intent(net=b"VCC", step=Some(raw))
+    if out.step is Some(v):
+        if not (v > 0.0):
+            out.step = None
+    return out.step is None
+
+
+public func test_a_loop_variable_read_beside_a_mut_sibling_field() -> bool:
+    mut ctx = Ctx(pins=[Pin(ref_des=b"U1", pin=b"1", net=b"GND"), Pin(ref_des=b"U1", pin=b"2", net=b"VCC")])
+    return collect(mut ctx) == 2 and ctx.names == [b"GND", b"VCC"]
+
+
+public func test_nested_loop_variables_read_beside_a_mut_sibling_field() -> bool:
+    const pins = [Pin(ref_des=b"U1", pin=b"1"), Pin(ref_des=b"R2", pin=b"2"), Pin(ref_des=b"U1", pin=b"3")]
+    mut ctx = Ctx(nets=[Net(name=b"N", pins=own pins)])
+    return adjacency(mut ctx) == 2 and ctx.adj[b"U1"] == [b"1", b"3"]
+
+
+public func test_a_scalar_payload_arm_may_rewrite_its_element() -> bool:
+    mut a: int?[] = [Some(1), Some(0), None]
+    const first = unadopt(mut a, 0)
+    const second = unadopt(mut a, 1)
+    const third = unadopt(mut a, 2)
+    return first and second and not third and a[0] is None and a[1] == Some(0)
+
+
+public func test_a_scalar_payload_arm_may_clear_its_field() -> bool:
+    return clear_step(0.0) and not clear_step(1.5)
+
+
+func degree_len(unit: bytes) -> int:
+    const tail = unit[3:]
+    const degree = tail[1:]
+    return len(degree)
+
+
+func stem_of(path: bytes) -> bytes?:
+    const slash = bytes.find_any(path, b"/", 0)
+    const base = path[slash + 1:]
+    const stem = base[:len(base) - 5]
+    if len(stem) == 0:
+        return None
+    return Some(copy(stem))
+
+
+func text_part(name: str, i: int, n: int) -> str:
+    const after = name[i:]
+    const suffix = after[n:]
+    return copy(suffix)
+
+
+func list_part(xs: int[]) -> int:
+    const rest = xs[1:]
+    const part = rest[1:]
+    mut total = 0
+    for x in part:
+        total += x
+    return total
+
+
+public func test_a_slice_of_a_bytes_slice_is_a_view() -> bool:
+    return degree_len(b"ppm/C") == 1
+
+
+public func test_a_copy_of_a_slice_of_a_slice() -> bool:
+    if stem_of(b"a/b.sexp") is Some(s):
+        return s == b"b"
+    return False
+
+
+public func test_a_slice_of_a_text_slice() -> bool:
+    return text_part("ldo/VIN.U1.IN", 4, 3) == ".U1.IN"
+
+
+public func test_a_slice_of_a_list_slice() -> bool:
+    return list_part([1, 2, 3, 4]) == 7
+
+
+record Sig:
+    direction: bytes
+
+
+record End:
+    net: bytes
+
+
+record Property:
+    key: bytes
+    value: bytes
+
+
+func flip(direction: bytes) -> bytes from direction:
+    if direction == b"in":
+        return b"out"
+    return direction
+
+
+func letters(raw: bytes) -> int:
+    mut suffix = raw
+    if raw == b"X":
+        suffix = b"R"
+    return len(suffix)
+
+
+func pick(sig: Sig, controller: bool) -> bytes:
+    mut dir = sig.direction
+    if controller:
+        dir = flip(sig.direction)
+    return copy(dir)
+
+
+func label_of(ends: End[], i: int) -> int:
+    mut name = b"IN"
+    if i >= 0:
+        name = ends[i].net
+    return len(name)
+
+
+func by_loop_variable(props: Property[]) -> bytes:
+    mut mpn: bytes = b""
+    for p in props:
+        if p.key == b"mpn":
+            mpn = p.value
+    return copy(mpn)
+
+
+func by_index(props: Property[]) -> bytes:
+    mut mpn: bytes = b""
+    for i in range(len(props)):
+        if props[i].key == b"mpn":
+            mpn = props[i].value
+    return copy(mpn)
+
+
+public func test_a_borrowing_mut_local_assigned_a_literal() -> bool:
+    return letters(b"X") == 1 and letters(b"abc") == 3
+
+
+public func test_a_borrowing_mut_local_assigned_a_from_call() -> bool:
+    const sig = Sig(direction=b"in")
+    return pick(sig, True) == b"out" and pick(sig, False) == b"in"
+
+
+public func test_a_borrowing_mut_local_starting_from_a_literal() -> bool:
+    return label_of([End(net=b"VBATT")], 0) == 5 and label_of([], -1) == 2
+
+
+public func test_a_borrowing_mut_local_assigned_an_element_field() -> bool:
+    const props = [Property(key=b"a", value=b"1"), Property(key=b"mpn", value=b"XYZ")]
+    return by_loop_variable(props) == b"XYZ" and by_index(props) == b"XYZ" and by_index([]) == b""

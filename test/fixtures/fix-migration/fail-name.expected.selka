@@ -1,0 +1,14 @@
+func parse(text: str) -> int fails str:
+    const message = "bad:" + text
+    if len(text) == 0:
+        fail message
+    return len(text)
+func main(out: Stream) -> int:
+    mut answer = 0
+    match parse(""):
+        case Ok(value):
+            answer = value
+        case Err(_):
+            answer = 7
+    print(out, answer)
+    return 0

@@ -1,0 +1,9 @@
+# A function value: `head` borrows its result, so it cannot be used as an owned function value.
+import lib
+
+func apply(f: func(xs: str[]) -> str, xs: str[]) -> int:
+    return len(f(xs))
+
+
+func main() -> int:
+    return apply(lib.head, ["a"])

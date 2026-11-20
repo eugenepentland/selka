@@ -1,0 +1,138 @@
+# F-58: a type argument is inferred through a function passed for a function-typed parameter. The function's parameter
+# types and its result are unified with the parameter's function type, in both spellings of a failing result:
+# `-> T fails E` and `-> Result[T, E]`.
+record Link:
+    label: str
+
+
+func link_of(value: str) -> Link fails str:
+    if value == "":
+        fail "empty"
+    return Link(label=copy(value))
+
+
+func length_of(value: str) -> int:
+    return len(value)
+
+
+func each[T](values: str[], make: func(str) -> T fails str) -> T[] fails str:
+    mut out: T[] = []
+    for value in values:
+        const item = try make(value)
+        append(mut out, own item)
+    return out
+
+
+func each_result[T](values: str[], make: func(str) -> Result[T, str]) -> T[] fails str:
+    mut out: T[] = []
+    for value in values:
+        const item = try make(value)
+        append(mut out, own item)
+    return out
+
+
+func each_plain[T](values: str[], make: func(str) -> T) -> T[]:
+    mut out: T[] = []
+    for value in values:
+        append(mut out, make(value))
+    return out
+
+
+func each_failing_with[T, E](values: str[], make: func(str) -> T fails E) -> T[] fails E:
+    mut out: T[] = []
+    for value in values:
+        const item = try make(value)
+        append(mut out, own item)
+    return out
+
+
+func map_from[T, U](values: T[], make: func(T) -> U fails str) -> U[] fails str:
+    mut out: U[] = []
+    for value in values:
+        const item = try make(value)
+        append(mut out, own item)
+    return out
+
+
+func count(found: Result[Link[], str]) -> int:
+    match found:
+        case Ok(items):
+            return len(items)
+        case Err(_):
+            return -1
+
+
+func returned(values: str[]) -> Link[] fails str:
+    return try each(values, link_of)
+
+
+func returned_result(values: str[]) -> Link[] fails str:
+    return try each_result(values, link_of)
+
+
+func bound(values: str[]) -> int fails str:
+    const links = try each(values, link_of)
+    return len(links)
+
+
+func bound_typed(values: str[]) -> int fails str:
+    const links: Link[] = try each(values, link_of)
+    return len(links)
+
+
+func forwarded[U](values: str[], make: func(str) -> U fails str) -> U[] fails str:
+    return try each(values, make)
+
+
+func or_minus_one(found: Result[int, str]) -> int:
+    match found:
+        case Ok(value):
+            return value
+        case Err(_):
+            return -1
+
+
+func links_or_none(found: Result[Link[], str]) -> int:
+    return count(found)
+
+
+public func test_a_return_try_infers_through_a_fails_callback() -> bool:
+    const two = count(returned(["a", "b"])) == 2
+    const failed = count(returned(["a", ""])) == -1
+    return two and failed
+
+
+public func test_a_return_try_infers_through_a_result_callback() -> bool:
+    return count(returned_result(["a", "b", "c"])) == 3
+
+
+public func test_a_binding_with_and_without_a_declared_type_infers() -> bool:
+    return or_minus_one(bound(["a"])) == 1 and or_minus_one(bound_typed(["a", "b"])) == 2
+
+
+public func test_an_argument_of_another_call_infers_in_both_spellings() -> bool:
+    const fails_spelling = count(each(["a", "b"], link_of)) == 2
+    const result_spelling = links_or_none(each_result(["a"], link_of)) == 1
+    return fails_spelling and result_spelling
+
+
+public func test_a_call_inside_another_generic_infers_its_callback() -> bool:
+    return count(forwarded(["a", "b"], link_of)) == 2
+
+
+public func test_the_explicit_type_argument_still_checks() -> bool:
+    return count(each[Link](["a"], link_of)) == 1
+
+
+public func test_the_callback_fixes_one_of_two_type_parameters() -> bool:
+    const found = map_from(["a", "bb"], link_of)
+    return count(found) == 2
+
+
+public func test_the_failure_type_is_inferred_from_the_callback() -> bool:
+    return count(each_failing_with(["a"], link_of)) == 1
+
+
+public func test_a_plain_callback_infers_its_result() -> bool:
+    const lengths = each_plain(["a", "bcd"], length_of)
+    return len(lengths) == 2 and lengths[1] == 3

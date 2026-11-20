@@ -1,0 +1,3 @@
+public func program() -> i64:
+    mut values: FixedArray[i64, 3] = FixedArray[int, 3]([10, 20, 12])
+    return values[0] + values[1] + values[2]

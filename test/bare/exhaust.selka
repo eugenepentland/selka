@@ -1,0 +1,8 @@
+# bare: R_MEMORY_BUDGET
+# Memory exhaustion: 400,000 integers (3.2 MB) do not fit in 264 KiB, so the bare CPU traps R_MEMORY_BUDGET with
+# status 1; Linux has the room and returns the checksum.
+func main() -> int:
+    mut values: int[] = []
+    for i in range(400000):
+        append(mut values, i)
+    return len(values) % 256

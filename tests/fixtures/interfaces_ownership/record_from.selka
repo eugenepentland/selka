@@ -1,0 +1,9 @@
+# A record built from two parameters (`from a, b`): writing either source while the pair is live is refused.
+import lib
+
+func main() -> int:
+    mut a = ["x"]
+    const b = ["y"]
+    const p = lib.pair_of(a, b)
+    append(mut a, "z")
+    return len(p.left) + len(a)

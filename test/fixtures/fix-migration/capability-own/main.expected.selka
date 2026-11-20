@@ -1,0 +1,26 @@
+import filesystem
+import random
+import state
+
+func record_run(mut session: state.Session):
+    session.runs = session.runs + 1
+    _ = session.fs.write_text("runs", str(session.runs))
+
+
+func build(fs: Filesystem, entropy: Entropy, out: Stream) -> int:
+    mut evaluator = state.new_evaluator(fs, entropy, "project")
+    append(mut evaluator.log_lines, "built")
+    print(out, evaluator.project_dir, len(evaluator.log_lines), state.draw(evaluator))
+    return 0
+
+
+func main(out: Stream) -> int:
+    mut fs = filesystem.memory()
+    mut session = state.new_session(fs)
+    record_run(mut session)
+    record_run(mut session)
+    const moved = session
+    print(out, moved.runs, moved.fs.exists("runs"))
+    mut other = filesystem.memory()
+    mut entropy = random.seeded_entropy(7)
+    return build(other, entropy, out)

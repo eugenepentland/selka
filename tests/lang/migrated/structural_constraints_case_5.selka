@@ -1,0 +1,52 @@
+func checkout[P: copy](policy: P, subtotal: int, named price_operation: func(P, int) -> int) -> int:
+    return price_operation(policy, subtotal) + 500
+
+
+func forward[Q: copy](policy: Q, subtotal: int, named price_operation: func(Q, int) -> int) -> int:
+    return checkout[Q](policy, subtotal, price_operation=price_operation)
+
+
+func inline_checkout[P: copy](policy: P, subtotal: int, named price_operation: func(P, int) -> int) -> int:
+    return price_operation(policy, subtotal) + 500
+
+
+func named_to_inline[P: copy](policy: P, subtotal: int, named price_operation: func(P, int) -> int) -> int:
+    return inline_checkout[P](policy, subtotal, price_operation=price_operation)
+
+
+func inline_to_named[P: copy](policy: P, subtotal: int, named price_operation: func(P, int) -> int) -> int:
+    return forward[P](policy, subtotal, price_operation=price_operation)
+
+
+record DiscountPrices:
+    value: int
+
+
+func DiscountPrices_make(discount: int) -> DiscountPrices:
+    return DiscountPrices(value=discount)
+
+
+func DiscountPrices_price(policy: DiscountPrices, subtotal: int) -> int:
+    return subtotal - policy.value
+
+
+record FixedPrices:
+    value: int
+
+
+func FixedPrices_make(amount: int) -> FixedPrices:
+    return FixedPrices(value=amount)
+
+
+func FixedPrices_price(policy: FixedPrices, subtotal: int) -> int:
+    _ = subtotal
+    return policy.value
+
+
+public func program() -> int:
+    mut real = DiscountPrices_make(250)
+    mut fake = FixedPrices_make(1750)
+    assert forward(real, 2000, price_operation=DiscountPrices_price) == 2250
+    assert named_to_inline(fake, 2000, price_operation=FixedPrices_price) == 2250
+    assert inline_to_named(real, 2000, price_operation=DiscountPrices_price) == 2250
+    return 9

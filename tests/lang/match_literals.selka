@@ -1,0 +1,177 @@
+const LIMIT: int = 7
+
+
+func digit_name(value: int) -> int:
+    match value:
+        case 0 | 1:
+            return 10
+        case 2:
+            return 20
+        case 3 | 4 | 5:
+            return 30
+        case 6:
+            return 40
+        case LIMIT:
+            return 50
+        case _:
+            return -1
+
+
+func sign_word(value: int) -> int:
+    match value:
+        case -1:
+            return 1
+        case 0:
+            return 2
+        case _:
+            return 3
+
+
+func greet(name: str) -> int:
+    match name:
+        case "ada":
+            return 1
+        case "grace" | "linus":
+            return 2
+        case _:
+            return 0
+
+
+func prefix_kind(text: str) -> int:
+    match text[0:3]:
+        case "abc":
+            return 1
+        case _:
+            return 0
+
+
+func label_for(code: int) -> str:
+    if code == 1:
+        return "one"
+    return "other"
+
+
+func call_kind(code: int) -> int:
+    match label_for(code):
+        case "one":
+            return 1
+        case _:
+            return 2
+
+
+func tag_kind(tag: bytes) -> int:
+    match tag:
+        case b"AB":
+            return 1
+        case b"CD" | b"EF":
+            return 2
+        case _:
+            return 0
+
+
+func flag_word(flag: bool) -> int:
+    match flag:
+        case True:
+            return 1
+        case False:
+            return 0
+
+
+public func test_int_arms_with_alternatives_and_a_constant() -> bool:
+    return digit_name(0) == 10 and digit_name(1) == 10 and digit_name(2) == 20 and digit_name(4) == 30 and digit_name(6) == 40 and digit_name(7) == 50 and digit_name(9) == -1
+
+
+public func test_negative_literal_arm() -> bool:
+    return sign_word(-1) == 1 and sign_word(0) == 2 and sign_word(5) == 3
+
+
+public func test_str_arm_on_a_parameter() -> bool:
+    return greet("ada") == 1 and greet("linus") == 2 and greet("bob") == 0
+
+
+public func test_str_arm_on_a_slice_is_a_view() -> bool:
+    return prefix_kind("abcdef") == 1 and prefix_kind("abxyz") == 0
+
+
+public func test_bytes_arms() -> bool:
+    return tag_kind(b"AB") == 1 and tag_kind(b"EF") == 2 and tag_kind(b"ZZ") == 0
+
+
+public func test_owned_call_result_is_the_scrutinee_once() -> bool:
+    return call_kind(1) == 1 and call_kind(2) == 2
+
+
+public func test_bool_arms_that_list_both_values_need_no_wildcard() -> bool:
+    return flag_word(True) == 1 and flag_word(False) == 0
+
+
+func signed_pair(value: int) -> int:
+    match value:
+        case -1 | -2:
+            return 1
+        case 1 | 2:
+            return 2
+        case _:
+            return 0
+
+
+func either(flag: bool) -> int:
+    match flag:
+        case True | False:
+            return 5
+
+
+func grade(score: int) -> str:
+    mut label = "none"
+    match score:
+        case 0:
+            label = "zero"
+        case 1 | 2:
+            label = "few"
+        case _:
+            label = "many"
+    return label
+
+
+func count_until_three(limit: int) -> int:
+    mut count = 0
+    for i in range(limit):
+        match i:
+            case 3:
+                break
+            case _:
+                count += 1
+    return count
+
+
+public func test_negative_and_positive_alternatives() -> bool:
+    return signed_pair(-2) == 1 and signed_pair(2) == 2 and signed_pair(0) == 0
+
+
+public func test_a_bool_arm_with_both_values_needs_no_wildcard() -> bool:
+    return either(True) == 5 and either(False) == 5
+
+
+public func test_an_arm_assigns_the_result_that_follows_the_match() -> bool:
+    return grade(0) == "zero" and grade(2) == "few" and grade(9) == "many"
+
+
+public func test_break_in_a_literal_arm_leaves_the_loop() -> bool:
+    return count_until_three(10) == 3 and count_until_three(2) == 2
+
+
+func first_name_kind(names: str[]) -> int:
+    const first = copy(names[0])
+    match first:
+        case "ada":
+            return 1
+        case _:
+            return 0
+
+
+public func test_a_copied_element_is_matched_as_a_name() -> bool:
+    return first_name_kind(["ada", "bob"]) == 1 and first_name_kind(["bob"]) == 0
+
+
+public func test_a_top_level_constant_arm_matches_its_value() -> bool:
+    return digit_name(7) == 50 and digit_name(8) == -1

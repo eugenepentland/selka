@@ -1,0 +1,6 @@
+import strings
+
+func main() -> int:
+    mut n = 4 // 2
+    mut raw: bytes = strings.encode("hi")
+    return len(raw) + n

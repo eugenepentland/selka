@@ -1,0 +1,35 @@
+# A text copied from part of another inherits its ASCII flag (NEW-CORE-S1-ASCII-1): every
+# length, index and search below depends on the flag being exactly right. CPython's answers.
+import dicts
+import strings
+
+func describe(p: str) -> str:
+    mut last = ""
+    if strings.char_count(p) > 0:
+        last = strings.char_at(p, strings.char_count(p) - 1)
+    return p + "/" + str(strings.char_count(p)) + "/" + last + "/" + str(strings.char_find(p, "l"))
+
+
+func main(out: Stream) -> int:
+    mut t = "héllo wörld"
+    mut a = "hello world"
+    mut parts = [copy(strings.char_slice(t, 0, 2)), copy(strings.char_slice(t, 2, 5)), copy(strings.char_slice(t, 6, None)), copy(strings.char_slice(t, max(strings.char_count(t) - 3, 0), None)), copy(strings.char_slice(a, 1, 4)), copy(strings.char_slice(a, max(strings.char_count(a) - 2, 0), None)), copy(strings.char_slice(t, 3, 3)), copy(strings.strip(t)), copy(strings.strip("  é ")), copy(strings.strip(" ab ")), strings.char_stride(a, None, None, 2), strings.char_stride(t, None, None, 2), strings.char_stride(t, None, None, -1), strings.char_stride(a, None, None, -1)]
+    for p in parts:
+        print(out, describe(p))
+    mut keys: dict[str, int] = {}
+    for i in range(strings.char_count(t) - 1):
+        keys[copy(strings.char_slice(t, i, i + 2))] = dicts.get(keys, strings.char_slice(t, i, i + 2), 0) + 1
+    for i in range(strings.char_count(a) - 1):
+        keys[copy(strings.char_slice(a, i, i + 2))] = dicts.get(keys, strings.char_slice(a, i, i + 2), 0) + 1
+    mut total = 0
+    for key in sorted(list(dicts.keys(keys))):
+        total = total * 7 + strings.char_count(key) * 3 + keys[key]
+        total = total % 1000003
+    print(out, len(keys), total)
+    mut s = "é"
+    mut u = copy(s)
+    u += "a"
+    mut v = copy(a)
+    v += "é"
+    print(out, strings.char_count(s), strings.char_count(u), strings.char_at(u, 1), strings.char_count(v), strings.char_at(v, 11), strings.char_count(a))
+    return 0

@@ -1,0 +1,27 @@
+import sealed_records_support as s
+
+# The declaring module's test file: it may build a sealed record, write its fields, replace it, take it and be given one by
+# the test runner.
+public func test_builds_and_writes() -> bool:
+    mut c = s.Count(value=2, label="a")
+    c.value = 3
+    c.label += "b"
+    const d = replace(own c, value=4)
+    assert d.value == 4
+    assert d.label == "ab"
+    return True
+
+
+public func test_takes_and_writes_a_markup() -> bool:
+    mut m = s.Markup(html="<b>")
+    m.html = "raw"
+    mut holder = s.Holder()
+    const old = take(mut holder.count)
+    assert old.label == "held"
+    assert holder.count.label == ""
+    assert m.html == "raw"
+    return True
+
+
+public func test_generated_count(c: s.Count) -> bool:
+    return c.value >= 0

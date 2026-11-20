@@ -1,0 +1,104 @@
+{
+  "version": "syntax-corpus-v1",
+  "about": "The files a Selka lexer and parser are checked against, byte for byte, by selfhost/tests/syntax_parity.py. A root's glob is relative to its path (the repository root for a relative path). Every file is an oracle input whether it parses or not: `selka dump-syntax` and `selka dump-tokens` describe a refused file as faithfully as an accepted one. `trusted` roots are parsed with the compiler's reserved internal spellings allowed (the embedded standard library); `optional` roots are skipped when absent and when the script runs with --in-tree. `negative` lists files (and globs of files) that must be refused by design: a corpus run fails when the reference accepts one, so a fixture cannot rot into a positive.",
+  "roots": [
+    {
+      "name": "tests",
+      "path": "tests",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "test",
+      "path": "test",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "stdlib",
+      "path": "src/stdlib",
+      "glob": "*.selka",
+      "trusted": true
+    },
+    {
+      "name": "src-core",
+      "path": "src/core",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "selfhost",
+      "path": "selfhost",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "bench",
+      "path": "bench",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "benchmarks",
+      "path": "benchmarks",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "examples",
+      "path": "examples",
+      "glob": "**/*.selka"
+    },
+    {
+      "name": "selka-projects",
+      "path": "/home/epentland/ai/canopy/selka-projects",
+      "glob": "**/*.selka",
+      "optional": true
+    }
+  ],
+  "exclude": [
+    "**/.*/**",
+    "**/node_modules/**"
+  ],
+  "negative": [
+    "selfhost/corpus/negative/**/*.selka",
+    "test/fixtures/fix-migration/lox/*.selka",
+    "test/fixtures/fix-migration/port-defects/*.selka",
+    "selfhost/diagnostic.selka",
+    "selfhost/lexer.selka",
+    "selfhost/prototype/bench.selka",
+    "selfhost/prototype/lexer.selka",
+    "selfhost/prototype/parser.selka",
+    "selfhost/source.selka",
+    "selfhost/tests/fixtures/lexer/at_token.selka",
+    "selfhost/tests/fixtures/lexer/bad_escape.selka",
+    "selfhost/tests/fixtures/lexer/blank_comment_suite.selka",
+    "selfhost/tests/fixtures/lexer/bytes_literals.selka",
+    "selfhost/tests/fixtures/lexer/crlf.selka",
+    "selfhost/tests/fixtures/lexer/decl_heads.selka",
+    "selfhost/tests/fixtures/lexer/delimiters.selka",
+    "selfhost/tests/fixtures/lexer/format_strings.selka",
+    "selfhost/tests/fixtures/lexer/integers.selka",
+    "selfhost/tests/fixtures/lexer/is_keyword.selka",
+    "selfhost/tests/fixtures/lexer/keywords.selka",
+    "selfhost/tests/fixtures/lexer/literal_limit.selka",
+    "selfhost/tests/fixtures/lexer/mixed_indent.selka",
+    "selfhost/tests/fixtures/lexer/module_header.selka",
+    "selfhost/tests/fixtures/lexer/multiple_dedents.selka",
+    "selfhost/tests/fixtures/lexer/nested_indent.selka",
+    "selfhost/tests/fixtures/lexer/nesting_limit.selka",
+    "selfhost/tests/fixtures/lexer/numeric_spellings.selka",
+    "selfhost/tests/fixtures/lexer/operators.selka",
+    "selfhost/tests/fixtures/lexer/removed_amp.selka",
+    "selfhost/tests/fixtures/lexer/removed_fat_arrow.selka",
+    "selfhost/tests/fixtures/lexer/removed_spelling.selka",
+    "selfhost/tests/fixtures/lexer/strings_escapes.selka",
+    "selfhost/tests/fixtures/lexer/tabs.selka",
+    "selfhost/tests/fixtures/lexer/unicode_ident.selka",
+    "selfhost/tests/fixtures/lexer/unicode_string.selka",
+    "selfhost/tests/fixtures/lexer/unknown_backtick.selka",
+    "selfhost/tests/fixtures/lexer/unknown_char.selka",
+    "selfhost/tests/fixtures/lexer/unterminated_string.selka",
+    "selfhost/token.selka",
+    "test/fixtures/fix-migration/arenas.selka",
+    "test/fixtures/fix-migration/capture.selka",
+    "test/fixtures/fix-migration/dictionary-views.selka",
+    "test/fixtures/fix-migration/frontend.selka",
+    "test/fixtures/fix-migration/receiver-overlap.selka",
+    "tests/fixtures/idioms/ternary.selka"
+  ]
+}

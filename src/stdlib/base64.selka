@@ -1,0 +1,115 @@
+# The sixty-four symbols of RFC 4648 section 4, in value order.
+public func standard_alphabet() -> bytes:
+    return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+
+# The sixty-four symbols of RFC 4648 section 5, in value order.
+public func urlsafe_alphabet() -> bytes:
+    return b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+
+# The padding octet that completes a four-symbol group.
+func padding() -> int:
+    return 61
+
+
+# Bytes encoded with an explicit alphabet and canonical trailing padding.
+func encode_with(data: bytes, alphabet: bytes) -> bytes:
+    mut out: int[] = []
+    mut index = 0
+    while index + 3 <= len(data):
+        const chunk = data[index] * 65536 + data[index + 1] * 256 + data[index + 2]
+        mut second = chunk // 4096 % 64
+        mut third = chunk // 64 % 64
+        append(mut out, alphabet[chunk // 262144])
+        append(mut out, alphabet[second])
+        append(mut out, alphabet[third])
+        append(mut out, alphabet[chunk % 64])
+        index += 3
+    mut remaining = len(data) - index
+    if remaining == 1:
+        const chunk = data[index] * 16
+        append(mut out, alphabet[chunk // 64])
+        append(mut out, alphabet[chunk % 64])
+        append(mut out, padding())
+        append(mut out, padding())
+    elif remaining == 2:
+        const chunk = data[index] * 1024 + data[index + 1] * 4
+        mut middle = chunk // 64 % 64
+        append(mut out, alphabet[chunk // 4096])
+        append(mut out, alphabet[middle])
+        append(mut out, alphabet[chunk % 64])
+        append(mut out, padding())
+    return bytes(out)
+
+
+# Reverse lookup from an alphabet symbol to its six-bit value.
+func reverse(alphabet: bytes) -> dict[int, int]:
+    mut table: dict[int, int] = {}
+    for value, symbol in enumerate(alphabet):
+        table[symbol] = value
+    return table
+
+
+# Bytes decoded with an explicit alphabet, rejecting every noncanonical form.
+func decode_with(data: bytes, alphabet: bytes) -> bytes fails str:
+    if len(data) % 4 != 0:
+        fail "base64 input length must be a multiple of four"
+    mut table = reverse(alphabet)
+    mut out: int[] = []
+    mut index = 0
+    while index < len(data):
+        mut final = index + 4 == len(data)
+        mut pad = 0
+        mut values: int[] = []
+        mut position = 0
+        while position < 4:
+            mut symbol = data[index + position]
+            if symbol == padding():
+                if not final or position < 2:
+                    fail "base64 padding may only end the final group"
+                pad += 1
+                append(mut values, 0)
+            elif pad > 0:
+                fail "base64 padding may not be followed by data"
+            elif symbol not in table:
+                fail "base64 input has a symbol outside the alphabet"
+            else:
+                append(mut values, table[symbol])
+            position += 1
+        mut chunk = values[0] * 262144 + values[1] * 4096 + values[2] * 64 + values[3]
+        if pad == 0:
+            append(mut out, chunk // 65536)
+            append(mut out, (chunk // 256) % 256)
+            append(mut out, chunk % 256)
+        elif pad == 1:
+            if chunk % 256 != 0:
+                fail "base64 group has nonzero padding bits"
+            append(mut out, chunk // 65536)
+            append(mut out, (chunk // 256) % 256)
+        else:
+            if chunk % 65536 != 0:
+                fail "base64 group has nonzero padding bits"
+            append(mut out, chunk // 65536)
+        index += 4
+    return bytes(out)
+
+
+# Bytes encoded with the standard alphabet and canonical padding.
+public func b64encode(data: bytes) -> bytes:
+    return encode_with(data, standard_alphabet())
+
+
+# Standard-alphabet base64 decoded, rejecting invalid symbols and padding.
+public func b64decode(data: bytes) -> bytes fails str:
+    return try decode_with(data, standard_alphabet())
+
+
+# Bytes encoded with the URL and filename safe alphabet.
+public func urlsafe_b64encode(data: bytes) -> bytes:
+    return encode_with(data, urlsafe_alphabet())
+
+
+# URL-safe base64 decoded, rejecting invalid symbols and padding.
+public func urlsafe_b64decode(data: bytes) -> bytes fails str:
+    return try decode_with(data, urlsafe_alphabet())

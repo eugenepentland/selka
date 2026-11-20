@@ -1,0 +1,13 @@
+# A bytes helper takes an optional value. The caller passes its named bytes
+# bare, which the implicit Some around the argument cannot move, so the repair
+# inserts own; the marked call then checks and a second fix finds nothing.
+func size(value: bytes?) -> int:
+    if value is None:
+        return 0
+    mut text = copy(value)
+    return len(text)
+
+
+func main() -> int:
+    mut label = b"brand"
+    return size(own label)

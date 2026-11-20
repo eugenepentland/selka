@@ -1,0 +1,37 @@
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record Chunk:
+    bytes: FixedArray[u8, 16]
+    length: u64
+    eof: bool
+
+
+result Read:
+    ok: Chunk,
+    err: int
+
+
+func delegated_read(fs: Filesystem, request: FixedArray[u8, 1]) -> int:
+    with fs.dir("nested") as scoped:
+        with scoped.read_only() as reader:
+            match acquire_resource[Open](reader, request):
+                case ok(input):
+                    mut file = own input
+                    match read_resource[Read](file):
+                        case ok(chunk):
+                            return int(chunk.length)
+                        case err(code):
+                            return -code
+                case err(code):
+                    return -code
+
+
+func main(fs: Filesystem) -> int:
+    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+    return delegated_read(fs, request)

@@ -1,0 +1,64 @@
+# Parse a length-prefixed binary record set the way Python code would: managed
+# byte strings, integer octets, and a checked result instead of an exception.
+import bytes
+import hex
+import strings
+
+record Record:
+    tag: str
+    body: bytes
+
+
+func checksum(body: bytes) -> int:
+    mut total = 0
+    for octet in body:
+        total = (total + octet) % 251
+    return total
+
+
+func split_records(payload: bytes) -> Record[] fails str:
+    mut records: Record[] = []
+    mut cursor = 0
+    while cursor < len(payload):
+        if cursor + 1 >= len(payload):
+            fail "truncated record header"
+        mut size = payload[cursor + 1]
+        mut start = cursor + 2
+        mut stop = start + size
+        if stop > len(payload):
+            fail "record body runs past the payload"
+        mut tag = try strings.decode(bytes([payload[cursor]]))
+        append(mut records, Record(tag=own tag, body=copy((payload[start:stop]))))
+        cursor = stop
+    return records
+
+
+func report(payload: bytes) -> int fails str:
+    if not bytes.starts_with(payload, b"A"):
+        fail "payload does not start with the A record"
+    mut records = try split_records(payload)
+    if len(records) != 3:
+        fail "expected three records"
+    if records[0].tag != "A" or records[0].body != b"abc":
+        fail "first record did not round-trip"
+    if hex.encode(records[1].body) != "ff01":
+        fail "second record is not ff01"
+    if len(records[2].body) != 0:
+        fail "third record should be empty"
+    mut names: dict[str, bytes] = {}
+    for record in records:
+        names[copy(record.tag)] = copy(record.body)
+    if b"bc" not in names["A"]:
+        fail "subsequence search failed"
+    mut total = 0
+    for record in records:
+        total += checksum(record.body)
+    return total + len(names)
+
+
+func main() -> int:
+    match report(b"A\x03abcB\x02\xff\x01C\x00"):
+        case Ok(value):
+            return value
+        case Err(message):
+            return 0 - strings.char_count(message)

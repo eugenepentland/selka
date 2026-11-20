@@ -1,0 +1,76 @@
+record Holder:
+    seen: set[str]
+    names: str[]
+    table: dict[str, int]
+
+
+func has(seen: set[str], name: str) -> bool:
+    return seen.contains(name)
+
+
+func negated(seen: set[str], name: str) -> bool:
+    return not seen.contains(name)
+
+
+func combined(seen: set[str], name: str, other: str) -> bool:
+    return seen.contains(name) and not seen.contains(other)
+
+
+func compared(seen: set[str], name: str, flag: bool) -> bool:
+    return seen.contains(name) == flag
+
+
+func low(seen: set[str], name: str, other: str) -> bool:
+    return seen.contains(name + other)
+
+
+func field(h: Holder, name: str) -> int:
+    if h.seen.contains(name):
+        return 1
+    if h.names.contains(name):
+        return 2
+    if h.table.contains(name):
+        return 3
+    return 0
+
+
+func text(body: str, part: str) -> bool:
+    return body.contains(part)
+
+
+func bytes_in(data: bytes, part: bytes) -> bool:
+    return data.contains(part)
+
+
+func items(xs: int[], value: int) -> bool:
+    return xs.contains(value)
+
+
+func call_arg(seen: set[str], name: str) -> int:
+    const flags = [seen.contains(name), seen.contains("z")]
+    return len(flags)
+
+
+func main() -> int:
+    const seen: set[str] = {"a"}
+    const h = Holder(seen={"a"}, names=["a"], table={"a": 1})
+    mut n = 0
+    if has(seen, "a"):
+        n += 1
+    if negated(seen, "b"):
+        n += 1
+    if combined(seen, "a", "b"):
+        n += 1
+    if compared(seen, "a", True):
+        n += 1
+    if low(seen, "", "a"):
+        n += 1
+    n += field(h, "a")
+    if text("abc", "b"):
+        n += 1
+    if bytes_in(b"abc", b"b"):
+        n += 1
+    if items([1, 2], 2):
+        n += 1
+    n += call_arg(seen, "a")
+    return n

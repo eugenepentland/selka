@@ -1,0 +1,73 @@
+//! Portable independently bounded cache blocks; compression is never required for correctness.
+const std = @import("std");
+pub const Error = std.mem.Allocator.Error || error{InvalidEncoding};
+
+/// Write policy affects new blocks only; both encodings remain readable.
+pub const Policy = enum {
+    zlib,
+    none,
+
+    /// Parse the diagnostic environment control. An unset control selects `default_policy`
+    /// (uncompressed); `zlib` opts back in to compressed blocks.
+    pub fn parse(value: ?[]const u8) error{InvalidCompression}!Policy {
+        const selected = value orelse return default_policy;
+        if (std.mem.eql(u8, selected, "zlib")) return .zlib;
+        if (std.mem.eql(u8, selected, "none")) return .none;
+        return error.InvalidCompression;
+    }
+};
+
+/// The write policy of a store that names none: uncompressed blocks. Recompressing
+/// every edit build's packs cost 12-19% of its CPU; the store is about twice as large.
+pub const default_policy: Policy = .none;
+
+/// Encode `input` as one block under `policy` without changing the block protocol. Prefix
+/// zero holds the input as raw bytes; prefix one holds a zlib stream, used only when it is
+/// smaller than the raw block.
+pub fn encodeWithPolicy(a: std.mem.Allocator, input: []const u8, policy: Policy) std.mem.Allocator.Error![]u8 {
+    if (policy == .none) return rawBlock(a, input);
+    var scratch = std.heap.ArenaAllocator.init(a);
+    defer scratch.deinit();
+    const work = scratch.allocator();
+    var output = std.Io.Writer.Allocating.init(work);
+    output.writer.writeByte(1) catch return error.OutOfMemory;
+    const compressor = try work.create(std.compress.flate.Compress);
+    compressor.* = std.compress.flate.Compress.init(&output.writer, try work.alloc(u8, std.compress.flate.max_window_len), .zlib, .fastest) catch return error.OutOfMemory;
+    compressor.writer.writeAll(input) catch return error.OutOfMemory;
+    compressor.finish() catch return error.OutOfMemory;
+    if (output.written().len < input.len + 1) return a.dupe(u8, output.written());
+    return rawBlock(a, input);
+}
+
+fn rawBlock(a: std.mem.Allocator, input: []const u8) std.mem.Allocator.Error![]u8 {
+    const raw = try a.alloc(u8, input.len + 1);
+    raw[0] = 0;
+    @memcpy(raw[1..], input);
+    return raw;
+}
+
+/// Decode exactly the admitted size, rejecting short, oversized or trailing streams.
+pub fn decode(a: std.mem.Allocator, input: []const u8, size: usize) Error![]u8 {
+    if (input.len == 0) return error.InvalidEncoding;
+    if (input[0] == 0) {
+        if (input.len - 1 != size) return error.InvalidEncoding;
+        return a.dupe(u8, input[1..]);
+    }
+    if (input[0] != 1) return error.InvalidEncoding;
+    // streamRemaining uses the direct writer path. readSliceAll instead routes
+    // through readVec, which requires a separate full history window.
+    const capacity = std.math.add(usize, size, 258) catch return error.InvalidEncoding;
+    const output = try a.alloc(u8, capacity);
+    errdefer a.free(output);
+    var reader = std.Io.Reader.fixed(input[1..]);
+    var writer = std.Io.Writer.fixed(output);
+    var decoder = std.compress.flate.Decompress.init(&reader, .zlib, &.{});
+    const decoded = decoder.reader.streamRemaining(&writer) catch return error.InvalidEncoding;
+    if (decoded != size or reader.seek != reader.end) return error.InvalidEncoding;
+    // Always copy to an exact-size block. An in-place resize succeeds or fails
+    // with the allocator's address-space layout, so the number of allocations a
+    // decode makes would vary between runs of an allocation-failure test.
+    const exact = try a.dupe(u8, output[0..size]);
+    a.free(output);
+    return exact;
+}

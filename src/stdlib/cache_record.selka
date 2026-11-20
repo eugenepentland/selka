@@ -1,0 +1,60 @@
+import bytes
+import hashes
+import json
+import strings
+
+# A record failed its format, canonical representation or content checksum.
+public enum Error:
+    Corrupt
+
+
+# Describe a rejected storage record.
+public func message(error: Error) -> str:
+    match error:
+        case Corrupt:
+            return "corrupt or incompatible storage record"
+
+
+# Canonical string-array JSON protected by a versioned SHA-256 envelope.
+# The caller bounds the input before reading; this is integrity, not authentication.
+public func encode(fields: str[]) -> bytes:
+    mut values: json.Json[] = []
+    for field in fields:
+        append(mut values, json.text(field))
+    const payload = strings.encode(json.dumps(json.array(values)))
+    return b"SELKA-RECORD-1\n" + strings.encode(hashes.sha256(payload)) + b"\n" + payload
+
+
+# Decode only a complete canonical record with the exact envelope and checksum.
+public func decode(data: bytes) -> str[] fails Error:
+    const prefix = b"SELKA-RECORD-1\n"
+    const offset = len(prefix) + 65
+    if len(data) < offset or not bytes.starts_with(data, prefix):
+        fail Error.Corrupt
+    if data[offset - 1] != 10:
+        fail Error.Corrupt
+    const payload = data[offset:]
+    if data[len(prefix):offset - 1] != strings.encode(hashes.sha256(payload)):
+        fail Error.Corrupt
+    match strings.decode(payload):
+        case Err(_):
+            fail Error.Corrupt
+        case Ok(text):
+            match json.loads(text):
+                case Err(_):
+                    fail Error.Corrupt
+                case Ok(value):
+                    if json.dumps(value) != text:
+                        fail Error.Corrupt
+                    match json.as_list(value):
+                        case None:
+                            fail Error.Corrupt
+                        case Some(items):
+                            mut fields: str[] = []
+                            for item in items:
+                                match copy(json.as_str(item)):
+                                    case None:
+                                        fail Error.Corrupt
+                                    case Some(field):
+                                        append(mut fields, own field)
+                            return fields

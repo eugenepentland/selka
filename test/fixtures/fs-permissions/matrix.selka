@@ -1,0 +1,251 @@
+# The permission matrix of friction F-42: every Filesystem call against directories and files of chosen permission bits, printed
+# as `TAG CALL: ok` or the failure text. `expected.txt` is what the real filesystem answers to an ordinary user; the test in
+# test/fs_permissions_cli_test.zig runs this program on a real directory and on `filesystem.memory()` and requires both to
+# print exactly that, so the stand-in refuses what the real one refuses, call by call. Its `main` is appended by the test.
+import filesystem
+
+func note(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_bytes(result: Result[bytes, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_text(result: Result[str, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_list(result: Result[str[], str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_entries(result: Result[filesystem.Entry[], str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func note_stat(fs: Filesystem, path: str) -> str:
+    match filesystem.stat(fs, path):
+        case Ok(_):
+            return "ok"
+        case Err(error):
+            match error:
+                case Missing:
+                    return "missing"
+                case Failed(message):
+                    return copy(message)
+
+
+func open_write(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.open(path, "wb") as f:
+        _ = f.write(b"new")
+
+
+func open_append(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.open(path, "ab") as f:
+        _ = f.write(b"more")
+
+
+func open_read(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.open(path, "rb") as f:
+        _ = f.read()
+
+
+func lock_try(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.try_lock_file(path) as lease:
+        _ = lease
+
+
+func lock_dir(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.lock_directory(path) as lease:
+        _ = lease
+
+
+func realpath_note(fs: Filesystem, path: str) -> str:
+    match filesystem.realpath(fs, path):
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func show(out: Stream, tag: str, name: str, outcome: str):
+    print(out, tag + " " + name + ": " + outcome)
+
+
+# One situation: directory `D/d` of `dir_mode` holding files f g h k c of `file_mode`, and a writable `D/e` holding x.
+func situation(fs: Filesystem, out: Stream, tag: str, dir_mode: int, file_mode: int):
+    const root = tag
+    _ = fs.mkdir(root)
+    _ = fs.mkdir(root + "/d")
+    _ = fs.mkdir(root + "/e")
+    _ = fs.write_file(root + "/e/x", b"x")
+    _ = fs.write_file(root + "/e/y", b"y")
+    const d = root + "/d"
+    for name in ["f", "g", "h", "k", "c", "m"]:
+        _ = fs.write_file(d + "/" + name, b"old")
+        _ = filesystem.chmod(fs, d + "/" + name, file_mode)
+    _ = fs.mkdir(d + "/subdir")
+    _ = filesystem.chmod(fs, d, dir_mode)
+    show(out, tag, "read_file f", note_bytes(fs.read_file(d + "/f")))
+    show(out, tag, "read_text f", note_text(fs.read_text(d + "/f")))
+    show(out, tag, "read_regular_file f", note_bytes(fs.read_regular_file(d + "/f", 100)))
+    show(out, tag, "open rb f", note(open_read(fs, d + "/f")))
+    show(out, tag, "stat f", note_stat(fs, d + "/f"))
+    show(out, tag, "stat_follow f", note_stat(fs, d + "/f"))
+    show(out, tag, "realpath f", realpath_note(fs, d + "/f"))
+    show(out, tag, "exists f", str(fs.exists(d + "/f")))
+    show(out, tag, "listdir d", note_list(fs.listdir(d)))
+    show(out, tag, "list_entries d", note_entries(filesystem.list_entries(fs, d)))
+    show(out, tag, "write_file f", note(fs.write_file(d + "/f", b"new")))
+    show(out, tag, "write_text f", note(fs.write_text(d + "/f", "new")))
+    show(out, tag, "open wb f", note(open_write(fs, d + "/f")))
+    show(out, tag, "open ab f", note(open_append(fs, d + "/f")))
+    show(out, tag, "atomic_write_file f", note(fs.atomic_write_file(d + "/f", b"new")))
+    show(out, tag, "replace_file f", note(fs.replace_file(d + "/f", b"new")))
+    show(out, tag, "replace_file_synced_mode f", note(fs.replace_file_synced_mode(d + "/f", b"new", 0o755)))
+    show(out, tag, "write_file new", note(fs.write_file(d + "/new", b"new")))
+    show(out, tag, "open wb new", note(open_write(fs, d + "/new2")))
+    show(out, tag, "atomic_write_file new", note(fs.atomic_write_file(d + "/new3", b"new")))
+    show(out, tag, "mkdir sub", note(fs.mkdir(d + "/sub")))
+    show(out, tag, "symlink ln", note(filesystem.symlink(fs, "f", d + "/ln")))
+    show(out, tag, "link f", note(filesystem.link(fs, d + "/f", d + "/hl")))
+    show(out, tag, "link e/y into d", note(filesystem.link(fs, root + "/e/y", d + "/hly")))
+    show(out, tag, "link h out of d", note(filesystem.link(fs, d + "/h", root + "/e/hlo")))
+    show(out, tag, "link f onto g", note(filesystem.link(fs, d + "/f", d + "/g")))
+    show(out, tag, "link subdir", note(filesystem.link(fs, d + "/subdir", d + "/hls")))
+    show(out, tag, "link ln", note(filesystem.link(fs, d + "/ln", d + "/hll")))
+    show(out, tag, "mkdir_mode msub", note(filesystem.mkdir_mode(fs, d + "/msub", 0o700)))
+    show(out, tag, "mkdir_mode subdir", note(filesystem.mkdir_mode(fs, d + "/subdir", 0o700)))
+    show(out, tag, "lock f", note(lock_try(fs, d + "/f")))
+    show(out, tag, "lock new", note(lock_try(fs, d + "/newlock")))
+    show(out, tag, "lock_directory d", note(lock_dir(fs, d)))
+    show(out, tag, "sync_directory d", note(fs.sync_directory(d)))
+    show(out, tag, "chmod c", note(filesystem.chmod(fs, d + "/c", 0o600)))
+    show(out, tag, "touch c", note(filesystem.touch(fs, d + "/c")))
+    show(out, tag, "set_modified c", note(filesystem.set_modified(fs, d + "/c", 5)))
+    show(out, tag, "rename h h2 (same dir)", note(fs.rename_path(d + "/h", d + "/h2")))
+    show(out, tag, "rename e/x into d", note(fs.rename_path(root + "/e/x", d + "/x")))
+    show(out, tag, "rename k out of d", note(fs.rename_path(d + "/k", root + "/e/k")))
+    show(out, tag, "rename e/y over d/m", note(fs.rename_path(root + "/e/y", d + "/m")))
+    show(out, tag, "remove g", note(fs.remove(d + "/g")))
+    show(out, tag, "remove subdir", note(fs.remove(d + "/subdir")))
+    _ = filesystem.chmod(fs, d, 0o755)
+
+
+func note_follow(fs: Filesystem, path: str) -> str:
+    match filesystem.stat_follow(fs, path):
+        case Ok(_):
+            return "ok"
+        case Err(error):
+            match error:
+                case Missing:
+                    return "missing"
+                case Failed(message):
+                    return copy(message)
+
+
+func lock_wait(fs: Filesystem, path: str) -> Unit fails str:
+    with try fs.lock_file(path) as lease:
+        _ = lease
+
+
+# Files of one mode: lock and open them, create beside them.
+func files(fs: Filesystem, out: Stream, tag: str, file_mode: int):
+    _ = fs.mkdir(tag)
+    _ = fs.write_file(tag + "/l", b"old")
+    _ = fs.write_file(tag + "/m", b"old")
+    _ = filesystem.chmod(fs, tag + "/l", file_mode)
+    _ = filesystem.chmod(fs, tag + "/m", file_mode)
+    show(out, tag, "try_lock_file l", note(lock_try(fs, tag + "/l")))
+    show(out, tag, "lock_file l", note(lock_wait(fs, tag + "/l")))
+    show(out, tag, "open ab new", note(open_append(fs, tag + "/new-a")))
+    show(out, tag, "write_text new", note(fs.write_text(tag + "/new-t", "text")))
+    show(out, tag, "open ab m", note(open_append(fs, tag + "/m")))
+    show(out, tag, "open wb m", note(open_write(fs, tag + "/m")))
+    show(out, tag, "read_text m", note_text(fs.read_text(tag + "/m")))
+    show(out, tag, "open rb m", note(open_read(fs, tag + "/m")))
+
+
+# Two levels: `a` of `outer` holds `b` of `inner` holding f; `e` is an ordinary sibling directory holding dd of `moved`.
+func deep(fs: Filesystem, out: Stream, tag: str, outer: int, inner: int, moved: int):
+    _ = fs.mkdir(tag)
+    _ = fs.mkdir(tag + "/a")
+    _ = fs.mkdir(tag + "/a/b")
+    _ = fs.write_file(tag + "/a/b/f", b"old")
+    _ = fs.write_file(tag + "/a/b/g", b"old")
+    _ = fs.mkdir(tag + "/a/b/dd")
+    _ = fs.mkdir(tag + "/e")
+    _ = fs.mkdir(tag + "/e/dd")
+    _ = filesystem.chmod(fs, tag + "/e/dd", moved)
+    _ = filesystem.chmod(fs, tag + "/a/b", inner)
+    _ = filesystem.chmod(fs, tag + "/a", outer)
+    const b = tag + "/a/b"
+    show(out, tag, "read_file f", note_bytes(fs.read_file(b + "/f")))
+    show(out, tag, "read_regular_file f", note_bytes(fs.read_regular_file(b + "/f", 100)))
+    show(out, tag, "stat f", note_stat(fs, b + "/f"))
+    show(out, tag, "stat_follow f", note_follow(fs, b + "/f"))
+    show(out, tag, "listdir b", note_list(fs.listdir(b)))
+    show(out, tag, "lock_directory b", note(lock_dir(fs, b)))
+    show(out, tag, "sync_directory b", note(fs.sync_directory(b)))
+    show(out, tag, "chmod f", note(filesystem.chmod(fs, b + "/f", 0o600)))
+    show(out, tag, "touch f", note(filesystem.touch(fs, b + "/f")))
+    show(out, tag, "atomic_write f", note(fs.atomic_write_file(b + "/f", b"new")))
+    show(out, tag, "write_file new", note(fs.write_file(b + "/new", b"new")))
+    show(out, tag, "mkdir s", note(fs.mkdir(b + "/s")))
+    show(out, tag, "mkdir_mode s2", note(filesystem.mkdir_mode(fs, b + "/s2", 0o700)))
+    show(out, tag, "link f beside", note(filesystem.link(fs, b + "/f", b + "/hl")))
+    show(out, tag, "link f into e", note(filesystem.link(fs, b + "/f", tag + "/e/hlf")))
+    show(out, tag, "remove g", note(fs.remove(b + "/g")))
+    show(out, tag, "rename e/dd into b", note(fs.rename_path(tag + "/e/dd", b + "/dd2")))
+    show(out, tag, "rename b/dd out to e", note(fs.rename_path(b + "/dd", tag + "/e/dd3")))
+    _ = filesystem.chmod(fs, tag + "/a", 0o755)
+    _ = filesystem.chmod(fs, tag + "/a/b", 0o755)
+    _ = filesystem.chmod(fs, tag + "/e/dd", 0o755)
+
+
+func run_all(fs: Filesystem, out: Stream):
+    situation(fs, out, "S1", 0o755, 0o644)
+    situation(fs, out, "S2", 0o555, 0o644)
+    situation(fs, out, "S3", 0o755, 0o444)
+    situation(fs, out, "S4", 0o755, 0o222)
+    situation(fs, out, "S5", 0o755, 0o000)
+    situation(fs, out, "S6", 0o333, 0o644)
+    situation(fs, out, "S7", 0o666, 0o644)
+    situation(fs, out, "S8", 0o444, 0o644)
+    situation(fs, out, "S9", 0o111, 0o644)
+    files(fs, out, "F1", 0o644)
+    files(fs, out, "F2", 0o444)
+    files(fs, out, "F3", 0o222)
+    files(fs, out, "F4", 0o000)
+    files(fs, out, "F5", 0o600)
+    files(fs, out, "F6", 0o400)
+    files(fs, out, "F7", 0o200)
+    deep(fs, out, "D1", 0o755, 0o755, 0o755)
+    deep(fs, out, "D2", 0o333, 0o755, 0o755)
+    deep(fs, out, "D3", 0o755, 0o333, 0o755)
+    deep(fs, out, "D4", 0o644, 0o755, 0o755)
+    deep(fs, out, "D5", 0o755, 0o755, 0o555)
+    deep(fs, out, "D6", 0o755, 0o755, 0o000)
+    deep(fs, out, "D7", 0o755, 0o000, 0o755)
+    deep(fs, out, "D8", 0o755, 0o755, 0o755)

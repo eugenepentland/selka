@@ -1,0 +1,15 @@
+# str_build: append a short piece into a growable byte buffer 8,000,000 times.
+import buffers
+
+func main(out: Stream) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"selka!\n"
+    for i in range(16000000):
+        _ = buffers.append_range(mut buffer, piece, 0, 8)
+    mut length = len(buffer)
+    mut total = 0
+    for j in range(length // 1021):
+        total = (total + buffer[j * 1021]) % 1000003
+    print(out, length, total)
+    return 0

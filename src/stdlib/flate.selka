@@ -1,0 +1,1670 @@
+# Decompression for the DEFLATE family: raw streams (RFC 1951), zlib (RFC 1950) and gzip (RFC 1952), whole or in pieces. The
+# module only decompresses. `inflate`, `zlib_decode` and `gunzip` take all the compressed bytes and a `limit` on the size of
+# the result, which stops a small input from claiming gigabytes. `inflater`, `zlib_inflater` and `gzip_inflater` make a
+# stream state that `feed` takes the compressed bytes by piece, returning the plain bytes each piece yields, so a stream of
+# any size runs in the memory of one 32 KiB window and one piece; `finish` and `ended` say whether it ended cleanly. Every
+# function fails with a message instead of trapping: a truncated stream, a bad block, a code that is not a prefix code, a
+# distance before the start of the output, a checksum that does not match, or a result past the limit. The one-shot
+# functions run the same inflater on one piece.
+import buffers
+import bytes
+import lists
+
+# The most history a back reference reaches (RFC 1951 section 3.2.5).
+const WINDOW: int = 32768
+
+
+# A Huffman code is one `int[]` of TABLE_SIZE entries: FAST entries that a lookup of the next ten input bits indexes (the
+# symbol times 16 plus the code length, 0 when the code is longer or unused), then the count of codes of each length 0 to
+# 15 from COUNTS, the symbols in code order from SYMBOLS, and from OFFSETS and NEXT two scratch rows of 16 that building
+# the code uses.
+const FAST: int = 1024
+
+
+const COUNTS: int = 1024
+
+
+const SYMBOLS: int = 1040
+
+
+const OFFSETS: int = 1328
+
+
+const NEXT: int = 1344
+
+
+const TABLE_SIZE: int = 1360
+
+
+# The kinds of stream.
+const RAW: int = 0
+
+
+const ZLIB: int = 1
+
+
+const GZIP: int = 2
+
+
+# Where a stream is: the start of the zlib header or of a gzip member, the parts of a gzip header, a block header, inside
+# a stored block (its header, then its bytes), inside a dynamic block's header or its symbols, the checksum after the
+# stream, the end, or failed.
+const S_START: int = 0
+
+
+const S_XLEN: int = 1
+
+
+const S_EXTRA: int = 2
+
+
+const S_NAME: int = 3
+
+
+const S_COMMENT: int = 4
+
+
+const S_HCRC: int = 5
+
+
+const S_BLOCK: int = 6
+
+
+const S_STORED: int = 7
+
+
+const S_COPY: int = 8
+
+
+const S_DYNAMIC: int = 9
+
+
+const S_CODES: int = 10
+
+
+const S_TRAILER: int = 11
+
+
+const S_DONE: int = 12
+
+
+const S_FAILED: int = 13
+
+
+# The output buffer keeps the window and what `feed` has not returned; it is cut back to the window once it holds this much.
+const COMPACT_AT: int = 131072
+
+
+# How many plain bytes one `feed` returns at most (a little more, up to one match); the rest waits for the next call.
+const CHUNK: int = 1048576
+
+
+# A position in the compressed input: the next byte to load, the loaded bits not yet used (least significant first), and
+# how many there are.
+record Reader:
+    bits: int
+    count: int
+    at: int
+
+
+# The state of one compressed stream. It is a value: pass it with `mut`. `carry` is the input not yet used, `bits` and
+# `count` the bits loaded and not yet used, `out` the last of the output (the window and what `feed` has not returned),
+# `emitted`, `checked` and `base` positions in it, `discarded` how much output is gone from its front, and `lit` and
+# `dist` the codes of the current block.
+public record Inflater:
+    format: int
+    stage: int
+    whole: bool
+    limit: int
+    chunk: int
+    failure: str
+    carry: bytes
+    at: int
+    bits: int
+    count: int
+    out: byte_buffer
+    emitted: int
+    checked: int
+    base: int
+    discarded: int
+    check: int
+    size: int
+    members: int
+    last: bool
+    left: int
+    flags: int
+    padded: bool
+    lit: int[]
+    dist: int[]
+
+
+# The base value (16 bits, least significant octet first) and extra-bit count of each length and distance symbol (RFC 1951
+# section 3.2.5), and the order of the code length code lengths. The loop that decodes reads them by index because a call to
+# `bytes.read_u16_le` costs a block of a test's step budget.
+const LENGTH_BASE: bytes = b"\x03\x00\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0a\x00\x0b\x00\x0d\x00\x0f\x00\x11\x00\x13\x00\x17\x00\x1b\x00\x1f\x00\x23\x00\x2b\x00\x33\x00\x3b\x00\x43\x00\x53\x00\x63\x00\x73\x00\x83\x00\xa3\x00\xc3\x00\xe3\x00\x02\x01"
+
+
+const LENGTH_EXTRA: bytes = b"\x00\x00\x00\x00\x00\x00\x00\x00\x01\x01\x01\x01\x02\x02\x02\x02\x03\x03\x03\x03\x04\x04\x04\x04\x05\x05\x05\x05\x00"
+
+
+const DISTANCE_BASE: bytes = b"\x01\x00\x02\x00\x03\x00\x04\x00\x05\x00\x07\x00\x09\x00\x0d\x00\x11\x00\x19\x00\x21\x00\x31\x00\x41\x00\x61\x00\x81\x00\xc1\x00\x01\x01\x81\x01\x01\x02\x01\x03\x01\x04\x01\x06\x01\x08\x01\x0c\x01\x10\x01\x18\x01\x20\x01\x30\x01\x40\x01\x60"
+
+
+const DISTANCE_EXTRA: bytes = b"\x00\x00\x00\x00\x01\x01\x02\x02\x03\x03\x04\x04\x05\x05\x06\x06\x07\x07\x08\x08\x09\x09\x0a\x0a\x0b\x0b\x0c\x0c\x0d\x0d"
+
+
+const ORDER: bytes = b"\x10\x11\x12\x00\x08\x07\x09\x06\x0a\x05\x0b\x04\x0c\x03\x0d\x02\x0e\x01\x0f"
+
+
+# Zero octets: the table a code starts from, which `bytes.to_list` makes a list of in one step, and the longest run a match can
+# copy (258), which a match of distance 1 appends a piece of. The compiler builds it while it checks the program.
+const ZEROS: bytes = zeros()
+
+
+func zeros() -> bytes:
+    mut table = buffers.empty()
+    for index in range(TABLE_SIZE):
+        _ = buffers.append_byte(mut table, 0)
+    return bytes(table)
+
+
+# A table for a code of a dynamic block: TABLE_SIZE zeros. `build` sets everything it reads.
+func fresh_table() -> int[]:
+    return bytes.to_list(ZEROS)
+
+
+# The table of the fixed literal/length code of block type 1 (RFC 1951 section 3.2.6), as `build` makes it from the lengths 8
+# for 0 to 143, 9 for 144 to 255, 7 for 256 to 279 and 8 for 280 to 287: no code is longer than nine bits, so its lookup of ten
+# bits repeats after 512 entries, and no longer code means the rest of the table is never read. A block of type 1 starts from this
+# list instead of building it, which costs a few thousand blocks of a test's budget. `experiments/audit-work-20261111/GZSTREAM.md`.
+func fixed_literal_table() -> int[]:
+    mut table: int[] = [
+        4103,
+        1288,
+        264,
+        4488,
+        4359,
+        1800,
+        776,
+        3081,
+        4231,
+        1544,
+        520,
+        2569,
+        8,
+        2056,
+        1032,
+        3593,
+        4167,
+        1416,
+        392,
+        2313,
+        4423,
+        1928,
+        904,
+        3337,
+        4295,
+        1672,
+        648,
+        2825,
+        136,
+        2184,
+        1160,
+        3849,
+        4135,
+        1352,
+        328,
+        4552,
+        4391,
+        1864,
+        840,
+        3209,
+        4263,
+        1608,
+        584,
+        2697,
+        72,
+        2120,
+        1096,
+        3721,
+        4199,
+        1480,
+        456,
+        2441,
+        4455,
+        1992,
+        968,
+        3465,
+        4327,
+        1736,
+        712,
+        2953,
+        200,
+        2248,
+        1224,
+        3977,
+        4119,
+        1320,
+        296,
+        4520,
+        4375,
+        1832,
+        808,
+        3145,
+        4247,
+        1576,
+        552,
+        2633,
+        40,
+        2088,
+        1064,
+        3657,
+        4183,
+        1448,
+        424,
+        2377,
+        4439,
+        1960,
+        936,
+        3401,
+        4311,
+        1704,
+        680,
+        2889,
+        168,
+        2216,
+        1192,
+        3913,
+        4151,
+        1384,
+        360,
+        4584,
+        4407,
+        1896,
+        872,
+        3273,
+        4279,
+        1640,
+        616,
+        2761,
+        104,
+        2152,
+        1128,
+        3785,
+        4215,
+        1512,
+        488,
+        2505,
+        4471,
+        2024,
+        1000,
+        3529,
+        4343,
+        1768,
+        744,
+        3017,
+        232,
+        2280,
+        1256,
+        4041,
+        4103,
+        1304,
+        280,
+        4504,
+        4359,
+        1816,
+        792,
+        3113,
+        4231,
+        1560,
+        536,
+        2601,
+        24,
+        2072,
+        1048,
+        3625,
+        4167,
+        1432,
+        408,
+        2345,
+        4423,
+        1944,
+        920,
+        3369,
+        4295,
+        1688,
+        664,
+        2857,
+        152,
+        2200,
+        1176,
+        3881,
+        4135,
+        1368,
+        344,
+        4568,
+        4391,
+        1880,
+        856,
+        3241,
+        4263,
+        1624,
+        600,
+        2729,
+        88,
+        2136,
+        1112,
+        3753,
+        4199,
+        1496,
+        472,
+        2473,
+        4455,
+        2008,
+        984,
+        3497,
+        4327,
+        1752,
+        728,
+        2985,
+        216,
+        2264,
+        1240,
+        4009,
+        4119,
+        1336,
+        312,
+        4536,
+        4375,
+        1848,
+        824,
+        3177,
+        4247,
+        1592,
+        568,
+        2665,
+        56,
+        2104,
+        1080,
+        3689,
+        4183,
+        1464,
+        440,
+        2409,
+        4439,
+        1976,
+        952,
+        3433,
+        4311,
+        1720,
+        696,
+        2921,
+        184,
+        2232,
+        1208,
+        3945,
+        4151,
+        1400,
+        376,
+        4600,
+        4407,
+        1912,
+        888,
+        3305,
+        4279,
+        1656,
+        632,
+        2793,
+        120,
+        2168,
+        1144,
+        3817,
+        4215,
+        1528,
+        504,
+        2537,
+        4471,
+        2040,
+        1016,
+        3561,
+        4343,
+        1784,
+        760,
+        3049,
+        248,
+        2296,
+        1272,
+        4073,
+        4103,
+        1288,
+        264,
+        4488,
+        4359,
+        1800,
+        776,
+        3097,
+        4231,
+        1544,
+        520,
+        2585,
+        8,
+        2056,
+        1032,
+        3609,
+        4167,
+        1416,
+        392,
+        2329,
+        4423,
+        1928,
+        904,
+        3353,
+        4295,
+        1672,
+        648,
+        2841,
+        136,
+        2184,
+        1160,
+        3865,
+        4135,
+        1352,
+        328,
+        4552,
+        4391,
+        1864,
+        840,
+        3225,
+        4263,
+        1608,
+        584,
+        2713,
+        72,
+        2120,
+        1096,
+        3737,
+        4199,
+        1480,
+        456,
+        2457,
+        4455,
+        1992,
+        968,
+        3481,
+        4327,
+        1736,
+        712,
+        2969,
+        200,
+        2248,
+        1224,
+        3993,
+        4119,
+        1320,
+        296,
+        4520,
+        4375,
+        1832,
+        808,
+        3161,
+        4247,
+        1576,
+        552,
+        2649,
+        40,
+        2088,
+        1064,
+        3673,
+        4183,
+        1448,
+        424,
+        2393,
+        4439,
+        1960,
+        936,
+        3417,
+        4311,
+        1704,
+        680,
+        2905,
+        168,
+        2216,
+        1192,
+        3929,
+        4151,
+        1384,
+        360,
+        4584,
+        4407,
+        1896,
+        872,
+        3289,
+        4279,
+        1640,
+        616,
+        2777,
+        104,
+        2152,
+        1128,
+        3801,
+        4215,
+        1512,
+        488,
+        2521,
+        4471,
+        2024,
+        1000,
+        3545,
+        4343,
+        1768,
+        744,
+        3033,
+        232,
+        2280,
+        1256,
+        4057,
+        4103,
+        1304,
+        280,
+        4504,
+        4359,
+        1816,
+        792,
+        3129,
+        4231,
+        1560,
+        536,
+        2617,
+        24,
+        2072,
+        1048,
+        3641,
+        4167,
+        1432,
+        408,
+        2361,
+        4423,
+        1944,
+        920,
+        3385,
+        4295,
+        1688,
+        664,
+        2873,
+        152,
+        2200,
+        1176,
+        3897,
+        4135,
+        1368,
+        344,
+        4568,
+        4391,
+        1880,
+        856,
+        3257,
+        4263,
+        1624,
+        600,
+        2745,
+        88,
+        2136,
+        1112,
+        3769,
+        4199,
+        1496,
+        472,
+        2489,
+        4455,
+        2008,
+        984,
+        3513,
+        4327,
+        1752,
+        728,
+        3001,
+        216,
+        2264,
+        1240,
+        4025,
+        4119,
+        1336,
+        312,
+        4536,
+        4375,
+        1848,
+        824,
+        3193,
+        4247,
+        1592,
+        568,
+        2681,
+        56,
+        2104,
+        1080,
+        3705,
+        4183,
+        1464,
+        440,
+        2425,
+        4439,
+        1976,
+        952,
+        3449,
+        4311,
+        1720,
+        696,
+        2937,
+        184,
+        2232,
+        1208,
+        3961,
+        4151,
+        1400,
+        376,
+        4600,
+        4407,
+        1912,
+        888,
+        3321,
+        4279,
+        1656,
+        632,
+        2809,
+        120,
+        2168,
+        1144,
+        3833,
+        4215,
+        1528,
+        504,
+        2553,
+        4471,
+        2040,
+        1016,
+        3577,
+        4343,
+        1784,
+        760,
+        3065,
+        248,
+        2296,
+        1272,
+        4089,
+    ]
+    lists.extend(mut table, copy(table))
+    lists.extend(mut table, bytes.to_list(ZEROS[0:TABLE_SIZE - FAST]))
+    return table
+
+
+# The table of the fixed distance code: 30 codes of five bits, so its lookup repeats after 32 entries, and the codes 30 and 31 are
+# not in it.
+func fixed_distance_table() -> int[]:
+    mut table: int[] = [
+        5,
+        261,
+        133,
+        389,
+        69,
+        325,
+        197,
+        453,
+        37,
+        293,
+        165,
+        421,
+        101,
+        357,
+        229,
+        0,
+        21,
+        277,
+        149,
+        405,
+        85,
+        341,
+        213,
+        469,
+        53,
+        309,
+        181,
+        437,
+        117,
+        373,
+        245,
+        0,
+    ]
+    for step in range(5):
+        lists.extend(mut table, copy(table))
+    lists.extend(mut table, bytes.to_list(ZEROS[0:TABLE_SIZE - FAST]))
+    return table
+
+
+# Build the canonical Huffman code (RFC 1951 section 3.2.2) of `count` symbols whose code lengths are lengths[first],
+# lengths[first + 1], ... into `table`, with a lookup of the first `fast_bits` input bits, and say how many codes are left
+# unused after the shortest ones are assigned (negative when a length has too many).
+func build(lengths: int[], first: int, count: int, fast_bits: int, mut table: int[]) -> int:
+    const fast = shift_left(1, fast_bits)
+    for slot in range(COUNTS, SYMBOLS):
+        table[slot] = 0
+    for symbol in range(count):
+        table[COUNTS + lengths[first + symbol]] += 1
+    if table[COUNTS] == count:
+        for slot in range(fast):
+            table[slot] = 0
+        return 0
+    mut left = 1
+    mut longest = 0
+    for length in range(1, 16):
+        left = left * 2 - table[COUNTS + length]
+        if left < 0:
+            return left
+        if table[COUNTS + length] > 0:
+            longest = length
+    if left > 0 or longest > fast_bits:
+        for slot in range(fast):
+            table[slot] = 0
+    mut code = 0
+    table[OFFSETS + 1] = 0
+    table[NEXT + 1] = 0
+    for length in range(1, 15):
+        table[OFFSETS + length + 1] = table[OFFSETS + length] + table[COUNTS + length]
+        code = (code + table[COUNTS + length]) * 2
+        table[NEXT + length + 1] = code
+    for symbol in range(count):
+        const length = lengths[first + symbol]
+        if length != 0:
+            table[SYMBOLS + table[OFFSETS + length]] = symbol
+            table[OFFSETS + length] += 1
+    for length in range(1, min(fast_bits, longest) + 1):
+        const number = table[COUNTS + length]
+        if number > 0:
+            mut reversed = 0
+            for step in range(length):
+                reversed = reversed * 2 + bit_and(shift_right(table[NEXT + length], step), 1)
+            const stride = shift_left(1, length)
+            mut position = table[OFFSETS + length] - number
+            for index in range(number):
+                const entry = table[SYMBOLS + position] * 16 + length
+                mut slot = reversed
+                while slot < fast:
+                    table[slot] = entry
+                    slot += stride
+                position += 1
+                mut carry = shift_left(1, length - 1)
+                while bit_and(reversed, carry) != 0:
+                    carry = shift_right(carry, 1)
+                reversed = bit_and(reversed, carry - 1) + carry
+    return left
+
+
+# The code at the low end of `bits`, which holds `count` loaded bits, for a code longer than ten bits (or none): its symbol
+# times 16 plus its length, 0 when more bits are needed to tell, -1 when no code of at most 15 bits matches. The decoder
+# of zlib's puff.c, a bit at a time.
+func slow_symbol(bits: int, count: int, table: int[]) -> int:
+    mut code = 0
+    mut first = 0
+    mut index = 0
+    for length in range(1, 16):
+        if length > count:
+            return 0
+        code = bit_or(code, bit_and(shift_right(bits, length - 1), 1))
+        const number = table[COUNTS + length]
+        if code - number < first:
+            return table[SYMBOLS + index + (code - first)] * 16 + length
+        index += number
+        first = (first + number) * 2
+        code = code * 2
+    return 0 - 1
+
+
+# Take `need` bits (0 to 16) from the reader, least significant first, or -1 when the input has fewer.
+func read_bits(data: bytes, mut reader: Reader, need: int) -> int:
+    while reader.count < need:
+        if reader.at >= len(data):
+            return 0 - 1
+        reader.bits = bit_or(reader.bits, shift_left(int(bytes.read_u8(data, reader.at)), reader.count))
+        reader.at += 1
+        reader.count += 8
+    const value = bit_and(reader.bits, shift_left(1, need) - 1)
+    reader.bits = shift_right(reader.bits, need)
+    reader.count -= need
+    return value
+
+
+# One symbol of `table` at the reader, or -1 when the input ends before the code does.
+func read_symbol(data: bytes, mut reader: Reader, mask: int, table: int[]) -> int fails str:
+    while reader.count < 15 and reader.at < len(data):
+        reader.bits = bit_or(reader.bits, shift_left(int(bytes.read_u8(data, reader.at)), reader.count))
+        reader.at += 1
+        reader.count += 8
+    mut entry = table[bit_and(reader.bits, mask)]
+    if entry == 0:
+        entry = slow_symbol(reader.bits, reader.count, table)
+        if entry < 0:
+            fail "invalid Huffman code"
+        if entry == 0:
+            return 0 - 1
+    const used = bit_and(entry, 15)
+    if used > reader.count:
+        return 0 - 1
+    reader.bits = shift_right(reader.bits, used)
+    reader.count -= used
+    return shift_right(entry, 4)
+
+
+# The CRC-32 lookup tables (reflected polynomial 0xEDB88320): four tables of 256 entries of four octets each, least significant
+# octet first, with the four entries of an index together, so entry `index` of table k is `CRC_TABLE[o] + 256 * CRC_TABLE[o + 1] +
+# 65536 * CRC_TABLE[o + 2] + 16777216 * CRC_TABLE[o + 3]` for `o = 16 * index + 4 * k`. Table 0 is the usual one; table k gives
+# the CRC-32 of an octet followed by k zero octets, which lets a loop take four octets at a time. The compiler builds them while
+# it checks the program and the built program holds them as static data: reading one allocates nothing and runs no loop. They
+# are read octet by octet because a call to `bytes.read_u32_le` costs a block of a guest test's step budget.
+const CRC_TABLE: bytes = crc_table()
+
+
+# The CRC-32 of the single octet `index`: the exclusive or of the CRC-32 of each of its set bits, which are the constants.
+func crc_base(index: int) -> int:
+    mut value = 0
+    if bit_and(index, 1) != 0:
+        value = bit_xor(value, 1996959894)
+    if bit_and(index, 2) != 0:
+        value = bit_xor(value, 3993919788)
+    if bit_and(index, 4) != 0:
+        value = bit_xor(value, 124634137)
+    if bit_and(index, 8) != 0:
+        value = bit_xor(value, 249268274)
+    if bit_and(index, 16) != 0:
+        value = bit_xor(value, 498536548)
+    if bit_and(index, 32) != 0:
+        value = bit_xor(value, 997073096)
+    if bit_and(index, 64) != 0:
+        value = bit_xor(value, 1994146192)
+    if bit_and(index, 128) != 0:
+        value = bit_xor(value, 3988292384)
+    return value
+
+
+# The CRC-32 of the octet `value` & 255 followed by a zero octet, given `value`, the CRC-32 of the octets before.
+func crc_after_zero(value: int) -> int:
+    return bit_xor(shift_right(value, 8), crc_base(bit_and(value, 255)))
+
+
+func crc_table() -> bytes:
+    mut table = buffers.empty()
+    for index in range(256):
+        mut value = crc_base(index)
+        for round in range(4):
+            for part in range(4):
+                _ = buffers.append_byte(mut table, bit_and(shift_right(value, part * 8), 255))
+            value = crc_after_zero(value)
+    return bytes(table)
+
+
+# The CRC-32 (IEEE 802.3, as gzip and zip use it) of the bytes, as a non-negative integer below 2^32.
+public func crc32(data: bytes) -> int:
+    return crc32_update(0, data)
+
+
+# The CRC-32 of some bytes followed by `data`, given the CRC-32 `value` of the bytes before (0 for none): the running form of
+# `crc32`, so `crc32_update(crc32(a), b)` is `crc32(a + b)`. It takes thirty-two octets a turn and calls nothing in the loop.
+public func crc32_update(value: int, data: bytes) -> int:
+    const table = CRC_TABLE
+    mut crc = bit_xor(value, 4294967295)
+    mut index = 0
+    while index + 32 <= len(data):
+        const word0 = bit_xor(crc, int(data[index + 0]) + 256 * int(data[index + 1]) + 65536 * int(data[index + 2]) + 16777216 * int(data[index + 3]))
+        const a0_at = 16 * (bit_and(word0, 255)) + 12
+        const a0 = int(table[a0_at]) + 256 * int(table[a0_at + 1]) + 65536 * int(table[a0_at + 2]) + 16777216 * int(table[a0_at + 3])
+        const b0_at = 16 * (bit_and(shift_right(word0, 8), 255)) + 8
+        const b0 = int(table[b0_at]) + 256 * int(table[b0_at + 1]) + 65536 * int(table[b0_at + 2]) + 16777216 * int(table[b0_at + 3])
+        const c0_at = 16 * (bit_and(shift_right(word0, 16), 255)) + 4
+        const c0 = int(table[c0_at]) + 256 * int(table[c0_at + 1]) + 65536 * int(table[c0_at + 2]) + 16777216 * int(table[c0_at + 3])
+        const d0_at = 16 * (shift_right(word0, 24)) + 0
+        const d0 = int(table[d0_at]) + 256 * int(table[d0_at + 1]) + 65536 * int(table[d0_at + 2]) + 16777216 * int(table[d0_at + 3])
+        crc = bit_xor(bit_xor(a0, b0), bit_xor(c0, d0))
+        const word4 = bit_xor(crc, int(data[index + 4]) + 256 * int(data[index + 5]) + 65536 * int(data[index + 6]) + 16777216 * int(data[index + 7]))
+        const a4_at = 16 * (bit_and(word4, 255)) + 12
+        const a4 = int(table[a4_at]) + 256 * int(table[a4_at + 1]) + 65536 * int(table[a4_at + 2]) + 16777216 * int(table[a4_at + 3])
+        const b4_at = 16 * (bit_and(shift_right(word4, 8), 255)) + 8
+        const b4 = int(table[b4_at]) + 256 * int(table[b4_at + 1]) + 65536 * int(table[b4_at + 2]) + 16777216 * int(table[b4_at + 3])
+        const c4_at = 16 * (bit_and(shift_right(word4, 16), 255)) + 4
+        const c4 = int(table[c4_at]) + 256 * int(table[c4_at + 1]) + 65536 * int(table[c4_at + 2]) + 16777216 * int(table[c4_at + 3])
+        const d4_at = 16 * (shift_right(word4, 24)) + 0
+        const d4 = int(table[d4_at]) + 256 * int(table[d4_at + 1]) + 65536 * int(table[d4_at + 2]) + 16777216 * int(table[d4_at + 3])
+        crc = bit_xor(bit_xor(a4, b4), bit_xor(c4, d4))
+        const word8 = bit_xor(crc, int(data[index + 8]) + 256 * int(data[index + 9]) + 65536 * int(data[index + 10]) + 16777216 * int(data[index + 11]))
+        const a8_at = 16 * (bit_and(word8, 255)) + 12
+        const a8 = int(table[a8_at]) + 256 * int(table[a8_at + 1]) + 65536 * int(table[a8_at + 2]) + 16777216 * int(table[a8_at + 3])
+        const b8_at = 16 * (bit_and(shift_right(word8, 8), 255)) + 8
+        const b8 = int(table[b8_at]) + 256 * int(table[b8_at + 1]) + 65536 * int(table[b8_at + 2]) + 16777216 * int(table[b8_at + 3])
+        const c8_at = 16 * (bit_and(shift_right(word8, 16), 255)) + 4
+        const c8 = int(table[c8_at]) + 256 * int(table[c8_at + 1]) + 65536 * int(table[c8_at + 2]) + 16777216 * int(table[c8_at + 3])
+        const d8_at = 16 * (shift_right(word8, 24)) + 0
+        const d8 = int(table[d8_at]) + 256 * int(table[d8_at + 1]) + 65536 * int(table[d8_at + 2]) + 16777216 * int(table[d8_at + 3])
+        crc = bit_xor(bit_xor(a8, b8), bit_xor(c8, d8))
+        const word12 = bit_xor(crc, int(data[index + 12]) + 256 * int(data[index + 13]) + 65536 * int(data[index + 14]) + 16777216 * int(data[index + 15]))
+        const a12_at = 16 * (bit_and(word12, 255)) + 12
+        const a12 = int(table[a12_at]) + 256 * int(table[a12_at + 1]) + 65536 * int(table[a12_at + 2]) + 16777216 * int(table[a12_at + 3])
+        const b12_at = 16 * (bit_and(shift_right(word12, 8), 255)) + 8
+        const b12 = int(table[b12_at]) + 256 * int(table[b12_at + 1]) + 65536 * int(table[b12_at + 2]) + 16777216 * int(table[b12_at + 3])
+        const c12_at = 16 * (bit_and(shift_right(word12, 16), 255)) + 4
+        const c12 = int(table[c12_at]) + 256 * int(table[c12_at + 1]) + 65536 * int(table[c12_at + 2]) + 16777216 * int(table[c12_at + 3])
+        const d12_at = 16 * (shift_right(word12, 24)) + 0
+        const d12 = int(table[d12_at]) + 256 * int(table[d12_at + 1]) + 65536 * int(table[d12_at + 2]) + 16777216 * int(table[d12_at + 3])
+        crc = bit_xor(bit_xor(a12, b12), bit_xor(c12, d12))
+        const word16 = bit_xor(crc, int(data[index + 16]) + 256 * int(data[index + 17]) + 65536 * int(data[index + 18]) + 16777216 * int(data[index + 19]))
+        const a16_at = 16 * (bit_and(word16, 255)) + 12
+        const a16 = int(table[a16_at]) + 256 * int(table[a16_at + 1]) + 65536 * int(table[a16_at + 2]) + 16777216 * int(table[a16_at + 3])
+        const b16_at = 16 * (bit_and(shift_right(word16, 8), 255)) + 8
+        const b16 = int(table[b16_at]) + 256 * int(table[b16_at + 1]) + 65536 * int(table[b16_at + 2]) + 16777216 * int(table[b16_at + 3])
+        const c16_at = 16 * (bit_and(shift_right(word16, 16), 255)) + 4
+        const c16 = int(table[c16_at]) + 256 * int(table[c16_at + 1]) + 65536 * int(table[c16_at + 2]) + 16777216 * int(table[c16_at + 3])
+        const d16_at = 16 * (shift_right(word16, 24)) + 0
+        const d16 = int(table[d16_at]) + 256 * int(table[d16_at + 1]) + 65536 * int(table[d16_at + 2]) + 16777216 * int(table[d16_at + 3])
+        crc = bit_xor(bit_xor(a16, b16), bit_xor(c16, d16))
+        const word20 = bit_xor(crc, int(data[index + 20]) + 256 * int(data[index + 21]) + 65536 * int(data[index + 22]) + 16777216 * int(data[index + 23]))
+        const a20_at = 16 * (bit_and(word20, 255)) + 12
+        const a20 = int(table[a20_at]) + 256 * int(table[a20_at + 1]) + 65536 * int(table[a20_at + 2]) + 16777216 * int(table[a20_at + 3])
+        const b20_at = 16 * (bit_and(shift_right(word20, 8), 255)) + 8
+        const b20 = int(table[b20_at]) + 256 * int(table[b20_at + 1]) + 65536 * int(table[b20_at + 2]) + 16777216 * int(table[b20_at + 3])
+        const c20_at = 16 * (bit_and(shift_right(word20, 16), 255)) + 4
+        const c20 = int(table[c20_at]) + 256 * int(table[c20_at + 1]) + 65536 * int(table[c20_at + 2]) + 16777216 * int(table[c20_at + 3])
+        const d20_at = 16 * (shift_right(word20, 24)) + 0
+        const d20 = int(table[d20_at]) + 256 * int(table[d20_at + 1]) + 65536 * int(table[d20_at + 2]) + 16777216 * int(table[d20_at + 3])
+        crc = bit_xor(bit_xor(a20, b20), bit_xor(c20, d20))
+        const word24 = bit_xor(crc, int(data[index + 24]) + 256 * int(data[index + 25]) + 65536 * int(data[index + 26]) + 16777216 * int(data[index + 27]))
+        const a24_at = 16 * (bit_and(word24, 255)) + 12
+        const a24 = int(table[a24_at]) + 256 * int(table[a24_at + 1]) + 65536 * int(table[a24_at + 2]) + 16777216 * int(table[a24_at + 3])
+        const b24_at = 16 * (bit_and(shift_right(word24, 8), 255)) + 8
+        const b24 = int(table[b24_at]) + 256 * int(table[b24_at + 1]) + 65536 * int(table[b24_at + 2]) + 16777216 * int(table[b24_at + 3])
+        const c24_at = 16 * (bit_and(shift_right(word24, 16), 255)) + 4
+        const c24 = int(table[c24_at]) + 256 * int(table[c24_at + 1]) + 65536 * int(table[c24_at + 2]) + 16777216 * int(table[c24_at + 3])
+        const d24_at = 16 * (shift_right(word24, 24)) + 0
+        const d24 = int(table[d24_at]) + 256 * int(table[d24_at + 1]) + 65536 * int(table[d24_at + 2]) + 16777216 * int(table[d24_at + 3])
+        crc = bit_xor(bit_xor(a24, b24), bit_xor(c24, d24))
+        const word28 = bit_xor(crc, int(data[index + 28]) + 256 * int(data[index + 29]) + 65536 * int(data[index + 30]) + 16777216 * int(data[index + 31]))
+        const a28_at = 16 * (bit_and(word28, 255)) + 12
+        const a28 = int(table[a28_at]) + 256 * int(table[a28_at + 1]) + 65536 * int(table[a28_at + 2]) + 16777216 * int(table[a28_at + 3])
+        const b28_at = 16 * (bit_and(shift_right(word28, 8), 255)) + 8
+        const b28 = int(table[b28_at]) + 256 * int(table[b28_at + 1]) + 65536 * int(table[b28_at + 2]) + 16777216 * int(table[b28_at + 3])
+        const c28_at = 16 * (bit_and(shift_right(word28, 16), 255)) + 4
+        const c28 = int(table[c28_at]) + 256 * int(table[c28_at + 1]) + 65536 * int(table[c28_at + 2]) + 16777216 * int(table[c28_at + 3])
+        const d28_at = 16 * (shift_right(word28, 24)) + 0
+        const d28 = int(table[d28_at]) + 256 * int(table[d28_at + 1]) + 65536 * int(table[d28_at + 2]) + 16777216 * int(table[d28_at + 3])
+        crc = bit_xor(bit_xor(a28, b28), bit_xor(c28, d28))
+        index += 32
+    while index < len(data):
+        const slot = 16 * bit_and(bit_xor(crc, int(data[index])), 255)
+        crc = bit_xor(int(table[slot]) + 256 * int(table[slot + 1]) + 65536 * int(table[slot + 2]) + 16777216 * int(table[slot + 3]), shift_right(crc, 8))
+        index += 1
+    return bit_xor(crc, 4294967295)
+
+
+# The Adler-32 checksum of the bytes (RFC 1950), as a non-negative integer below 2^32.
+public func adler32(data: bytes) -> int:
+    return adler32_update(1, data)
+
+
+# The Adler-32 of some bytes followed by `data`, given the Adler-32 `value` of the bytes before (1 for none): the running
+# form of `adler32`, so `adler32_update(adler32(a), b)` is `adler32(a + b)`.
+public func adler32_update(value: int, data: bytes) -> int:
+    mut low = bit_and(value, 65535)
+    mut high = shift_right(value, 16)
+    mut index = 0
+    while index < len(data):
+        const stop = min(index + 5552, len(data))
+        while index + 16 <= stop:
+            low += int(data[index + 0])
+            high += low
+            low += int(data[index + 1])
+            high += low
+            low += int(data[index + 2])
+            high += low
+            low += int(data[index + 3])
+            high += low
+            low += int(data[index + 4])
+            high += low
+            low += int(data[index + 5])
+            high += low
+            low += int(data[index + 6])
+            high += low
+            low += int(data[index + 7])
+            high += low
+            low += int(data[index + 8])
+            high += low
+            low += int(data[index + 9])
+            high += low
+            low += int(data[index + 10])
+            high += low
+            low += int(data[index + 11])
+            high += low
+            low += int(data[index + 12])
+            high += low
+            low += int(data[index + 13])
+            high += low
+            low += int(data[index + 14])
+            high += low
+            low += int(data[index + 15])
+            high += low
+            index += 16
+        while index < stop:
+            low += int(data[index])
+            high += low
+            index += 1
+        low = low % 65521
+        high = high % 65521
+    return high * 65536 + low
+
+
+# A stream state for `format` that fails past `limit` plain bytes. `whole` says the caller feeds all the input in one piece.
+func start(format: int, limit: int, whole: bool) -> Inflater:
+    mut stage = S_START
+    if format == RAW:
+        stage = S_BLOCK
+    mut chunk = CHUNK
+    if whole:
+        chunk = 4611686018427387904
+    mut lit: int[] = []
+    mut dist: int[] = []
+    mut check = 0
+    if format == ZLIB:
+        check = 1
+    return Inflater(format=format, stage=stage, whole=whole, limit=limit, chunk=chunk, failure="", carry=b"", at=0, bits=0, count=0, out=buffers.empty(), emitted=0, checked=0, base=0, discarded=0, check=check, size=0, members=0, last=False, left=0, flags=0, padded=False, lit=own lit, dist=own dist)
+
+
+# A stream state for raw DEFLATE data (RFC 1951) that fails once it has produced more than `limit` plain bytes.
+public func inflater(limit: int) -> Inflater:
+    return start(RAW, limit, False)
+
+
+# A stream state for zlib data (RFC 1950): the header, a DEFLATE stream and the Adler-32 of the result.
+public func zlib_inflater(limit: int) -> Inflater:
+    return start(ZLIB, limit, False)
+
+
+# A stream state for gzip data (RFC 1952): one member or several, each with its CRC-32 and size checked.
+public func gzip_inflater(limit: int) -> Inflater:
+    return start(GZIP, limit, False)
+
+
+# Whether every byte from `from` on is zero.
+func all_zero(data: bytes, from: int) -> bool:
+    for index in range(from, len(data)):
+        if int(bytes.read_u8(data, index)) != 0:
+            return False
+    return True
+
+
+# Hand the loaded whole bytes back to the input, keeping the bits of the byte that is only partly used.
+func unread(mut stream: Inflater):
+    const whole = stream.count // 8
+    stream.at -= whole
+    stream.count -= whole * 8
+    stream.bits = bit_and(stream.bits, shift_left(1, stream.count) - 1)
+
+
+# Drop the bits up to the next byte boundary and hand the loaded whole bytes back to the input.
+func align(mut stream: Inflater):
+    stream.at -= stream.count // 8
+    stream.count = 0
+    stream.bits = 0
+
+
+# Fold the output not yet counted into the running checksum and the member's size.
+func account(mut stream: Inflater):
+    const end = len(stream.out)
+    if stream.format == GZIP and end > stream.checked:
+        stream.check = crc32_update(stream.check, bytes(stream.out[stream.checked:end]))
+        stream.size += end - stream.checked
+    elif stream.format == ZLIB and end > stream.checked:
+        stream.check = adler32_update(stream.check, bytes(stream.out[stream.checked:end]))
+    stream.checked = end
+
+
+# The stage after `done` that the flags of a gzip header ask for next.
+func next_part(flags: int, done: int) -> int:
+    if done < S_XLEN and bit_and(flags, 4) != 0:
+        return S_XLEN
+    if done < S_NAME and bit_and(flags, 8) != 0:
+        return S_NAME
+    if done < S_COMMENT and bit_and(flags, 16) != 0:
+        return S_COMMENT
+    if done < S_HCRC and bit_and(flags, 2) != 0:
+        return S_HCRC
+    return S_BLOCK
+
+
+# Where a gzip header ends and the DEFLATE stream of the member begins.
+func header_end(mut stream: Inflater, data: bytes) -> bool fails str:
+    if stream.whole and stream.at >= len(data):
+        fail "the gzip header is cut short"
+    stream.stage = S_BLOCK
+    return True
+
+
+# The start of a zlib stream or of a gzip member. Returns False when the input ends first.
+func start_stage(mut stream: Inflater, data: bytes) -> bool fails str:
+    const available = len(data) - stream.at
+    if stream.format == ZLIB:
+        if available < 2:
+            return False
+        const method = int(bytes.read_u8(data, stream.at))
+        const flags = int(bytes.read_u8(data, stream.at + 1))
+        if bit_and(method, 15) != 8 or shift_right(method, 4) > 7:
+            fail "the zlib header does not name the deflate method"
+        if (method * 256 + flags) % 31 != 0:
+            fail "the zlib header check bits are wrong"
+        if bit_and(flags, 32) != 0:
+            fail "the zlib stream needs a preset dictionary"
+        stream.at += 2
+        stream.stage = S_BLOCK
+        return True
+    if stream.members > 0:
+        if stream.whole:
+            if all_zero(data, stream.at):
+                stream.at = len(data)
+                return False
+        else:
+            while stream.at < len(data) and int(bytes.read_u8(data, stream.at)) == 0:
+                stream.at += 1
+                stream.padded = True
+            if stream.at >= len(data):
+                return False
+            if stream.padded:
+                fail "the data is not gzip: the magic number is wrong"
+    if stream.whole and 0 < available < 18:
+        fail "the gzip member is too short"
+    if available >= 1 and int(bytes.read_u8(data, stream.at)) != 31:
+        fail "the data is not gzip: the magic number is wrong"
+    if available >= 2 and int(bytes.read_u8(data, stream.at + 1)) != 139:
+        fail "the data is not gzip: the magic number is wrong"
+    if available >= 3 and int(bytes.read_u8(data, stream.at + 2)) != 8:
+        fail "the gzip member does not use the deflate method"
+    if available < 10:
+        return False
+    stream.flags = int(bytes.read_u8(data, stream.at + 3))
+    stream.at += 10
+    stream.stage = next_part(stream.flags, S_START)
+    if stream.stage == S_BLOCK:
+        return try header_end(mut stream, data)
+    return True
+
+
+# The parts of a gzip header after the fixed ten bytes: the extra field's length and bytes, the name and the comment (each
+# up to a zero byte) and the header check, which is skipped unchecked.
+func header_part(mut stream: Inflater, data: bytes) -> bool fails str:
+    const stage = stream.stage
+    if stage == S_XLEN:
+        if len(data) - stream.at < 2:
+            return False
+        stream.left = int(bytes.read_u16_le(data, stream.at))
+        stream.at += 2
+        stream.stage = S_EXTRA
+        return True
+    if stage == S_EXTRA or stage == S_HCRC:
+        if stage == S_HCRC and stream.left == 0:
+            stream.left = 2
+        const skipped = min(stream.left, len(data) - stream.at)
+        stream.at += skipped
+        stream.left -= skipped
+        if stream.left > 0:
+            return False
+        stream.stage = next_part(stream.flags, stage)
+        if stream.stage == S_BLOCK:
+            return try header_end(mut stream, data)
+        return True
+    while stream.at < len(data):
+        const octet = int(bytes.read_u8(data, stream.at))
+        stream.at += 1
+        if octet == 0:
+            stream.stage = next_part(stream.flags, stage)
+            if stream.stage == S_HCRC:
+                stream.left = 2
+            if stream.stage == S_BLOCK:
+                return try header_end(mut stream, data)
+            return True
+    return False
+
+
+# The end of a block: the next block header, or the end of the DEFLATE stream.
+func block_end(mut stream: Inflater) -> bool:
+    if not stream.last:
+        stream.stage = S_BLOCK
+        return True
+    align(mut stream)
+    account(mut stream)
+    if stream.format == RAW:
+        stream.stage = S_DONE
+    else:
+        stream.stage = S_TRAILER
+    return True
+
+
+# A block header: the final bit and the two type bits, then the start of the block that the type names.
+func block_head(mut stream: Inflater, data: bytes) -> bool fails str:
+    while stream.count < 3 and stream.at < len(data):
+        stream.bits = bit_or(stream.bits, shift_left(int(bytes.read_u8(data, stream.at)), stream.count))
+        stream.at += 1
+        stream.count += 8
+    if stream.count < 3:
+        return False
+    const kind = bit_and(shift_right(stream.bits, 1), 3)
+    stream.last = bit_and(stream.bits, 1) == 1
+    stream.bits = shift_right(stream.bits, 3)
+    stream.count -= 3
+    match kind:
+        case 0:
+            align(mut stream)
+            stream.stage = S_STORED
+        case 1:
+            stream.lit = fixed_literal_table()
+            stream.dist = fixed_distance_table()
+            stream.stage = S_CODES
+        case 2:
+            if len(stream.lit) == 0:
+                stream.lit = fresh_table()
+                stream.dist = fresh_table()
+            stream.stage = S_DYNAMIC
+        case _:
+            fail "a block has the reserved type 3"
+    return True
+
+
+# A stored block's header: LEN and its complement, after the bits up to the byte boundary were dropped.
+func stored_head(mut stream: Inflater, data: bytes) -> bool fails str:
+    if len(data) - stream.at < 4:
+        return False
+    const length = int(bytes.read_u16_le(data, stream.at))
+    const complement = int(bytes.read_u16_le(data, stream.at + 2))
+    if bit_xor(length, 65535) != complement:
+        fail "a stored block's length does not match its complement"
+    if stream.whole and stream.at + 4 + length > len(data):
+        fail "unexpected end of the compressed data"
+    if len(stream.out) + length > stream.limit - stream.discarded:
+        fail "the result is past the size limit"
+    stream.at += 4
+    stream.left = length
+    stream.stage = S_COPY
+    if length == 0:
+        return block_end(mut stream)
+    return True
+
+
+# The bytes of a stored block, as many as the input and the room for output allow. Returns True once the block is done.
+func stored_copy(mut stream: Inflater, data: bytes) -> bool:
+    const room = stream.emitted + stream.chunk - len(stream.out)
+    const take_now = min(min(stream.left, len(data) - stream.at), room)
+    if take_now <= 0:
+        return False
+    _ = buffers.append_range(mut stream.out, data, stream.at, stream.at + take_now)
+    stream.at += take_now
+    stream.left -= take_now
+    if stream.left == 0:
+        return block_end(mut stream)
+    return False
+
+
+# A dynamic block's header (RFC 1951 section 3.2.7): the code lengths, themselves Huffman coded. Returns False, having
+# used none of the input, when the input ends before the header does.
+func dynamic_head(mut stream: Inflater, data: bytes) -> bool fails str:
+    mut reader = Reader(bits=stream.bits, count=stream.count, at=stream.at)
+    const head = read_bits(data, mut reader, 14)
+    if head < 0:
+        return False
+    const literals = bit_and(head, 31) + 257
+    const distances = bit_and(shift_right(head, 5), 31) + 1
+    const header_lengths = shift_right(head, 10) + 4
+    if literals > 286 or distances > 30:
+        fail "too many length or distance codes"
+    mut header: int[] = lists.filled(19, 0)
+    for position in range(header_lengths):
+        const bits = read_bits(data, mut reader, 3)
+        if bits < 0:
+            return False
+        header[int(ORDER[position])] = bits
+    if build(header, 0, 19, 7, mut stream.dist) != 0:
+        fail "the code length code is not complete"
+    mut all: int[] = list(range(literals + distances))
+    mut index = 0
+    while index < literals + distances:
+        const symbol = try read_symbol(data, mut reader, 127, stream.dist)
+        if symbol < 0:
+            return False
+        if symbol < 16:
+            all[index] = symbol
+            index += 1
+        else:
+            mut previous = 0
+            mut repeat = 0
+            if symbol == 16:
+                if index == 0:
+                    fail "a length repeats with no length before it"
+                previous = all[index - 1]
+                const extra = read_bits(data, mut reader, 2)
+                if extra < 0:
+                    return False
+                repeat = 3 + extra
+            elif symbol == 17:
+                const extra = read_bits(data, mut reader, 3)
+                if extra < 0:
+                    return False
+                repeat = 3 + extra
+            else:
+                const extra = read_bits(data, mut reader, 7)
+                if extra < 0:
+                    return False
+                repeat = 11 + extra
+            if index + repeat > literals + distances:
+                fail "too many code lengths"
+            for copied in range(repeat):
+                all[index] = previous
+                index += 1
+    if all[256] == 0:
+        fail "the block has no end-of-block code"
+    const literal_left = build(all, 0, literals, 10, mut stream.lit)
+    if literal_left < 0 or (literal_left > 0 and literals != stream.lit[COUNTS] + stream.lit[COUNTS + 1]):
+        fail "the literal/length code is over-subscribed or incomplete"
+    const distance_left = build(all, literals, distances, 10, mut stream.dist)
+    if distance_left < 0 or (distance_left > 0 and distances != stream.dist[COUNTS] + stream.dist[COUNTS + 1]):
+        fail "the distance code is over-subscribed or incomplete"
+    stream.bits = reader.bits
+    stream.count = reader.count
+    stream.at = reader.at
+    stream.stage = S_CODES
+    return True
+
+
+# The symbols of a Huffman coded block, up to its end-of-block symbol. Each symbol is decoded whole or not at all: when the
+# input ends inside one, the bits go back as they were and the call returns False, as it does when the output has reached
+# the chunk. Returns True at the end of the block.
+func codes(mut stream: Inflater, data: bytes) -> bool fails str:
+    mut bits = stream.bits
+    mut count = stream.count
+    mut at = stream.at
+    const size = len(data)
+    const length_extras = LENGTH_EXTRA
+    const length_bases = LENGTH_BASE
+    const distance_extras = DISTANCE_EXTRA
+    const distance_bases = DISTANCE_BASE
+    const run_of_zeros = ZEROS
+    const hard = stream.limit - stream.discarded
+    const soft = stream.emitted + stream.chunk
+    mut finished = False
+    mut running = True
+    while running:
+        if len(stream.out) >= soft:
+            running = False
+        else:
+            const start_bits = bits
+            const start_count = count
+            const start_at = at
+            if count < 32:
+                if at + 4 <= size:
+                    bits = bit_or(bits, shift_left(int(bytes.read_u32_le(data, at)), count))
+                    at += 4
+                    count += 32
+                else:
+                    while count < 56 and at < size:
+                        bits = bit_or(bits, shift_left(int(bytes.read_u8(data, at)), count))
+                        at += 1
+                        count += 8
+            mut entry = stream.lit[bit_and(bits, 1023)]
+            if entry == 0:
+                entry = slow_symbol(bits, count, stream.lit)
+                if entry < 0:
+                    fail "invalid Huffman code"
+            const used = bit_and(entry, 15)
+            const symbol = shift_right(entry, 4)
+            if entry == 0 or used > count:
+                bits = start_bits
+                count = start_count
+                at = start_at
+                running = False
+            elif symbol < 256:
+                if len(stream.out) >= hard:
+                    fail "the result is past the size limit"
+                bits = shift_right(bits, used)
+                count -= used
+                _ = buffers.append_byte(mut stream.out, symbol)
+            elif symbol == 256:
+                bits = shift_right(bits, used)
+                count -= used
+                finished = True
+                running = False
+            elif symbol > 285:
+                fail "invalid length symbol"
+            else:
+                bits = shift_right(bits, used)
+                count -= used
+                const index = symbol - 257
+                const length_extra = int(length_extras[index])
+                if length_extra > count:
+                    bits = start_bits
+                    count = start_count
+                    at = start_at
+                    running = False
+                else:
+                    const length = (int(length_bases[2 * index]) + 256 * int(length_bases[2 * index + 1])) + bit_and(bits, shift_left(1, length_extra) - 1)
+                    bits = shift_right(bits, length_extra)
+                    count -= length_extra
+                    if count < 32:
+                        if at + 4 <= size:
+                            bits = bit_or(bits, shift_left(int(bytes.read_u32_le(data, at)), count))
+                            at += 4
+                            count += 32
+                        else:
+                            while count < 56 and at < size:
+                                bits = bit_or(bits, shift_left(int(bytes.read_u8(data, at)), count))
+                                at += 1
+                                count += 8
+                    mut slot_entry = stream.dist[bit_and(bits, 1023)]
+                    if slot_entry == 0:
+                        slot_entry = slow_symbol(bits, count, stream.dist)
+                        if slot_entry < 0:
+                            fail "invalid Huffman code"
+                    const slot_used = bit_and(slot_entry, 15)
+                    const slot = shift_right(slot_entry, 4)
+                    if slot_entry == 0 or slot_used > count:
+                        bits = start_bits
+                        count = start_count
+                        at = start_at
+                        running = False
+                    elif slot >= 30:
+                        fail "invalid distance symbol"
+                    else:
+                        const distance_extra = int(distance_extras[slot])
+                        if slot_used + distance_extra > count:
+                            bits = start_bits
+                            count = start_count
+                            at = start_at
+                            running = False
+                        else:
+                            bits = shift_right(bits, slot_used)
+                            const distance = (int(distance_bases[2 * slot]) + 256 * int(distance_bases[2 * slot + 1])) + bit_and(bits, shift_left(1, distance_extra) - 1)
+                            bits = shift_right(bits, distance_extra)
+                            count -= slot_used + distance_extra
+                            if distance > len(stream.out) - stream.base:
+                                fail "a distance reaches back before the start of the output"
+                            if len(stream.out) + length > hard:
+                                fail "the result is past the size limit"
+                            const from = len(stream.out) - distance
+                            if distance == 1 and length >= 12:
+                                const value = int(stream.out[from])
+                                if value == 0:
+                                    _ = buffers.append_range(mut stream.out, run_of_zeros, 0, length)
+                                else:
+                                    buffers.append(mut stream.out, bytes.replace(run_of_zeros[0:length], b"\x00", bytes([value])))
+                            elif length < 12:
+                                for copied in range(length):
+                                    const byte = int(stream.out[from + copied])
+                                    _ = buffers.append_byte(mut stream.out, byte)
+                            else:
+                                mut copied = 0
+                                while copied < length:
+                                    const piece = min(length - copied, len(stream.out) - from)
+                                    buffers.append(mut stream.out, bytes(stream.out[from:from + piece]))
+                                    copied += piece
+    stream.bits = bits
+    stream.count = count
+    stream.at = at
+    if finished:
+        return block_end(mut stream)
+    return False
+
+
+# The checksum after the end of a zlib stream or a gzip member.
+func trailer(mut stream: Inflater, data: bytes) -> bool fails str:
+    const available = len(data) - stream.at
+    if stream.format == ZLIB:
+        if stream.whole and available != 4:
+            fail "the zlib stream has the wrong length"
+        if available < 4:
+            return False
+        if int(bytes.read_u32_be(data, stream.at)) != stream.check:
+            fail "the zlib checksum does not match"
+        stream.at += 4
+        stream.stage = S_DONE
+        return True
+    if available < 8:
+        return False
+    if int(bytes.read_u32_le(data, stream.at)) != stream.check:
+        fail "the gzip checksum does not match"
+    if int(bytes.read_u32_le(data, stream.at + 4)) != bit_and(stream.size, 4294967295):
+        fail "the gzip size does not match"
+    stream.at += 8
+    stream.members += 1
+    stream.padded = False
+    stream.check = 0
+    stream.size = 0
+    stream.base = len(stream.out)
+    stream.stage = S_START
+    return True
+
+
+# Run the stream on `data` from `stream.at` until the input ends, the output chunk is full or the stream has ended.
+func run(mut stream: Inflater, data: bytes) -> Unit fails str:
+    mut going = True
+    while going:
+        const stage = stream.stage
+        if stage == S_CODES:
+            going = try codes(mut stream, data)
+        elif stage == S_BLOCK:
+            going = try block_head(mut stream, data)
+        elif stage == S_COPY:
+            going = stored_copy(mut stream, data)
+        elif stage == S_DYNAMIC:
+            going = try dynamic_head(mut stream, data)
+        elif stage == S_STORED:
+            going = try stored_head(mut stream, data)
+        elif stage == S_TRAILER:
+            going = try trailer(mut stream, data)
+        elif stage == S_START:
+            going = try start_stage(mut stream, data)
+        elif stage == S_DONE:
+            if stream.at < len(data):
+                if stream.format == RAW:
+                    fail "there is data after the end of the DEFLATE stream"
+                fail "the zlib stream has the wrong length"
+            going = False
+        else:
+            going = try header_part(mut stream, data)
+
+
+# Drop the history the stream no longer needs: all but the last window of the current member.
+func compact(mut stream: Inflater):
+    const size = len(stream.out)
+    if size <= COMPACT_AT:
+        return
+    const keep = max(size - WINDOW, stream.base)
+    mut next = copy(stream.out[keep:])
+    stream.out = own next
+    stream.discarded += keep
+    stream.emitted = size - keep
+    stream.checked = size - keep
+    stream.base = 0
+
+
+# Feed the next piece of compressed bytes to a stream and return the plain bytes it yields: what the piece completed, which
+# may be nothing when the piece ends inside a header or a code. A piece may end anywhere. A call returns about a mebibyte
+# at most; when it returns something, call again with `b""` until it returns nothing, to get the rest. Fails with a
+# message, now and in every later call, when the input is damaged or the result passes the limit.
+public func feed(mut stream: Inflater, piece: bytes) -> bytes fails str:
+    if stream.stage == S_FAILED:
+        fail copy(stream.failure)
+    if len(stream.carry) == 0:
+        return try feed_data(mut stream, piece)
+    const joined = stream.carry + piece
+    return try feed_data(mut stream, joined)
+
+
+# `feed` on the whole of the input the stream has: its carried bytes and the new piece.
+func feed_data(mut stream: Inflater, data: bytes) -> bytes fails str:
+    stream.at = 0
+    _ = run(mut stream, data) else Err(message):
+        stream.stage = S_FAILED
+        stream.failure = copy(message)
+        fail message
+    unread(mut stream)
+    stream.carry = copy(data[stream.at:])
+    account(mut stream)
+    const plain = bytes(stream.out[stream.emitted:])
+    stream.emitted = len(stream.out)
+    compact(mut stream)
+    return plain
+
+
+# Whether the stream has ended cleanly: a raw or zlib stream through its last block (and the Adler-32 for zlib), a gzip
+# stream at the end of a member or empty, with nothing left unused.
+public func ended(stream: Inflater) -> bool:
+    if stream.stage == S_DONE:
+        return True
+    return stream.format == GZIP and stream.stage == S_START and len(stream.carry) == 0
+
+
+# Say with a message why the stream has not ended cleanly, once all the input has been fed; nothing when it has.
+public func finish(stream: Inflater) -> Unit fails str:
+    if stream.stage == S_FAILED:
+        fail copy(stream.failure)
+    if ended(stream):
+        return
+    const stage = stream.stage
+    if stream.format == ZLIB:
+        if stage == S_START:
+            fail "the zlib stream is too short"
+        if stage == S_TRAILER:
+            fail "the zlib stream has the wrong length"
+    if stream.format == GZIP:
+        if stage == S_TRAILER:
+            fail "the gzip member is cut short"
+        if stage == S_START or (stage >= S_XLEN and stage <= S_HCRC):
+            fail "the gzip header is cut short"
+    fail "unexpected end of the compressed data"
+
+
+# Decompress a raw DEFLATE stream (RFC 1951). The stream must be the whole input.
+public func inflate(data: bytes, limit: int) -> bytes fails str:
+    mut stream = start(RAW, limit, True)
+    const plain = try feed(mut stream, data)
+    try finish(stream)
+    return plain
+
+
+# Decompress a zlib stream (RFC 1950): a two-byte header, a DEFLATE stream and the Adler-32 of the result. A stream that
+# asks for a preset dictionary is refused.
+public func zlib_decode(data: bytes, limit: int) -> bytes fails str:
+    if len(data) < 6:
+        fail "the zlib stream is too short"
+    mut stream = start(ZLIB, limit, True)
+    const plain = try feed(mut stream, data)
+    try finish(stream)
+    return plain
+
+
+# Decompress gzip data (RFC 1952): one member, or several one after another, which decompress to their concatenation;
+# zero bytes after the last member are ignored, any other trailing data is refused. Every member's CRC-32 and size are
+# checked.
+public func gunzip(data: bytes, limit: int) -> bytes fails str:
+    mut stream = start(GZIP, limit, True)
+    const plain = try feed(mut stream, data)
+    try finish(stream)
+    return plain

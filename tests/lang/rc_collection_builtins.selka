@@ -1,0 +1,76 @@
+import dicts
+import lists
+import sets
+import strings
+
+public func test_nested_list_mutators_publish_owned_results() -> bool:
+    mut values = [[1], [2]]
+    mut first = lists.pop_at(mut values, 0)
+    lists.insert(mut values, 0, [3])
+    append(mut values, copy(first))
+    values[1] = [4]
+    if values != [[3], [4], [1]] or first != [1]:
+        return False
+    lists.clear(mut values)
+    return len(values) == 0 and first == [1]
+
+
+public func test_dictionary_results_survive_receiver_clear() -> bool:
+    mut mapping = {"a": [10], "b": [20]}
+    mut existing = copy(dicts.setdefault(mut mapping, "a", [99]))
+    mut inserted = copy(dicts.setdefault(mut mapping, "c", [30]))
+    mut removed = dicts.pop(mut mapping, "b")
+    mut fallback = dicts.pop_default(mut mapping, "missing", [42])
+    if existing != [10] or inserted != [30] or removed != [20] or fallback != [42]:
+        return False
+    mut copied = copy(mapping)
+    dicts.update(mut copied, {"d": [40]})
+    mut values = list(dicts.values(mapping))
+    mut keys = list(dicts.keys(mapping))
+    dicts.clear(mut mapping)
+    return values == [[10], [30]] and keys == ["a", "c"] and len(copied) == 3
+
+
+func word_length(word: str) -> int:
+    return strings.char_count(word)
+
+
+func word_fold(word: str) -> str:
+    return strings.lower(word)
+
+
+public func test_keyed_sort_owns_its_managed_elements() -> bool:
+    mut words = ["pear", "apple", "fig"]
+    mut ordered = sorted(words, key=word_length)
+    if ordered != ["fig", "pear", "apple"] or words != ["pear", "apple", "fig"]:
+        return False
+    mut folded = sorted(["ZED", "alpha", "BEE"], key=word_fold)
+    return folded == ["alpha", "BEE", "ZED"]
+
+
+public func test_set_pop_owns_the_removed_key() -> bool:
+    mut selected = {"first", "second"}
+    mut last = sets.pop(mut selected)
+    sets.clear(mut selected)
+    return last == "second" and len(selected) == 0
+
+
+public func test_identity_text_conversion_retains_its_input() -> bool:
+    mut parts = strings.split(("head" + "-tail"), "-")
+    mut converted = copy(str(parts[0]))
+    lists.clear(mut parts)
+    return converted == "head"
+
+
+func main() -> int:
+    if not test_nested_list_mutators_publish_owned_results():
+        return 1
+    if not test_dictionary_results_survive_receiver_clear():
+        return 2
+    if not test_keyed_sort_owns_its_managed_elements():
+        return 3
+    if not test_set_pop_owns_the_removed_key():
+        return 4
+    if not test_identity_text_conversion_retains_its_input():
+        return 5
+    return 0

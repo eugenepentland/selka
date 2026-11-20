@@ -1,0 +1,393 @@
+# json_roundtrip: generate a compact JSON text of nested records, parse it into a
+# recursive value enum, walk the tree into a checksum and serialize it back
+# (SUITE.md section 12). Decimals are parsed with the byte-range float parser and
+# printed from their scaled integers. Text values are kept as bytes: the escapes
+# are decoded to octets, and ASCII needs no UTF-8 validation.
+import byte_builder
+import bytes
+
+# A decimal: its scaled integer (value * 1000, sign applied) and the parsed float.
+record Decimal:
+    scaled: int
+    value: float
+
+
+enum Value:
+    null
+    boolean(value: bool)
+    integer(value: int)
+    decimal(value: Decimal)
+    text(value: bytes)
+    array(items: Value[])
+    object(members: Member[])
+
+
+record Member:
+    key: bytes
+    value: Value
+
+
+# The generator state, updated through a mut parameter.
+record Gen:
+    state: u64
+
+
+# The byte string of a document, read through a mut cursor.
+record Parser:
+    data: bytes
+    position: int
+
+
+# The shared checksum step: (c * 31 + v) mod 1000000007, for non-negative v.
+func mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+func full(mut gen: Gen) -> u64:
+    mut x = gen.state
+    x = bit_xor(x, shift_left(x, 13u64))
+    x = bit_xor(x, shift_right(x, 7u64))
+    x = bit_xor(x, shift_left(x, 17u64))
+    gen.state = x
+    return x
+
+
+func draw(mut gen: Gen) -> int:
+    return int(shift_right(full(mut gen), 33u64))
+
+
+func pick(mut gen: Gen, n: int) -> int:
+    return draw(mut gen) % n
+
+
+# One ASCII octet of the alphabet a-z, A-Z, 0-9 for index 0 to 61.
+func alpha_byte(index: int) -> int:
+    if index < 26:
+        return 97 + index
+    if index < 52:
+        return 65 + index - 26
+    return 48 + index - 52
+
+
+func put(mut out: byte_builder.Builder, value: int):
+    _ = byte_builder.append_byte(mut out, value)
+
+
+func put_text(mut out: byte_builder.Builder, text: str):
+    byte_builder.append_text(mut out, text)
+
+
+# Three fractional digits, zero-padded.
+func put_fraction(mut out: byte_builder.Builder, fraction: int):
+    if fraction < 100:
+        put(mut out, 48)
+    if fraction < 10:
+        put(mut out, 48)
+    byte_builder.append_int(mut out, fraction)
+
+
+func gen_decimal(mut gen: Gen, mut out: byte_builder.Builder):
+    mut mag = pick(mut gen, 2000000)
+    mut sign = pick(mut gen, 2)
+    if sign == 1 and mag > 0:
+        put(mut out, 45)
+    byte_builder.append_int(mut out, mag // 1000)
+    put(mut out, 46)
+    put_fraction(mut out, mag % 1000)
+
+
+func gen_record(mut gen: Gen, mut out: byte_builder.Builder, depth: int):
+    put_text(mut out, '{"id":')
+    byte_builder.append_int(mut out, draw(mut gen))
+    mut length = 4 + pick(mut gen, 12)
+    put_text(mut out, ',"name":"')
+    for _ in range(length):
+        mut r = pick(mut gen, 16)
+        if r == 0:
+            put_text(mut out, '\\"')
+        elif r == 1:
+            put_text(mut out, "\\\\")
+        elif r == 2:
+            put_text(mut out, "\\n")
+        else:
+            put(mut out, alpha_byte(pick(mut gen, 62)))
+    put(mut out, 34)
+    put_text(mut out, ',"pos":[')
+    gen_decimal(mut gen, mut out)
+    put(mut out, 44)
+    gen_decimal(mut gen, mut out)
+    put_text(mut out, '],"tags":[')
+    mut tags = pick(mut gen, 5)
+    for t in range(tags):
+        if t > 0:
+            put(mut out, 44)
+        mut letters = 1 + pick(mut gen, 4)
+        put(mut out, 34)
+        for _ in range(letters):
+            put(mut out, 97 + pick(mut gen, 26))
+        put(mut out, 34)
+    put_text(mut out, '],"child":')
+    mut has_child = False
+    if depth < 3:
+        has_child = pick(mut gen, 3) != 0
+    if has_child:
+        gen_record(mut gen, mut out, depth + 1)
+    else:
+        put_text(mut out, "null")
+    put(mut out, 125)
+
+
+# The octet an escape letter stands for: n is a newline; " and \ stand for themselves.
+func escaped_octet(letter: int) -> int:
+    if letter == 110:
+        return 10
+    return letter
+
+
+func parse_string(mut parser: Parser) -> bytes:
+    parser.position += 1
+    mut start = parser.position
+    mut end = start
+    mut escaped = False
+    while parser.data[end] != 34:
+        if parser.data[end] == 92:
+            escaped = True
+            end += 2
+        else:
+            end += 1
+    parser.position = end + 1
+    if not escaped:
+        return copy(parser.data[start:end])
+    mut out = byte_builder.create()
+    mut i = start
+    while i < end:
+        mut c = parser.data[i]
+        if c == 92:
+            put(mut out, escaped_octet(parser.data[i + 1]))
+            i += 2
+        else:
+            put(mut out, c)
+            i += 1
+    return byte_builder.finish(out)
+
+
+func parse_number(mut parser: Parser) -> Value:
+    mut start = parser.position
+    mut has_dot = False
+    mut scanning = True
+    while scanning:
+        mut c = parser.data[parser.position]
+        if c == 46:
+            has_dot = True
+            parser.position += 1
+        elif c == 45 or (c >= 48 and c <= 57):
+            parser.position += 1
+        else:
+            scanning = False
+    if not has_dot:
+        match bytes.parse_int_range(parser.data, start, parser.position):
+            case Some(number):
+                return Value.integer(value=number)
+            case None:
+                return Value.integer(value=0)
+    mut value = 0.0
+    match bytes.parse_float_range(parser.data, start, parser.position):
+        case Some(number):
+            value = number
+        case None:
+            value = 0.0
+    mut magnitude = 0
+    mut negative = False
+    mut seen_dot = False
+    mut fraction_digits = 0
+    mut fraction = 0
+    for index in range(start, parser.position):
+        mut c = parser.data[index]
+        if c == 45:
+            negative = True
+        elif c == 46:
+            seen_dot = True
+        elif seen_dot:
+            if fraction_digits < 3:
+                fraction = fraction * 10 + c - 48
+                fraction_digits += 1
+        else:
+            magnitude = magnitude * 10 + c - 48
+    mut scaled = magnitude * 1000 + fraction
+    if negative:
+        scaled = 0 - scaled
+    return Value.decimal(value=Decimal(scaled=scaled, value=value))
+
+
+func parse_array(mut parser: Parser) -> Value:
+    parser.position += 1
+    mut items: Value[] = []
+    if parser.data[parser.position] == 93:
+        parser.position += 1
+        return Value.array(items=own items)
+    mut more = True
+    while more:
+        append(mut items, parse_value(mut parser))
+        mut sep = parser.data[parser.position]
+        parser.position += 1
+        more = sep == 44
+    return Value.array(items=own items)
+
+
+func parse_object(mut parser: Parser) -> Value:
+    parser.position += 1
+    mut members: Member[] = []
+    if parser.data[parser.position] == 125:
+        parser.position += 1
+        return Value.object(members=own members)
+    mut more = True
+    while more:
+        mut key = parse_string(mut parser)
+        parser.position += 1
+        mut value = parse_value(mut parser)
+        append(mut members, Member(key=own key, value=own value))
+        mut sep = parser.data[parser.position]
+        parser.position += 1
+        more = sep == 44
+    return Value.object(members=own members)
+
+
+func parse_value(mut parser: Parser) -> Value:
+    mut c = parser.data[parser.position]
+    if c == 110:
+        parser.position += 4
+        return Value.null
+    if c == 116:
+        parser.position += 4
+        return Value.boolean(value=True)
+    if c == 102:
+        parser.position += 5
+        return Value.boolean(value=False)
+    if c == 34:
+        return Value.text(value=parse_string(mut parser))
+    if c == 91:
+        return parse_array(mut parser)
+    if c == 123:
+        return parse_object(mut parser)
+    return parse_number(mut parser)
+
+
+# Folds one value into the walk checksum, in document order.
+func walk(value: Value, checksum: int) -> int:
+    mut c = checksum
+    match value:
+        case null:
+            return mix(c, 1)
+        case boolean(value=flag):
+            if flag:
+                return mix(c, 3)
+            return mix(c, 2)
+        case integer(value=number):
+            c = mix(c, 4)
+            return mix(c, number)
+        case decimal(value=parts):
+            c = mix(c, 5)
+            mut scaled = int(parts.value * 1e9)
+            if scaled < 0:
+                scaled = 0 - scaled
+            return mix(c, scaled)
+        case text(value=octets):
+            c = mix(c, 6)
+            return mix(c, len(octets))
+        case array(items=items):
+            c = mix(c, 7)
+            c = mix(c, len(items))
+            for item in items:
+                c = walk(item, c)
+            return c
+        case object(members=members):
+            c = mix(c, 8)
+            c = mix(c, len(members))
+            for member in members:
+                c = mix(c, len(member.key))
+                c = walk(member.value, c)
+            return c
+
+
+# Appends the compact JSON form of `value` to `out`.
+func serialize(value: Value, mut out: byte_builder.Builder):
+    match value:
+        case null:
+            put_text(mut out, "null")
+        case boolean(value=flag):
+            if flag:
+                put_text(mut out, "true")
+            else:
+                put_text(mut out, "false")
+        case integer(value=number):
+            byte_builder.append_int(mut out, number)
+        case decimal(value=parts):
+            mut magnitude = parts.scaled
+            if magnitude < 0:
+                put(mut out, 45)
+                magnitude = 0 - magnitude
+            byte_builder.append_int(mut out, magnitude // 1000)
+            put(mut out, 46)
+            put_fraction(mut out, magnitude % 1000)
+        case text(value=octets):
+            put(mut out, 34)
+            for octet in octets:
+                if octet == 34:
+                    put_text(mut out, '\\"')
+                elif octet == 92:
+                    put_text(mut out, "\\\\")
+                elif octet == 10:
+                    put_text(mut out, "\\n")
+                else:
+                    put(mut out, octet)
+            put(mut out, 34)
+        case array(items=items):
+            put(mut out, 91)
+            mut first = True
+            for item in items:
+                if not first:
+                    put(mut out, 44)
+                first = False
+                serialize(item, mut out)
+            put(mut out, 93)
+        case object(members=members):
+            put(mut out, 123)
+            mut first = True
+            for member in members:
+                if not first:
+                    put(mut out, 44)
+                first = False
+                put(mut out, 34)
+                byte_builder.append(mut out, member.key)
+                put_text(mut out, '":')
+                serialize(member.value, mut out)
+            put(mut out, 125)
+
+
+func main(out: Stream) -> int:
+    mut records = 120000
+    mut gen = Gen(state=88172645463325252u64)
+    mut builder = byte_builder.create()
+    put(mut builder, 91)
+    for r in range(records):
+        if r > 0:
+            put(mut builder, 44)
+        gen_record(mut gen, mut builder, 0)
+    put(mut builder, 93)
+    const text = byte_builder.finish(builder)
+    mut parser = Parser(data=copy(text), position=0)
+    const root = parse_value(mut parser)
+    const walk_sum = walk(root, 0)
+    mut serial = byte_builder.create()
+    serialize(root, mut serial)
+    const serialized = byte_builder.finish(serial)
+    mut serialized_mix = 0
+    for octet in serialized:
+        serialized_mix = mix(serialized_mix, octet)
+    print(out, f"records {records} text {len(text)} walk {walk_sum}")
+    print(out, f"serialized {len(serialized)} mix {serialized_mix}")
+    if serialized == text:
+        print(out, "roundtrip ok")
+    else:
+        print(out, "roundtrip mismatch")
+    return 0

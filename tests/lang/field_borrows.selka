@@ -1,0 +1,55 @@
+# Two different fields of one record name disjoint storage: a
+# mutable argument and a read argument (or a second mutable argument) that name different parts may be passed
+# together. The same place, a record and its field, and any path through a list element stay refused (see
+# src/core/field_borrow_test.zig).
+record Inner:
+    x: int
+    y: int[]
+
+
+record Outer:
+    inner: Inner
+    grid: int[][]
+    tag: int[]
+
+
+func grow(mut xs: int[], ys: int[]) -> int:
+    append(mut xs, len(ys))
+    return len(xs)
+
+
+func grow_both(mut xs: int[], mut ys: int[]) -> int:
+    append(mut xs, 1)
+    append(mut ys, 2)
+    return len(xs) + len(ys)
+
+
+public func test_disjoint_fields_pass_in_either_order() -> bool:
+    mut o = Outer(inner=Inner(x=1, y=[3]), grid=[[1], [2, 2]], tag=[9])
+    const a = grow(mut o.inner.y, o.tag)
+    const b = grow(mut o.tag, o.inner.y)
+    assert a == 2 and b == 2
+    assert o.inner.y == [3, 1] and o.tag == [9, 2]
+    return True
+
+
+public func test_disjoint_mutable_fields_pass_together() -> bool:
+    mut o = Outer(inner=Inner(x=1, y=[3]), grid=[[1], [2, 2]], tag=[9])
+    const total = grow_both(mut o.inner.y, mut o.tag)
+    assert total == 4
+    assert o.inner.y == [3, 1] and o.tag == [9, 2]
+    return True
+
+
+public func test_disjoint_nested_field_and_sibling_pass_together() -> bool:
+    mut o = Outer(inner=Inner(x=1, y=[3]), grid=[[1], [2, 2]], tag=[9])
+    const n = grow(mut o.inner.y, o.tag)
+    assert n == 2 and o.inner.y == [3, 1]
+    return True
+
+
+func main() -> int:
+    assert test_disjoint_fields_pass_in_either_order()
+    assert test_disjoint_mutable_fields_pass_together()
+    assert test_disjoint_nested_field_and_sibling_pass_together()
+    return 0

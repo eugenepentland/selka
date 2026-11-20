@@ -1,0 +1,59 @@
+# `bytes.replace(data, old, new)` replaces every non-overlapping occurrence of `old`, scanning from the front, as
+# `strings.replace` does for `str` (G31). An empty `old` traps, as `split` does.
+import bytes
+import strings
+
+public func test_every_occurrence_is_replaced() -> bool:
+    assert bytes.replace(b"a,b,c", b",", b";") == b"a;b;c"
+    assert bytes.replace(b"abcabc", b"bc", b"X") == b"aXaX"
+    assert bytes.replace(b"one two one", b"one", b"1") == b"1 two 1"
+    return True
+
+
+public func test_the_replacement_may_be_longer_shorter_or_empty() -> bool:
+    assert bytes.replace(b"a-b", b"-", b"<->") == b"a<->b"
+    assert bytes.replace(b"aaa", b"aa", b"b") == b"ba"
+    assert bytes.replace(b"x.y.z", b".", b"") == b"xyz"
+    assert bytes.replace(b"abc", b"abc", b"") == b""
+    return True
+
+
+public func test_occurrences_do_not_overlap_and_are_taken_from_the_front() -> bool:
+    assert bytes.replace(b"aaaa", b"aa", b"b") == b"bb"
+    assert bytes.replace(b"aaa", b"aa", b"b") == b"ba"
+    assert bytes.replace(b"abababa", b"aba", b"X") == b"XbX"
+    return True
+
+
+public func test_no_match_and_empty_data_give_the_data() -> bool:
+    assert bytes.replace(b"abc", b"x", b"y") == b"abc"
+    assert bytes.replace(b"", b"x", b"y") == b""
+    assert bytes.replace(b"abc", b"abcd", b"y") == b"abc"
+    return True
+
+
+public func test_arbitrary_octets_including_nul_and_high_bytes() -> bool:
+    const data = b"\x00\xff\x00\xfe\x00"
+    assert bytes.replace(data, b"\x00", b"\xaa\xbb") == b"\xaa\xbb\xff\xaa\xbb\xfe\xaa\xbb"
+    assert bytes.replace(data, b"\xff\x00", b"") == b"\x00\xfe\x00"
+    assert len(bytes.replace(data, b"\x00", b"")) == 2
+    return True
+
+
+public func test_bytes_replace_agrees_with_strings_replace_on_text() -> bool:
+    const text = "the cat sat on the mat"
+    const replaced = strings.replace(text, "at", "og")
+    match strings.decode(bytes.replace(strings.encode(text), b"at", b"og")):
+        case Ok(decoded):
+            assert decoded == replaced
+        case Err(_):
+            return False
+    return True
+
+
+public func test_the_data_is_not_changed() -> bool:
+    const data = b"a,b"
+    const replaced = bytes.replace(data, b",", b"--")
+    assert data == b"a,b"
+    assert replaced == b"a--b"
+    return True

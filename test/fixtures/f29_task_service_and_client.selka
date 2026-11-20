@@ -1,0 +1,77 @@
+# F-29 (the artifacts site's friction log), as the site wrote it: a fake service and its client in two tasks of one group.
+# It checked and then never finished; since W28 a task cannot take the Network, so `check` refuses it.
+import byte_builder
+import network
+import parallel
+import time
+
+# A fake service and its client in one program: the service runs as one task of a group (a Poller on 127.0.0.1:39761),
+# the client as another, making a blocking request to it. The service stops when it has answered one request.
+func serve_loop(own poller: network.Poller) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut answered = 0
+    mut rounds = 0
+    while answered < 1 and rounds < 100:
+        rounds += 1
+        live = network.wait(own live, 100, mut ready)
+        for index in range(ready.count):
+            if ready.ids[index] == network.LISTENER:
+                live = network.accept(own live, mut outcome)
+            elif network.has(ready.flags[index], network.EVENT_READABLE):
+                mut raw = byte_builder.create()
+                live = network.recv(own live, ready.ids[index], mut raw, mut outcome)
+                if outcome.code == network.OUTCOME_OK:
+                    live = network.send(own live, ready.ids[index], b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nConnection: close\r\n\r\nalice", 0, mut outcome)
+                    live = network.close_connection(own live, ready.ids[index], mut outcome)
+                    answered += 1
+    return rounds
+
+
+func serve(net: Network) -> int:
+    with net.host("127.0.0.1:39761") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return serve_loop(own poller)
+            case err(code):
+                return 0 - code
+
+
+func ask(net: Network, clock: Clock) -> int:
+    with net.host("127.0.0.1:39761") as scoped:
+        mut tries = 0
+        while tries < 50:
+            tries += 1
+            match network.connect(scoped):
+                case ok(connection):
+                    mut live = own connection
+                    match write_resource[network.Written](live, b"GET /verify HTTP/1.1\r\n\r\n"):
+                        case Ok(_):
+                            pass
+                        case Err(code):
+                            return 0 - code
+                    mut total = 0
+                    while True:
+                        match read_resource[network.Read[4096]](live):
+                            case Ok(chunk):
+                                total += int(chunk.length)
+                                if chunk.eof:
+                                    return total
+                            case Err(code):
+                                return 0 - code
+                case err(_):
+                    time.sleep(clock, 50000000)
+    return -98
+
+
+func main(net: Network, clock: Clock, out: Stream) -> int:
+    mut rounds = 0
+    mut got = 0
+    with parallel.group() as g:
+        const s = g.submit(serve, net)
+        const c = g.submit(ask, net, clock)
+        rounds = s.result()
+        got = c.result()
+    print(out, "server rounds", rounds, "client read", got)
+    return 0

@@ -1,0 +1,27 @@
+func f(a, b):
+    if a:
+        while b:
+            for i in c:
+                x = 1
+
+            y = 2
+    elif b:
+
+        z = 3
+    else:
+        pass
+    return (a +
+        b)
+
+
+class C:
+    x: int
+
+
+values = [1, 2,
+    3, 4]
+table = {"a": 1,
+         "b": 2}
+call(a,
+     b,
+         c)

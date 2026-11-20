@@ -1,0 +1,18 @@
+func score(v: D) -> i64:
+    return v.value
+
+
+record D:
+    value: i64
+
+
+func make(n: i64) -> D:
+    return D(value=n)
+
+
+func apply[T: copy](v: T, named score_operation: func(T) -> i64) -> i64:
+    return score_operation(v)
+
+
+public func program() -> i64:
+    return apply[D](make(7), score_operation=score)

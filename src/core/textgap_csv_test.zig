@@ -1,0 +1,180 @@
+//! Immortal-prefix appends allocate their final independent owner directly.
+const std = @import("std");
+const build = @import("build.zig");
+const passes = @import("passes.zig");
+const support = @import("test_support.zig");
+const zero = @import("zero_rc.zig");
+const report = std.debug.print;
+const Lane = struct { release: bool, mode: ?passes.Mode };
+const lanes = [_]Lane{
+    .{ .release = false, .mode = null },
+    .{ .release = false, .mode = .trusted },
+    .{ .release = true, .mode = .trusted },
+    .{ .release = true, .mode = .verify },
+    .{ .release = true, .mode = .off },
+};
+
+fn execute(a: std.mem.Allocator, source: []const u8, expected: []const u8) !void {
+    // A fixture that imports `strings` for `strings.join` (W13-S5) is checked as an embedded project.
+    const program = try support.checkedProgram(a, source);
+    var failure: @import("single_owner.zig").Failure = .{};
+    try @import("single_owner.zig").check(a, program, &failure);
+    for (lanes) |lane| {
+        var refusal: build.Refusal = .{};
+        var module = try build.buildExecutable(a, .{ .program = program }, &refusal);
+        const result = if (lane.mode) |mode| try passes.run(a, &module, mode) else try passes.debug(a, &module);
+        const run = try support.runOwned(a, &module, .{ .own = false, .release = lane.release, .verify = lane.mode == .verify, .analysis = support.analysis(&result) });
+        if (run.status != 0) report("static append: {s}{s}\n", .{ run.stdout, run.stderr });
+        try std.testing.expectEqual(@as(u8, 0), run.status);
+        try std.testing.expectEqualStrings(expected, run.stdout);
+        try std.testing.expectEqualStrings("", run.stderr);
+        try std.testing.expect(zero.emittedClean(run.llvm));
+    }
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "textgap_csv static append keeps Unicode literals snapshots self appends and empty values independent" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try execute(arena.allocator(),
+        \\func modify() -> str:
+        \\    mut value = "é€🙂"
+        \\    value += ""
+        \\    value += "!"
+        \\    return value
+        \\func main(out: Stream) -> int:
+        \\    print(out, modify(), modify(), "é€🙂")
+        \\    mut text = "abc"
+        \\    const snapshot = copy(text)
+        \\    text += text
+        \\    text += ""
+        \\    print(out, text, snapshot, "abc")
+        \\    mut empty = ""
+        \\    empty += ""
+        \\    const saved = copy(empty)
+        \\    empty += "\0🙂"
+        \\    print(out, strings.char_count(empty), strings.char_count(saved))
+        \\    mut dynamic = "é" + str(1)
+        \\    const old = copy(dynamic)
+        \\    dynamic += "€🙂"
+        \\    print(out, dynamic, old)
+        \\    return 0
+    , "é€🙂! é€🙂! é€🙂\nabcabc abc abc\n2 0\né1€🙂 é1\n");
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "textgap_csv character collectors preserve delimiter resets UTF8 and early exits across growth" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try execute(arena.allocator(),
+        \\import strings
+        \\
+        \\func fields(source: str) -> str[]:
+        \\    mut output: str[] = []
+        \\    mut field = ""
+        \\    for ch in strings.chars(source):
+        \\        if ch == ";":
+        \\            append(mut output, own field)
+        \\            field = ""
+        \\        else:
+        \\            field += ch
+        \\    append(mut output, own field)
+        \\    return output
+        \\func first(source: str) -> str:
+        \\    mut output = ""
+        \\    for ch in strings.chars(source):
+        \\        output += ch
+        \\        return output
+        \\    return output
+        \\func main(out: Stream) -> int:
+        \\    mut parsed = fields(";é;abc;;🙂;")
+        \\    print(out, strings.join(parsed, ":"), first("€abc"), first(""))
+        \\    mut long = ""
+        \\    for i in range(1027):
+        \\        long += "é"
+        \\    mut chunks = fields(long)
+        \\    print(out, len(chunks), strings.char_count(chunks[0]), long == chunks[0])
+        \\    return 0
+    , ":é:abc::🙂: € \n1 1027 True\n");
+}
+
+// spec-case: NEW-CORE-TEXT-CURSOR-1
+test "textgap_csv cursor traversal preserves source update after traversal and character early return" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try execute(arena.allocator(),
+        \\func count(mut source: str) -> int:
+        \\    mut total = 0
+        \\    for ch in strings.chars(source):
+        \\        total += strings.char_count(ch)
+        \\    source += "🙂"
+        \\    return total
+        \\func first(source: str) -> str:
+        \\    mut output = ""
+        \\    for ch in strings.chars(source):
+        \\        output += ch
+        \\        return output
+        \\    return output
+        \\func main(out: Stream) -> int:
+        \\    mut source = "é€x"
+        \\    print(out, count(mut source), source, first("🙂more"), first(""))
+        \\    return 0
+    , "3 é€x🙂 🙂 \n");
+}
+
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "textgap_csv ASCII append invalidates cached scalar lengths and hashes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    try execute(arena.allocator(),
+        \\func collect(source: str) -> str:
+        \\    mut output = "é"
+        \\    for ch in strings.chars(source):
+        \\        const before = strings.char_count(output)
+        \\        output += ch
+        \\        if strings.char_count(output) != before + 1:
+        \\            return "bad"
+        \\    return output
+        \\func main(out: Stream) -> int:
+        \\    mut value = collect("abc")
+        \\    mut keys: dict[str, int] = {}
+        \\    keys["éabc"] = 7
+        \\    const cached = keys[value]
+        \\    const prior = copy(value)
+        \\    value += strings.char_at(value, 1)
+        \\    keys["éabca"] = 9
+        \\    print(out, value, prior, strings.char_count(value), cached, keys[value])
+        \\    return 0
+    , "éabca éabc 5 7 9\n");
+}
+
+// Direct native helper contract: explicit destruction, no ownership rewrite.
+// Source ownership need not admit this same-owner fused instruction shape.
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "textgap_csv append helper captures same-owner scalars before growth and rejects invalid offsets" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ir = @import("ir.zig");
+    for ([_]support.RunOptions{ .{ .own = false }, .{ .own = false, .release = true }, .{ .own = false, .release = true, .verify = true } }) |mode| {
+        for ([_]bool{ false, true }) |invalid| {
+            var module: ir.Module = .{};
+            try module.strings.append(a, "éabc");
+            var h = try support.Hand.init(a, &module, "main", .{ .params = &.{.cap}, .ret = .i64 });
+            const literal = try h.loose(.{ .op = .str_const, .ty = .str });
+            var text = try h.emit(.{ .op = .str_append_char, .ty = .str, .a = literal, .b = literal, .data = try h.extra(&.{try h.int(.u64, 0)}) });
+            text = try h.emit(.{ .op = .str_append_char, .ty = .str, .a = text, .b = text, .data = try h.extra(&.{try h.int(.u64, if (invalid) -1 else 2)}) });
+            try h.printValues(try h.param(0), &.{text});
+            _ = try h.emit(.{ .op = .drop, .ty = .void, .a = text });
+            _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+            _ = try h.finish();
+            var options = mode;
+            options.leakcheck = !invalid;
+            const run = try support.runOwned(a, &module, options);
+            try std.testing.expectEqual(@as(u8, if (invalid) 1 else 0), run.status);
+            try std.testing.expectEqualStrings(if (invalid) "" else "éabcéa\n", run.stdout);
+            try std.testing.expectEqualStrings(if (invalid) "error[E_CORE_UNSUPPORTED]: S2 IR operation -1 is not implemented\n" else "", run.stderr);
+            try std.testing.expect(zero.emittedClean(run.llvm));
+        }
+    }
+}

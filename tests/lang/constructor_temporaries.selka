@@ -1,0 +1,181 @@
+# A read through a field of a record constructor (FR24 item 2): `len(Name(text=own t).text)` keeps nothing of the
+# constructed record, so the checker roots the whole record in a hidden owner for the statement, as it does for a call's
+# result, and the record (with its other fields) is destroyed once when the statement ends. Each test runs under the leak check.
+record Name:
+    text: str
+
+
+record Bag:
+    items: str[]
+
+
+record Pair:
+    left: str
+    right: str
+
+
+record Outer:
+    inner: Name
+    n: int = 5
+
+
+record Boxed[T]:
+    value: T
+
+
+record Defaulted:
+    text: str = "dflt"
+    count: int = 2
+
+
+func bump(mut n: int) -> str:
+    n += 1
+    return "v" + str(n)
+
+
+func made(flag: bool) -> str fails str:
+    if flag:
+        fail "no"
+    return "made"
+
+
+func returned(own t: str) -> int:
+    return len(Name(text=own t).text)
+
+
+func bound(own t: str) -> int:
+    const n = len(Name(text=own t).text)
+    return n
+
+
+func summed(own t: str) -> int:
+    return len(Name(text=own t).text) + 1
+
+
+public func test_a_length_through_a_constructor_is_returned_bound_and_summed() -> bool:
+    return returned("abcd") == 4 and bound("ab") == 2 and summed("a") == 2
+
+
+public func test_a_list_field_and_a_nested_field_of_a_constructor_read_through() -> bool:
+    const items = len(Bag(items=["a", "b", "c"]).items)
+    const nested = len(Outer(inner=Name(text="xyz")).inner.text)
+    const first = len(Bag(items=["a", "bb"]).items[1])
+    return items == 3 and nested == 3 and first == 2
+
+
+public func test_a_generic_record_and_a_defaulted_record_read_through() -> bool:
+    const generic = len(Boxed[str](value="pq").value)
+    const defaulted = len(Defaulted().text) + Defaulted().count
+    return generic == 2 and defaulted == 6
+
+
+public func test_the_other_managed_field_of_the_constructor_is_destroyed_once() -> bool:
+    const kept = len(Pair(left="one" + "two", right="unused" + "text").left)
+    return kept == 6
+
+
+public func test_the_constructor_arguments_are_evaluated_once_and_in_order() -> bool:
+    mut n = 0
+    const first = len(Name(text=bump(mut n)).text)
+    const second = len(Name(text=bump(mut n)).text)
+    return first == 2 and second == 2 and n == 2
+
+
+func in_a_loop() -> int:
+    mut total = 0
+    for i in range(4):
+        total += len(Name(text=str(i * 100)).text)
+    return total
+
+
+func guarded(own t: str) -> int:
+    if len(Name(text=own t).text) > 2:
+        return 1
+    return 0
+
+
+func matched(own t: str) -> int:
+    match len(Name(text=own t).text):
+        case 3:
+            return 30
+        case _:
+            return 0
+
+
+func kept_copy(own t: str) -> str:
+    return copy(Name(text=own t).text)
+
+
+public func test_the_read_works_in_a_loop_a_condition_a_match_scrutinee_and_a_copy() -> bool:
+    return in_a_loop() == 10 and guarded("abc") == 1 and guarded("a") == 0 and matched("abc") == 30 and kept_copy("w") == "w"
+
+
+func through_fails(flag: bool) -> int fails str:
+    const text = try made(flag)
+    return len(Name(text=own text).text)
+
+
+public func test_the_read_works_in_a_function_that_fails() -> bool:
+    match through_fails(False):
+        case Ok(value):
+            match through_fails(True):
+                case Ok(_):
+                    return False
+                case Err(message):
+                    return value == 4 and message == "no"
+        case Err(_):
+            return False
+
+
+# The same for a text slice of such a field (FR25 item 3): `Name(text=own t).text[0:2]` is read within the statement, and the
+# record is destroyed with it. A slice that is bound, stored or returned would outlive the temporary and is refused
+# (`src/core/single_owner_test.zig`, "a slice of a field of a record constructor ...").
+record Blob:
+    data: bytes
+
+
+func head(own t: str) -> str:
+    return copy(Name(text=own t).text[0:2])
+
+
+func shown(text: str) -> str:
+    return text + "!"
+
+
+func head_length(own t: str) -> int:
+    return len(Name(text=own t).text[0:2])
+
+
+public func test_a_text_slice_of_a_constructor_field_is_read_by_len_a_call_and_a_copy() -> bool:
+    return head_length("hello") == 2 and shown(Name(text="hello").text[1:4]) == "ell!" and head("world") == "wo"
+
+
+public func test_the_slice_endpoints_may_be_omitted_and_the_other_field_is_destroyed_once() -> bool:
+    const tail = len(Name(text="hello").text[3:])
+    const front = len(Name(text="hello").text[:2])
+    const whole = len(Name(text="hello").text[:])
+    const left = len(Pair(left="one" + "two", right="unused" + "text").left[1:4])
+    return tail == 2 and front == 2 and whole == 5 and left == 3
+
+
+public func test_a_nested_a_generic_and_a_bytes_field_slice_read_through() -> bool:
+    const nested = len(Outer(inner=Name(text="nested")).inner.text[0:3])
+    const generic = len(Boxed[str](value="generic").value[1:5])
+    const octets = len(Blob(data=b"octets").data[0:3])
+    return nested == 3 and generic == 4 and octets == 3
+
+
+public func test_the_constructor_of_a_sliced_field_is_evaluated_once_before_the_endpoints() -> bool:
+    mut n = 0
+    const first = len(Name(text=bump(mut n)).text[0:2])
+    const second = len(Name(text=bump(mut n)).text[0:2])
+    return first == 2 and second == 2 and n == 2
+
+
+public func test_a_text_slice_of_a_constructor_field_works_in_a_condition_and_a_loop() -> bool:
+    mut total = 0
+    for i in range(4):
+        if Name(text=str(i * 100)).text[0:1] == "1":
+            total += 10
+        total += len(Name(text=str(i * 100)).text[0:2])
+    return total == 17

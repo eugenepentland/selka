@@ -1,0 +1,282 @@
+import byte_builder
+import flate
+import flate_fixtures
+
+# The `flate` module decodes DEFLATE (RFC 1951), zlib (RFC 1950) and gzip (RFC 1952). Every stream below was made by
+# Python's zlib or gzip (experiments/real-work-20261030/LT/gen_flate_fixtures.py), which also produced the checksums, so
+# the tests are Python's answers.
+func limit() -> int:
+    return 1048576
+
+
+# The index of the first payload in [first, last) whose stream at `streams[index * stride + offset]` does not inflate to it.
+func first_raw_difference(first: int, last: int, offset: int) -> int:
+    const payloads = flate_fixtures.payloads()
+    const streams = flate_fixtures.raw_streams()
+    const stride = flate_fixtures.strategy_count()
+    mut payload = first
+    while payload < last and payload < len(payloads):
+        match flate.inflate(streams[payload * stride + offset], limit()):
+            case Ok(data):
+                if data != payloads[payload]:
+                    return payload
+            case Err(_):
+                return payload
+        payload += 1
+    return 0 - 1
+
+
+func raw_strategy(offset: int) -> bool:
+    return first_raw_difference(0, 100, offset) < 0
+
+
+public func test_raw_streams_made_at_level_1_inflate() -> bool:
+    return raw_strategy(0)
+
+
+public func test_raw_streams_made_at_level_9_inflate() -> bool:
+    return raw_strategy(1)
+
+
+public func test_stored_blocks_inflate() -> bool:
+    return raw_strategy(2)
+
+
+public func test_filtered_streams_inflate() -> bool:
+    return raw_strategy(3)
+
+
+public func test_huffman_only_streams_inflate() -> bool:
+    return raw_strategy(4)
+
+
+public func test_run_length_streams_inflate() -> bool:
+    return raw_strategy(5)
+
+
+public func test_fixed_code_streams_inflate() -> bool:
+    return raw_strategy(6)
+
+
+public func test_zlib_streams_decode_and_check_their_adler_32() -> bool:
+    const payloads = flate_fixtures.payloads()
+    const streams = flate_fixtures.zlib_streams()
+    mut index = 0
+    while index < len(payloads):
+        match flate.zlib_decode(streams[index], limit()):
+            case Ok(data):
+                if data != payloads[index]:
+                    return False
+            case Err(_):
+                return False
+        index += 1
+    return True
+
+
+public func test_gzip_streams_decode_and_check_their_crc_32_and_size() -> bool:
+    const payloads = flate_fixtures.payloads()
+    const streams = flate_fixtures.gzip_streams()
+    mut index = 0
+    while index < len(payloads):
+        match flate.gunzip(streams[index], limit()):
+            case Ok(data):
+                if data != payloads[index]:
+                    return False
+            case Err(_):
+                return False
+        index += 1
+    return True
+
+
+public func test_gzip_header_fields_are_skipped() -> bool:
+    const payloads = flate_fixtures.payloads()
+    const text = payloads[4]
+    for member in flate_fixtures.gzip_members():
+        match flate.gunzip(member, limit()):
+            case Ok(data):
+                if data != text:
+                    return False
+            case Err(_):
+                return False
+    return True
+
+
+public func test_several_members_decode_to_their_concatenation_and_zero_padding_is_ignored() -> bool:
+    const payloads = flate_fixtures.payloads()
+    match flate.gunzip(flate_fixtures.two_members(), limit()):
+        case Ok(data):
+            if data != payloads[2] + payloads[4]:
+                return False
+        case Err(_):
+            return False
+    match flate.gunzip(flate_fixtures.padded_member(), limit()):
+        case Ok(data):
+            return data == payloads[4]
+        case Err(_):
+            return False
+
+
+public func test_damaged_gzip_input_is_refused_with_a_message() -> bool:
+    const inputs = flate_fixtures.gzip_refusals()
+    mut index = 0
+    while index < len(inputs):
+        match flate.gunzip(inputs[index], limit()):
+            case Ok(_):
+                return False
+            case Err(message):
+                if len(message) == 0:
+                    return False
+        index += 1
+    return True
+
+
+public func test_each_gzip_refusal_names_what_is_wrong() -> bool:
+    const inputs = flate_fixtures.gzip_refusals()
+    const expected = [
+        "the gzip checksum does not match",
+        "the gzip size does not match",
+        "the data is not gzip: the magic number is wrong",
+        "the gzip member does not use the deflate method",
+        "unexpected end of the compressed data",
+        "the gzip member is too short",
+    ]
+    mut index = 0
+    while index < len(inputs):
+        match flate.gunzip(inputs[index], limit()):
+            case Ok(_):
+                return False
+            case Err(message):
+                if message != expected[index]:
+                    return False
+        index += 1
+    return True
+
+
+public func test_empty_gzip_data_has_no_members_and_decompresses_to_nothing() -> bool:
+    match flate.gunzip(b"", limit()):
+        case Ok(data):
+            return len(data) == 0
+        case Err(_):
+            return False
+
+
+public func test_damaged_raw_streams_are_refused() -> bool:
+    const inputs = flate_fixtures.raw_refusals()
+    mut index = 0
+    while index < len(inputs):
+        match flate.inflate(inputs[index], limit()):
+            case Ok(_):
+                return False
+            case Err(_):
+                pass
+        index += 1
+    return True
+
+
+public func test_zlib_checksum_header_and_dictionary_faults_are_refused() -> bool:
+    match flate.zlib_decode(flate_fixtures.zlib_bad_checksum(), limit()):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "the zlib checksum does not match":
+                return False
+    match flate.zlib_decode(flate_fixtures.zlib_bad_header(), limit()):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "the zlib header check bits are wrong":
+                return False
+    match flate.zlib_decode(flate_fixtures.zlib_dictionary(), limit()):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "the zlib stream needs a preset dictionary"
+
+
+public func test_the_size_limit_stops_a_result_that_is_too_large() -> bool:
+    const payloads = flate_fixtures.payloads()
+    const streams = flate_fixtures.raw_streams()
+    const stride = flate_fixtures.strategy_count()
+    const stream = streams[3 * stride + 3]
+    match flate.inflate(stream, len(payloads[3]) - 1):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "the result is past the size limit":
+                return False
+    match flate.inflate(stream, len(payloads[3])):
+        case Ok(data):
+            return len(data) == len(payloads[3])
+        case Err(_):
+            return False
+
+
+public func test_crc_32_and_adler_32_match_zlib() -> bool:
+    const inputs = flate_fixtures.checksum_inputs()
+    const crcs = flate_fixtures.crc_values()
+    const adlers = flate_fixtures.adler_values()
+    mut index = 0
+    while index < len(inputs):
+        if flate.crc32(inputs[index]) != crcs[index] or flate.adler32(inputs[index]) != adlers[index]:
+            return False
+        index += 1
+    return True
+
+
+public func test_long_runs_have_the_checksums_zlib_gives_them() -> bool:
+    const bytes_of_run = flate_fixtures.run_bytes()
+    const counts = flate_fixtures.run_counts()
+    const crcs = flate_fixtures.run_crc_values()
+    const adlers = flate_fixtures.run_adler_values()
+    mut index = 0
+    while index < len(counts):
+        mut piece = byte_builder.create()
+        _ = byte_builder.append_byte(mut piece, bytes_of_run[index])
+        const run = byte_builder.repeat(byte_builder.finish(piece), counts[index])
+        if flate.crc32(run) != crcs[index] or flate.adler32(run) != adlers[index]:
+            return False
+        index += 1
+    return True
+
+
+# Cutting a stream anywhere gives a message, never a trap or a short result.
+func first_cut_accepted(stream: bytes, stride: int) -> int:
+    mut cut = 1
+    while cut < len(stream):
+        match flate.gunzip(stream[0:cut], limit()):
+            case Ok(_):
+                return cut
+            case Err(_):
+                pass
+        cut += stride
+    return 0 - 1
+
+
+public func test_a_small_gzip_member_cut_anywhere_is_refused() -> bool:
+    const streams = flate_fixtures.gzip_streams()
+    return first_cut_accepted(streams[2], 1) < 0 and first_cut_accepted(streams[3], 1) < 0
+
+
+public func test_a_larger_gzip_member_cut_in_many_places_is_refused() -> bool:
+    const streams = flate_fixtures.gzip_streams()
+    return first_cut_accepted(streams[4], 53) < 0
+
+
+# Flipping one byte of the compressed body or the trailer is caught by the checksums (the header's time, flags for
+# extra fields, extra flags and operating system bytes are not covered by them, so those positions are skipped).
+public func test_a_flipped_byte_in_a_gzip_member_is_refused() -> bool:
+    const streams = flate_fixtures.gzip_streams()
+    const stream = streams[2]
+    mut position = 10
+    while position < len(stream):
+        mut damaged = byte_builder.create()
+        byte_builder.append(mut damaged, stream[0:position])
+        _ = byte_builder.append_byte(mut damaged, 255 - int(stream[position]))
+        byte_builder.append(mut damaged, stream[position + 1:])
+        match flate.gunzip(byte_builder.finish(damaged), limit()):
+            case Ok(_):
+                return False
+            case Err(_):
+                pass
+        position += 1
+    return True

@@ -1,0 +1,21 @@
+import flate
+import strings
+
+public record Source:
+    mem: bytes
+    total: int
+
+
+# `plain` is given to `mem` and read for `total` in one call: the repair reads first and moves last, with no copy.
+public func open(raw: bytes) -> Source fails str:
+    const plain = try flate.gunzip(raw, 1048576)
+    return Source(total=len(plain), mem=own plain)
+
+
+func main(out: Stream) -> int:
+    match open(strings.encode("not a gzip stream")):
+        case Ok(source):
+            print(out, f"{source.total}")
+        case Err(message):
+            print(out, message)
+    return 0

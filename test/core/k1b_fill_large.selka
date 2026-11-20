@@ -1,0 +1,13 @@
+# A counted fill of 200000 elements whose pushed value cannot trap: the whole count is
+# reserved once, so no push grows the list. The count comes from main's arguments, so the
+# fill is not inlined and its bound is a parameter.
+func fill(n: int) -> int:
+    mut out: int[] = []
+    for _ in range(n):
+        append(mut out, 7)
+    return len(out)
+
+
+func main(args: str[], out: Stream) -> int:
+    print(out, fill(200000 + len(args)))
+    return 0

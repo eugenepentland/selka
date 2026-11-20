@@ -1,0 +1,110 @@
+# Element moves in the list helpers: `lists.pop_at` moves the elements after the
+# removed one down a place, and `lists.exchange` hands back the former element and
+# takes its replacement `own`, so neither is copied.
+import lists
+import testing
+
+record Item:
+    name: int
+    holds: int[]
+
+
+public func test_pop_at_takes_the_middle_element_and_keeps_the_order() -> bool:
+    mut xs = [Item(name=1, holds=[10]), Item(name=2, holds=[20]), Item(name=3, holds=[30]), Item(name=4, holds=[40])]
+    const middle = lists.pop_at(mut xs, 1)
+    return middle.name == 2 and middle.holds == [20] and len(xs) == 3 and xs[0].name == 1 and xs[1].name == 3 and xs[2].name == 4 and xs[2].holds == [40]
+
+
+public func test_pop_at_takes_the_first_and_the_last_element() -> bool:
+    mut values = [1, 2, 3]
+    const first = lists.pop_at(mut values, 0)
+    const last = lists.pop_at(mut values, len(values) - 1)
+    return first == 1 and last == 3 and values == [2]
+
+
+public func test_exchange_returns_the_former_element_and_keeps_the_rest() -> bool:
+    mut xs = [Item(name=1, holds=[]), Item(name=2, holds=[2])]
+    const former = lists.exchange(mut xs, 1, Item(name=7, holds=[7]))
+    return former.name == 2 and former.holds == [2] and xs[1].name == 7 and xs[1].holds == [7] and xs[0].name == 1
+
+
+public func test_exchange_moves_a_named_replacement_in_with_own() -> bool:
+    mut xs = [Item(name=1, holds=[1]), Item(name=2, holds=[2])]
+    const fresh = Item(name=9, holds=[9, 9])
+    const former = lists.exchange(mut xs, 0, own fresh)
+    return former.name == 1 and former.holds == [1] and xs[0].name == 9 and xs[0].holds == [9, 9] and xs[1].name == 2
+
+
+# Rotate a spare row through the list: each call moves the spare in and the former row out.
+func rotate(n: int) -> int:
+    mut rows = [[1, 2, 3], [4, 5]]
+    mut spare = [6]
+    mut total = 0
+    for i in range(n):
+        const former = lists.exchange(mut rows, i % 2, own spare)
+        total += len(former)
+        spare = own former
+    return total
+
+
+public func test_exchange_with_own_allocates_nothing_per_call() -> bool:
+    const small = testing.allocations(rotate, 10)
+    const large = testing.allocations(rotate, 1000)
+    return rotate(4) == 9 and small == large
+
+
+# 4d: `lists.extend_own` moves every element of its second list onto the first, in order, and frees the emptied list.
+public func test_extend_own_moves_the_elements_in_order() -> bool:
+    mut xs = [Item(name=1, holds=[10]), Item(name=2, holds=[20])]
+    const more = [Item(name=3, holds=[30]), Item(name=4, holds=[40, 41]), Item(name=5, holds=[])]
+    lists.extend_own(mut xs, own more)
+    mut names: int[] = []
+    for item in xs:
+        append(mut names, item.name)
+    return names == [1, 2, 3, 4, 5] and xs[3].holds == [40, 41] and len(xs[4].holds) == 0
+
+
+public func test_extend_own_onto_an_empty_list_and_from_an_empty_list() -> bool:
+    mut empty: str[] = []
+    lists.extend_own(mut empty, ["a", "b", "c"])
+    mut words = ["x"]
+    const none: str[] = []
+    lists.extend_own(mut words, own none)
+    lists.extend_own(mut words, ["y"])
+    return empty == ["a", "b", "c"] and words == ["x", "y"]
+
+
+public func test_extend_own_moves_an_odd_and_an_even_count() -> bool:
+    mut odd = [0]
+    lists.extend_own(mut odd, [1, 2, 3])
+    mut even = [0]
+    lists.extend_own(mut even, [1, 2, 3, 4])
+    mut one = [0]
+    lists.extend_own(mut one, [1])
+    return odd == [0, 1, 2, 3] and even == [0, 1, 2, 3, 4] and one == [0, 1]
+
+
+func rows_of(n: int) -> int[][]:
+    mut rows: int[][] = []
+    for i in range(n):
+        append(mut rows, [i])
+    return rows
+
+
+func moved_rows(n: int) -> int:
+    mut out: int[][] = [[0]]
+    lists.extend_own(mut out, rows_of(n))
+    return len(out)
+
+
+func copied_rows(n: int) -> int:
+    mut out: int[][] = [[0]]
+    const rows = rows_of(n)
+    lists.extend(mut out, rows)
+    return len(out)
+
+
+public func test_extend_own_copies_no_element() -> bool:
+    const moved = testing.allocations(moved_rows, 1000)
+    const copied = testing.allocations(copied_rows, 1000)
+    return moved_rows(1000) == 1001 and copied_rows(1000) == 1001 and copied - moved >= 1000

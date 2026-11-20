@@ -1,0 +1,19 @@
+import strings
+import summary
+
+func trace_requested(env: Environment) -> bool:
+    match env.get("SELKA_ACCEPT_MODE"):
+        case Some(value):
+            return strings.char_count(value) >= 0
+        case None:
+            return False
+
+
+func main(args: str[], fs: Filesystem, env: Environment, out: Stream, err: Stream) -> Result[int, str]:
+    if len(args) != 1:
+        return Err("usage: boundary-cli <source.selka>")
+    if trace_requested(env):
+        print(err, "reading", args[0])
+    mut source = try fs.read_text(args[0])
+    print(out, summary.render(source))
+    return Ok(0)

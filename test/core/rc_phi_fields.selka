@@ -1,0 +1,27 @@
+# NEW-CORE-RC-12: a record joined by a phi (here the exits of the two loop versions a
+# release build's unswitching makes) whose only uses are field reads still takes its
+# operands on their edges; it is never emptied. `b.items` is shared with `xs` at the first
+# append, read after the loop, and replaced by `b = c`.
+record Bucket:
+    count: int
+    items: int[]
+
+
+func main(args: str[], out: Stream) -> int:
+    mut acc = len(args)
+    mut xs: int[] = []
+    for j in range(0, 3):
+        append(mut xs, j)
+    mut ys: int[] = []
+    for j in range(0, 3):
+        append(mut ys, j)
+    mut b = Bucket(count=3, items=copy(xs))
+    mut c = Bucket(count=1, items=[7])
+    for r in range(2):
+        acc = acc + len(ys) * 3 + xs[0]
+        append(mut b.items, acc)
+    for x in b.items:
+        acc = acc + x
+    b = copy(c)
+    print(out, acc, b.count, c.count)
+    return 0

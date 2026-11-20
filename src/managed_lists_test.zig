@@ -1,0 +1,703 @@
+//! Source-level managed aliases, native rooting, effects, and storage boundaries.
+const std = @import("std");
+const t = std.testing;
+const debug = std.debug;
+const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
+const negative_index_removed = "E_NEGATIVE_INDEX_REMOVED";
+
+fn execute(text: []const u8) !native.Run {
+    var compilation = try language.Compilation.init(t.allocator, "managed.selka", text);
+    defer compilation.deinit();
+    return native.runWithOptions(&compilation, .{}) catch |err| {
+        for (compilation.diagnostics.items) |diag| debug.print("{s}: {s} ({s})\n", .{ diag.code, diag.message, compilation.src.text(diag.span) });
+        return err;
+    };
+}
+
+/// Run one program that checks, as an embedded project so it may import a module.
+fn executeProject(text: []const u8) !native.Run {
+    const Entry = struct {
+        text: []const u8,
+        pub fn read(context: ?*anyopaque, a: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+            if (!std.mem.eql(u8, path, "main.selka")) return error.NotFound;
+            return a.dupe(u8, (@as(*const @This(), @ptrCast(@alignCast(context.?)))).text);
+        }
+    };
+    var entry: Entry = .{ .text = text };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &entry, .read = Entry.read });
+    defer program.deinit();
+    return native.run(&program.compilation);
+}
+
+fn firstError(items: []const language.diagnostic.Diagnostic) ?language.diagnostic.Diagnostic {
+    for (items) |item| if (item.severity == .err) return item;
+    return null;
+}
+
+fn reject(text: []const u8, expected: []const u8) !void {
+    if (std.mem.startsWith(u8, text, "import ")) {
+        const Entry = struct {
+            text: []const u8,
+            pub fn read(context: ?*anyopaque, a: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+                if (!std.mem.eql(u8, path, "main.selka")) return error.NotFound;
+                return a.dupe(u8, (@as(*const @This(), @ptrCast(@alignCast(context.?)))).text);
+            }
+        };
+        var entry: Entry = .{ .text = text };
+        var loaded = language.project.Project.init(t.allocator);
+        defer loaded.deinit();
+        try loaded.load(.{ .context = &entry, .read = Entry.read }, "main", .{});
+        var index = language.interfaces.build(&loaded) catch |err| {
+            if (err != error.SourceError) return err;
+            try t.expect(loaded.problem != null);
+            try t.expectEqualStrings(expected, loaded.problem.?.code);
+            return;
+        };
+        var unit = try language.project_compile.Compilation.init(&index);
+        try t.expectError(error.SourceError, unit.check());
+        const diag = firstError(unit.diagnostics.items.items) orelse return error.TestUnexpectedResult;
+        try t.expectEqualStrings(expected, diag.code);
+        return;
+    }
+    var compilation = try language.Compilation.init(t.allocator, "invalid-managed.selka", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    const diag = firstError(compilation.diagnostics.items) orelse return error.TestUnexpectedResult;
+    try t.expectEqualStrings(expected, diag.code);
+}
+
+fn rejectAll(sources: []const []const u8, code: []const u8) !void {
+    for (sources) |source| try reject(source, code);
+}
+
+// spec: GC-SOURCE-1
+test "managed copies are stored back after helper mutation without allocator authority" {
+    const source =
+        \\func change(mut values: i64[]):
+        \\    append(mut values, 40)
+        \\    values[0u64] = 42
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    mut alias = own values
+        \\    change(mut alias)
+        \\    values = own alias
+        \\    if len(values) != 1:
+        \\        return 1
+        \\    return values[0u64]
+    ;
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 42), result.value);
+}
+
+// spec: GC-SOURCE-3
+test "managed intermediate call arguments and record snapshots survive collection" {
+    const source =
+        \\record Holder:
+        \\    values: i64[]
+        \\
+        \\
+        \\func make() -> i64[]:
+        \\    mut values: i64[] = []
+        \\    append(mut values, 42)
+        \\    return values
+        \\
+        \\
+        \\func consume(first: Holder, mut second: i64[]) -> i64:
+        \\    append(mut second, 9)
+        \\    mut values = copy(first.values)
+        \\    return values[0u64]
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut scratch: i64[] = []
+        \\    return consume(Holder(values=make()), mut scratch)
+    ;
+    try t.expectEqual(@as(i64, 42), (try execute(source)).value);
+}
+
+// spec: GC-SOURCE-4
+test "managed bounds reads and writes produce located list bounds traps" {
+    for ([_][]const u8{
+        "return values[0u64]",
+        "values[0u64] = 42\n    return 0",
+    }) |operation| {
+        const source = try std.fmt.allocPrint(t.allocator,
+            \\func main() -> i64:
+            \\    mut values: i64[] = []
+            \\    {s}
+        , .{operation});
+        defer t.allocator.free(source);
+        const result = try execute(source);
+        try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
+        try t.expectEqualStrings("managed.selka", result.trap.path);
+        try t.expectEqual(@as(u64, 3), result.trap.line);
+    }
+}
+
+// spec: GC-SOURCE-6
+test "explicit effects reject transitive managed allocation while permitting fixed-slot mutation" {
+    for ([_][]const u8{ "effects()", "effects(mutation)" }) |bound| {
+        const create_source = try std.fmt.allocPrint(t.allocator,
+            \\func make() -> i64[]:
+            \\    return []
+            \\
+            \\
+            \\func constrained() -> i64[] {s}:
+            \\    return make()
+            \\
+            \\
+            \\func main() -> i64:
+            \\    return 0
+            \\
+        , .{"effects()"});
+        defer t.allocator.free(create_source);
+        try reject(create_source, "E_EFFECTS_REMOVED");
+        const append_source = try std.fmt.allocPrint(t.allocator,
+            \\func grow(mut values: i64[]) -> Unit:
+            \\    append(mut values, 42)
+            \\
+            \\
+            \\func constrained(mut values: i64[]) -> Unit {s}:
+            \\    grow(mut values)
+            \\
+            \\
+            \\func main() -> i64:
+            \\    return 0
+            \\
+        , .{bound});
+        defer t.allocator.free(append_source);
+        try reject(append_source, "E_EFFECTS_REMOVED");
+    }
+    // migrate-embedded: skip preserved original effect retirement witness
+    const source =
+        \\func fixed(mut values: i64[]) -> Unit effects(mutation):
+        \\    values[0u64] = 42
+        \\
+        \\
+        \\func inspect(mut values: i64[]) -> i64 effects(mutation):
+        \\    fixed(mut values)
+        \\    return values[0u64]
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    append(mut values, 0)
+        \\    return inspect(mut values)
+    ;
+    try reject(source, "E_EFFECTS_REMOVED");
+    const modern_source =
+        \\func fixed(mut values: i64[]) -> Unit:
+        \\    values[0u64] = 42
+        \\
+        \\
+        \\func inspect(mut values: i64[]) -> i64:
+        \\    fixed(mut values)
+        \\    return values[0u64]
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    append(mut values, 0)
+        \\    return inspect(mut values)
+    ;
+    try t.expectEqual(@as(i64, 42), (try execute(modern_source)).value);
+}
+
+// spec: GC-SOURCE-7
+test "managed elements reject owned resources" {
+    try rejectAll(&.{
+        \\resource File: filesystem
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: File[] = []
+        \\    return len(values)
+        ,
+        \\resource File: filesystem
+        \\
+        \\
+        \\record Wrapper:
+        \\    file: File
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: Wrapper[] = []
+        \\    return len(values)
+        ,
+    }, "E_GENERIC_REQUIREMENT");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RESULT-LISTS-1
+test "managed Result lists preserve obligations independently from storage eligibility" {
+    const prefix = "result Answer:\n    ok: i64,\n    err: i64\n\nfunc main() -> i64:\n    mut values: Answer[] = []\n";
+    try rejectAll(&.{prefix ++ "    return len(values)\n"}, "E_RESULT_UNHANDLED");
+    try t.expectEqual(@as(i64, 0), (try execute(prefix ++ "    const count = len(values)\n    _ = values\n    return count\n")).value);
+}
+
+// spec: GC-ROOTS-1
+test "an independent collection snapshot roots its elements across later mutations" {
+    const source =
+        \\record Holder:
+        \\    items: i64[]
+        \\
+        \\
+        \\func total(holder: Holder) -> i64:
+        \\    mut sum = 0
+        \\    for item in holder.items:
+        \\        sum = sum + item
+        \\    return sum
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    mut alias = own values
+        \\    append(mut alias, 11)
+        \\    mut holder = Holder(items=copy(alias))
+        \\    append(mut alias, 31)
+        \\    mut i = 0
+        \\    while i < 40:
+        \\        mut garbage: i64[] = []
+        \\        append(mut garbage, i)
+        \\        i = i + 1
+        \\    return total(holder)
+    ;
+    const result = try execute(source);
+    try t.expectEqual(@as(i64, 11), result.value);
+}
+
+// spec: GC-BOUNDARY-1
+test "a managed list read past its initialized bounds is a located trap" {
+    const source =
+        \\func main() -> i64:
+        \\    mut values: i64[] = []
+        \\    append(mut values, 7)
+        \\    return values[3u64]
+    ;
+    const result = try execute(source);
+    try t.expect(result.trapped());
+    try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
+    try t.expectEqual(@as(u64, 4), result.trap.line);
+}
+
+test "scalar element reads load every width and keep a record read's copy" {
+    // migrate-embedded: skip intentional legacy negative-index removal regression
+    const source =
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut narrow = [1i16, 2i16, 300i16]
+        \\    mut flags = [True, False]
+        \\    mut raw = b"abc"
+        \\    mut total = i64(narrow[0]) + i64(narrow[-1]) + i64(narrow[1])
+        \\    if flags[-1]:
+        \\        total = total + 100
+        \\    mut rows = [Pair(left=5, right=6)]
+        \\    return total + rows[0].left + i64(raw[2])
+    ;
+    try reject(source, negative_index_removed);
+    const modern_source =
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut narrow = [1i16, 2i16, 300i16]
+        \\    mut flags = [True, False]
+        \\    mut raw = b"abc"
+        \\    mut total = i64(narrow[0]) + i64(narrow[len(narrow) - 1]) + i64(narrow[1])
+        \\    if flags[len(flags) - 1]:
+        \\        total = total + 100
+        \\    mut rows = [Pair(left=5, right=6)]
+        \\    return total + rows[0].left + i64(raw[2])
+    ;
+    const result = try execute(modern_source);
+    try t.expectEqual(@as(i64, 407), result.value);
+}
+
+test "a scalar element read past the end keeps the original index in its detail" {
+    // migrate-embedded: skip intentional legacy negative-index removal regression
+    const source =
+        \\func main() -> i64:
+        \\    mut values = [4, 5, 6]
+        \\    return values[-4]
+    ;
+    try reject(source, negative_index_removed);
+    const modern_source =
+        \\func main() -> i64:
+        \\    mut values = [4, 5, 6]
+        \\    return values[0 - len(values) - 1]
+    ;
+    const result = try execute(modern_source);
+    try t.expect(result.trapped());
+    try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
+    try t.expectEqual(@as(i64, -4), result.trap.detail.values.index);
+    try t.expectEqual(@as(u64, 3), result.trap.detail.values.length);
+}
+
+test "negative element indexes count from the end for lists byte strings and text" {
+    // Retain the old spelling as a removal regression; the modern copy spells offsets explicitly.
+    // migrate-embedded: skip intentional legacy negative-index removal regression
+    const source =
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values = [4, 5, 6]
+        \\    mut names = ["red", "green"]
+        \\    mut rows = [Pair(left=7, right=8)]
+        \\    mut raw = b"abc"
+        \\    mut text = "héllo"
+        \\    return values[-1] + values[-len(values)] + strings.char_count(names[-1]) + rows[-1].left + i64(raw[-1]) + i64(raw[-len(raw)]) + strings.char_count(strings.char_at(text, -1)) + strings.char_count(strings.char_at(text, -strings.char_count(text)))
+    ;
+    try reject(source, negative_index_removed);
+    const modern_source =
+        \\record Pair:
+        \\    left: i64
+        \\    right: i64
+        \\
+        \\
+        \\func main() -> i64:
+        \\    mut values = [4, 5, 6]
+        \\    mut names = ["red", "green"]
+        \\    mut rows = [Pair(left=7, right=8)]
+        \\    mut raw = b"abc"
+        \\    mut text = "héllo"
+        \\    return values[len(values) - 1] + values[0] + strings.char_count(names[len(names) - 1]) + rows[len(rows) - 1].left + i64(raw[len(raw) - 1]) + i64(raw[0]) + strings.char_count(strings.char_at(text, strings.char_count(text) - 1)) + strings.char_count(strings.char_at(text, 0))
+    ;
+    const result = try execute(modern_source);
+    try t.expect(!result.trapped());
+    try t.expectEqual(@as(i64, 6 + 4 + 5 + 7 + 99 + 97 + 1 + 1), result.value);
+}
+
+// spec: GC-CAPABILITY-1
+test "a managed element declaration (5C) holds a capability, directly or inside a record" {
+    for ([_][]const u8{
+        \\func main(fs: Filesystem) -> int:
+        \\    mut values: Filesystem[] = []
+        \\    append(mut values, fs)
+        \\    return len(values)
+        ,
+        \\record Holder:
+        \\    fs: Filesystem
+        \\
+        \\
+        \\func main(fs: Filesystem) -> int:
+        \\    mut values: Holder[] = []
+        \\    append(mut values, Holder(fs=fs))
+        \\    return len(values)
+        ,
+        \\record Holder:
+        \\    fs: Filesystem
+        \\
+        \\
+        \\record Outer:
+        \\    holder: Holder
+        \\
+        \\
+        \\func main(fs: Filesystem) -> int:
+        \\    mut values: Outer[] = []
+        \\    append(mut values, Outer(holder=Holder(fs=fs)))
+        \\    return len(values)
+    }) |text| {
+        var compilation = try language.Compilation.init(t.allocator, "managed-capability.selka", text);
+        defer compilation.deinit();
+        try compilation.check();
+    }
+}
+
+test "QBE-TEXT-BLOCK-1 run-time text shares one allocation with its payload" {
+    const source =
+        \\import strings
+        \\
+        \\func main() -> i64:
+        \\    mut keep: str[] = []
+        \\    for index in range(64):
+        \\        mut text = strings.join(["a", "b", "c"], "-")
+        \\        append(mut keep, strings.replace(text, "-", "\u00e9") + strings.char_slice(text, 0, 2))
+        \\    mut total = 0
+        \\    for item in keep:
+        \\        total = total + strings.char_count(item)
+        \\    if keep[0] != "a\u00e9b\u00e9ca-":
+        \\        return 1
+        \\    if keep[63] != "a\u00e9b\u00e9ca-":
+        \\        return 2
+        \\    return total
+    ;
+    // Every allocation collects under gc-stress, so a text whose block still
+    // traced a pointer into its own allocation would corrupt or crash here
+    // rather than merely leak.
+    const result = try executeProject(source);
+    try t.expectEqual(@as(i64, 64 * 7), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}
+
+// spec: UTF8-TEXT-1
+test "UTF8-TEXT-1 text stores UTF-8 octets and still indexes Unicode scalars" {
+    // Scalar indexing, slicing, length, comparison, searching, case mapping,
+    // classification, joining, padding, dictionary keys and byte interop all
+    // run over a payload whose scalars are one, two, three and four octets
+    // wide. A representation that answered any of them in octets, or that
+    // cached a scalar count that drifted from the payload, disagrees here; the
+    // mixed-width keys are what makes a dictionary's hashing and equality part
+    // of the same check.
+    // migrate-embedded: skip intentional legacy negative-index removal regression
+    const source =
+        \\import strings
+        \\
+        \\func main() -> i64:
+        \\    mut text = "a\u00e9\u6f22b"
+        \\    if strings.char_count(text) != 4:
+        \\        return 1
+        \\    if strings.char_at(text, 0) != "a":
+        \\        return 2
+        \\    if strings.char_at(text, 1) != "\u00e9":
+        \\        return 3
+        \\    if strings.char_at(text, 2) != "\u6f22":
+        \\        return 4
+        \\    if strings.char_at(text, -1) != "b":
+        \\        return 5
+        \\    if strings.char_slice(text, 1, 3) != "\u00e9\u6f22":
+        \\        return 6
+        \\    if strings.char_slice(text, 3, 99) != "b":
+        \\        return 7
+        \\    mut ordered = sorted(["\u6f22", "\u00e9", "a"])
+        \\    if ordered[0] != "a":
+        \\        return 8
+        \\    if ordered[1] != "\u00e9":
+        \\        return 9
+        \\    if ordered[2] != "\u6f22":
+        \\        return 10
+        \\    if text == "ab":
+        \\        return 37
+        \\    if "a\u00e9" != "a" + "\u00e9":
+        \\        return 10
+        \\    if ord("\u00e9") != 233:
+        \\        return 11
+        \\    if chr(233) != "\u00e9":
+        \\        return 12
+        \\    if strings.char_count(chr(128512)) != 1:
+        \\        return 13
+        \\    if chr(128512) != "\U0001f600":
+        \\        return 14
+        \\    if "a\u00e9b\u00e9c".count("\u00e9") != 2:
+        \\        return 16
+        \\    if strings.char_find("a\u00e9b\u00e9c", "\u00e9") != 1:
+        \\        return 17
+        \\    if strings.char_find("a\u00e9b\u00e9c", "c") != 4:
+        \\        return 18
+        \\    if strings.char_find("a\u00e9b\u00e9c", "\u6f22") != -1:
+        \\        return 19
+        \\    if len(strings.split("a\u00e9,b", ",")) != 2:
+        \\        return 20
+        \\    if strings.split("a\u00e9,b", ",")[0] != "a\u00e9":
+        \\        return 21
+        \\    if "-".join(["\u00e9", "\u6f22"]) != "\u00e9-\u6f22":
+        \\        return 22
+        \\    if "a\u00e9".zfill(4) != "00a\u00e9":
+        \\        return 27
+        \\    mut counts: dict[str, int] = {}
+        \\    counts["\u00e9"] = 1
+        \\    counts["\u6f22"] = 2
+        \\    counts["\u00e9"] = counts["\u00e9"] + 1
+        \\    if counts["\u00e9"] != 2:
+        \\        return 28
+        \\    if counts["\u6f22"] != 2:
+        \\        return 29
+        \\    if len(counts) != 2:
+        \\        return 30
+        \\    if "\u00e9" not in counts:
+        \\        return 31
+        \\    mut total = 0
+        \\    for letter in strings.chars(text):
+        \\        total = total + strings.char_count(letter)
+        \\    if total != 4:
+        \\        return 32
+        \\    if len(text.encode()) != 7:
+        \\        return 33
+        \\    match text.encode().decode():
+        \\        case Ok(value):
+        \\            if value != text:
+        \\                return 34
+        \\        case Err(message):
+        \\            return 35
+        \\    if strings.char_stride(text, 3, 0, -2) != "b\u00e9":
+        \\        return 39
+        \\    if strings.char_stride(text, None, None, -1) != "b\u6f22\u00e9a":
+        \\        return 40
+        \\    if strings.char_count(strings.char_stride(text, 1, 4, 2)) != 2 or strings.char_at(strings.char_stride(text, 1, 4, 2), 0) != "\u00e9":
+        \\        return 41
+        \\    mut kept = "z"
+        \\    mut inside = "-".join([text, "\u00e9"])
+        \\    kept = inside
+        \\    if kept != "a\u00e9\u6f22b-\u00e9" or strings.char_count(kept) != 6:
+        \\        return 42
+        \\    return 1234
+    ;
+    try reject(source, negative_index_removed);
+    const modern_source =
+        \\import strings
+        \\
+        \\func main() -> i64:
+        \\    mut text = "a\u00e9\u6f22b"
+        \\    if strings.char_count(text) != 4:
+        \\        return 1
+        \\    if strings.char_at(text, 0) != "a":
+        \\        return 2
+        \\    if strings.char_at(text, 1) != "\u00e9":
+        \\        return 3
+        \\    if strings.char_at(text, 2) != "\u6f22":
+        \\        return 4
+        \\    if strings.char_at(text, strings.char_count(text) - 1) != "b":
+        \\        return 5
+        \\    if strings.char_slice(text, 1, 3) != "\u00e9\u6f22":
+        \\        return 6
+        \\    if strings.char_slice(text, 3, 99) != "b":
+        \\        return 7
+        \\    mut ordered = sorted(["\u6f22", "\u00e9", "a"])
+        \\    if ordered[0] != "a":
+        \\        return 8
+        \\    if ordered[1] != "\u00e9":
+        \\        return 9
+        \\    if ordered[2] != "\u6f22":
+        \\        return 10
+        \\    if text == "ab":
+        \\        return 37
+        \\    if "a\u00e9" != "a" + "\u00e9":
+        \\        return 10
+        \\    if ord("\u00e9") != 233:
+        \\        return 11
+        \\    if chr(233) != "\u00e9":
+        \\        return 12
+        \\    if strings.char_count(chr(128512)) != 1:
+        \\        return 13
+        \\    if chr(128512) != "\U0001f600":
+        \\        return 14
+        \\    if strings.replace("aXbXc", "X", "\u00e9") != "a\u00e9b\u00e9c":
+        \\        return 15
+        \\    if strings.count("a\u00e9b\u00e9c", "\u00e9") != 2:
+        \\        return 16
+        \\    if strings.char_find("a\u00e9b\u00e9c", "\u00e9") != 1:
+        \\        return 17
+        \\    if strings.char_find("a\u00e9b\u00e9c", "c") != 4:
+        \\        return 18
+        \\    if strings.char_find("a\u00e9b\u00e9c", "\u6f22") != -1:
+        \\        return 19
+        \\    if len(strings.split("a\u00e9,b", ",")) != 2:
+        \\        return 20
+        \\    if strings.split("a\u00e9,b", ",")[0] != "a\u00e9":
+        \\        return 21
+        \\    if strings.join(["\u00e9", "\u6f22"], "-") != "\u00e9-\u6f22":
+        \\        return 22
+        \\    if strings.upper("\u00c9a") != "\u00c9A":
+        \\        return 23
+        \\    if not strings.is_alpha("aB"):
+        \\        return 24
+        \\    if strings.is_alpha("\u00e9"):
+        \\        return 38
+        \\    if strings.is_digit("\u00e9"):
+        \\        return 25
+        \\    if strings.strip("  \u00e9 ") != "\u00e9":
+        \\        return 26
+        \\    if strings.zfill("a\u00e9", 4) != "00a\u00e9":
+        \\        return 27
+        \\    mut counts: dict[str, int] = {}
+        \\    counts["\u00e9"] = 1
+        \\    counts["\u6f22"] = 2
+        \\    counts["\u00e9"] = counts["\u00e9"] + 1
+        \\    if counts["\u00e9"] != 2:
+        \\        return 28
+        \\    if counts["\u6f22"] != 2:
+        \\        return 29
+        \\    if len(counts) != 2:
+        \\        return 30
+        \\    if "\u00e9" not in counts:
+        \\        return 31
+        \\    mut total = 0
+        \\    for letter in strings.chars(text):
+        \\        total = total + strings.char_count(letter)
+        \\    if total != 4:
+        \\        return 32
+        \\    if len(strings.encode(text)) != 7:
+        \\        return 33
+        \\    match strings.decode(strings.encode(text)):
+        \\        case Ok(value):
+        \\            if value != text:
+        \\                return 34
+        \\        case Err(message):
+        \\            return 35
+        \\    if len(strings.lines("a\u00e9")) != 1:
+        \\        return 36
+        \\    if strings.char_stride(text, 3, 0, -2) != "b\u00e9":
+        \\        return 39
+        \\    if strings.char_stride(text, None, None, -1) != "b\u6f22\u00e9a":
+        \\        return 40
+        \\    if strings.char_count(strings.char_stride(text, 1, 4, 2)) != 2 or strings.char_at(strings.char_stride(text, 1, 4, 2), 0) != "\u00e9":
+        \\        return 41
+        \\    mut kept = "z"
+        \\    mut inside = strings.join([own text, "\u00e9"], "-")
+        \\    kept = own inside
+        \\    if kept != "a\u00e9\u6f22b-\u00e9" or strings.char_count(kept) != 6:
+        \\        return 42
+        \\    return 1234
+    ;
+    const result = try executeProject(modern_source);
+    try t.expectEqual(@as(i64, 1234), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}
+
+test "GC-OBJECT-1 a two-word header fits thousands of live lists under one budget" {
+    // Each live four-element `i64[]` costs one 72-byte list header object
+    // plus a 32-byte backing; the two-word header is what lets four thousand of
+    // them stay inside one mebibyte. The retired 96-byte header charged roughly
+    // twice that and trapped here, so the budget is the observable half of the
+    // representation change.
+    var compilation = try language.Compilation.init(t.allocator, "header.selka",
+        \\func main() -> i64:
+        \\    mut values: i64[][] = []
+        \\    mut n = 0
+        \\    while n < 4000:
+        \\        append(mut values, [n, n + 1, n + 2, n + 3])
+        \\        n += 1
+        \\    return values[3999][3]
+    );
+    defer compilation.deinit();
+    const result = try native.runWithOptions(&compilation, .{ .max_memory = 1 << 20 });
+    try t.expectEqual(@as(i64, 4002), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}
+
+test "GC-SEGMENT-1 a churn loop reuses reclaimed slots without stale fields" {
+    // Every allocation collects under gc-stress, so each iteration's scratch list
+    // is swept and its slots come back through the size-class free list. A slot
+    // handed out with a stale `length` or `capacity` would corrupt the retained
+    // copies, and a slot whose payload was not zeroed would publish the previous
+    // owner's storage pointer.
+    var compilation = try language.Compilation.init(t.allocator, "segments.selka",
+        \\func main() -> i64:
+        \\    mut keep: i64[][] = []
+        \\    mut n = 0
+        \\    while n < 20000:
+        \\        mut scratch = [n, n + 1, n + 2, n + 3]
+        \\        if n % 1000 == 0:
+        \\            append(mut keep, own scratch)
+        \\        n += 1
+        \\    mut total = 0
+        \\    for item in keep:
+        \\        total = total + item[3]
+        \\    return total
+    );
+    defer compilation.deinit();
+    const result = try native.runWithOptions(&compilation, .{});
+    try t.expectEqual(@as(i64, 190060), result.value);
+    try t.expectEqualStrings("", result.trap.code);
+}

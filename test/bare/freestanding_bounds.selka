@@ -1,0 +1,16 @@
+# A `@freestanding` function whose index is out of range (MCU-NOC2): the failed check calls nothing. On the bare CPU it is
+# `udf #83` with the code and place in r0-r2, and the runtime's fault handler reports `error[R_LIST_BOUNDS] PATH:LINE` in
+# every build mode, then status 1. On Linux the program's own SIGILL handler reports the same line, then status 1.
+# bare: R_LIST_BOUNDS
+# bare-text: error[R_LIST_BOUNDS] freestanding_bounds.selka:8
+@freestanding
+func pick(words: FixedArray[u32, 4], index: int) -> u32:
+    return words[index]
+
+
+func main() -> int:
+    const words = FixedArray[u32, 4]([1, 2, 3, 4])
+    mut total: u32 = 0
+    for i in range(6):
+        total = total + pick(words, i)
+    return int(total)

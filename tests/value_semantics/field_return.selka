@@ -1,0 +1,221 @@
+func former_position(length: int, index: int) -> int:
+    if index < 0:
+        return length + index
+    return index
+
+
+record Box:
+    items: int[]
+
+
+record Owner:
+    box: Box
+    other: Box
+
+
+record CountOwner:
+    box: Box
+    count: int
+
+
+record IndexedOwner:
+    box: Box
+    others: Box[]
+
+
+func push(mut box: Box):
+    append(mut box.items, 2)
+
+
+func change(mut owner: Owner):
+    mut work = copy(owner.box)
+    push(mut work)
+    owner.box = own work
+
+
+func observe(mut owner: Owner) -> int:
+    mut work = copy(owner.box)
+    push(mut work)
+    mut seen = len(owner.box.items)
+    owner.box = own work
+    return seen
+
+
+func conditional(mut owner: Owner, stop: bool):
+    mut work = copy(owner.box)
+    push(mut work)
+    if stop:
+        return
+    owner.box = own work
+
+
+func retain(mut owner: Owner) -> int:
+    mut work = copy(owner.box)
+    push(mut work)
+    owner.box = copy(work)
+    push(mut work)
+    return len(work.items)
+
+
+func other_field(mut owner: Owner):
+    mut work = copy(owner.box)
+    push(mut work)
+    owner.other = own work
+
+
+func observe_alias(mut first: Owner, mut second: Owner) -> int:
+    mut work = copy(first.box)
+    push(mut work)
+    mut seen = len(second.box.items)
+    second.other = Box(items=[9])
+    first.box = own work
+    return seen
+
+
+func observe_sibling(mut owner: CountOwner) -> int:
+    mut work = copy(owner.box)
+    push(mut work)
+    mut seen = owner.count
+    owner.box = own work
+    return seen
+
+
+func indexed_sibling(mut owner: IndexedOwner, index: int) -> int:
+    mut work = copy(owner.box)
+    push(mut work)
+    const sibling_position = former_position(len(owner.others), index)
+    mut seen = owner.others[sibling_position].items[len(owner.others[sibling_position].items) - 1]
+    owner.box = own work
+    return seen
+
+
+func looped(mut owner: Owner, count: int?, stop: bool):
+    mut work = copy(owner.box)
+    match count:
+        case Some(n):
+            for i in range(n):
+                push(mut work)
+                if stop:
+                    return
+        case None:
+            push(mut work)
+    owner.box = own work
+
+
+func closed_loop(mut owner: Owner, count: int?):
+    mut work = copy(owner.box)
+    match count:
+        case Some(n):
+            for i in range(n):
+                push(mut work)
+        case None:
+            push(mut work)
+    owner.box = own work
+
+
+func loop_observation(mut owner: Owner, stop: bool) -> int:
+    mut work = copy(owner.box)
+    mut seen = 0
+    for i in range(3):
+        push(mut work)
+        seen += len(owner.box.items)
+        if stop:
+            break
+    owner.box = own work
+    return seen
+
+
+func joined_extraction(mut owner: Owner, choose: bool):
+    mut work: Box
+    if choose:
+        work = copy(owner.box)
+    else:
+        work = copy(owner.other)
+    if choose:
+        push(mut work)
+    owner.box = own work
+
+
+public func test_field_return_preserves_existing_copies_and_sibling_values() -> bool:
+    mut box = Box(items=[1])
+    mut owner = Owner(box=copy(box), other=copy(box))
+    mut saved = copy(owner)
+    change(mut owner)
+    change(mut owner)
+    return owner.box.items == [1, 2, 2] and owner.other.items == [1] and saved.box.items == [1] and box.items == [1]
+
+
+public func test_observation_before_store_back_sees_original_value() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[]))
+    mut seen = observe(mut owner)
+    return seen == 1 and owner.box.items == [1, 2]
+
+
+public func test_early_return_does_not_write_the_original_field() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[]))
+    conditional(mut owner, True)
+    mut untouched = owner.box.items == [1]
+    conditional(mut owner, False)
+    return untouched and owner.box.items == [1, 2]
+
+
+public func test_retained_temporary_and_other_destination_stay_independent() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[]))
+    mut size = retain(mut owner)
+    other_field(mut owner)
+    return size == 3 and owner.box.items == [1, 2] and owner.other.items == [1, 2, 2]
+
+
+# `observe_alias(mut owner, mut owner)` is E_SINGLE_OWNER_OVERLAP (MUT-EXCLUSIVE-1);
+# a copy sharing the original field must not see the temporary's write.
+public func test_a_second_mut_parameter_observes_its_own_original_field() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[]))
+    mut other = copy(owner)
+    mut seen = observe_alias(mut owner, mut other)
+    return seen == 1 and owner.box.items == [1, 2] and owner.other.items == [] and other.box.items == [1] and other.other.items == [9]
+
+
+public func test_a_sibling_scalar_field_stays_readable_during_mutation() -> bool:
+    mut owner = CountOwner(box=Box(items=[1]), count=7)
+    mut seen = observe_sibling(mut owner)
+    return seen == 7 and owner.box.items == [1, 2]
+
+
+public func test_sibling_index_normalization_keeps_shared_snapshots_independent() -> bool:
+    mut original = Box(items=[7])
+    mut owner = IndexedOwner(box=copy(original), others=[copy(original)])
+    mut seen = indexed_sibling(mut owner, -1)
+    return seen == 7 and owner.box.items == [7, 2] and owner.others[0].items == [7] and original.items == [7]
+
+
+public func test_closed_loop_and_match_store_back_preserve_copies() -> bool:
+    mut original = Box(items=[1])
+    mut owner = Owner(box=copy(original), other=copy(original))
+    mut saved = copy(owner)
+    closed_loop(mut owner, Some(3))
+    closed_loop(mut owner, None)
+    return owner.box.items == [1, 2, 2, 2, 2] and owner.other.items == [1] and saved.box.items == [1] and original.items == [1]
+
+
+public func test_loop_exit_does_not_commit_a_partial_field_update() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[]))
+    looped(mut owner, Some(3), True)
+    mut unchanged = owner.box.items == [1]
+    looped(mut owner, Some(3), False)
+    return unchanged and owner.box.items == [1, 2, 2, 2]
+
+
+public func test_loop_observations_read_the_original_field_until_store_back() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[]))
+    mut seen = loop_observation(mut owner, False)
+    return seen == 3 and owner.box.items == [1, 2, 2, 2]
+
+
+public func test_external_join_preserves_preexisting_values() -> bool:
+    mut owner = Owner(box=Box(items=[1]), other=Box(items=[3]))
+    mut saved = copy(owner)
+    joined_extraction(mut owner, True)
+    mut changed = owner.box.items == [1, 2]
+    joined_extraction(mut owner, False)
+    change(mut owner)
+    return changed and owner.box.items == [3, 2] and owner.other.items == [3] and saved.box.items == [1]

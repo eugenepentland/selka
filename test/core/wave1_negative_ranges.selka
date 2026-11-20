@@ -1,0 +1,154 @@
+import bytes
+import strings
+
+@noalloc
+func find_text(text: str, start: int, end: int) -> int:
+    return strings.char_find(text, "", start, end)
+
+
+@noalloc
+func parse_bytes(data: bytes, start: int, end: int) -> int?:
+    return bytes.parse_int_range(data, start, end)
+
+
+func text_value() -> str:
+    return "aé中😀b"
+
+
+func byte_value() -> bytes:
+    return b"12345"
+
+
+func main(args: str[]) -> int:
+    const offset = 0 - len(args)
+    const text = "aé中😀b"
+    const data = b"12345"
+    if args[0] == "text-find-start":
+        _ = strings.char_find(text, "", offset)
+        return 0
+    if args[0] == "text-find-end":
+        _ = strings.char_find(text, "", 0, offset)
+        return 0
+    if args[0] == "text-rfind-start":
+        _ = strings.char_rfind(text, "", offset)
+        return 0
+    if args[0] == "text-rfind-end":
+        _ = strings.char_rfind(text, "", 0, offset)
+        return 0
+    if args[0] == "text-index-start":
+        _ = strings.char_index(text, "", offset)
+        return 0
+    if args[0] == "text-index-end":
+        _ = strings.char_index(text, "", 0, offset)
+        return 0
+    if args[0] == "text-rindex-start":
+        _ = strings.char_rindex(text, "", offset)
+        return 0
+    if args[0] == "text-rindex-end":
+        _ = strings.char_rindex(text, "", 0, offset)
+        return 0
+    if args[0] == "text-count-start":
+        _ = strings.char_count_of(text, "", offset)
+        return 0
+    if args[0] == "text-count-end":
+        _ = strings.char_count_of(text, "", 0, offset)
+        return 0
+    if args[0] == "text-startswith-start":
+        _ = strings.char_startswith(text, "", offset)
+        return 0
+    if args[0] == "text-startswith-end":
+        _ = strings.char_startswith(text, "", 0, offset)
+        return 0
+    if args[0] == "text-endswith-start":
+        _ = strings.char_endswith(text, "", offset)
+        return 0
+    if args[0] == "text-endswith-end":
+        _ = strings.char_endswith(text, "", 0, offset)
+        return 0
+    if args[0] == "byte-find-start":
+        _ = bytes.find(data, b"", offset)
+        return 0
+    if args[0] == "byte-find-end":
+        _ = bytes.find(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-rfind-start":
+        _ = bytes.rfind(data, b"", offset)
+        return 0
+    if args[0] == "byte-rfind-end":
+        _ = bytes.rfind(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-index-start":
+        _ = bytes.index(data, b"", offset)
+        return 0
+    if args[0] == "byte-index-end":
+        _ = bytes.index(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-rindex-start":
+        _ = bytes.rindex(data, b"", offset)
+        return 0
+    if args[0] == "byte-rindex-end":
+        _ = bytes.rindex(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-count-start":
+        _ = bytes.count(data, b"", offset)
+        return 0
+    if args[0] == "byte-count-end":
+        _ = bytes.count(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-startswith-start":
+        _ = bytes.starts_with(data, b"", offset)
+        return 0
+    if args[0] == "byte-startswith-end":
+        _ = bytes.starts_with(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-endswith-start":
+        _ = bytes.ends_with(data, b"", offset)
+        return 0
+    if args[0] == "byte-endswith-end":
+        _ = bytes.ends_with(data, b"", 0, offset)
+        return 0
+    if args[0] == "byte-parse_int_range-start":
+        _ = bytes.parse_int_range(data, offset, 99)
+        return 0
+    if args[0] == "byte-parse_int_range-end":
+        _ = bytes.parse_int_range(data, 0, offset)
+        return 0
+    if args[0] == "byte-parse_float_range-start":
+        _ = bytes.parse_float_range(data, offset, 99)
+        return 0
+    if args[0] == "byte-parse_float_range-end":
+        _ = bytes.parse_float_range(data, 0, offset)
+        return 0
+    if args[0] == "byte-scalar_count_range-start":
+        # lint: allow discarded-failure reason="the range check is the subject: this build must trap, not handle"
+        _ = bytes.scalar_count_range(data, offset, 99)
+        return 0
+    if args[0] == "byte-scalar_count_range-end":
+        # lint: allow discarded-failure reason="the range check is the subject: this build must trap, not handle"
+        _ = bytes.scalar_count_range(data, 0, offset)
+        return 0
+    if args[0] == "direct-text-find-start":
+        _ = strings.char_find(text_value(), "", offset)
+        return 0
+    if args[0] == "direct-text-find-end":
+        _ = strings.char_find(text_value(), "", 0, offset)
+        return 0
+    if args[0] == "direct-byte-find-start":
+        _ = bytes.find(byte_value(), b"", offset)
+        return 0
+    if args[0] == "direct-byte-find-end":
+        _ = bytes.find(byte_value(), b"", 0, offset)
+        return 0
+    if args[0] == "noalloc-text-find-start":
+        _ = find_text(text, offset, 99)
+        return 0
+    if args[0] == "noalloc-text-find-end":
+        _ = find_text(text, 0, offset)
+        return 0
+    if args[0] == "noalloc-byte-parse_int_range-start":
+        _ = parse_bytes(data, offset, 99)
+        return 0
+    if args[0] == "noalloc-byte-parse_int_range-end":
+        _ = parse_bytes(data, 0, offset)
+        return 0
+    return 99

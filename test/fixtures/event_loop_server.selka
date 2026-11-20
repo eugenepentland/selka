@@ -1,0 +1,137 @@
+# A test server for the event loop (NETWORK-POLL-1 to NETWORK-POLL-5): one thread,
+# one Poller, many clients. A request is whatever one `recv` returns, and its first
+# byte picks the reply:
+#   b<N>   send N * 256 bytes of the pattern 0, 1, ... 255 repeated
+#   l      reply "limit LIMIT open OPEN"
+#   p      reply "peer ADDRESS:PORT"
+#   q      reply "bye" and stop the server once it is sent
+#   other  echo the request
+# A client silent for IDLE_MS is closed. The port is announced on stderr, which is
+# flushed line by line, as `port N`.
+import byte_builder
+import dicts
+import network
+import strings
+
+const IDLE_MS: int = 2000
+
+
+# What the server remembers about one client between wake-ups.
+record Client:
+    pending: bytes
+    sent: int
+    finished: bool
+    stop: bool
+
+
+# All clients by id, and whether a client asked the server to stop.
+record Server:
+    clients: dict[int, Client]
+    stop: bool
+
+
+func main(net: Network, err: Stream) -> int:
+    with net.host("127.0.0.1:0") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return serve(own poller, err)
+            case err(code):
+                print(err, "listen failed", code, network.describe(code))
+                return 1
+
+
+func serve(own poller: network.Poller, err: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut server = Server(clients={}, stop=False)
+    live = network.port(own live, network.LISTENER, mut outcome)
+    print(err, "port " + str(outcome.value))
+    live = network.set_idle_timeout(own live, IDLE_MS, mut outcome)
+    while not server.stop or len(server.clients) > 0:
+        live = network.wait(own live, 1000, mut ready)
+        for index in range(ready.count):
+            if ready.ids[index] == network.LISTENER:
+                live = accept_all(own live, mut server, mut outcome)
+            else:
+                live = serve_client(own live, ready.ids[index], ready.flags[index], mut server, mut outcome)
+    return 0
+
+
+# Take every waiting connection; stop at the first would-block or when the table is full.
+func accept_all(own poller: network.Poller, mut server: Server, mut outcome: network.Outcome) -> network.Poller:
+    mut live = own poller
+    while True:
+        live = network.accept(own live, mut outcome)
+        if outcome.code != network.OUTCOME_OK:
+            return live
+        server.clients[outcome.value] = Client(pending=b"", sent=0, finished=False, stop=False)
+    return live
+
+
+# The reply to one request.
+func reply_to(request: bytes) -> bytes:
+    if len(request) > 0 and request[0] == 98:
+        mut blocks = 0
+        mut at = 1
+        while at < len(request) and request[at] >= 48 and request[at] <= 57:
+            blocks = blocks * 10 + request[at] - 48
+            at += 1
+        mut one = byte_builder.create()
+        mut value = 0
+        while value < 256:
+            _ = byte_builder.append_byte(mut one, value)
+            value += 1
+        return byte_builder.repeat(byte_builder.finish(one), blocks)
+    return copy(request)
+
+
+func serve_client(own poller: network.Poller, id: int, flags: int, mut server: Server, mut outcome: network.Outcome) -> network.Poller:
+    mut live = own poller
+    if id not in server.clients:
+        return live
+    mut client = dicts.pop(mut server.clients, id)
+    mut keep = not network.has(flags, network.EVENT_IDLE) and not network.has(flags, network.EVENT_ERROR)
+    if keep and network.has(flags, network.EVENT_READABLE) and not client.finished and client.sent >= len(client.pending):
+        mut raw = byte_builder.create()
+        live = network.recv(own live, id, mut raw, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            const request = byte_builder.finish(raw)
+            if request[0] == 108:
+                mut limits = network.new_outcome()
+                live = network.connection_limit(own live, mut limits)
+                client.pending = strings.encode(("limit " + str(limits.value) + " open " + str(limits.extra)))
+            elif request[0] == 112:
+                mut peer = network.new_outcome()
+                live = network.peer(own live, id, mut peer)
+                client.pending = strings.encode(("peer " + network.format_address(peer.value, peer.extra)))
+            elif request[0] == 113:
+                client.pending = b"bye"
+                client.stop = True
+            else:
+                client.pending = reply_to(request)
+            client.sent = 0
+        elif outcome.code == network.OUTCOME_CLOSED:
+            client.finished = True
+        elif outcome.code != network.OUTCOME_WOULD_BLOCK:
+            keep = False
+    if keep and client.sent < len(client.pending):
+        live = network.send(own live, id, client.pending, client.sent, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            client.sent += outcome.value
+        elif outcome.code != network.OUTCOME_WOULD_BLOCK:
+            keep = False
+    if keep and client.sent >= len(client.pending):
+        if client.stop:
+            server.stop = True
+        if client.finished or client.stop:
+            keep = False
+    if not keep:
+        live = network.close_connection(own live, id, mut outcome)
+        return live
+    if client.sent < len(client.pending):
+        live = network.set_interest(own live, id, network.EVENT_WRITABLE, mut outcome)
+    else:
+        live = network.set_interest(own live, id, network.EVENT_READABLE, mut outcome)
+    server.clients[id] = own client
+    return live

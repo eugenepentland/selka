@@ -1,0 +1,6 @@
+func use[T: copy](x: T, named domain_op_T_identity: func(T[]) -> int) -> int:
+    return 0
+
+
+public func program() -> int:
+    return 0

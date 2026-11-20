@@ -1,0 +1,64 @@
+# The set module: the fourteen operations on `set[T]`, each taking its sets as ordinary
+# arguments. `sets.add`, `sets.include` and `sets.discard` carry the call-site `mut` marker,
+# and `sets.add` takes its value `own`.
+#
+# Add `value` to the set. Adding a value it already holds changes nothing.
+public builtin func add[T: equality](mut values: set[T], own value: T)
+
+
+# Add `value` to the set, copying it only when the set does not hold it yet. The value is
+# borrowed, so the caller keeps it, and a value the set already holds allocates nothing.
+# This is `sets.add(mut values, copy(value))` without the copy a present value throws away.
+public func include[T: equality](mut values: set[T], value: T):
+    if value not in values:
+        add(mut values, copy(value))
+
+
+# Remove `value` from the set, if it is present.
+public builtin func discard[T: equality](mut values: set[T], value: T)
+
+
+# Remove `value` from the set, trapping with `R_MISSING_KEY` when the set does not hold it;
+# `discard` is the form that ignores an absent value.
+public builtin func remove[T: equality](mut values: set[T], value: T)
+
+
+# Remove and answer one element of the set, trapping when it is empty.
+public builtin func pop[T: equality](mut values: set[T]) -> T
+
+
+# Remove every element of the set.
+public builtin func clear[T: equality](mut values: set[T])
+
+
+# Add every element of `other` to the set. `other` is another set of the same type or a
+# list of the element type; any other source (a text, a dictionary) is refused.
+public builtin func update[T: equality](mut values: set[T], other: set[T])
+
+
+# Every element of either set.
+public builtin func union[T: equality](left: set[T], right: set[T]) -> set[T]
+
+
+# The elements both sets hold.
+public builtin func intersection[T: equality](left: set[T], right: set[T]) -> set[T]
+
+
+# The elements of `left` that `right` does not hold.
+public builtin func difference[T: equality](left: set[T], right: set[T]) -> set[T]
+
+
+# The elements exactly one of the two sets holds.
+public builtin func symmetric_difference[T: equality](left: set[T], right: set[T]) -> set[T]
+
+
+# Whether every element of `left` is in `right`.
+public builtin func subset[T: equality](left: set[T], right: set[T]) -> bool
+
+
+# Whether every element of `right` is in `left`.
+public builtin func superset[T: equality](left: set[T], right: set[T]) -> bool
+
+
+# Whether the two sets share no element.
+public builtin func disjoint[T: equality](left: set[T], right: set[T]) -> bool

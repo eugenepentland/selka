@@ -1,0 +1,507 @@
+# A field of a record held in a dictionary entry inside a `mut` record is written in place (FR66): through two or three
+# levels of entries, through a list of dictionaries or a dictionary of lists, and by a compound assignment whose right
+# side reads the same entry again. Each built on main with E_CORE_UNSUPPORTED (rule Z3, "takes ownership of
+# `server.groups[g]` ..., which is a borrowed part of `server`"), though `check` accepted it.
+record Conn:
+    out: bytes
+    sent: int
+
+
+record Group:
+    conns: dict[int, Conn]
+
+
+record Server:
+    groups: dict[int, Group]
+
+
+record Zone:
+    groups: dict[int, Group]
+
+
+record Region:
+    zones: dict[int, Zone]
+
+
+record Rack:
+    groups: Group[]
+
+
+record Row:
+    conns: Conn[]
+
+
+record Hall:
+    rows: dict[int, Row]
+
+
+record Pool:
+    conns: dict[int, Conn]
+
+
+func queue_output(mut server: Server, g: int, id: int):
+    server.groups[g].conns[id].out = b"xyz"
+
+
+public func test_a_field_two_dictionary_entries_deep_is_assigned() -> bool:
+    mut server = Server(groups={})
+    server.groups[1] = Group(conns={})
+    server.groups[1].conns[2] = Conn(out=b"abc", sent=1)
+    queue_output(mut server, 1, 2)
+    return server.groups[1].conns[2].out == b"xyz" and server.groups[1].conns[2].sent == 1
+
+
+public func test_a_field_two_dictionary_entries_deep_in_a_local_is_assigned() -> bool:
+    mut server = Server(groups={})
+    server.groups[1] = Group(conns={})
+    server.groups[1].conns[2] = Conn(out=b"abc", sent=1)
+    server.groups[1].conns[2].out = b"xyz"
+    return server.groups[1].conns[2].out == b"xyz"
+
+
+func queue_deep(mut region: Region, z: int, g: int, id: int):
+    region.zones[z].groups[g].conns[id].out = b"xyz"
+
+
+public func test_a_field_three_dictionary_entries_deep_is_assigned() -> bool:
+    mut region = Region(zones={})
+    region.zones[0] = Zone(groups={})
+    region.zones[0].groups[1] = Group(conns={})
+    region.zones[0].groups[1].conns[2] = Conn(out=b"abc", sent=1)
+    queue_deep(mut region, 0, 1, 2)
+    return region.zones[0].groups[1].conns[2].out == b"xyz"
+
+
+func queue_rack(mut rack: Rack, g: int, id: int):
+    rack.groups[g].conns[id].out = b"xyz"
+
+
+public func test_a_field_of_an_entry_of_a_list_element_is_assigned() -> bool:
+    mut rack = Rack(groups=[Group(conns={})])
+    rack.groups[0].conns[2] = Conn(out=b"abc", sent=1)
+    queue_rack(mut rack, 0, 2)
+    return rack.groups[0].conns[2].out == b"xyz"
+
+
+func queue_hall(mut hall: Hall, r: int, at: int):
+    hall.rows[r].conns[at].out = b"xyz"
+
+
+public func test_a_field_of_a_list_element_of_an_entry_is_assigned() -> bool:
+    mut hall = Hall(rows={})
+    hall.rows[1] = Row(conns=[Conn(out=b"abc", sent=1)])
+    queue_hall(mut hall, 1, 0)
+    return hall.rows[1].conns[0].out == b"xyz"
+
+
+func drain(mut pool: Pool, id: int, chunks: bytes[]) -> int:
+    mut at = 0
+    while at < len(chunks):
+        pool.conns[id].sent += len(chunks[at]) - pool.conns[id].sent
+        at += 1
+    return pool.conns[id].sent
+
+
+func drain_down(mut pool: Pool, id: int, chunks: bytes[]) -> int:
+    mut at = 0
+    while at < len(chunks):
+        pool.conns[id].sent -= len(chunks[at]) - pool.conns[id].sent
+        at += 1
+    return pool.conns[id].sent
+
+
+func drain_scaled(mut pool: Pool, id: int, chunks: bytes[]) -> int:
+    mut at = 0
+    while at < len(chunks):
+        pool.conns[id].sent *= len(chunks[at]) - pool.conns[id].sent
+        at += 1
+    return pool.conns[id].sent
+
+
+func drain_sibling(mut pool: Pool, id: int, chunks: bytes[]) -> int:
+    mut at = 0
+    while at < len(chunks):
+        pool.conns[id].sent += len(chunks[at]) - len(pool.conns[id].out)
+        at += 1
+    return pool.conns[id].sent
+
+
+func pool_of(sent: int) -> Pool:
+    mut pool = Pool(conns={})
+    pool.conns[7] = Conn(out=b"abcdef", sent=sent)
+    return pool
+
+
+public func test_a_loop_adds_to_an_entry_field_what_reads_the_same_field() -> bool:
+    mut pool = pool_of(1)
+    return drain(mut pool, 7, [b"ab", b"cde", b"f"]) == 1
+
+
+public func test_a_loop_subtracts_from_an_entry_field_what_reads_the_same_field() -> bool:
+    mut pool = pool_of(1)
+    return drain_down(mut pool, 7, [b"ab", b"cde", b"f"]) == -7
+
+
+public func test_a_loop_multiplies_an_entry_field_by_what_reads_the_same_field() -> bool:
+    mut pool = pool_of(1)
+    return drain_scaled(mut pool, 7, [b"ab", b"cde", b"f"]) == -2
+
+
+public func test_a_loop_adds_to_an_entry_field_what_reads_a_sibling_field() -> bool:
+    mut pool = pool_of(1)
+    return drain_sibling(mut pool, 7, [b"ab", b"cde", b"f"]) == -11 and pool.conns[7].out == b"abcdef"
+
+
+func bump(mut pool: Pool, id: int, n: int) -> int:
+    pool.conns[id].sent += n - pool.conns[id].sent
+    return pool.conns[id].sent
+
+
+public func test_an_entry_field_adds_what_reads_the_same_field_outside_a_loop() -> bool:
+    mut pool = pool_of(1)
+    return bump(mut pool, 7, 5) == 5 and pool.conns[7].sent == 5
+
+
+public func test_a_loop_in_a_local_adds_to_an_entry_field_what_reads_the_same_field() -> bool:
+    mut pool = pool_of(1)
+    const chunks = [b"ab", b"cde", b"f"]
+    mut at = 0
+    while at < len(chunks):
+        pool.conns[7].sent += len(chunks[at]) - pool.conns[7].sent
+        at += 1
+    return pool.conns[7].sent == 1
+
+
+# A compound assignment whose right side reads other entries of the same dictionary (FR70) builds as `x = x op e` does
+# and gives what it gives. Each was refused on main the same way (Z3, "a borrowed part of `server`").
+record Port:
+    out: bytes
+    sent: int
+    items: int[]
+
+
+record Dock:
+    ports: dict[int, Port]
+
+
+record Yard:
+    docks: dict[int, Dock]
+
+
+func dock_of() -> Dock:
+    mut dock = Dock(ports={})
+    dock.ports[7] = Port(out=b"abc", sent=1, items=[5, 6])
+    dock.ports[8] = Port(out=b"", sent=2, items=[10, 20])
+    dock.ports[9] = Port(out=b"zz", sent=4, items=[])
+    return dock
+
+
+func add_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += dock.ports[8].sent * len(dock.ports[id].out)
+    return dock.ports[id].sent
+
+
+func add_other_on_the_right(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += len(dock.ports[id].out) * dock.ports[8].sent
+    return dock.ports[id].sent
+
+
+func add_two_others(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += dock.ports[8].sent * dock.ports[9].sent + len(dock.ports[9].out)
+    return dock.ports[id].sent
+
+
+func add_keyed(mut dock: Dock, id: int, k: int) -> int:
+    dock.ports[id].sent += dock.ports[k].sent * len(dock.ports[id].out)
+    return dock.ports[id].sent
+
+
+func add_other_element(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += dock.ports[8].items[1] * len(dock.ports[id].out)
+    return dock.ports[id].sent
+
+
+func subtract_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent -= dock.ports[8].sent * len(dock.ports[id].out)
+    return dock.ports[id].sent
+
+
+func multiply_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent *= dock.ports[8].sent + len(dock.ports[id].out)
+    return dock.ports[id].sent
+
+
+func add_other_in_a_loop(mut dock: Dock, id: int, times: int) -> int:
+    mut i = 0
+    while i < times:
+        dock.ports[id].sent += dock.ports[8].sent * len(dock.ports[id].out)
+        i += 1
+    return dock.ports[id].sent
+
+
+func add_other_two_deep(mut yard: Yard, d: int, e: int, id: int) -> int:
+    yard.docks[d].ports[id].sent += yard.docks[e].ports[8].sent * len(yard.docks[d].ports[id].out)
+    return yard.docks[d].ports[id].sent
+
+
+func yard_of() -> Yard:
+    mut yard = Yard(docks={})
+    yard.docks[1] = dock_of()
+    yard.docks[2] = dock_of()
+    yard.docks[2].ports[8].sent = 3
+    return yard
+
+
+public func test_an_entry_field_adds_what_reads_another_entry() -> bool:
+    mut dock = dock_of()
+    return add_other(mut dock, 7) == 7 and dock.ports[8].sent == 2
+
+
+public func test_an_entry_field_adds_what_reads_another_entry_on_the_right() -> bool:
+    mut dock = dock_of()
+    return add_other_on_the_right(mut dock, 7) == 7
+
+
+public func test_an_entry_field_adds_what_reads_two_other_entries() -> bool:
+    mut dock = dock_of()
+    return add_two_others(mut dock, 7) == 11
+
+
+public func test_an_entry_field_adds_what_reads_an_entry_by_a_key_equal_to_its_own() -> bool:
+    mut dock = dock_of()
+    return add_keyed(mut dock, 7, 7) == 4
+
+
+public func test_an_entry_field_adds_what_reads_an_entry_by_another_key() -> bool:
+    mut dock = dock_of()
+    return add_keyed(mut dock, 7, 9) == 13
+
+
+public func test_an_entry_field_adds_a_list_element_of_another_entry() -> bool:
+    mut dock = dock_of()
+    return add_other_element(mut dock, 7) == 61 and dock.ports[8].items == [10, 20]
+
+
+public func test_an_entry_field_subtracts_and_multiplies_what_reads_another_entry() -> bool:
+    mut down = dock_of()
+    mut scaled = dock_of()
+    return subtract_other(mut down, 7) == -5 and multiply_other(mut scaled, 7) == 5
+
+
+public func test_a_loop_adds_to_an_entry_field_what_reads_another_entry() -> bool:
+    mut dock = dock_of()
+    return add_other_in_a_loop(mut dock, 7, 3) == 19
+
+
+public func test_a_field_two_entries_deep_adds_what_reads_another_entry() -> bool:
+    mut same = yard_of()
+    mut other = yard_of()
+    return add_other_two_deep(mut same, 1, 1, 7) == 7 and add_other_two_deep(mut other, 1, 2, 7) == 10
+
+
+# A compound assignment to an entry field whose right side calls a function (FR71) builds as `x = x op e` does and gives
+# what it gives. Each was refused on main the same way (Z3, "cannot schedule dict_set_value").
+func twice(n: int) -> int:
+    return n * 2
+
+
+func pair_sum(a: int, b: int) -> int:
+    return a + b
+
+
+func filled(n: int) -> bytes:
+    mut made = b""
+    mut i = 0
+    while i < n:
+        made = made + b"x"
+        i += 1
+    return made
+
+
+func out_len(port: Port) -> int:
+    return len(port.out)
+
+
+func add_called_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += twice(dock.ports[8].sent)
+    return dock.ports[id].sent
+
+
+func add_called_same(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += twice(dock.ports[id].sent)
+    return dock.ports[id].sent
+
+
+func add_called_two_others(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += pair_sum(dock.ports[8].sent, dock.ports[9].sent)
+    return dock.ports[id].sent
+
+
+func add_fresh_length(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += len(filled(dock.ports[8].sent))
+    return dock.ports[id].sent
+
+
+func add_lent_entry(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += out_len(dock.ports[9])
+    return dock.ports[id].sent
+
+
+func subtract_called_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent -= twice(dock.ports[8].sent)
+    return dock.ports[id].sent
+
+
+func add_called_in_a_loop(mut dock: Dock, id: int, times: int) -> int:
+    mut i = 0
+    while i < times:
+        dock.ports[id].sent += twice(dock.ports[8].sent) + i
+        i += 1
+    return dock.ports[id].sent
+
+
+func add_called_two_deep(mut yard: Yard, d: int, e: int, id: int) -> int:
+    yard.docks[d].ports[id].sent += twice(yard.docks[e].ports[8].sent)
+    return yard.docks[d].ports[id].sent
+
+
+public func test_an_entry_field_adds_a_call_on_another_entry() -> bool:
+    mut dock = dock_of()
+    return add_called_other(mut dock, 7) == 5 and dock.ports[8].sent == 2
+
+
+public func test_an_entry_field_adds_a_call_on_its_own_value() -> bool:
+    mut dock = dock_of()
+    return add_called_same(mut dock, 7) == 3
+
+
+public func test_an_entry_field_adds_a_call_on_two_other_entries() -> bool:
+    mut dock = dock_of()
+    return add_called_two_others(mut dock, 7) == 7
+
+
+public func test_an_entry_field_adds_the_length_of_fresh_bytes_a_call_made() -> bool:
+    mut dock = dock_of()
+    return add_fresh_length(mut dock, 7) == 3
+
+
+public func test_an_entry_field_adds_a_call_lent_another_entry() -> bool:
+    mut dock = dock_of()
+    return add_lent_entry(mut dock, 7) == 3 and dock.ports[9].out == b"zz"
+
+
+public func test_an_entry_field_subtracts_a_call_on_another_entry() -> bool:
+    mut dock = dock_of()
+    return subtract_called_other(mut dock, 7) == -3
+
+
+public func test_a_loop_adds_to_an_entry_field_a_call_on_another_entry() -> bool:
+    mut dock = dock_of()
+    return add_called_in_a_loop(mut dock, 7, 3) == 16
+
+
+public func test_a_field_two_entries_deep_adds_a_call_on_another_entry() -> bool:
+    mut same = yard_of()
+    mut other = yard_of()
+    return add_called_two_deep(mut same, 1, 1, 7) == 5 and add_called_two_deep(mut other, 1, 2, 7) == 7
+
+
+# A compound assignment to an entry field whose right side lends another entry `mut` (FR72) reads the receiver again after
+# the call, as `x = x op e` does, so the call's write to that entry is kept. Each was refused on main (Z3, "cannot
+# schedule a store", at the `mut` argument).
+func reset_port(mut port: Port) -> int:
+    port.sent = 50
+    return 3
+
+
+func add_reset_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += reset_port(mut dock.ports[8])
+    return dock.ports[id].sent
+
+
+func add_reset_same(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent += reset_port(mut dock.ports[id])
+    return dock.ports[id].sent
+
+
+func subtract_reset_other(mut dock: Dock, id: int) -> int:
+    dock.ports[id].sent -= reset_port(mut dock.ports[8])
+    return dock.ports[id].sent
+
+
+func add_reset_in_a_loop(mut dock: Dock, id: int, times: int) -> int:
+    mut i = 0
+    while i < times:
+        dock.ports[id].sent += reset_port(mut dock.ports[8])
+        i += 1
+    return dock.ports[id].sent
+
+
+func add_reset_two_deep(mut yard: Yard, d: int, e: int, id: int) -> int:
+    yard.docks[d].ports[id].sent += reset_port(mut yard.docks[e].ports[8])
+    return yard.docks[d].ports[id].sent
+
+
+public func test_an_entry_field_adds_a_call_given_another_entry_mut() -> bool:
+    mut dock = dock_of()
+    return add_reset_other(mut dock, 7) == 4 and dock.ports[8].sent == 50 and dock.ports[9].sent == 4
+
+
+public func test_an_entry_field_adds_a_call_given_its_own_entry_mut() -> bool:
+    mut dock = dock_of()
+    mut again = dock_of()
+    return add_reset_same(mut dock, 7) == 4 and dock.ports[8].sent == 2 and add_reset_same(mut again, 8) == 5
+
+
+public func test_an_entry_field_subtracts_a_call_given_another_entry_mut() -> bool:
+    mut dock = dock_of()
+    return subtract_reset_other(mut dock, 7) == -2 and dock.ports[8].sent == 50
+
+
+public func test_a_loop_adds_to_an_entry_field_a_call_given_another_entry_mut() -> bool:
+    mut dock = dock_of()
+    return add_reset_in_a_loop(mut dock, 7, 3) == 10 and dock.ports[8].sent == 50
+
+
+public func test_a_field_two_entries_deep_adds_a_call_given_another_entry_mut() -> bool:
+    mut same = yard_of()
+    mut other = yard_of()
+    const first = add_reset_two_deep(mut same, 1, 1, 7) == 4 and same.docks[1].ports[8].sent == 50
+    const second = add_reset_two_deep(mut other, 1, 2, 7) == 4 and other.docks[2].ports[8].sent == 50
+    return first and second and other.docks[1].ports[8].sent == 2
+
+
+# The same when the dictionary is the local itself or a `mut` parameter (FR74): the receiver is the root, so it is read
+# again as the local's current value. Each was refused on main (E_CORE_UNSUPPORTED, "write to a receiver's place while its
+# arguments are evaluated").
+func ports_of() -> dict[int, Port]:
+    mut ports: dict[int, Port] = {}
+    ports[7] = Port(out=b"abc", sent=1, items=[5, 6])
+    ports[8] = Port(out=b"", sent=2, items=[10, 20])
+    return ports
+
+
+func add_reset_in_a_parameter(mut ports: dict[int, Port], id: int, other: int) -> int:
+    ports[id].sent += reset_port(mut ports[other])
+    return ports[id].sent
+
+
+public func test_an_entry_field_of_a_local_dictionary_adds_a_call_given_another_entry_mut() -> bool:
+    mut ports = ports_of()
+    const id = 7
+    ports[id].sent += reset_port(mut ports[8])
+    return ports[7].sent == 4 and ports[8].sent == 50 and ports[7].items[1] == 6
+
+
+public func test_an_entry_field_of_a_local_dictionary_adds_a_call_given_its_own_entry_mut() -> bool:
+    mut ports = ports_of()
+    const id = 8
+    ports[id].sent -= reset_port(mut ports[id])
+    return ports[8].sent == -1 and ports[7].sent == 1
+
+
+public func test_an_entry_field_of_a_dictionary_parameter_adds_a_call_given_an_entry_mut() -> bool:
+    mut ports = ports_of()
+    mut again = ports_of()
+    const other = add_reset_in_a_parameter(mut ports, 7, 8) == 4 and ports[8].sent == 50
+    return other and add_reset_in_a_parameter(mut again, 8, 8) == 5 and again[7].sent == 1

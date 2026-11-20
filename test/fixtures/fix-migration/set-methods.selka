@@ -1,0 +1,18 @@
+record Roster:
+    names: set[str]
+
+
+func main(out: Stream) -> int:
+    mut seen: set[int] = {1, 2}
+    const other: set[int] = {2, 3}
+    seen.add(4)
+    seen.discard(1)
+    print(out, len(seen.union(other)), len(seen.intersection(other)), len(seen.difference(other)))
+    print(out, len(seen.symmetric_difference(other)), seen.issubset(other), seen.issuperset(other), seen.isdisjoint(other))
+    mut names: set[str] = {"a"}
+    const name = "b" + "c"
+    names.add(name)
+    mut roster = Roster(names={"x"})
+    roster.names.add("y")
+    print(out, len(names), len(roster.names))
+    return 0

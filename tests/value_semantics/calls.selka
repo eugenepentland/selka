@@ -1,0 +1,48 @@
+record Carrier:
+    items: int[]
+
+
+func touch(mut target: int[], source: int[]) -> int:
+    append(mut target, len(source))
+    return len(source)
+
+
+func calls_reversed(source: int[], mut target: int[]) -> int:
+    append(mut target, len(source))
+    return len(source)
+
+
+func touch_both(mut first: int[], mut second: int[], source: int[]) -> int:
+    append(mut first, len(source))
+    append(mut second, len(source))
+    return len(source)
+
+
+# spec-case: VALUE-SEMANTICS-5
+public func test_a_mut_argument_before_or_after_its_snapshot() -> bool:
+    mut first = [1, 2]
+    const first_snapshot = copy(first)
+    mut seen_first = touch(mut first, first_snapshot)
+    mut second = [1, 2]
+    const second_snapshot = copy(second)
+    mut seen_second = calls_reversed(second_snapshot, mut second)
+    return seen_first == 2 and seen_second == 2 and first == [1, 2, 2] and second == [1, 2, 2]
+
+
+# `touch_both(mut items, mut items, items)` is E_SINGLE_OWNER_OVERLAP
+# (MUT-EXCLUSIVE-1); a read-only snapshot of one `mut` operand stays legal.
+# spec-case: VALUE-SEMANTICS-5
+public func test_two_mut_operands_and_a_snapshot_of_one_of_them() -> bool:
+    mut items = [1, 2]
+    mut others = [7]
+    const items_snapshot = copy(items)
+    mut seen = touch_both(mut items, mut others, items_snapshot)
+    return seen == 2 and items == [1, 2, 2] and others == [7, 2]
+
+
+# spec-case: VALUE-SEMANTICS-5
+public func test_a_mut_record_field_is_redirected_after_a_later_snapshot() -> bool:
+    mut holder = Carrier(items=[1, 2])
+    const items_snapshot = copy(holder.items)
+    mut seen = touch(mut holder.items, items_snapshot)
+    return seen == 2 and holder.items == [1, 2, 2]

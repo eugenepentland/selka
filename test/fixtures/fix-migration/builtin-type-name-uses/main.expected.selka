@@ -1,0 +1,9 @@
+import shape
+
+
+func main(out: Stream) -> int:
+    const unit = shape.make(3)
+    const held = shape.Holder(units=[copy(unit)])
+    const none = shape.maybe(0)
+    print(out, unit.number, len(held.units), none is None)
+    return 0

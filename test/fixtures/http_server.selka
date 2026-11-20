@@ -1,0 +1,77 @@
+# The integration test rewrites the endpoint literal below to a free loopback port.
+import byte_builder
+import http
+import network
+
+func main(net: Network, out: Stream) -> int:
+    with net.host("127.0.0.1:18080") as scoped:
+        match network.listen(scoped):
+            case ok(owned):
+                mut listener = own owned
+                return serve_once(mut listener, out)
+            case err(code):
+                print(out, "listen failed", code, network.describe(code))
+                return 1
+
+
+func serve_once(mut listener: network.Listener, out: Stream) -> int:
+    match accept_resource[network.Accepted](listener):
+        case Ok(connection):
+            return handle(own connection, out)
+        case Err(code):
+            print(out, "accept failed", code, network.describe(code))
+            return 2
+
+
+func handle(own connection: network.Connection, out: Stream) -> int:
+    mut live = own connection
+    mut raw = byte_builder.create()
+    while True:
+        match read_resource[network.Read[65536]](live):
+            case Ok(chunk):
+                mut index = 0
+                # FR-205: no FixedArray[u8, N] -> bytes conversion; append octet by octet
+                while index < int(chunk.length):
+                    if not byte_builder.append_byte(mut raw, int(chunk.bytes[index])):
+                        return 3
+                    index += 1
+                match http.parse_request(byte_builder.finish(raw)):
+                    case Ok(request):
+                        if http.path(request) != "/":
+                            return reply(mut live, 404, "Not Found", b"not found\n", out)
+                        return reply(mut live, 200, "OK", b"hello from selka\n", out)
+                    case Err(error):
+                        match error:
+                            case Incomplete:
+                                if chunk.eof:
+                                    return reply(mut live, 400, "Bad Request", b"incomplete request\n", out)
+                            case Malformed(value=_):
+                                return reply(mut live, 400, "Bad Request", b"bad request\n", out)
+                            case BodyTooLarge(value=_):
+                                return reply(mut live, 400, "Bad Request", b"bad request\n", out)
+                            case HeaderTooLarge(value=_):
+                                return reply(mut live, 400, "Bad Request", b"bad request\n", out)
+                            case Unsupported(value=_):
+                                return reply(mut live, 501, "Not Implemented", b"unsupported request\n", out)
+                            case UnsupportedVersion(value=_):
+                                return reply(mut live, 501, "Not Implemented", b"unsupported request\n", out)
+            case Err(code):
+                print(out, "read failed", code)
+                return 4
+
+
+func reply(mut connection: network.Connection, status: int, reason: str, body: bytes, out: Stream) -> int:
+    mut headers: http.Header[] = [http.Header(name="Content-Type", value="text/plain"), http.Header(name="Connection", value="close")]
+    mut response = http.Response(version="HTTP/1.1", status=status, reason=copy(reason), headers=own headers, body=copy(body))
+    match http.write_response(response):
+        case Ok(wire):
+            match write_resource[network.Written](connection, wire):
+                case Ok(count):
+                    print(out, "wrote", count)
+                    return 0
+                case Err(code):
+                    print(out, "write failed", code)
+                    return 5
+        case Err(error):
+            print(out, "encode failed", http.message(error))
+            return 6

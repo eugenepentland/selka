@@ -1,0 +1,228 @@
+# One process plays both ends of a loopback connection through one poller and moves messages across it at the sizes
+# where `recv` changes how it reads (the first 256 bytes of an answer, then 2,048 more or up to the 16,396 the longest
+# answer holds) and where `RECV_LIMIT` ends one read: 0, 1, 243 to 245, 2,292 and 2,293, 16,383 to 16,385. Every
+# message goes both ways and is compared byte for byte; a peer that closes midway, and one that closes with bytes it
+# never read, end it. A test replaces the port and compares the transcript, under the leak check.
+import byte_builder
+import network
+
+func main(net: Network, out: Stream) -> int:
+    with net.host("127.0.0.1:18091") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return probe(own poller, scoped, out)
+            case err(code):
+                print(out, "open failed", code)
+                return 1
+
+
+# `count` bytes that repeat every 251, so a byte in the wrong place is a byte that differs.
+func pattern(count: int) -> bytes:
+    mut builder = byte_builder.create()
+    for index in range(0, count):
+        _ = byte_builder.append_byte(mut builder, (index * 7 + 3) % 251)
+    return byte_builder.finish(builder)
+
+
+# Wait until the listener reports the dialled connection, accept it, and name it in `accepted`.
+func settle(own poller: network.Poller, mut accepted: int) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut tries = 0
+    accepted = 0
+    while accepted == 0 and tries < 100:
+        live = network.wait(own live, 100, mut ready)
+        live = network.accept(own live, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            accepted = outcome.value
+        tries += 1
+    live = network.wait(own live, 100, mut ready)
+    return live
+
+
+# Offer all of `data` to connection `id`, waiting when the kernel takes no more; `taken` counts what it took.
+func push(own poller: network.Poller, id: int, data: bytes, mut taken: int) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut tries = 0
+    taken = 0
+    while taken < len(data) and tries < 1000:
+        live = network.send(own live, id, data, taken, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            taken += outcome.value
+        elif outcome.code == network.OUTCOME_WOULD_BLOCK:
+            live = network.wait(own live, 10, mut ready)
+        else:
+            tries = 1000
+        tries += 1
+    return live
+
+
+# Receive from connection `id` until `want` bytes are in `raw`. `agree` says whether every `recv` appended exactly the
+# number of bytes it reported.
+func collect(own poller: network.Poller, id: int, want: int, mut raw: byte_builder.Builder, mut agree: bool) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut tries = 0
+    agree = True
+    while len(raw.buffer) < want and tries < 1000:
+        const before = len(raw.buffer)
+        live = network.recv(own live, id, mut raw, mut outcome)
+        if outcome.code == network.OUTCOME_OK:
+            if len(raw.buffer) - before != outcome.value:
+                agree = False
+        elif outcome.code == network.OUTCOME_WOULD_BLOCK:
+            live = network.wait(own live, 100, mut ready)
+        else:
+            tries = 1000
+        tries += 1
+    return live
+
+
+# What a `recv` on connection `id` answers when nothing is left to read: its code, and how many bytes it appended.
+func idle_recv(own poller: network.Poller, id: int, mut appended: int, mut code: int) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut raw = byte_builder.create()
+    live = network.recv(own live, id, mut raw, mut outcome)
+    appended = len(raw.buffer)
+    code = outcome.code
+    return live
+
+
+# A blocking client reads what the poller sent into an array of 64: the bytes sent, then zeros to the end of it.
+func client_zeros(own client: network.Connection, out: Stream) -> network.Connection:
+    mut live = own client
+    match read_resource[network.Read[64]](live):
+        case Ok(chunk):
+            mut dirty = 0
+            for index in range(int(chunk.length), 64):
+                if chunk.bytes[index] != 0:
+                    dirty += 1
+            print(out, "client read", chunk.length, "bytes, nonzero after them", dirty)
+        case Err(code):
+            print(out, "client read failed", code)
+    return live
+
+
+# One message of `size` bytes from `first` to `second` and back, each end compared with what was sent.
+func exchange_at(own poller: network.Poller, first: int, second: int, size: int, out: Stream) -> network.Poller:
+    mut live = own poller
+    const message = pattern(size)
+    mut taken = 0
+    mut agree = True
+    mut there = byte_builder.create()
+    live = push(own live, first, message, mut taken)
+    live = collect(own live, second, size, mut there, mut agree)
+    const arrived = byte_builder.finish(there)
+    mut back = byte_builder.create()
+    mut taken_back = 0
+    mut agree_back = True
+    live = push(own live, second, arrived, mut taken_back)
+    live = collect(own live, first, size, mut back, mut agree_back)
+    mut rest = 0
+    mut code = 0
+    live = idle_recv(own live, second, mut rest, mut code)
+    print(out, "size", size, "sent", taken, "received", len(arrived), "same", arrived == message, agree, "back", len(byte_builder.finish(back)), "same", byte_builder.finish(back) == message, agree_back, "then nothing", rest, code)
+    return live
+
+
+# Every size, both ways.
+func every_size(own poller: network.Poller, first: int, second: int, out: Stream) -> network.Poller:
+    mut live = own poller
+    for size in [0, 1, 243, 244, 245, 2292, 2293, 16383, 16384, 16385]:
+        live = exchange_at(own live, first, second, size, out)
+    return live
+
+
+# The peer `first` sends 20,000 bytes and closes: all of it arrives, then the end of the stream with nothing appended,
+# and a send to the gone peer fails at last (the first may be taken, the reset it brings fails the next).
+func peer_closes(own poller: network.Poller, first: int, second: int, out: Stream) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut taken = 0
+    mut agree = True
+    mut raw = byte_builder.create()
+    live = push(own live, first, pattern(20000), mut taken)
+    live = network.close_connection(own live, first, mut outcome)
+    live = collect(own live, second, 20000, mut raw, mut agree)
+    print(out, "peer closed after", taken, "received", len(raw.buffer), "same", byte_builder.finish(raw) == pattern(20000), agree)
+    mut appended = 0
+    mut code = network.OUTCOME_WOULD_BLOCK
+    mut tries = 0
+    while code == network.OUTCOME_WOULD_BLOCK and tries < 100:
+        live = idle_recv(own live, second, mut appended, mut code)
+        tries += 1
+    print(out, "after the peer closed: appended and code", appended, code)
+    mut failed = False
+    mut shipped = 0
+    for _ in range(100):
+        live = push(own live, second, pattern(8192), mut shipped)
+        if shipped < 8192:
+            failed = True
+    print(out, "send to a closed peer fails", failed)
+    live = network.close_connection(own live, second, mut outcome)
+    return live
+
+
+# `reader` closes after one read of a long message, the rest unread: the sender's next sends fail the same way.
+func reader_closes(own poller: network.Poller, sender: int, reader: int, out: Stream) -> network.Poller:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut taken = 0
+    mut one = byte_builder.create()
+    live = push(own live, sender, pattern(40000), mut taken)
+    live = network.wait(own live, 100, mut ready)
+    live = network.recv(own live, reader, mut one, mut outcome)
+    print(out, "one read of a message of", taken, "took", len(one.buffer) == outcome.value, outcome.value <= network.RECV_LIMIT, outcome.value > 0)
+    live = network.close_connection(own live, reader, mut outcome)
+    mut cut = False
+    mut shipped = 0
+    for _ in range(100):
+        live = push(own live, sender, pattern(8192), mut shipped)
+        if shipped < 8192:
+            cut = True
+    print(out, "send after the reader closed", cut)
+    live = network.close_connection(own live, sender, mut outcome)
+    return live
+
+
+func probe(own poller: network.Poller, scoped: Network, out: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut accepted = 0
+    network.dial(mut live, scoped, mut outcome)
+    const first = outcome.value
+    live = settle(own live, mut accepted)
+    const second = accepted
+    print(out, "connected", first > 0, second > 0)
+    live = every_size(own live, first, second, out)
+    match network.connect(scoped):
+        case ok(dialed):
+            mut client = own dialed
+            mut taken = 0
+            live = settle(own live, mut accepted)
+            live = push(own live, accepted, b"hello", mut taken)
+            client = client_zeros(own client, out)
+            live = network.close_connection(own live, accepted, mut outcome)
+            match network.close(own client):
+                case ok(_):
+                    pass
+                case err(failure):
+                    print(out, "client close failed", failure.code)
+                    return 3
+        case err(code):
+            print(out, "connect failed", code)
+            return 2
+    live = peer_closes(own live, first, second, out)
+    network.dial(mut live, scoped, mut outcome)
+    const sender = outcome.value
+    live = settle(own live, mut accepted)
+    live = reader_closes(own live, sender, accepted, out)
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "open at end", outcome.extra)
+    return 0

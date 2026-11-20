@@ -1,0 +1,16 @@
+test: 19 test(s) selected by filter: "poller"
+test: SLOW  6.94s  network_poller_cli_test.test.a poller sends a response larger than the socket buffers over several wake-ups to a slow reader
+All 19 tests passed.
+test: test wall 44.96s; slowest over 50ms:
+test:   6.94s  network_poller_cli_test.test.a poller sends a response larger than the socket buffers over several wake-ups to a slow reader
+test:   4.65s  network_poller_cli_test.test.connect_within bounds a connect, a read and a write, and a connection's idle timeout is its own
+test:   3.58s  network_poller_cli_test.test.a poller closes an idle client after the timeout it asked for, and sixty idle clients with it, and still answers a new one
+test:   3.43s  network_poller_cli_test.test.a client poller holds fifteen hundred outgoing connections with a message each way, under only a connect grant
+test:   3.09s  network_poller_cli_test.test.a poller dials, serves the connections it dialled, and reports a refused or unanswered dial
+test:   2.61s  network_poller_cli_test.test.a poller with a full connection table leaves clients in the backlog until a slot frees
+test:   2.60s  network_poller_cli_test.test.F-29's service and client in two tasks are refused, and one loop that accepts and dials finishes
+test:   2.17s  network_poller_cli_test.test.a poller and a client in one process: the poller reports every step
+test:   1.85s  network_poller_cli_test.test.a poller holds no descriptor after fifteen hundred connect, echo and close cycles
+test:   1.79s  network_poller_cli_test.test.a program started after a poller opened gets the soft descriptor limit this program started with
+test: PASS — 19 passed
+test: RESULT {"passed":19,"failed":0,"skipped":0}

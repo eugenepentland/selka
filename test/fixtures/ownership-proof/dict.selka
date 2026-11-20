@@ -1,0 +1,14 @@
+# A dictionary entry taken and removed in one step, with and without a default.
+import dicts
+
+func pop_text(mut values: dict[int, str[]], key: int) -> int:
+    const got = dicts.pop_default(mut values, key, ["none"])
+    return len(got)
+
+
+func main(out: Stream) -> int:
+    mut values: dict[int, str[]] = {1: ["a" + str(1)], 2: ["b" + str(2)]}
+    const present = pop_text(mut values, 1)
+    const missing = pop_text(mut values, 9)
+    print(out, present, missing, len(values))
+    return 0

@@ -1,0 +1,162 @@
+func mark_count(mut log: int[]) -> u64:
+    append(mut log, 1)
+    return 18446744073709551615u64
+
+
+func mark_bytes(mut log: int[]) -> bytes:
+    append(mut log, 2)
+    return b""
+
+
+func list_count(mut values: int[]) -> u64:
+    append(mut values, 9)
+    return 2u64
+
+
+public func generic_empty[T](tag: T, count: u64) -> str:
+    _ = tag
+    return repeat_sequence_334("", count)
+
+
+func main() -> int:
+    mut log: int[] = []
+    const huge: u64 = 18446744073709551615
+    const empty: int[] = []
+    if repeat_sequence_504("", huge) != "" or repeat_sequence_543(mark_count(mut log), mark_bytes(mut log)) != b"":
+        return 1
+    if len(repeat_sequence_641(empty, huge)) != 0 or generic_empty(0, huge) != "":
+        return 2
+    mut text = "ab"
+    const repeated_source_754 = copy(text)
+    const repeated_count_754 = 3u64
+    text = repeat_sequence_754(repeated_source_754, repeated_count_754)
+    mut data = b"ab"
+    const repeated_source_926 = copy(data)
+    const repeated_count_926 = 3u64
+    data = repeat_sequence_926(repeated_source_926, repeated_count_926)
+    mut values: int[] = []
+    const repeated_source_1104 = copy(values)
+    const repeated_count_1104 = huge
+    values = repeat_sequence_1104(repeated_source_1104, repeated_count_1104)
+    mut snapshots = [1]
+    const repeated_source_1288 = copy(snapshots)
+    const repeated_count_1288 = list_count(mut snapshots)
+    snapshots = repeat_sequence_1288(repeated_source_1288, repeated_count_1288)
+    if snapshots != [1, 1]:
+        return 4
+    const narrow: u8 = 2
+    mut narrow_values = [5]
+    const repeated_source_925 = copy(narrow_values)
+    mut repeated_count_925 = int(narrow)
+    if len(repeated_source_925) == 0:
+        repeated_count_925 = 0
+    narrow_values = []
+    for _ in range(repeated_count_925):
+        for repeated_element_925 in repeated_source_925:
+            append(mut narrow_values, copy(repeated_element_925))
+    if narrow_values != [5, 5]:
+        return 3
+    if text == "ababab" and data == b"ababab" and len(values) == 0 and log == [1, 2]:
+        return 42
+    return 0
+
+
+func repeat_sequence_334(repeat_source_334: str, repeat_times_334: u64) -> str:
+    if repeat_times_334 == 0u64 or len(repeat_source_334) == 0:
+        return ""
+    mut repeat_output_334 = copy(repeat_source_334)
+    mut repeat_copies_334 = 1u64
+    while repeat_copies_334 <= repeat_times_334 - repeat_copies_334:
+        repeat_output_334 = repeat_output_334 + repeat_output_334
+        repeat_copies_334 *= 2u64
+    if repeat_copies_334 < repeat_times_334:
+        repeat_output_334 = repeat_output_334 + repeat_output_334[:len(repeat_source_334) * int(repeat_times_334 - repeat_copies_334)]
+    return repeat_output_334
+
+
+func repeat_sequence_504(repeat_source_504: str, repeat_times_504: u64) -> str:
+    if repeat_times_504 == 0u64 or len(repeat_source_504) == 0:
+        return ""
+    mut repeat_output_504 = copy(repeat_source_504)
+    mut repeat_copies_504 = 1u64
+    while repeat_copies_504 <= repeat_times_504 - repeat_copies_504:
+        repeat_output_504 = repeat_output_504 + repeat_output_504
+        repeat_copies_504 *= 2u64
+    if repeat_copies_504 < repeat_times_504:
+        repeat_output_504 = repeat_output_504 + repeat_output_504[:len(repeat_source_504) * int(repeat_times_504 - repeat_copies_504)]
+    return repeat_output_504
+
+
+func repeat_sequence_543(repeat_times_543: u64, repeat_source_543: bytes) -> bytes:
+    if repeat_times_543 == 0u64 or len(repeat_source_543) == 0:
+        return b""
+    mut repeat_output_543 = copy(repeat_source_543)
+    mut repeat_copies_543 = 1u64
+    while repeat_copies_543 <= repeat_times_543 - repeat_copies_543:
+        repeat_output_543 = repeat_output_543 + repeat_output_543
+        repeat_copies_543 *= 2u64
+    if repeat_copies_543 < repeat_times_543:
+        repeat_output_543 = repeat_output_543 + repeat_output_543[:len(repeat_source_543) * int(repeat_times_543 - repeat_copies_543)]
+    return repeat_output_543
+
+
+func repeat_sequence_641[RepeatType_641: copy + storable](repeat_source_641: RepeatType_641[], repeat_times_641: u64) -> RepeatType_641[]:
+    mut repeat_output_641: RepeatType_641[] = []
+    if len(repeat_source_641) == 0:
+        return repeat_output_641
+    mut repeat_index_641 = 0u64
+    while repeat_index_641 < repeat_times_641:
+        for repeat_element_641 in repeat_source_641:
+            append(mut repeat_output_641, copy(repeat_element_641))
+        repeat_index_641 += 1u64
+    return repeat_output_641
+
+
+func repeat_sequence_754(repeat_source_754: str, repeat_times_754: u64) -> str:
+    if repeat_times_754 == 0u64 or len(repeat_source_754) == 0:
+        return ""
+    mut repeat_output_754 = copy(repeat_source_754)
+    mut repeat_copies_754 = 1u64
+    while repeat_copies_754 <= repeat_times_754 - repeat_copies_754:
+        repeat_output_754 = repeat_output_754 + repeat_output_754
+        repeat_copies_754 *= 2u64
+    if repeat_copies_754 < repeat_times_754:
+        repeat_output_754 = repeat_output_754 + repeat_output_754[:len(repeat_source_754) * int(repeat_times_754 - repeat_copies_754)]
+    return repeat_output_754
+
+
+func repeat_sequence_926(repeat_source_926: bytes, repeat_times_926: u64) -> bytes:
+    if repeat_times_926 == 0u64 or len(repeat_source_926) == 0:
+        return b""
+    mut repeat_output_926 = copy(repeat_source_926)
+    mut repeat_copies_926 = 1u64
+    while repeat_copies_926 <= repeat_times_926 - repeat_copies_926:
+        repeat_output_926 = repeat_output_926 + repeat_output_926
+        repeat_copies_926 *= 2u64
+    if repeat_copies_926 < repeat_times_926:
+        repeat_output_926 = repeat_output_926 + repeat_output_926[:len(repeat_source_926) * int(repeat_times_926 - repeat_copies_926)]
+    return repeat_output_926
+
+
+func repeat_sequence_1104[RepeatType_1104: copy + storable](repeat_source_1104: RepeatType_1104[], repeat_times_1104: u64) -> RepeatType_1104[]:
+    mut repeat_output_1104: RepeatType_1104[] = []
+    if len(repeat_source_1104) == 0:
+        return repeat_output_1104
+    mut repeat_index_1104 = 0u64
+    while repeat_index_1104 < repeat_times_1104:
+        for repeat_element_1104 in repeat_source_1104:
+            append(mut repeat_output_1104, copy(repeat_element_1104))
+        repeat_index_1104 += 1u64
+    return repeat_output_1104
+
+
+func repeat_sequence_1288[RepeatType_1288: copy + storable](repeat_source_1288: RepeatType_1288[], repeat_times_1288: u64) -> RepeatType_1288[]:
+    mut repeat_output_1288: RepeatType_1288[] = []
+    if len(repeat_source_1288) == 0:
+        return repeat_output_1288
+    mut repeat_index_1288 = 0u64
+    while repeat_index_1288 < repeat_times_1288:
+        for repeat_element_1288 in repeat_source_1288:
+            append(mut repeat_output_1288, copy(repeat_element_1288))
+        repeat_index_1288 += 1u64
+    return repeat_output_1288

@@ -1,0 +1,622 @@
+import buffers
+import math
+
+# The ten decimal digits, in value order.
+public func digits() -> str:
+    return "0123456789"
+
+
+# One rejected string operation, carrying the human-readable reason.
+public enum Error:
+    Invalid(value: str)
+    Overflow(value: str)
+
+
+# The human-readable reason carried by a rejected string operation.
+public func message(error: Error) -> str:
+    match error:
+        case Invalid(value=detail):
+            return copy(detail)
+        case Overflow(value=detail):
+            return copy(detail)
+
+
+# The thirty-six digits used by bases up to 36, in value order.
+func base_digits() -> str:
+    return "0123456789abcdefghijklmnopqrstuvwxyz"
+
+
+# The twenty-six lowercase ASCII letters followed by the uppercase ones.
+public func letters() -> str:
+    return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+# The ASCII characters treated as whitespace by this module.
+public func whitespace() -> str:
+    return " \t\n\r"
+
+
+# Position of a single character inside a table, or -1 when it is absent.
+func table_index(table: str, character: str) -> int:
+    for index, entry in enumerate(strings.chars(table)):
+        if entry == character:
+            return index
+    return 0 - 1
+
+
+# Whether every character belongs to a table, rejecting the empty text.
+func all_in(table: str, text: str) -> bool:
+    if strings.char_count(text) == 0:
+        return False
+    for character in strings.chars(text):
+        if table_index(table, character) < 0:
+            return False
+    return True
+
+
+# Whether the text is nonempty and made only of decimal digits.
+public builtin func is_digit(text: str) -> bool
+
+
+# Whether the text is nonempty and made only of ASCII letters.
+public builtin func is_alpha(text: str) -> bool
+
+
+# Whether the text is nonempty and made only of ASCII letters and digits.
+public func is_alnum(text: str) -> bool:
+    return all_in(letters() + digits(), text)
+
+
+# Whether the text is nonempty and made only of spaces, tabs and line breaks.
+public builtin func is_space(text: str) -> bool
+
+
+# Whether the text begins with a prefix; every text starts with the empty one. With
+# `start` or `end`, whether the octets in `[start, end)` begin with it (an `end` past the
+# length is the length; a negative bound traps `R_TEXT_BOUNDS`).
+public builtin func starts_with(text: str, prefix: str, start: int = 0, end: int = 9223372036854775807) -> bool
+
+
+# Whether the octets of the text from byte offset `at` begin with a prefix, asked without slicing: an offset inside a
+# multi-byte scalar or past the end answers False where `starts_with(text[at:], prefix)` would trap `R_TEXT_BOUNDARY`,
+# so a scanner may ask at every octet. At the end only the empty prefix matches; a negative offset traps `R_TEXT_BOUNDS`.
+public func starts_with_at(text: str, prefix: str, at: int) -> bool:
+    if at >= len(text):
+        return at == len(text) and len(prefix) == 0
+    const octet = text[at]
+    if 128 <= octet < 192:
+        return False
+    return starts_with(text, prefix, at)
+
+
+# The longest prefix of the text that is at most `limit` octets and ends where a character ends, as a view of the
+# text: nothing is copied, and `copy(...)` makes it independent storage. A limit inside a multi-byte character backs off
+# to where that character starts, so the cut never traps `R_TEXT_BOUNDARY` as `text[0:limit]` does; a limit below the
+# first character's width, or a negative one, gives the empty text, and a limit at or past the length gives the whole
+# text. `strings.char_slice` cuts at a count of characters instead.
+public func cut_octets(text: str, limit: int) -> str from text:
+    if limit >= len(text):
+        return text
+    if limit <= 0:
+        return text[0:0]
+    mut end = limit
+    while end > 0 and 128 <= text[end] < 192:
+        end -= 1
+    return text[0:end]
+
+
+# Whether the text ends with a suffix; every text ends with the empty one. With `start` or `end`, whether the octets in
+# `[start, end)` end with it (an `end` past the length is the length; a negative bound traps `R_TEXT_BOUNDS`).
+public builtin func ends_with(text: str, suffix: str, start: int = 0, end: int = 9223372036854775807) -> bool
+
+
+# The byte offset of the first occurrence of `needle` inside the octets `[start, end)`, counted from the text's start,
+# or -1 when absent: the bounded search `find` answers as an option. The library's own; programs call `find`.
+builtin func find_offset(text: str, needle: str, start: int, end: int) -> int
+
+
+# The byte offset of the last occurrence of `needle` inside the octets `[start, end)`, or -1 when absent: the bounded
+# search `rfind` answers as an option. The library's own; programs call `rfind`.
+builtin func rfind_offset(text: str, needle: str, start: int, end: int) -> int
+
+
+# The byte offset where a nonempty needle first occurs, or None when absent. A
+# scalar position is `strings.char_find`'s answer. With `start` or `end`, the first
+# occurrence inside the octets `[start, end)`, still counted from the text's start (an
+# `end` past the length is the length; a negative bound traps `R_TEXT_BOUNDS`).
+public func find(text: str, needle: str, start: int = 0, end: int = 9223372036854775807) -> int?:
+    mut offset = find_offset(text, needle, start, end)
+    if offset < 0:
+        return None
+    return Some(offset)
+
+
+# The number of nonoverlapping occurrences of `needle`, counted from the front. The empty
+# needle occurs at every boundary between octets, so it answers `len(text) + 1`, as
+# Python's `count` does. With `start` or `end`, the occurrences inside the octets
+# `[start, end)` (an `end` past the length is the length; a negative bound traps `R_TEXT_BOUNDS`).
+public builtin func count(text: str, needle: str, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# Text without leading whitespace, as a view of the text after its leading
+# whitespace: the native trim borrows the octets it keeps, so nothing is copied.
+public builtin func lstrip(text: str) -> str from text
+
+
+# Text without trailing whitespace, as a view of the text before its trailing
+# whitespace.
+public builtin func rstrip(text: str) -> str from text
+
+
+# Text without leading or trailing whitespace, as a view of the text between them.
+public builtin func strip(text: str) -> str from text
+
+
+# Text without the leading or trailing characters that `characters` holds, as a new
+# text; `strip` removes whitespace and lends a view instead. The set is read as octets,
+# so a multi-byte character in it removes each of its octets.
+public builtin func strip_chars(text: str, characters: str) -> str
+
+
+# Text without the leading characters that `characters` holds, as a new text.
+public builtin func lstrip_chars(text: str, characters: str) -> str
+
+
+# Text without the trailing characters that `characters` holds, as a new text.
+public builtin func rstrip_chars(text: str, characters: str) -> str
+
+
+# Text padded on the left with `0` to at least `width` octets, after a leading `+` or
+# `-` sign, as Python's `zfill`: a text already that wide is copied unchanged.
+public builtin func zfill(text: str, width: int) -> str
+
+
+# The lines of `text`: a line feed, a carriage return or a carriage return fed by
+# a line feed ends a line, and a final terminator adds no empty line. This is
+# Python's `splitlines` rule.
+public builtin func lines(text: str) -> str[]
+
+
+# The text's words: maximal runs of non-whitespace, with the whitespace dropped.
+# This is `split()` with no separator in Python: leading, trailing and repeated
+# whitespace contribute no empty word, and every word is an independent copy. The
+# whitespace is the six ASCII octets space, tab, line feed, vertical tab, form feed and
+# carriage return; no other character separates words.
+public builtin func words(text: str) -> str[]
+
+
+# Text repeated `times` times, or empty text when `times` is zero or negative. The copies double: `out` holds
+# `copies` copies and is appended to itself while that stays within `times`, and
+# one prefix of it tops up the rest, so building the answer copies each octet
+# of it at most three times instead of copying the growing answer once per copy.
+public func repeat(text: str, times: int) -> str:
+    if times <= 0 or strings.char_count(text) == 0:
+        return ""
+    mut out = copy(text)
+    mut copies = 1
+    while copies <= times - copies:
+        out = out + out
+        copies = copies * 2
+    if copies < times:
+        out = out + strings.char_slice(out, None, strings.char_count(text) * (times - copies))
+    return out
+
+
+# An append-only accumulator for text assembled from pieces. The buffer keeps
+# spare capacity, so `append` copies each piece into it and `finish` copies the
+# result once; no piece allocates a string of its own.
+public record Builder:
+    buffer: byte_buffer
+
+
+# An empty text builder.
+public func builder() -> Builder:
+    mut empty: int[] = []
+    return Builder(buffer=byte_buffer(empty))
+
+
+# Append `text` to the builder, writing its UTF-8 straight into the buffer's
+# spare capacity. The argument is borrowed, so no copy of it is made first.
+public func append(mut out: Builder, text: str):
+    buffers.append_utf8(mut out.buffer, text)
+
+
+# The text appended so far, as an independent snapshot. Later appends do not
+# change an earlier result, and the builder remains usable. Only text can enter
+# a builder, so the snapshot is always valid UTF-8.
+public func finish(out: Builder) -> str:
+    match decode(out.buffer):
+        case Ok(text):
+            return text
+        case Err(_):
+            assert False
+            return ""
+
+
+# The parts joined into one text with `separator` between each two, as Python's
+# `separator.join(parts)`: no separator before the first part or after the last,
+# and empty text for no parts. The answer is sized once and each part copied into it.
+public builtin func join(parts: str[], separator: str) -> str
+
+
+# Text padded on the left with a single fill character up to a width.
+public func pad_left(text: str, width: int, fill: str) -> str fails Error:
+    if strings.char_count(fill) != 1:
+        fail Error.Invalid(value="pad fill must be exactly one character")
+    if strings.char_count(text) >= width:
+        return copy(text)
+    const padding = repeat(fill, width - strings.char_count(text))
+    return padding + text
+
+
+# Text padded on the right with a single fill character up to a width.
+public func pad_right(text: str, width: int, fill: str) -> str fails Error:
+    if strings.char_count(fill) != 1:
+        fail Error.Invalid(value="pad fill must be exactly one character")
+    if strings.char_count(text) >= width:
+        return copy(text)
+    const padding = repeat(fill, width - strings.char_count(text))
+    return text + padding
+
+
+# Text with ASCII lowercase letters replaced by their uppercase forms.
+public builtin func upper(text: str) -> str
+
+
+# Text with ASCII uppercase letters replaced by their lowercase forms.
+public builtin func lower(text: str) -> str
+
+
+# Every nonoverlapping occurrence of a nonempty needle replaced by a substitute.
+public func substitute(text: str, needle: str, insertion: str) -> str fails Error:
+    if strings.char_count(needle) == 0:
+        fail Error.Invalid(value="replacement needle must not be empty")
+    return replace(text, needle, insertion)
+
+
+# Signed decimal text converted to an integer, rejecting overflow and junk.
+public func to_int(text: str) -> int?:
+    return parse_int(text)
+
+
+# Text converted through the pinned float grammar shared with byte parsing.
+public func to_float(text: str) -> float?:
+    return parse_float(text)
+
+
+# Integer rendered in a base between 2 and 36 using lowercase digits.
+public func format_int(value: int, base: int) -> str fails Error:
+    if base < 2 or base > 36:
+        fail Error.Invalid(value="integer base must be between 2 and 36")
+    if value == 0:
+        return "0"
+    mut magnitude = 0u64
+    if value < 0:
+        magnitude = u64(0 - (value + 1)) + 1u64
+    else:
+        magnitude = u64(value)
+    mut radix = u64(base)
+    mut out = ""
+    while magnitude > 0u64:
+        out = strings.char_at(base_digits(), i64(magnitude % radix)) + out
+        magnitude = magnitude // radix
+    if value < 0:
+        return "-" + out
+    return out
+
+
+# The exact rounding error of `a * b`, whose rounded value is `product`: Dekker's
+# two-product over Veltkamp halves, exact while no partial product overflows.
+func product_error(a: float, b: float, product: float) -> float:
+    mut a_split = 134217729.0 * a
+    mut a_high = a_split - (a_split - a)
+    mut a_low = a - a_high
+    mut b_split = 134217729.0 * b
+    mut b_high = b_split - (b_split - b)
+    mut b_low = b - b_high
+    return ((a_high * b_high - product) + a_high * b_low + a_low * b_high) + a_low * b_low
+
+
+# Float rendered with a fixed number of decimals, rounding the exact binary value and
+# sending exact halves away from zero.
+public func format_float(value: float, decimals: int) -> str fails Error:
+    if decimals < 0 or decimals > 17:
+        fail Error.Invalid(value="decimal count must be between 0 and 17")
+    if math.is_nan(value):
+        return "nan"
+    if math.is_inf(value):
+        if value < 0.0:
+            return "-inf"
+        return "inf"
+    mut magnitude = math.fabs(value)
+    mut scale = math.pow(10.0, decimals)
+    mut product = magnitude * scale
+    mut scaled = 0
+    if product < 4503599627370496.0:
+        mut shifted = round(product)
+        # A product that rounded onto an exact half (2.675 * 100.0 == 267.5) is only a tie
+        # if the unrounded product is one; below it, the value rounds toward zero.
+        if shifted - product == 0.5 and product_error(magnitude, scale, product) < 0.0:
+            shifted = shifted - 1.0
+        scaled = int(shifted)
+    else:
+        # From 2^52 up the product is already an integer, so the multiply's rounding error
+        # (up to half a unit) decides the last digit, and the float product has lost it.
+        # Round product plus that exact error to the nearest integer, halves going up.
+        if product >= 9223372036854775808.0:
+            fail Error.Overflow(value="value is too large to render with fixed decimals")
+        const rounding_error = product_error(magnitude, scale, product)
+        mut adjust = floor(rounding_error)
+        const rest = rounding_error - adjust
+        if rest >= 0.5:
+            adjust = adjust + 1.0
+        scaled = int(product) + int(adjust)
+    mut body = try format_int(scaled, 10)
+    if decimals == 0:
+        if value < 0.0 and scaled != 0:
+            return "-" + body
+        return body
+    body = try pad_left(body, decimals + 1, "0")
+    mut whole = copy(strings.char_slice(body, 0, strings.char_count(body) - decimals))
+    mut fraction = copy(strings.char_slice(body, strings.char_count(body) - decimals, strings.char_count(body)))
+    if value < 0.0 and scaled != 0:
+        return "-" + whole + "." + fraction
+    return whole + "." + fraction
+
+
+# Add one to decimal digits: "199" becomes "200" and "999" becomes "1000".
+func increment_digits(text: str) -> str:
+    mut index = strings.char_count(text) - 1
+    while index >= 0 and strings.char_at(text, index) == "9":
+        index -= 1
+    if index < 0:
+        return "1" + repeat("0", strings.char_count(text))
+    const table = digits()
+    const next_digit = table_index(table, strings.char_at(text, index)) + 1
+    return strings.char_slice(text, None, index) + strings.char_slice(table, next_digit, next_digit + 1) + repeat("0", strings.char_count(text) - index - 1)
+
+
+# Float rendered with a fixed number of decimals by rounding its shortest round-trip digits
+# half up, as Zig's `{d:.N}` does: the digits `str(value)` prints are cut at the Nth decimal
+# and the first dropped digit decides, so `format_decimal(6.475, 2)` is "6.48" where
+# `format_float` rounds the exact binary value and answers "6.47". The sign is kept, even
+# on a result that rounds to zero ("-0.00").
+public func format_decimal(value: float, decimals: int) -> str fails Error:
+    if decimals < 0 or decimals > 17:
+        fail Error.Invalid(value="decimal count must be between 0 and 17")
+    if math.is_nan(value):
+        return "nan"
+    if math.is_inf(value):
+        if value < 0.0:
+            return "-inf"
+        return "inf"
+    mut shortest = str(value)
+    mut negative = False
+    if starts_with(shortest, "-"):
+        negative = True
+        shortest = copy(strings.char_slice(shortest, 1, None))
+    const point = strings.char_find(shortest, ".")
+    mut whole = copy(strings.char_slice(shortest, None, point))
+    mut fraction = copy(strings.char_slice(shortest, point + 1, None))
+    if strings.char_count(fraction) > decimals:
+        mut kept = whole + strings.char_slice(fraction, None, decimals)
+        if strings.char_at(fraction, decimals) >= "5":
+            kept = increment_digits(kept)
+        whole = copy(strings.char_slice(kept, None, strings.char_count(kept) - decimals))
+        fraction = copy(strings.char_slice(kept, strings.char_count(kept) - decimals, None))
+    else:
+        fraction = fraction + repeat("0", decimals - strings.char_count(fraction))
+    mut out = own whole
+    if decimals > 0:
+        out = out + "." + fraction
+    if negative:
+        out = "-" + out
+    return out
+
+
+# The shortest round-trip digits of a finite nonzero float, as scientific text: `1.5e+16`, `1e-05`, `5e-324`. The digits are
+# the ones `str(magnitude)` prints in full; the exponent has a sign and at least two digits.
+func scientific_text(magnitude: float) -> str:
+    const plain = str(magnitude)
+    const point = strings.char_find(plain, ".")
+    const all = strings.char_slice(plain, None, point) + strings.char_slice(plain, point + 1, None)
+    mut start = 0
+    while strings.char_at(all, start) == "0":
+        start += 1
+    mut end = strings.char_count(all)
+    while strings.char_at(all, end - 1) == "0":
+        end -= 1
+    const significant = copy(strings.char_slice(all, start, end))
+    mut exponent = point - start - 1
+    mut out = copy(strings.char_slice(significant, 0, 1))
+    if strings.char_count(significant) > 1:
+        out = out + "." + strings.char_slice(significant, 1, None)
+    mut sign = "+"
+    if exponent < 0:
+        sign = "-"
+        exponent = 0 - exponent
+    return out + "e" + sign + zfill(str(exponent), 2)
+
+
+# Float rendered as the shortest text that reads back as the same float (`parse_float(text) == Some(value)`), with an exponent where
+# the plain form would be long, by Python's `repr` rule: from 1e-4 up to but not including 1e16 it is `str(value)` (plain
+# digits, a `.0` on a whole number); outside that range it is scientific: the shortest digits with a point after the first
+# when there are more, `e`, a sign and at least two exponent digits (`1e+16`, `1.5e-05`, `5e-324`). Go's `'g', -1` and `jq`
+# agree on the small side; Go starts its exponent at 1e6, `jq` when the zeros after the digits pass 15. Zero keeps its sign
+# (`-0.0`), and an infinity or NaN is `str`'s text.
+public func format_shortest(value: float) -> str:
+    if math.is_nan(value) or math.is_inf(value):
+        return str(value)
+    const magnitude = math.fabs(value)
+    if magnitude == 0.0 or (magnitude >= 1e-4 and magnitude < 1e16):
+        return str(value)
+    if value < 0.0:
+        return "-" + scientific_text(magnitude)
+    return scientific_text(magnitude)
+
+
+# Unicode scalar value of a single-character text, or `Err` for any other length.
+public func ord(text: str) -> int fails Error:
+    if strings.char_count(text) != 1:
+        fail Error.Invalid(value="ord requires exactly one character")
+    mut encoded = encode(text)
+    mut first = encoded[0]
+    if first < 128:
+        return first
+    const width: int
+    if first < 224:
+        width = 2
+    elif first < 240:
+        width = 3
+    else:
+        width = 4
+    const mask: int
+    if first < 224:
+        mask = 31
+    elif first < 240:
+        mask = 15
+    else:
+        mask = 7
+    if len(encoded) != width:
+        fail Error.Invalid(value="ord requires exactly one character")
+    mut value = bit_and(first, mask)
+    for index in range(1, width):
+        value = value * 64 + bit_and(encoded[index], 63)
+    return value
+
+
+# One-character text for a Unicode scalar value. Surrogates and code points past
+# `0x10FFFF` are rejected rather than encoded as replacement bytes.
+public func chr(code: int) -> str fails Error:
+    if code < 0:
+        fail Error.Invalid(value="chr requires a non-negative code point")
+    if code > 1114111:
+        fail Error.Overflow(value="chr requires a code point at most 0x10FFFF")
+    if 55296 <= code <= 57343:
+        fail Error.Invalid(value="chr rejects surrogate code points")
+    const values: int[]
+    if code < 128:
+        values = [code]
+    elif code < 2048:
+        values = [192 + code // 64, 128 + code % 64]
+    elif code < 65536:
+        values = [224 + code // 4096, 128 + (code // 64) % 64, 128 + code % 64]
+    else:
+        values = [240 + code // 262144, 128 + (code // 4096) % 64, 128 + (code // 64) % 64, 128 + code % 64]
+    match decode(bytes(values)):
+        case Ok(text):
+            return text
+        case Err(_):
+            fail Error.Invalid(value="chr could not encode the code point")
+
+
+# The UTF-8 bytes of `text`. Encoding a `str` cannot fail, because a `str` is
+# already valid UTF-8; decoding is the direction that can.
+public builtin func encode(text: str) -> bytes
+
+
+# The text a byte string holds, or `Err("invalid UTF-8 in byte string")` when the
+# bytes are not valid UTF-8.
+public builtin func decode(data: bytes) -> str fails str
+
+
+# The byte offset of the earliest of `needles` found in `text`, or None when none
+# is present. Ties keep the earliest offset, whichever needle found it.
+public func find_any(text: str, needles: str[]) -> int?:
+    mut best = 0 - 1
+    for needle in needles:
+        const at = find(text, needle).unwrap_or(0 - 1)
+        if at >= 0 and (best < 0 or at < best):
+            best = at
+    if best < 0:
+        return None
+    return Some(best)
+
+
+# Split on `separator`, keeping every piece including empty ones. An empty
+# separator traps with `R_EMPTY_SEPARATOR`, where Python's `split` raises.
+public builtin func split(text: str, separator: str) -> str[]
+
+
+# Replace every occurrence of `needle` with `insertion`. An empty needle traps with
+# `R_EMPTY_SEPARATOR`; `substitute` is the checked form that answers a `Result`.
+public builtin func replace(text: str, needle: str, insertion: str) -> str
+
+
+# The byte offset of the last occurrence of `needle`, or None when absent — the
+# same option and convention as `find`. A scalar position is `strings.char_rfind`. With
+# `start` or `end`, the last occurrence inside the octets `[start, end)`.
+public func rfind(text: str, needle: str, start: int = 0, end: int = 9223372036854775807) -> int?:
+    mut offset = rfind_offset(text, needle, start, end)
+    if offset < 0:
+        return None
+    return Some(offset)
+
+
+# The byte offset of the first occurrence of `needle`, trapping with
+# `R_SUBSTRING_NOT_FOUND` when it is absent; `find` is the checked form. The
+# name is the compiler's own `text_index`: a bare `index` would be shadowed by
+# the loop counter every module already writes. With `start` or `end`, the first
+# occurrence inside the octets `[start, end)`.
+public builtin func text_index(text: str, needle: str, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# The byte offset of the last occurrence of `needle`, trapping with
+# `R_SUBSTRING_NOT_FOUND` when it is absent; `rfind` is the checked form. With `start`
+# or `end`, the last occurrence inside the octets `[start, end)`.
+public builtin func text_rindex(text: str, needle: str, start: int = 0, end: int = 9223372036854775807) -> int
+
+
+# The number of Unicode scalars in `value`; `len(value)` counts octets.
+public builtin func char_count(value: str) -> int
+
+
+# The one-scalar text at scalar position `index`, trapping outside `0 <= index < char_count(value)`.
+public builtin func char_at(value: str, index: int) -> str
+
+
+# An owned copy of the scalars from position `start` up to `end`. `None` is the start or the end of the text, and a
+# position past either end is clamped to it.
+public builtin func char_slice(value: str, start: int?, end: int?) -> str
+
+
+# The scalars from `start` up to `end` taking every `step`-th one, as `char_slice` reads its endpoints.
+public builtin func char_stride(value: str, start: int?, end: int?, step: int) -> str
+
+
+# A loop source: `for c in strings.chars(value):` reads each scalar of `value` as a one-scalar `str`, in order. A call
+# anywhere else is refused (`E_TEXT_ITERATION`).
+public builtin func chars(value: str) -> str[]
+
+
+# A loop source: `for b in strings.bytes(value):` reads each octet of `value` as an `int`, in order. A call anywhere else
+# is refused (`E_TEXT_ITERATION`).
+public builtin func bytes(value: str) -> int[]
+
+
+# The scalar position of the first `needle` in `value`, or -1. `start` and `end` bound the search in scalars.
+public builtin func char_find(value: str, needle: str, start: int? = None, end: int? = None) -> int
+
+
+# The scalar position of the last `needle` in `value`, or -1, within the scalar window `start` to `end`.
+public builtin func char_rfind(value: str, needle: str, start: int? = None, end: int? = None) -> int
+
+
+# The scalar position of the first `needle` in `value`, trapping `R_SUBSTRING_NOT_FOUND` when it is absent.
+public builtin func char_index(value: str, needle: str, start: int? = None, end: int? = None) -> int
+
+
+# The scalar position of the last `needle` in `value`, trapping `R_SUBSTRING_NOT_FOUND` when it is absent.
+public builtin func char_rindex(value: str, needle: str, start: int? = None, end: int? = None) -> int
+
+
+# The number of non-overlapping occurrences of `needle` in `value` within the scalar window `start` to `end`.
+public builtin func char_count_of(value: str, needle: str, start: int? = None, end: int? = None) -> int
+
+
+# Whether the scalar window `start` to `end` of `value` starts with `prefix`.
+public builtin func char_startswith(value: str, prefix: str, start: int? = None, end: int? = None) -> bool
+
+
+# Whether the scalar window `start` to `end` of `value` ends with `suffix`.
+public builtin func char_endswith(value: str, suffix: str, start: int? = None, end: int? = None) -> bool

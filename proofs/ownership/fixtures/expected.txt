@@ -1,0 +1,163 @@
+fixtures/accepted.cert ok_alloc_drop accept
+fixtures/accepted.cert ok_view accept
+fixtures/accepted.cert ok_owned_return accept
+fixtures/accepted.cert ok_borrowed_return accept
+fixtures/accepted.cert ok_loop accept
+fixtures/accepted.cert ok_join accept
+fixtures/accepted.cert ok_trap_join accept
+fixtures/accepted.cert ok_trap_meet accept
+fixtures/accepted.cert ok_trap_consume accept
+fixtures/accepted.cert ok_trap_chain accept
+fixtures/accepted.cert ok_emptied_construct accept
+fixtures/accepted.cert ok_repeated_test accept
+fixtures/accepted.cert ok_cursor accept
+fixtures/accepted.cert ok_stack accept
+fixtures/accepted.cert ok_stack_scalar accept
+fixtures/accepted.cert ok_stack_phi accept
+fixtures/accepted.cert ok_undef_phi accept
+fixtures/accepted.cert ok_void_call accept
+fixtures/accepted.cert ok_void_undef accept
+fixtures/accepted.cert ok_scalar_results accept
+fixtures/accepted.cert ok_call_projection accept
+fixtures/accepted.cert ok_selection_phi accept
+fixtures/accepted.cert ok_dead_phi accept
+fixtures/accepted.cert ok_owner_through_phi accept
+fixtures/accepted.cert ok_construct_loan accept
+fixtures/accepted.cert ok_construct_read_slot accept
+fixtures/accepted.cert ok_construct_read_listed accept
+fixtures/accepted.cert ok_record_take accept
+fixtures/accepted.cert ok_two_slots accept
+fixtures/accepted.cert ok_list_set_released_none accept
+fixtures/accepted.cert ok_list_set_released_old accept
+fixtures/accepted.cert ok_list_pop accept
+fixtures/accepted.cert ok_list_pop_tail accept
+fixtures/accepted.cert ok_dict_remove accept
+fixtures/accepted.cert ok_emptied accept
+fixtures/accepted.cert ok_guarded_take accept
+fixtures/accepted.cert ok_guarded_value accept
+fixtures/accepted.cert ok_pruned_edge accept
+fixtures/accepted.cert ok_slot_view accept
+fixtures/accepted.cert ok_slot_view_other_slot accept
+fixtures/accepted.cert ok_loan_holder accept
+fixtures/accepted.cert ok_loan_holder_other_slot accept
+fixtures/accepted.cert ok_named_unit accept
+fixtures/accepted.cert ok_dict_remove_taken accept
+fixtures/accepted.cert ok_group accept
+fixtures/accepted.cert ok_group_borrowed accept
+fixtures/accepted.cert ok_group_slot accept
+fixtures/accepted.cert ok_group_two_lends accept
+fixtures/accepted.cert ok_group_branch accept
+fixtures/accepted.cert ok_group_branch_trap accept
+fixtures/accepted.cert ok_group_phi accept
+fixtures/accepted.cert ok_trap_group accept
+fixtures/accepted.cert ok_lend_before_trap accept
+fixtures/accepted.cert ok_trap_param accept
+fixtures/accepted.cert ok_trap_take_abandoned accept
+fixtures/accepted.cert ok_trap_holder_abandoned accept
+fixtures/accepted.cert ok_trap_root_dropped_after accept
+fixtures/accepted.cert ok_abandon_branch_chain accept
+fixtures/accepted.cert ok_program_call accept
+fixtures/accepted.cert ok_call_take_scalar accept
+fixtures/accepted.cert ok_call_void accept
+fixtures/accepted.cert ok_call_from accept
+fixtures/accepted.cert ok_indirect_call accept
+fixtures/j1.cert bad_j1 reject J1 b0 0
+fixtures/j1.cert bad_j1_parent reject J1 b0 1
+fixtures/j1.cert bad_views_not_read reject J1 b0 2
+fixtures/j1.cert bad_views_not_construct reject J1 b0 1
+fixtures/j1.cert bad_lend_not_owned reject J1 b0 1
+fixtures/j1.cert bad_lend_three_reads reject J1 b0 2
+fixtures/j1.cert bad_lend_order reject J1 b0 2
+fixtures/j1.cert bad_lend_consumes reject J1 b0 2
+fixtures/j1.cert bad_lent_on_fresh reject J1 b0 1
+fixtures/j1.cert bad_abandon_not_pred reject J1 b1 -
+fixtures/j1.cert bad_abandon_repeated reject J1 b1 -
+fixtures/j1.cert bad_abandon_unsorted reject J1 b1 -
+fixtures/j1.cert bad_call_entry reject J1 b0 1
+fixtures/j1.cert bad_call_kind reject J1 b0 1
+fixtures/j1.cert bad_call_arity reject J1 b0 1
+fixtures/j1.cert bad_call_scalar reject J1 b0 1
+fixtures/j1.cert bad_call_result_owned reject J1 b0 0
+fixtures/j1.cert bad_call_void_owner reject J1 b0 0
+fixtures/j1.cert bad_call_from reject J1 b0 1
+fixtures/j1.cert bad_callee_table_ids reject J1 b- -
+fixtures/j1.cert bad_callee_table_name reject J1 b- -
+fixtures/j1.cert bad_callee_table_from reject J1 b- -
+fixtures/j2.cert bad_j2_leak reject J2 b0 1
+fixtures/j2.cert bad_j2_double reject J2 b0 2
+fixtures/j2.cert bad_j2_join reject J2 b1 1
+fixtures/j2.cert bad_undef_edge_live reject J2 b1 0
+fixtures/j2.cert bad_trap_twice reject J2 b3 1
+fixtures/j2.cert bad_loop_head_forgets reject J2 b5 0
+fixtures/j2.cert bad_group_not_ended reject J2 b0 5
+fixtures/j2.cert bad_group_dropped reject J2 b0 5
+fixtures/j2.cert bad_group_join_result reject J2 b0 5
+fixtures/j2.cert bad_group_stored reject J2 b0 5
+fixtures/j2.cert bad_trap_group reject J2 b1 0
+fixtures/j2.cert bad_trap_holder reject J2 b1 0
+fixtures/j2.cert bad_trap_take reject J2 b1 1
+fixtures/j2.cert bad_trap_join_unlisted reject J2 b1 1
+fixtures/j2.cert bad_trap_group_abandoned reject J2 b1 0
+fixtures/j2.cert bad_abandon_outside_region reject J2 b0 1
+fixtures/j2.cert bad_abandon_not_live reject J2 b0 2
+fixtures/j2.cert bad_abandon_scalar reject J2 b0 0
+fixtures/j2.cert bad_abandon_phi_operand reject J2 b0 1
+fixtures/j3.cert bad_read_named_unit reject J3 b0 1
+fixtures/j3.cert bad_j3 reject J3 b0 2
+fixtures/j3.cert bad_trap_meet reject J3 b3 0
+fixtures/j3.cert bad_trap_chain reject J3 b3 0
+fixtures/j4.cert bad_call_projection reject J4 b0 4
+fixtures/j4.cert bad_selection_phi reject J4 b3 1
+fixtures/j4.cert bad_owner_through_phi reject J4 b1 1
+fixtures/j4.cert bad_construct_loan reject J4 b0 4
+fixtures/j4.cert bad_emptied_owner_dropped reject J4 b0 5
+fixtures/j4.cert bad_emptied_construct_view reject J4 b0 4
+fixtures/j4.cert bad_abandoned_view_read reject J4 b1 0
+fixtures/j4.cert bad_slot_view_after_take reject J4 b0 3
+fixtures/j4.cert bad_loan_holder_owner reject J4 b0 3
+fixtures/j4.cert bad_loan_holder_take reject J4 b0 3
+fixtures/j4.cert bad_loan_holder_phi reject J4 b1 0
+fixtures/j4.cert bad_holder_read_after_emptied reject J4 b0 3
+fixtures/j4.cert bad_lender_dropped reject J4 b0 5
+fixtures/j4.cert bad_lender_pushed reject J4 b0 5
+fixtures/j4.cert bad_lender_slot_taken reject J4 b0 6
+fixtures/j4.cert bad_lender_aggregate_dropped reject J4 b0 6
+fixtures/j4.cert bad_group_branch_ret reject J4 b2 0
+fixtures/j4.cert bad_emptied_lender reject J4 b0 5
+fixtures/j4.cert bad_j4 reject J4 b0 3
+fixtures/j4.cert bad_stale reject J4 b1 0
+fixtures/j5.cert bad_j5 reject J5 b0 0
+fixtures/j5.cert bad_j5_ret reject J5 b0 0
+fixtures/j5.cert bad_j5_from reject J5 b0 1
+fixtures/j6.cert bad_j6 reject J6 b0 2
+fixtures/j6.cert bad_j6_same reject J6 b0 1
+fixtures/j6.cert bad_construct_read_emptied reject J6 b0 2
+fixtures/j6.cert bad_construct_read_caller reject J6 b0 0
+fixtures/j6.cert bad_construct_read_owned reject J6 b0 2
+fixtures/j6.cert bad_construct_read_two_owners reject J6 b0 4
+fixtures/j6.cert bad_construct_read_listed_not_view reject J6 b0 2
+fixtures/j7.cert bad_j7 reject J7 b0 1
+fixtures/j7.cert bad_j7_store reject J7 b0 1
+fixtures/j7.cert bad_j7_drop reject J7 b0 1
+fixtures/j7.cert bad_j7_element reject J7 b0 2
+fixtures/j8.cert bad_pending_at_ret reject J8 b0 2
+fixtures/j8.cert bad_take_twice reject J8 b0 2
+fixtures/j8.cert bad_store_not_pending reject J8 b0 3
+fixtures/j8.cert bad_drop_pending reject J8 b0 2
+fixtures/j8.cert bad_released_none_not_pending reject J8 b0 2
+fixtures/j8.cert bad_released_old_pending reject J8 b0 2
+fixtures/j8.cert bad_list_pop reject J8 b0 1
+fixtures/j8.cert bad_dict_remove_value reject J8 b0 2
+fixtures/j8.cert bad_phi_pending reject J8 b0 2
+fixtures/j8.cert bad_emptied_consumed reject J8 b0 3
+fixtures/j8.cert bad_emptied_taken_twice reject J8 b0 3
+fixtures/j8.cert bad_emptied_never_taken reject J8 b- -
+fixtures/j8.cert bad_guards_differ reject J8 b5 0
+fixtures/j8.cert bad_guarded_constant reject J8 b3 1
+fixtures/j8.cert bad_guarded_predicate reject J8 b3 1
+fixtures/j8.cert bad_dict_remove_taken_not_pending reject J8 b0 1
+fixtures/j8.cert bad_dict_remove_releases_taken reject J8 b0 2
+fixtures/j8.cert bad_trap_meet_take_later_listed reject J8 b3 0
+fixtures/j8.cert bad_j8 reject J8 b0 2
+fixtures/unchecked.cert unchecked_task_group unchecked task-group
+summary files=10 functions=162 accept=63 reject=98 unchecked=1 errors=0

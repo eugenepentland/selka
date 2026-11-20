@@ -1,0 +1,7 @@
+# This module never writes `list` bare, so its public `list` is reached only as `c4.list()`.
+public func list() -> int:
+    return 9
+
+
+public func program() -> int:
+    return 9

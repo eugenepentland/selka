@@ -1,0 +1,41 @@
+# The monotonic reading and sleep of a Clock (the time module). A simulated clock keeps its own monotonic counter:
+# sleep moves it forward and so does the wall reading; a wall-clock step (advance) moves only the wall reading.
+import time
+
+public func test_a_simulated_monotonic_reading_starts_at_zero_and_sleep_moves_it() -> bool fails str:
+    mut clock = time.simulated_clock(time.from_unix_nanoseconds(1000))
+    time.sleep(clock, 250)
+    const wall = try time.now(clock)
+    return time.monotonic(clock) == 250 and wall.unix_nanoseconds == 1250
+
+
+public func test_a_wall_clock_step_back_does_not_move_the_monotonic_reading() -> bool fails str:
+    mut clock = time.simulated_clock(time.from_unix_nanoseconds(1000))
+    time.sleep(clock, 100)
+    const before = time.monotonic(clock)
+    try time.advance(clock, time.nanoseconds(-400))
+    const wall = try time.now(clock)
+    return time.monotonic(clock) == before and wall.unix_nanoseconds == 700
+
+
+public func test_a_zero_or_negative_sleep_waits_for_nothing() -> bool fails str:
+    mut clock = time.simulated_clock(time.from_unix_nanoseconds(5))
+    time.sleep(clock, 0)
+    time.sleep(clock, -30)
+    const wall = try time.now(clock)
+    return time.monotonic(clock) == 0 and wall.unix_nanoseconds == 5
+
+
+public func test_the_monotonic_reading_never_decreases_across_steps() -> bool fails str:
+    mut clock = time.simulated_clock(time.from_unix_nanoseconds(0))
+    mut last = time.monotonic(clock)
+    mut ok = True
+    for step in [40, -90, 15, -3, 60]:
+        if step < 0:
+            try time.advance(clock, time.nanoseconds(step))
+        else:
+            time.sleep(clock, step)
+        mut now = time.monotonic(clock)
+        ok = ok and now >= last
+        last = now
+    return ok and last == 115

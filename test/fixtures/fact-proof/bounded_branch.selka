@@ -1,0 +1,10 @@
+func bounded(x: int) -> int:
+    if x < 100:
+        if x >= 0:
+            return x * 2 + 1
+    return 0
+
+
+func main(args: str[], out: Stream) -> int:
+    print(out, bounded(len(args) * 5))
+    return 0

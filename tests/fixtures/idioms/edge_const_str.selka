@@ -1,0 +1,7 @@
+import strings
+
+const NAME: str = "hello"
+
+
+func main() -> int:
+    return strings.char_count(NAME)

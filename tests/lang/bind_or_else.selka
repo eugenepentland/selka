@@ -1,0 +1,247 @@
+import filesystem
+
+# `const x = f() else FAILURE:` unwraps an Option or a Result and leaves when it cannot. The statements after it are the
+# success arm of the `match` it stands for, so the names and the ownership are a match's.
+func read(n: int) -> int[] fails str:
+    if n < 0:
+        fail "negative"
+    return [n, n + 1]
+
+
+func lookup(n: int) -> int?:
+    if n == 0:
+        return None
+    return Some(n)
+
+
+func check(n: int) -> Unit fails str:
+    if n < 0:
+        fail "bad"
+    return
+
+
+# A Result: the failure binding exists only in the else block; the success name is visible after the declaration.
+func first(n: int) -> int:
+    const items = read(n) else Err(message):
+        return len(message)
+    return items[0] + len(items)
+
+
+public func test_a_result_binds_its_payload_or_runs_the_else_block() -> bool:
+    return first(3) == 5 and first(-1) == 8
+
+
+# An Option, with `None` spelled or left out, and two declarations in a row.
+func twice(n: int) -> int:
+    const a = lookup(n) else:
+        return -1
+    const b = lookup(a - 1) else None:
+        return -2
+    return a + b
+
+
+public func test_an_option_takes_none_or_a_bare_else() -> bool:
+    return twice(3) == 5 and twice(0) == -1 and twice(1) == -2
+
+
+# `_ =` binds nothing: the shape of a call that returns Unit or a value only its failure matters for.
+func checked(n: int) -> int:
+    _ = check(n) else Err(message):
+        return len(message)
+    return 0
+
+
+func discarded(n: int) -> int:
+    _ = lookup(n) else:
+        return 7
+    return 0
+
+
+public func test_the_discard_form_binds_nothing() -> bool:
+    return checked(-1) == 3 and checked(1) == 0 and discarded(0) == 7 and discarded(2) == 0
+
+
+# `Err(_)` discards the error; a scalar payload binds as a value.
+func discard_error(n: int) -> int:
+    const items = read(n) else Err(_):
+        return -1
+    return len(items)
+
+
+func scalar(n: int) -> int:
+    const value = lookup(n) else:
+        return 0
+    return value + 1
+
+
+public func test_err_can_discard_its_payload_and_a_scalar_binds_a_value() -> bool:
+    return discard_error(2) == 2 and discard_error(-2) == -1 and scalar(4) == 5 and scalar(0) == 0
+
+
+# `mut NAME` is a writable owner of the payload: the arm's own binding is read-only, so the declaration takes the payload
+# over with a second binding, `mut items = own items` for a payload with managed storage and a plain copy for a scalar.
+func grown(n: int) -> int:
+    mut items = read(n) else Err(_):
+        return -1
+    append(mut items, 100)
+    return len(items)
+
+
+func bumped(n: int) -> int:
+    mut count = lookup(n) else:
+        return 0
+    count += 10
+    return count
+
+
+public func test_mut_makes_a_writable_owner() -> bool:
+    return grown(3) == 3 and grown(-1) == -1 and bumped(2) == 12 and bumped(0) == 0
+
+
+# A type annotation takes the payload the same way.
+func annotated(n: int) -> int:
+    const items: int[] = read(n) else Err(_):
+        return -1
+    return len(items)
+
+
+public func test_an_annotation_is_checked_against_the_payload() -> bool:
+    return annotated(5) == 2 and annotated(-5) == -1
+
+
+# A named place stays borrowed until the last use of the name, as `const alias = place` would, not to the end of the block.
+func write_after_last_use() -> int:
+    mut maybe: int[]? = Some([1, 2, 3])
+    const items = maybe else:
+        return 0
+    const size = len(items)
+    maybe = None
+    if maybe is None:
+        return size
+    return 100
+
+
+public func test_a_place_is_released_after_the_last_use_of_the_name() -> bool:
+    return write_after_last_use() == 3
+
+
+# A writable owner needs an owned source; a copy of the place is one.
+func grown_copy(maybe: int[]?) -> int:
+    mut items = copy(maybe) else:
+        return 0
+    append(mut items, 1)
+    return len(items) + len(maybe.unwrap_or([]))
+
+
+public func test_mut_over_a_place_needs_a_copy() -> bool:
+    return grown_copy(Some([5])) == 3 and grown_copy(None) == 0
+
+
+# `continue` and `break` leave the loop's pass in the else block, and the rest of the block is the pass's own statements.
+func count_valid(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        const item = lookup(value) else:
+            continue
+        if item > 100:
+            break
+        total += 1
+    return total
+
+
+public func test_continue_and_break_in_the_else_block_and_after_it() -> bool:
+    return count_valid([1, 0, 2, 0, 3]) == 3 and count_valid([4, 500, 9]) == 1 and count_valid([]) == 0
+
+
+# A break in the rest of the block leaves the loop it is written in, not an outer one.
+func nested(rows: int[][]) -> int:
+    mut total = 0
+    for row in rows:
+        for value in row:
+            const item = lookup(value) else:
+                break
+            total += item
+        total += 100
+    return total
+
+
+public func test_nested_loops_keep_their_own_exits() -> bool:
+    return nested([[1, 2], [3, 0, 4], [5]]) == 1 + 2 + 100 + 3 + 100 + 5 + 100
+
+
+# A second declaration on the next line, a loop and a conditional return in the rest of the block all behave as written.
+func chain(values: int[]) -> int:
+    mut count = 0
+    const head = lookup(values[0]) else:
+        return -1
+    const tail = lookup(values[1]) else:
+        return -2
+    mut at = 0
+    while at < head:
+        count += tail
+        at += 1
+        if count > 50:
+            return count
+    return count
+
+
+public func test_a_chain_of_declarations_and_the_statements_after_them() -> bool:
+    return chain([3, 4]) == 12 and chain([0, 4]) == -1 and chain([3, 0]) == -2 and chain([20, 9]) == 54
+
+
+# The declaration is a statement of its block, so the block ends where it did: nothing after the declaration is lost, and
+# a declaration last in a block has an empty success arm.
+func last_in_block(n: int) -> int:
+    mut seen = 0
+    if n > 0:
+        const item = lookup(n) else:
+            return -1
+        seen = item
+    return seen + 1
+
+
+public func test_a_declaration_last_in_its_block_has_nothing_after_it() -> bool:
+    return last_in_block(5) == 6 and last_in_block(0) == 1
+
+
+# Generic bodies unwrap too.
+func present_or[T](value: T?, fallback: int) -> int:
+    _ = value else:
+        return fallback
+    return fallback + 1
+
+
+public func test_a_generic_function_can_unwrap() -> bool:
+    const five: int? = Some(5)
+    const none: int? = None
+    const word: str? = Some("a")
+    return present_or(five, 10) == 11 and present_or(none, 10) == 10 and present_or(word, 1) == 2
+
+
+# A `with` scope inside the rest of the block, and a declaration inside a `with` body: the resource is released on every exit.
+func report(fs: Filesystem, path: str) -> int:
+    const size = lookup(len(path)) else:
+        return 0
+    with fs.open(path, "r") as file:
+        const lines = file.readlines()
+        return len(lines) + size
+
+
+func counted(fs: Filesystem, path: str) -> int:
+    with fs.open(path, "r") as file:
+        const lines = file.readlines()
+        const count = lookup(len(lines)) else:
+            return -1
+        return count
+
+
+func contents(fs: Filesystem, path: str) -> int:
+    const body = fs.read_text(path) else Err(_):
+        return -1
+    return len(body)
+
+
+public func test_with_scopes_around_and_inside_a_declaration() -> bool:
+    mut fs = filesystem.memory()
+    _ = fs.write_text("log.txt", "a\nb\n")
+    return report(fs, "log.txt") == 2 + 7 and counted(fs, "log.txt") == 2 and contents(fs, "log.txt") == 4 and contents(fs, "missing.txt") == -1

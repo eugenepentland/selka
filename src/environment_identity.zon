@@ -1,0 +1,165 @@
+// The environment identity contract (ENV-IDENTITY-1, ENV-IDENTITY-2): the one
+// definition of which environment variables enter an identity and which ones a
+// child process receives. `src/environment_identity.zig` imports it at compile
+// time; `scripts/verification_environment.py` reads it with a strict parser.
+//
+//   keyed      NAME=VALUE enters every identity, guest and host, and the
+//              variable is passed on.
+//   host       NAME=VALUE enters host-tool identities only (the build graph's
+//              verdicts, Python drivers, the coordinator), never a guest test
+//              receipt; the variable is passed on.
+//   placement  passed on, never keyed: where content-addressed storage or
+//              diagnostics live, how many jobs run, which process runs a test.
+//   dropped    removed from children and absent from every key. A name that
+//              no entry matches is dropped too; these entries document the
+//              usual ones and override a shorter prefix of another class.
+//
+// An entry is an exact name or a prefix ending in `*`. Precedence: an exact
+// name beats every prefix, and among prefixes the longest wins. Each spelling
+// appears once across all four lists. Read docs/tooling/environment-identity.md
+// before adding a variable; the Python reader accepts only this subset of ZON
+// (comments, `.name = .{ "string", ... }`, trailing commas, no escapes).
+.{
+    .keyed = .{
+        // The compiler, the core runtime and the verification tools.
+        "MYL_*",
+        "SELKA_*",
+        // Reproducible-output switches of the C toolchain and archivers.
+        "SOURCE_DATE_EPOCH",
+        "ZERO_AR_DATE",
+        // Dynamic-loader overrides; a non-empty one also refuses receipts.
+        "LD_*",
+        // The C compiler and Zig toolchain inputs.
+        "CCC_OVERRIDE_OPTIONS",
+        "COMPILER_PATH",
+        "CPATH",
+        "C_INCLUDE_PATH",
+        "CPLUS_INCLUDE_PATH",
+        "GCC_EXEC_PREFIX",
+        "LIBRARY_PATH",
+        "OBJC_INCLUDE_PATH",
+        "ZIG",
+        "ZIG_LIB_DIR",
+        "ZIG_LIBC",
+    },
+    .host = .{
+        // Host tooling only: locale, time zone and Python interpreter settings
+        // change Python drivers and host tools, never a guest build or test.
+        "PYTHON*",
+        "LANG",
+        "LANGUAGE",
+        "LC_*",
+        "TZ",
+    },
+    .placement = .{
+        // Homes, scratch and the search path (tools are keyed by content).
+        "HOME",
+        "XDG_CACHE_HOME",
+        // `XDG_CONFIG_HOME` places configuration. `SELKA_NATIVE_APPROVALS` named the approvals file of the retired
+        // `selka native approve` (GH-3b): nothing reads it; it stays placement for one release so it keys nothing.
+        "XDG_CONFIG_HOME",
+        "SELKA_NATIVE_APPROVALS",
+        "XDG_RUNTIME_DIR",
+        "TMPDIR",
+        "PATH",
+        // Content-addressed stores.
+        "ZIG_LOCAL_CACHE_DIR",
+        "ZIG_GLOBAL_CACHE_DIR",
+        "SELKA_CORE_RUNTIME_CACHE",
+        "SELKA_COMPILER_SHARED_CACHE",
+        "SELKA_TEST_SHARED_CACHE",
+        "SELKA_STAGE_SHARED_CACHE",
+        "SELKA_CORE_TEST_CACHE",
+        // Which of the variables above a project's `selka.json` set, and from which file (FR8).
+        "SELKA_STORE_SETTINGS",
+        // The coordinator's shared verification evidence store.
+        "SELKA_VERIFICATION_SHARED_CACHE",
+        "SELKA_FRONTEND_CACHE",
+        "SELKA_COMPONENT_DIR",
+        // Parallelism and the process that runs a test.
+        "SELKA_JOBS",
+        "SELKA_UNIT_JOBS",
+        "SELKA_UNIT_SHARDS",
+        "SELKA_TEST_ISOLATE",
+        "SELKA_TEST_CHILDREN",
+        "SELKA_CORE_PARENT_TOOL_TICKET",
+        "SELKA_TEST_COMPILER",
+        "SELKA_TEST_COMPONENT_BUILDER",
+        // Build-slot admission and developer job sizing.
+        "SELKA_SLOT_DIR",
+        "SELKA_ADMISSION_*",
+        "SELKA_BUILD_SLOTS",
+        "SELKA_BUILD_MEM",
+        "SELKA_GATE_SLOTS",
+        "SELKA_GATE_MEM",
+        "SELKA_TIMING_MEM",
+        "SELKA_TIMING_CPUS",
+        "SELKA_SLOT_SETTLE",
+        "SELKA_SLOT_POLL",
+        "SELKA_DEV_JOBS",
+        "SELKA_DEV_MAXRSS",
+        // Diagnostics and scratch directories.
+        "SELKA_TEST_TELEMETRY_DIR",
+        "SELKA_VERIFICATION_TELEMETRY_DIR",
+        // Deadlines: how long a step or one test may run before it is killed.
+        // Placement, so changing a deadline never invalidates a receipt.
+        "SELKA_TEST_DEADLINE_SECONDS",
+        "SELKA_TEST_IDLE_SECONDS",
+        "SELKA_STEP_DEADLINE_SECONDS",
+        // Admission-time cache bounds (GiB; 0 turns one off).
+        "SELKA_ZIG_CACHE_CAP_GB",
+        "SELKA_CACHE_TIERS_CAP_GB",
+        "SELKA_TEST_CACHES_CAP_GB",
+        "SELKA_FRICTION_LOG",
+        // `all` lists every warning in full: what a command prints, never what it computes.
+        "SELKA_WARNINGS",
+        "SELKA_PROFILE_DIR",
+        "SELKA_S1_WORKDIR",
+        // The incremental engine's checks: verify mode's sampling and the shadow's switch and log change no result.
+        "SELKA_ENGINE_VERIFY",
+        "SELKA_ENGINE_SHADOW",
+        "SELKA_ENGINE_SHADOW_LOG",
+        "SELKA_ENGINE_SHADOW_TAG",
+        // The compiler's shadow (part 2): the front end's queries computed beside it and compared; off unless set.
+        "SELKA_ENGINE_SHADOW_COMPILER",
+        // The engine decides the modules' prepared keys (part 2, G2g): where a fact comes from, never what it is.
+        "SELKA_ENGINE_DECIDE_COMPILER",
+        // The engine keys lowering by its checked-body parts (part 2, G3g): how a function is found in the cache, never what it lowers to.
+        "SELKA_ENGINE_DECIDE_LOWERING",
+        // Pass stand-ins for modules whose summaries stand (part 2, G2k): whether the passes rerun, never what they find.
+        "SELKA_ENGINE_DECIDE_PASSES",
+        // How the front end reads stored syntax (part 2, G2l-3): whole, or as far as the declarations with the bodies filled when read. A
+        // result is the same either way (exactness against `--no-cache` is the contract), so no key may differ by it.
+        "SELKA_LAZY_SYNTAX",
+        // How the ownership validation of a session that keeps every tree finds a held proof (lane EM, stage 3): by the body's
+        // receipt, or (`0`) by its tree's reach digest. The verdicts are the same either way.
+        "SELKA_OWNERSHIP_RECEIPTS",
+        // How a test run reads its functions' facts (test-loop stage 4): by group records, or (`0`) each by its own record. The
+        // facts are the same either way.
+        "SELKA_TEST_FACT_GROUPS",
+        // How a test entry's stored report reads its module sources (test-loop stage 6): through their tokens, or (`0`) by
+        // their bytes. The report and every verdict are the same either way.
+        "SELKA_TEST_TOKEN_REPORTS",
+    },
+    .dropped = .{
+        "PWD",
+        "OLDPWD",
+        "SHLVL",
+        "_",
+        "TERM*",
+        "COLUMNS",
+        "LINES",
+        "USER",
+        "LOGNAME",
+        "DISPLAY",
+        "SSH_*",
+        "CODEX_*",
+        "CLAUDE*",
+        "ANTHROPIC*",
+        "OPENAI*",
+        "GIT_*",
+        "BASH_ENV",
+        "ENV",
+        "BASH_FUNC_*",
+    },
+}

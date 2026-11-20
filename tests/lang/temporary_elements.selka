@@ -1,0 +1,146 @@
+# An element of a new list (F-55): `TEMP[i]`, where TEMP is the list a call returns or a list literal, may be the value
+# of a binding, an assignment, a return, a store and an `own` argument. The element moves out of the list and the rest
+# of the list is dropped with it; the bounds trap is the index's own. A new dictionary's `TEMP[key]` moves its value out
+# the same way.
+import strings
+import temporary_elements_support as support
+import testing
+
+record Row:
+    name: str
+    tags: str[]
+
+
+# No case of this union is a default, so an element of it cannot be taken by leaving a default behind.
+enum Shape:
+    circle(label: str)
+    square(label: str, sides: int[])
+
+
+record Holder:
+    row: Row
+    note: str
+
+
+enum Slot:
+    full(rows: Row[])
+    empty
+
+
+func rows() -> Row[]:
+    return [Row(name="a", tags=["x"]), Row(name="b", tags=["y", "z"])]
+
+
+func shapes() -> Shape[]:
+    return [Shape.circle(label="c"), Shape.square(label="s", sides=[1, 2, 3, 4])]
+
+
+func notes() -> dict[str, str[]]:
+    mut out: dict[str, str[]] = {}
+    out["k"] = ["v", "w"]
+    return out
+
+
+func keep(own row: Row) -> str:
+    return own row.name
+
+
+func between(html: str, start: str, stop: str) -> str:
+    return strings.split(strings.split(html, start)[1], stop)[0]
+
+
+func last_of[T](own first: T, own second: T) -> T:
+    return [own first, own second][1]
+
+
+func checked(text: str) -> Row fails str:
+    if text == "":
+        fail "empty"
+    const row = rows()[1]
+    if text == "late":
+        fail "late: " + row.name
+    return row
+
+
+public func test_an_element_of_a_call_s_list_is_bound_and_returned() -> bool:
+    const row = rows()[1]
+    mut other = rows()[0]
+    assert other.name == "a"
+    other = rows()[1]
+    const piece = strings.split("a#b#c", "#")[2]
+    assert piece == "c"
+    assert row.tags == ["y", "z"]
+    return other.name == "b" and between("<p>[one]</p>", "[", "]") == "one"
+
+
+public func test_an_element_of_a_temporary_is_stored_and_given() -> bool:
+    mut kept: Row[] = [Row(name="first", tags=[])]
+    kept[0] = rows()[0]
+    append(mut kept, rows()[1])
+    mut holder = Holder(row=rows()[0], note=strings.split("n,m", ",")[1])
+    holder.row = rows()[1]
+    mut index: dict[str, Row] = {}
+    index["b"] = rows()[1]
+    const listed = [rows()[0], rows()[1]]
+    const named = keep(rows()[0])
+    assert kept[0].name == "a" and kept[1].name == "b"
+    assert holder.row.name == "b" and holder.note == "m"
+    assert len(listed) == 2
+    return named == "a" and index["b"].tags == ["y", "z"]
+
+
+public func test_an_element_of_a_literal_and_of_another_module_s_list_moves() -> bool:
+    const literal = [Row(name="L", tags=["t"])][0]
+    const part = support.parts()[1]
+    const maybe: Row? = Some(rows()[0])
+    assert literal.name == "L"
+    assert part.pins == ["3"]
+    match maybe:
+        case Some(found):
+            return found.name == "a"
+        case None:
+            return False
+
+
+public func test_an_element_without_a_default_moves_out_of_a_new_list() -> bool:
+    const shape = shapes()[1]
+    match shape:
+        case square(label=label, sides=sides):
+            return label == "s" and len(sides) == 4
+        case circle(label=_):
+            return False
+
+
+public func test_a_value_of_a_new_dictionary_moves_out() -> bool:
+    const values = notes()["k"]
+    return values == ["v", "w"]
+
+
+public func test_an_element_of_a_new_list_moves_through_a_generic_and_a_match_mut_arm() -> bool:
+    const text = last_of("x", "y")
+    const tags = last_of(["a"], ["b", "c"])
+    mut slot = Slot.full(rows=[])
+    match mut slot:
+        case full(rows=listed):
+            append(mut listed, rows()[1])
+        case empty:
+            pass
+    match slot:
+        case full(rows=listed):
+            assert listed[0].name == "b"
+        case empty:
+            return False
+    return text == "y" and len(tags) == 2
+
+
+public func test_a_failure_while_the_new_list_is_held_drops_it() -> bool:
+    match checked("late"):
+        case Ok(_):
+            return False
+        case Err(message):
+            assert message == "late: b"
+    match checked("ok"):
+        case Ok(row):
+            return row.name == "b"
+        case Err(_):
+            return False

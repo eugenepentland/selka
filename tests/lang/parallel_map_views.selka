@@ -1,0 +1,172 @@
+# Parallel map over a borrowed list (FR59, decision PARMAP): `parallel.map`, `map_results`, the `map_with` variants
+# and the `try` form lend a slice or a plain list parameter to their tasks as the view itself, with no copy, and a
+# text, bytes or list parameter given as a trailing argument is lent the same way. Each answer here is the one a direct
+# loop over the same elements gives; before FR59 every form but `try` (which copied) was refused with `E_SLICE_ESCAPES`.
+import parallel
+
+record Row:
+    name: str
+    cells: int[]
+
+
+record Bag:
+    items: int[]
+
+
+func double(x: int) -> int:
+    return x * 2
+
+
+func text_size(s: str) -> int:
+    return len(s)
+
+
+func weigh(row: Row) -> int:
+    return len(row.name) + len(row.cells)
+
+
+func add_up(xs: int[]) -> int:
+    mut total = 0
+    for x in xs:
+        total += x
+    return total
+
+
+func by_list(xs: int[]) -> int:
+    return add_up(parallel.map(xs, double))
+
+
+func through(xs: int[]) -> int:
+    return by_list(xs)
+
+
+func by_text(names: str[]) -> int:
+    return add_up(parallel.map(names, text_size))
+
+
+func by_rows(rows: Row[]) -> int:
+    return add_up(parallel.map(rows, weigh))
+
+
+func by_results(xs: int[]) -> int:
+    return len(parallel.map_results(xs, double))
+
+
+func with_list(i: int, l: int[]) -> int:
+    return i + len(l)
+
+
+func with_text(i: int, t: str) -> int:
+    return i * 100 + len(t)
+
+
+func with_bytes(i: int, b: bytes) -> int:
+    return i + len(b)
+
+
+func with_both(i: int, l: int[], t: str) -> int:
+    return i + add_up(l) + len(t)
+
+
+func trail_list(xs: int[], nets: int[]) -> int:
+    return add_up(parallel.map(xs, with_list, nets))
+
+
+func trail_text(xs: int[], label: str) -> int:
+    return add_up(parallel.map(xs, with_text, label))
+
+
+func trail_bytes(xs: int[], data: bytes) -> int:
+    return add_up(parallel.map(xs, with_bytes, data))
+
+
+func trail_both(xs: int[], nets: int[], label: str) -> int:
+    return add_up(parallel.map(xs, with_both, nets, label))
+
+
+func head(xs: int[]) -> int[] from xs:
+    return xs[0:2]
+
+
+func attempt(value: int) -> int fails str:
+    if value < 0:
+        fail "bad-" + str(value)
+    return value * 3
+
+
+func collect(values: int[]) -> int fails str:
+    const got = try parallel.map(values, attempt)
+    return add_up(got)
+
+
+func numbers(count: int) -> int[]:
+    mut xs: int[] = []
+    for i in range(1, count + 1):
+        append(mut xs, i)
+    return xs
+
+
+# A slice, a whole list, a literal, a record's field and a parameter passed on through two functions all map in place.
+public func test_map_of_a_list_parameter_reads_the_list_it_was_given() -> bool:
+    const ys = numbers(2000)
+    const bag = Bag(items=[5, 6, 7])
+    const sliced = by_list(ys[1:3]) == 10 and by_list(ys) == 4002000 and by_list([1, 2, 3]) == 12
+    return sliced and by_list(bag.items) == 36 and through(ys[10:20]) == 310 and through(ys) == 4002000
+
+
+# A list of text and a list of records, whole and sliced; an empty slice maps to an empty list.
+public func test_map_of_text_and_records_reads_the_slice_in_place() -> bool:
+    const names = ["a", "bb", "ccc", "dddd"]
+    const rows = [Row(name="x", cells=[1, 2]), Row(name="yy", cells=[3]), Row(name="zzz", cells=[])]
+    const texts = by_text(names[1:3]) == 5 and by_text(names) == 10
+    const records = by_rows(rows[1:3]) == 6 and by_rows(rows) == 9
+    const ys = numbers(6)
+    return texts and records and len(parallel.map(ys[2:2], double)) == 0
+
+
+# A slice written at the call, a `from`-returned view and `map_results` over a slice.
+public func test_map_of_a_slice_at_the_call_and_of_a_returned_view() -> bool:
+    const ys = numbers(9)
+    const names = ["a", "bb", "ccc"]
+    const inline = add_up(parallel.map(ys[5:9], double)) == 60 and add_up(parallel.map(names[0:2], text_size)) == 3
+    return inline and add_up(parallel.map(head(ys[3:6]), double)) == 18 and by_results(ys[0:7]) == 7
+
+
+# A list, text or bytes parameter as a trailing argument is lent as the view: a slice gives its own length.
+public func test_trailing_list_text_and_bytes_parameters_are_lent_as_views() -> bool:
+    const ys = numbers(2000)
+    const text = "hello world"
+    const data = bytes([1, 2, 3, 4, 5])
+    const lists = trail_list(ys[0:3], ys[0:5]) == 21 and trail_list(ys[0:3], ys) == 6006
+    const texts = trail_text(ys[0:3], text[0:4]) == 612 and trail_text(ys[0:3], text) == 633
+    const octets = trail_bytes(ys[0:3], data[1:3]) == 12 and trail_bytes(ys[0:3], data) == 21
+    const inline = add_up(parallel.map(ys[0:3], with_list, ys[0:4])) == 18
+    return lists and texts and octets and inline and trail_both(ys[0:2], [5, 6, 7], text[6:11]) == 49
+
+
+# The `try` form over a slice and over the whole list: the lowest-index failure, or every value.
+public func test_try_map_over_a_slice_and_a_whole_list() -> bool:
+    const xs = [1, 2, 3, -4, 5, -6]
+    const whole = collect(xs) else Err(e):
+        return e == "bad--4"
+    _ = whole
+    return False
+
+
+# The `try` form over a slice with no failure sums the slice's own items.
+public func test_try_map_over_a_clean_slice() -> bool:
+    const xs = [1, 2, 3, -4, 5, -6]
+    const head_sum = collect(xs[0:3]) else Err(e):
+        return False
+    const tail = collect(xs[2:6]) else Err(e):
+        return head_sum == 18 and e == "bad--4"
+    _ = tail
+    return False
+
+
+# The `try` form over a list the caller owns reads it in place; the list is still the caller's after the map.
+public func test_try_map_over_an_owned_list_leaves_it_with_the_caller() -> bool:
+    const xs = numbers(1000)
+    const got = collect(xs) else Err(e):
+        return False
+    return got == 1501500 and len(xs) == 1000

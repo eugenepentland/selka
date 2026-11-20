@@ -1,0 +1,13 @@
+# A `@freestanding` function calling the public freestanding functions of another module (MCU-NOC2C): the checker sees
+# the attribute through the interface, and each gives what the plain computation gives.
+import freestanding_modules_support
+
+@freestanding
+func combined(words: FixedArray[u32, 4]) -> u32:
+    return freestanding_modules_support.scaled(freestanding_modules_support.first_or(words, 5), 3)
+
+
+public func test_freestanding_calls_across_modules() -> bool:
+    const words = FixedArray[u32, 4]([7, 1, 2, 3])
+    const empty = FixedArray[u32, 4]([0, 1, 2, 3])
+    return combined(words) == 22 and combined(empty) == 16

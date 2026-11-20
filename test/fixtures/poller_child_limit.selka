@@ -1,0 +1,37 @@
+# What a started program sees of the descriptor limit: `sh -c 'ulimit -n'` before a poller opens and after. Opening a poller
+# raises this program's soft limit to the hard one; a program it starts gets the soft limit this program started with back.
+import network
+import process
+import strings
+
+# The soft descriptor limit a child reports, as text, or why it did not run.
+func child_limit(proc: Process) -> str:
+    match process.run(proc, process.command(["/bin/sh", "-c", 'printf %s "$(ulimit -n)"'])):
+        case Ok(result):
+            match strings.decode(result.stdout):
+                case Ok(text):
+                    return text
+                case Err(_):
+                    return "not text"
+        case Err(error):
+            return process.message(error)
+
+
+func report(own poller: network.Poller, proc: Process, out: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "poller limit", outcome.value)
+    print(out, "child with a poller", child_limit(proc))
+    return 0
+
+
+func main(net: Network, proc: Process, out: Stream) -> int:
+    print(out, "child before", child_limit(proc))
+    with net.host("127.0.0.1:0") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return report(own poller, proc, out)
+            case err(code):
+                print(out, "open failed", code)
+                return 1

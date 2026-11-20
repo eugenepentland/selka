@@ -1,0 +1,248 @@
+# An enum of more than 64 cases with payloads: the IR verifier's union-tag rule keeps a set of cases of any width, so a
+# `match` on it is checked like a small one (lane VL, F-VL-10), and `match own` takes the payload of the case it tests.
+enum Wide:
+    w0(value: int)
+    w1(value: int)
+    w2(value: int)
+    w3(value: int)
+    w4(value: int)
+    w5(value: int)
+    w6(value: int)
+    w7(value: int)
+    w8(value: int)
+    w9(value: int)
+    w10(value: int)
+    w11(value: int)
+    w12(value: int)
+    w13(value: int)
+    w14(value: int)
+    w15(value: int)
+    w16(value: int)
+    w17(value: int)
+    w18(value: int)
+    w19(value: int)
+    w20(value: int)
+    w21(value: int)
+    w22(value: int)
+    w23(value: int)
+    w24(value: int)
+    w25(value: int)
+    w26(value: int)
+    w27(value: int)
+    w28(value: int)
+    w29(value: int)
+    w30(value: int)
+    w31(value: int)
+    w32(value: int)
+    w33(value: int)
+    w34(value: int)
+    w35(value: int)
+    w36(value: int)
+    w37(value: int)
+    w38(value: int)
+    w39(value: int)
+    w40(value: int)
+    w41(value: int)
+    w42(value: int)
+    w43(value: int)
+    w44(value: int)
+    w45(value: int)
+    w46(value: int)
+    w47(value: int)
+    w48(value: int)
+    w49(value: int)
+    w50(value: int)
+    w51(value: int)
+    w52(value: int)
+    w53(value: int)
+    w54(value: int)
+    w55(value: int)
+    w56(value: int)
+    w57(value: int)
+    w58(value: int)
+    w59(value: int)
+    w60(value: int)
+    w61(value: int)
+    w62(value: int)
+    w63(value: int)
+    w64(value: int)
+    w65(value: int)
+    w66(value: int)
+    w67(value: int)
+    w68(value: int)
+    w69(value: int)
+    named(text: str)
+
+
+func weigh(item: Wide) -> int:
+    match item:
+        case w0(value):
+            return value * 100 + 0
+        case w1(value):
+            return value * 100 + 1
+        case w2(value):
+            return value * 100 + 2
+        case w3(value):
+            return value * 100 + 3
+        case w4(value):
+            return value * 100 + 4
+        case w5(value):
+            return value * 100 + 5
+        case w6(value):
+            return value * 100 + 6
+        case w7(value):
+            return value * 100 + 7
+        case w8(value):
+            return value * 100 + 8
+        case w9(value):
+            return value * 100 + 9
+        case w10(value):
+            return value * 100 + 10
+        case w11(value):
+            return value * 100 + 11
+        case w12(value):
+            return value * 100 + 12
+        case w13(value):
+            return value * 100 + 13
+        case w14(value):
+            return value * 100 + 14
+        case w15(value):
+            return value * 100 + 15
+        case w16(value):
+            return value * 100 + 16
+        case w17(value):
+            return value * 100 + 17
+        case w18(value):
+            return value * 100 + 18
+        case w19(value):
+            return value * 100 + 19
+        case w20(value):
+            return value * 100 + 20
+        case w21(value):
+            return value * 100 + 21
+        case w22(value):
+            return value * 100 + 22
+        case w23(value):
+            return value * 100 + 23
+        case w24(value):
+            return value * 100 + 24
+        case w25(value):
+            return value * 100 + 25
+        case w26(value):
+            return value * 100 + 26
+        case w27(value):
+            return value * 100 + 27
+        case w28(value):
+            return value * 100 + 28
+        case w29(value):
+            return value * 100 + 29
+        case w30(value):
+            return value * 100 + 30
+        case w31(value):
+            return value * 100 + 31
+        case w32(value):
+            return value * 100 + 32
+        case w33(value):
+            return value * 100 + 33
+        case w34(value):
+            return value * 100 + 34
+        case w35(value):
+            return value * 100 + 35
+        case w36(value):
+            return value * 100 + 36
+        case w37(value):
+            return value * 100 + 37
+        case w38(value):
+            return value * 100 + 38
+        case w39(value):
+            return value * 100 + 39
+        case w40(value):
+            return value * 100 + 40
+        case w41(value):
+            return value * 100 + 41
+        case w42(value):
+            return value * 100 + 42
+        case w43(value):
+            return value * 100 + 43
+        case w44(value):
+            return value * 100 + 44
+        case w45(value):
+            return value * 100 + 45
+        case w46(value):
+            return value * 100 + 46
+        case w47(value):
+            return value * 100 + 47
+        case w48(value):
+            return value * 100 + 48
+        case w49(value):
+            return value * 100 + 49
+        case w50(value):
+            return value * 100 + 50
+        case w51(value):
+            return value * 100 + 51
+        case w52(value):
+            return value * 100 + 52
+        case w53(value):
+            return value * 100 + 53
+        case w54(value):
+            return value * 100 + 54
+        case w55(value):
+            return value * 100 + 55
+        case w56(value):
+            return value * 100 + 56
+        case w57(value):
+            return value * 100 + 57
+        case w58(value):
+            return value * 100 + 58
+        case w59(value):
+            return value * 100 + 59
+        case w60(value):
+            return value * 100 + 60
+        case w61(value):
+            return value * 100 + 61
+        case w62(value):
+            return value * 100 + 62
+        case w63(value):
+            return value * 100 + 63
+        case w64(value):
+            return value * 100 + 64
+        case w65(value):
+            return value * 100 + 65
+        case w66(value):
+            return value * 100 + 66
+        case w67(value):
+            return value * 100 + 67
+        case w68(value):
+            return value * 100 + 68
+        case w69(value):
+            return value * 100 + 69
+        case named(text):
+            return len(text)
+
+
+func make(index: int) -> Wide:
+    if index == 0:
+        return Wide.w0(value=index + 1)
+    if index == 63:
+        return Wide.w63(value=index + 1)
+    if index == 64:
+        return Wide.w64(value=index + 1)
+    if index == 69:
+        return Wide.w69(value=index + 1)
+    return Wide.named(text="index " + str(index))
+
+
+func take_text(own item: Wide) -> str:
+    match own item:
+        case named(text):
+            return text
+        case _:
+            return ""
+
+
+public func test_a_match_over_seventy_cases_reads_the_payload_of_the_case_it_tests() -> bool:
+    return weigh(make(0)) == 100 and weigh(make(63)) == 6463 and weigh(make(64)) == 6564 and weigh(make(69)) == 7069
+
+
+public func test_match_own_takes_the_payload_past_the_sixty_fourth_case() -> bool:
+    return take_text(make(5)) == "index 5" and take_text(make(64)) == "" and weigh(make(7)) == 7

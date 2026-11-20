@@ -1,0 +1,22 @@
+# Three borrowed values a `mut` binding keeps, two in one function: one check reports all three.
+record Batch:
+    items: int[]
+    more: int[]
+
+
+func keep(batch: Batch) -> int:
+    mut kept = batch.items
+    append(mut kept, 1)
+    mut other = batch.more
+    append(mut other, 2)
+    return len(kept) + len(other)
+
+
+func keep_row(rows: int[][], index: int) -> int[]:
+    mut kept = rows[index]
+    append(mut kept, 1)
+    return kept
+
+
+func main() -> int:
+    return keep(Batch(items=[1], more=[2])) + len(keep_row([[1]], 0))

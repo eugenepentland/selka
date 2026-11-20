@@ -1,0 +1,13 @@
+# A counted fill whose pushed value traps at index 5000 of 10**13. The body can trap, so
+# the reservation is the speculative prefix (4096): the list grows past it before the trap,
+# and the trap is the failure reported, not an allocation of the whole count.
+func fill(n: int) -> int:
+    mut out: int[] = []
+    for i in range(n):
+        append(mut out, 100 // (i - 5000))
+    return len(out)
+
+
+func main(args: str[], out: Stream) -> int:
+    print(out, fill(10000000000000 + len(args)))
+    return 0

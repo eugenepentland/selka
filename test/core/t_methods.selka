@@ -1,0 +1,104 @@
+# spec: NEW-CORE-TEXT-S3-1
+import bytes
+import lists
+import strings
+
+public func test_case_classify_replace_count_and_lines_preserve_snapshots() -> bool:
+    mut text = "aBé🙂aB"
+    mut saved = copy(text)
+    return strings.upper(text) == "ABé🙂AB" and strings.lower(text) == "abé🙂ab" and strings.count(text, "aB") == 2 and strings.count(text, "") == len(text) + 1 and strings.replace(text, "aB", "x") == "xé🙂x" and saved == text and strings.lines("a\r\nb\rc\n") == ["a", "b", "c"] and len(strings.lines("")) == 0 and strings.is_digit("19") and strings.is_alpha("aB") and strings.is_space(" \t") and not strings.is_alpha("é")
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_scalar_search_bounds_and_charset_trim() -> bool:
+    mut text = "aé🙂aé"
+    return strings.char_find(text, "é", 2) == 4 and strings.char_rfind(text, "é", 0, 4) == 1 and strings.char_index(text, "🙂") == 2 and strings.char_rindex(text, "é") == 4 and strings.char_count_of(text, "", 1, 4) == 4 and strings.char_count_of(text, "", 9) == 0 and strings.char_startswith(text, "é", 1) and strings.char_endswith(text, "🙂", 1, 3) and strings.strip("\u0085\u00a0x\u2028") == "x" and strings.strip_chars("éabcé", "é") == "abc" and strings.lstrip_chars("éabcé", "é") == "abcé" and strings.rstrip_chars("éabcé", "é") == "éabc"
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_repr_scalar_ord_chr_and_packed_text_format() -> bool:
+    return chr(0x1f642) == "🙂" and ord("🙂") == 0x1f642 and ord(chr(0)) == 0 and repr("é🙂") == "'é🙂'" and repr("\u00a0\u2028") == "'\\xa0\\u2028'" and repr(b"\x00\xff") == "b'\\x00\\xff'" and f"{'é🙂abc':🙂^7.3}" == "🙂🙂é🙂a🙂🙂" and strings.zfill("-7", 4) == "-007"
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_bytes_count_search_trim_and_find_any() -> bool:
+    mut raw = b"\xffa,a\xff"
+    return bytes.count(raw, b"a") == 2 and bytes.rfind(raw, b"a", 0, max(len(raw) - 1, 0)) == 3 and bytes.index(raw, b",") == 2 and bytes.find_any(raw, b",\xff", 1) == 2 and bytes.find_any(raw, b"a", 0) == 1 and bytes.strip_chars(raw, b"\xff") == b"a,a" and bytes.count(raw, b"", 99) == 0 and raw[1:max(len(raw) - 1, 0)] == b"a,a" and bytes.strip(b" \tx\n") == b"x"
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_decode_and_scalar_count_validate_utf8_and_clamped_ranges() -> bool:
+    mut raw = b"a\xc3\xa9\xf0\x9f\x99\x82"
+    match strings.decode(raw):
+        case Ok(text):
+            if text != "aé🙂":
+                return False
+        case Err(_):
+            return False
+    match bytes.scalar_count(raw):
+        case Ok(count):
+            if count != 3:
+                return False
+        case Err(_):
+            return False
+    match bytes.scalar_count_range(raw, 1, 3):
+        case Ok(count):
+            if count != 1:
+                return False
+        case Err(_):
+            return False
+    match strings.decode(b"\xed\xa0\x80"):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "invalid UTF-8 in byte string"
+
+
+# spec-case: NEW-CORE-LIST-S3-1
+public func test_extend_and_reverse_preserve_self_and_nested_snapshots() -> bool:
+    mut values = ["a", "é"]
+    mut saved = copy(values)
+    lists.extend(mut values, values)
+    lists.reverse(mut values)
+    mut nested = [copy(values)]
+    lists.reverse(mut values)
+    return saved == ["a", "é"] and nested == [["é", "a", "é", "a"]] and values == ["a", "é", "a", "é"]
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_missing_index_traps_at_the_call() -> bool:
+    _ = strings.char_index("aé", "z")
+    return False
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_invalid_chr_traps_at_the_call() -> bool:
+    _ = chr(0xd800)
+    return False
+
+
+# spec-case: NEW-CORE-TEXT-S3-1
+public func test_verified_lengths_survive_the_large_source_last_use() -> bool:
+    return large_bytes_length() == 4100 and large_string_length() == 4096 and large_list_length() == 256
+
+
+func large_bytes_length() -> int:
+    mut raw = b"x"
+    for _ in range(12):
+        raw += raw
+    raw = raw + b"tail"
+    return len(raw)
+
+
+func large_string_length() -> int:
+    mut text = "x"
+    for _ in range(12):
+        text += text
+    return strings.char_count(text)
+
+
+func large_list_length() -> int:
+    mut values: int[] = []
+    for item in range(256):
+        append(mut values, item)
+    return len(values)

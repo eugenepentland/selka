@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review site</title>
+<style>
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --ink: #1b2126;
+  --muted: #5b6770;
+  --rule: #d9dfe3;
+  --accent: #0d6a6a;
+  --accent-soft: #e0efee;
+  --code-bg: #eef2f3;
+  --ok: #2e7a3a;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0df;
+  --bad: #b02a22;
+  --display: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.45rem;
+  --step-3: 1.9rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111518; --surface: #181d21; --ink: #e2e7ea; --muted: #97a3ab; --rule: #2a3238;
+    --accent: #62c3bd; --accent-soft: #15302f; --code-bg: #1f262b; --ok: #79c784; --warn: #e2a64f; --warn-soft: #2d2416; --bad: #f08c82;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111518; --surface: #181d21; --ink: #e2e7ea; --muted: #97a3ab; --rule: #2a3238;
+  --accent: #62c3bd; --accent-soft: #15302f; --code-bg: #1f262b; --ok: #79c784; --warn: #e2a64f; --warn-soft: #2d2416; --bad: #f08c82;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: var(--step-0); line-height: 1.55; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 0.05em 0.35em; border-radius: 3px; overflow-wrap: anywhere; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
+h1 { font-size: var(--step-3); letter-spacing: -0.01em; }
+h2 { font-size: var(--step-2); }
+h3 { font-size: var(--step-1); }
+.label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.quiet { color: var(--muted); }
+
+.bar { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--rule);
+  padding-block: 0.6rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar-inner { max-width: 1040px; margin: 0 auto; }
+.brand { font-family: var(--display); font-weight: 600; font-size: var(--step-1); }
+.brand span { color: var(--muted); font-weight: 500; }
+
+main { max-width: 1040px; margin: 0 auto; display: grid; gap: 2rem;
+  padding-block: 1.4rem 3rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+section { display: grid; gap: 0.8rem; min-width: 0; }
+.banner { background: var(--warn-soft); border: 1px solid var(--warn); border-left-width: 4px; border-radius: 6px; padding: 0.7rem 0.9rem; color: var(--ink); }
+.banner b { color: var(--warn); }
+.pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 0.02rem 0.55rem; font-size: 0.76rem; font-weight: 600; border: 1px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); }
+.pill.warn { color: var(--warn); }
+.pill.bad { color: var(--bad); }
+
+.projects { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 0.8rem 0.95rem; display: grid; gap: 0.3rem; min-width: 0; }
+.card a { font-family: var(--display); font-weight: 600; font-size: var(--step-1); overflow-wrap: anywhere; }
+.card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 0.45rem 0.7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--bg); }
+tr:last-child td { border-bottom: none; }
+td.title { min-width: 12rem; }
+.bypass { color: var(--warn); font-size: 0.84rem; }
+.empty { color: var(--muted); font-style: italic; margin: 0; }
+footer { color: var(--muted); font-size: 0.8rem; max-width: 80ch; }
+@media (max-width: 640px) {
+  h1 { font-size: var(--step-2); }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-inner"><div class="brand" id="brand">Review site <span>projects and changes</span></div></div>
+</header>
+<main id="main"></main>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function () {
+  'use strict';
+  const DATA = JSON.parse(document.getElementById('data').textContent);
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const short = s => (s && s.length > 12 ? s.slice(0, 12) : (s || ''));
+  const verdict = ok => (ok ? '<span class="pill ok">passes</span>' : '<span class="pill bad">refused</span>');
+  const counts = c => `${c.public} public, ${c.explained} explained by a decision, ${c.refusals} ${c.refusals === 1 ? 'refusal' : 'refusals'}`;
+
+  function banner() {
+    if (DATA.gate_mode === 'report-only') {
+      return '<div class="banner"><b>The gate is report-only.</b> A refused landing is logged here and still lands. ' +
+        'Refusals are shown so that they can be read and repaired; they do not stop a merge until the gate is enforcing.</div>';
+    }
+    if (DATA.gate_mode === 'enforcing') return '<p class="quiet" style="margin:0">The gate is enforcing: a refused landing does not land.</p>';
+    return '';
+  }
+
+  function projectsHTML() {
+    if (!DATA.projects.length) return '<p class="empty">No project has a page yet.</p>';
+    return '<div class="projects">' + DATA.projects.map(p => `<div class="card"><a href="${esc(p.link)}">${esc(p.name)}</a>
+      <span class="quiet mono" style="font-size:0.78rem">${esc(p.title)}</span><p>${esc(p.summary)}</p></div>`).join('') + '</div>';
+  }
+
+  function changesHTML() {
+    if (!DATA.changes.length) return '<p class="empty">No open branch changes a project&rsquo;s source.</p>';
+    return '<div class="table-wrap"><table><thead><tr><th>Verdict</th><th>Branch</th><th>Project</th><th>Title</th><th>Counts</th><th>Review</th></tr></thead><tbody>' +
+      DATA.changes.map(r => `<tr><td>${verdict(r.ok)}</td><td><code>${esc(r.label)}</code></td><td>${esc(r.project)}</td>
+        <td class="title">${esc(r.title)}</td><td>${esc(counts(r.counts))}</td><td><a href="${esc(r.link)}">review</a></td></tr>`).join('') +
+      '</tbody></table></div>';
+  }
+
+  function landedHTML() {
+    if (!DATA.landed.length) return '<p class="empty">No landing has a review yet.</p>';
+    return '<div class="table-wrap"><table><thead><tr><th>Landing</th><th>Project</th><th>Verdict</th><th>Title</th><th>Counts</th><th>Review</th></tr></thead><tbody>' +
+      DATA.landed.map(r => `<tr><td><code>${esc(short(r.label))}</code></td><td>${esc(r.project)}</td><td>${verdict(r.ok)}${r.bypass !== null
+        ? `<div class="bypass">bypassed${r.bypass ? ': ' + esc(r.bypass) : ''}</div>` : ''}</td>
+        <td class="title">${esc(r.title)}</td><td>${esc(counts(r.counts))}</td><td><a href="${esc(r.link)}">review</a></td></tr>`).join('') +
+      '</tbody></table></div>';
+  }
+
+  document.getElementById('main').innerHTML = `${banner()}
+    <section><h2>Projects</h2>${projectsHTML()}</section>
+    <section><h2>Open changes</h2><p class="quiet" style="margin:0">One row per branch and project whose commits touch the project&rsquo;s source, as the refresh last saw it.</p>${changesHTML()}</section>
+    <section><h2>Landed</h2><p class="quiet" style="margin:0">The newest landings first, at most 20 per project. A bypassed landing names its reason.</p>${landedHTML()}</section>
+    <footer>Written by <code>selka review index</code> from the project pages and reviews beside it.</footer>`;
+  document.title = 'Review site';
+})();
+</script>
+</body>
+</html>

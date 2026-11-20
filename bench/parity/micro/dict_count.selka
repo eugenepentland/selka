@@ -1,0 +1,17 @@
+# dict_count: dict[str, int] read-modify-write over 1000 distinct short keys.
+import dicts
+import strings
+
+func main(out: Stream) -> int:
+    mut keys: str[] = []
+    for i in range(1000):
+        append(mut keys, "key" + str(i))
+    mut counts: dict[str, int] = {}
+    for i in range(2000000):
+        mut key = copy(keys[(i * 7919) % 1000])
+        counts[own key] = dicts.get(counts, key, 0) + 1
+    mut total = 0
+    for name in keys:
+        total = (total + counts[name] * strings.char_count(name)) % 1000003
+    print(out, total)
+    return 0

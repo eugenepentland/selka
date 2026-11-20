@@ -1,0 +1,10 @@
+str insert 800000
+str lookup hits_sum 319999600000 misses 800000
+str delete removed 266667 size 533333
+str reinsert reinserted 133334 size 666667
+str iterate size 666667 value_sum 319999999999 key_len_sum 11563125
+int insert 2000000
+int lookup hits_sum 1999999000000 misses 2000000
+int delete removed 666667 size 1333333
+int reinsert reinserted 333334 size 1666667
+int iterate size 1666667 value_sum 1999999999999 key_sum 1791094150973464

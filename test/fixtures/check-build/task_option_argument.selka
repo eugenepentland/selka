@@ -1,0 +1,44 @@
+# An option given to a task (lane OC, 10 November 2026). `check` accepted `g.submit(f, s)` with `s: str?`, and the build
+# refused it: the task thunk passed `option[str]` where the callee's read-only parameter is `option[str_view]`. The thunk now
+# lends each argument at the callee's parameter type, as `parallel.map` does, so an owned option, a lent `Some(place)` and a
+# framed text parameter all build.
+import parallel
+
+record Shelf:
+    label: str
+    n: int
+
+
+func task_len(value: str?) -> int:
+    match value:
+        case Some(text):
+            return len(text)
+        case None:
+            return -1
+
+
+func owned(n: int) -> int:
+    const s: str? = Some(f"ab{n}")
+    mut total = 0
+    with parallel.group() as g:
+        const t = g.submit(task_len, s)
+        total = t.result()
+    return total
+
+
+func lent(shelf: Shelf) -> int:
+    const s: str? = Some(shelf.label)
+    mut total = 0
+    with parallel.group() as g:
+        const t = g.submit(task_len, s)
+        total = t.result()
+    return total
+
+
+func framed(text: str) -> int:
+    const s: str? = Some(text)
+    mut total = 0
+    with parallel.group() as g:
+        const t = g.submit(task_len, s)
+        total = t.result()
+    return total

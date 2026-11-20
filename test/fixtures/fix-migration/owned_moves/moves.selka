@@ -1,0 +1,78 @@
+# Each transfer starts with an owned named list and preserves its contents.
+record Box:
+    items: int[]
+
+
+func consume(own values: int[]) -> int:
+    return values[0]
+
+
+func binding() -> int:
+    const source = [1]
+    mut kept = source
+    return kept[0]
+
+
+func local_store() -> int:
+    const source = [2]
+    mut kept = [0]
+    kept = source
+    return kept[0]
+
+
+func field_store() -> int:
+    const source = [3]
+    mut kept = Box(items=[])
+    kept.items = source
+    return kept.items[0]
+
+
+func element_store() -> int:
+    const source = [4]
+    mut kept: int[][] = [[]]
+    kept[0] = source
+    return kept[0][0]
+
+
+func dictionary_store() -> int:
+    const source = [5]
+    mut kept: dict[str, int[]] = {}
+    kept["value"] = source
+    return kept["value"][0]
+
+
+func record_value() -> int:
+    const source = [6]
+    const kept = Box(items=source)
+    return kept.items[0]
+
+
+func optional_value() -> int:
+    const source = [7]
+    const kept: int[]? = Some(source)
+    match kept:
+        case Some(value):
+            return value[0]
+        case None:
+            return 0
+
+
+func list_value() -> int:
+    const left = [8]
+    const right = [9]
+    const kept = [left, right]
+    return kept[0][0] + kept[1][0]
+
+
+func call_value() -> int:
+    const source = [10]
+    return consume(source)
+
+
+func main(out: Stream) -> int:
+    const total = binding() + local_store() + field_store() + element_store() + dictionary_store() + record_value() + optional_value() + list_value() + call_value()
+    assert total == 55
+    print(out, total)
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

@@ -1,0 +1,1589 @@
+import bytes
+import lists
+import sets
+import strings
+
+record Pair:
+    n: int
+    s: str
+
+
+enum Inner:
+    Leaf(text: str)
+    Stem
+
+
+enum Slot:
+    Has(value: bytes)
+    Nothing
+
+
+record Holder:
+    slot: Slot
+    tag: int
+
+
+enum Outer:
+    Wrap(slot: Slot)
+    Bare
+
+
+enum Twin:
+    Two(value: bytes, n: int)
+    Zero
+
+
+func make() -> bytes:
+    return b"xax"
+
+
+func look(x: bytes) -> int:
+    return len(x)
+
+
+func touch(mut x: bytes):
+    x = x + b"!"
+
+
+func after(out: Stream, s: Slot):
+    match s:
+        case Has(value):
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+
+
+func cell_compare_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, value == make())
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_compare_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, value == make())
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_compare_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, value == make())
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_compare_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, value == make())
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_compare_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, value == make())
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_compare_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_compare_mut_param(out, mut s)
+
+
+func cell_compare_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, value == make())
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_compare_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, value == make())
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_compare_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, value == make())
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_contains_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, 3 in value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_contains_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, 3 in value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_contains_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, 3 in value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_contains_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, 3 in value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_contains_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, 3 in value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_contains_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_contains_mut_param(out, mut s)
+
+
+func cell_contains_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, 3 in value)
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_contains_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, 3 in value)
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_contains_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, 3 in value)
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_copy_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            const c = copy(value)
+            print(out, look(c))
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_copy_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            const c = copy(value)
+            print(out, look(c))
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_copy_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            const c = copy(value)
+            print(out, look(c))
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_copy_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            const c = copy(value)
+            print(out, look(c))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_copy_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            const c = copy(value)
+            print(out, look(c))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_copy_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_copy_mut_param(out, mut s)
+
+
+func cell_copy_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    const c = copy(value)
+                    print(out, look(c))
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_copy_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            const c = copy(value)
+            print(out, look(c))
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_copy_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            const c = copy(value)
+            print(out, look(c))
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_hole_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, f"<{value}>")
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_hole_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, f"<{value}>")
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_hole_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, f"<{value}>")
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_hole_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, f"<{value}>")
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_hole_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, f"<{value}>")
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_hole_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_hole_mut_param(out, mut s)
+
+
+func cell_hole_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, f"<{value}>")
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_hole_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, f"<{value}>")
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_hole_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, f"<{value}>")
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_index_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, value[0])
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_index_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, value[0])
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_index_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, value[0])
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_index_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, value[0])
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_index_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, value[0])
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_index_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_index_mut_param(out, mut s)
+
+
+func cell_index_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, value[0])
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_index_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, value[0])
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_index_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, value[0])
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_iterate_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            for e in value:
+                print(out, e)
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_iterate_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            for e in value:
+                print(out, e)
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_iterate_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            for e in value:
+                print(out, e)
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_iterate_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            for e in value:
+                print(out, e)
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_iterate_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            for e in value:
+                print(out, e)
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_iterate_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_iterate_mut_param(out, mut s)
+
+
+func cell_iterate_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    for e in value:
+                        print(out, e)
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_iterate_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            for e in value:
+                print(out, e)
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_iterate_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            for e in value:
+                print(out, e)
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_len_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, len(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_len_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, len(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_len_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, len(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_len_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, len(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_len_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, len(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_len_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_len_mut_param(out, mut s)
+
+
+func cell_len_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, len(value))
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_len_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, len(value))
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_len_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, len(value))
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_method0_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, strings.decode(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_method0_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, strings.decode(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_method0_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, strings.decode(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_method0_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, strings.decode(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_method0_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, strings.decode(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_method0_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_method0_mut_param(out, mut s)
+
+
+func cell_method0_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, strings.decode(value))
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_method0_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, strings.decode(value))
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_method0_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, strings.decode(value))
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_method1_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, bytes.strip_chars(value, b"x"))
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_method1_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, bytes.strip_chars(value, b"x"))
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_method1_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, bytes.strip_chars(value, b"x"))
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_method1_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, bytes.strip_chars(value, b"x"))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_method1_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, bytes.strip_chars(value, b"x"))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_method1_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_method1_mut_param(out, mut s)
+
+
+func cell_method1_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, bytes.strip_chars(value, b"x"))
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_method1_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, bytes.strip_chars(value, b"x"))
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_method1_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, bytes.strip_chars(value, b"x"))
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_mutparam_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            touch(mut value)
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_mutparam_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            touch(mut value)
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_mutparam_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            touch(mut value)
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_mutparam_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            touch(mut value)
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_mutparam_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            touch(mut value)
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_mutparam_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_mutparam_mut_param(out, mut s)
+
+
+func cell_mutparam_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    touch(mut value)
+                    print(out, look(value))
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_mutparam_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            touch(mut value)
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_mutparam_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            touch(mut value)
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_param_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_param_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_param_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_param_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_param_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, look(value))
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_param_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_param_mut_param(out, mut s)
+
+
+func cell_param_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, look(value))
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_param_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_param_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_print_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_print_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_print_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_print_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_print_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, value)
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_print_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_print_mut_param(out, mut s)
+
+
+func cell_print_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, value)
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_print_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, value)
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_print_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, value)
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func cell_slice_element(out: Stream):
+    mut xs = [Slot.Has(value=make())]
+    match mut xs[0]:
+        case Has(value):
+            print(out, value[0:1])
+        case Nothing:
+            print(out, "nothing")
+    after(out, xs[0])
+
+
+func cell_slice_element_field(out: Stream):
+    mut hs = [Holder(slot=Slot.Has(value=make()), tag=0)]
+    match mut hs[0].slot:
+        case Has(value):
+            print(out, value[0:1])
+        case Nothing:
+            print(out, "nothing")
+    after(out, hs[0].slot)
+
+
+func cell_slice_field(out: Stream):
+    mut h = Holder(slot=Slot.Has(value=make()), tag=0)
+    match mut h.slot:
+        case Has(value):
+            print(out, value[0:1])
+        case Nothing:
+            print(out, "nothing")
+    after(out, h.slot)
+
+
+func cell_slice_local(out: Stream):
+    mut s = Slot.Has(value=make())
+    match mut s:
+        case Has(value):
+            print(out, value[0:1])
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func work_slice_mut_param(out: Stream, mut s: Slot):
+    match mut s:
+        case Has(value):
+            print(out, value[0:1])
+        case Nothing:
+            print(out, "nothing")
+    after(out, s)
+
+
+func cell_slice_mut_param(out: Stream):
+    mut s = Slot.Has(value=make())
+    work_slice_mut_param(out, mut s)
+
+
+func cell_slice_nested(out: Stream):
+    mut o = Outer.Wrap(slot=Slot.Has(value=make()))
+    match mut o:
+        case Wrap(slot):
+            match mut slot:
+                case Has(value):
+                    print(out, value[0:1])
+                case Nothing:
+                    print(out, "nothing")
+        case Bare:
+            print(out, "bare")
+    match o:
+        case Wrap(slot):
+            after(out, slot)
+        case Bare:
+            print(out, "bare")
+
+
+func cell_slice_option(out: Stream):
+    mut o: bytes? = Some(make())
+    match mut o:
+        case Some(value):
+            print(out, value[0:1])
+        case None:
+            print(out, "nothing")
+    match o:
+        case Some(value):
+            print(out, look(value))
+        case None:
+            print(out, "nothing")
+
+
+func cell_slice_two_fields(out: Stream):
+    mut w = Twin.Two(value=make(), n=5)
+    match mut w:
+        case Two(value, n):
+            print(out, value[0:1])
+        case Zero:
+            print(out, "nothing")
+    match w:
+        case Two(value, n):
+            print(out, look(value))
+        case Zero:
+            print(out, "nothing")
+
+
+func main(out: Stream) -> int:
+    print(out, "== compare element")
+    cell_compare_element(out)
+    print(out, "== compare element_field")
+    cell_compare_element_field(out)
+    print(out, "== compare field")
+    cell_compare_field(out)
+    print(out, "== compare local")
+    cell_compare_local(out)
+    print(out, "== compare mut_param")
+    cell_compare_mut_param(out)
+    print(out, "== compare nested")
+    cell_compare_nested(out)
+    print(out, "== compare option")
+    cell_compare_option(out)
+    print(out, "== compare two_fields")
+    cell_compare_two_fields(out)
+    print(out, "== contains element")
+    cell_contains_element(out)
+    print(out, "== contains element_field")
+    cell_contains_element_field(out)
+    print(out, "== contains field")
+    cell_contains_field(out)
+    print(out, "== contains local")
+    cell_contains_local(out)
+    print(out, "== contains mut_param")
+    cell_contains_mut_param(out)
+    print(out, "== contains nested")
+    cell_contains_nested(out)
+    print(out, "== contains option")
+    cell_contains_option(out)
+    print(out, "== contains two_fields")
+    cell_contains_two_fields(out)
+    print(out, "== copy element")
+    cell_copy_element(out)
+    print(out, "== copy element_field")
+    cell_copy_element_field(out)
+    print(out, "== copy field")
+    cell_copy_field(out)
+    print(out, "== copy local")
+    cell_copy_local(out)
+    print(out, "== copy mut_param")
+    cell_copy_mut_param(out)
+    print(out, "== copy nested")
+    cell_copy_nested(out)
+    print(out, "== copy option")
+    cell_copy_option(out)
+    print(out, "== copy two_fields")
+    cell_copy_two_fields(out)
+    print(out, "== hole element")
+    cell_hole_element(out)
+    print(out, "== hole element_field")
+    cell_hole_element_field(out)
+    print(out, "== hole field")
+    cell_hole_field(out)
+    print(out, "== hole local")
+    cell_hole_local(out)
+    print(out, "== hole mut_param")
+    cell_hole_mut_param(out)
+    print(out, "== hole nested")
+    cell_hole_nested(out)
+    print(out, "== hole option")
+    cell_hole_option(out)
+    print(out, "== hole two_fields")
+    cell_hole_two_fields(out)
+    print(out, "== index element")
+    cell_index_element(out)
+    print(out, "== index element_field")
+    cell_index_element_field(out)
+    print(out, "== index field")
+    cell_index_field(out)
+    print(out, "== index local")
+    cell_index_local(out)
+    print(out, "== index mut_param")
+    cell_index_mut_param(out)
+    print(out, "== index nested")
+    cell_index_nested(out)
+    print(out, "== index option")
+    cell_index_option(out)
+    print(out, "== index two_fields")
+    cell_index_two_fields(out)
+    print(out, "== iterate element")
+    cell_iterate_element(out)
+    print(out, "== iterate element_field")
+    cell_iterate_element_field(out)
+    print(out, "== iterate field")
+    cell_iterate_field(out)
+    print(out, "== iterate local")
+    cell_iterate_local(out)
+    print(out, "== iterate mut_param")
+    cell_iterate_mut_param(out)
+    print(out, "== iterate nested")
+    cell_iterate_nested(out)
+    print(out, "== iterate option")
+    cell_iterate_option(out)
+    print(out, "== iterate two_fields")
+    cell_iterate_two_fields(out)
+    print(out, "== len element")
+    cell_len_element(out)
+    print(out, "== len element_field")
+    cell_len_element_field(out)
+    print(out, "== len field")
+    cell_len_field(out)
+    print(out, "== len local")
+    cell_len_local(out)
+    print(out, "== len mut_param")
+    cell_len_mut_param(out)
+    print(out, "== len nested")
+    cell_len_nested(out)
+    print(out, "== len option")
+    cell_len_option(out)
+    print(out, "== len two_fields")
+    cell_len_two_fields(out)
+    print(out, "== method0 element")
+    cell_method0_element(out)
+    print(out, "== method0 element_field")
+    cell_method0_element_field(out)
+    print(out, "== method0 field")
+    cell_method0_field(out)
+    print(out, "== method0 local")
+    cell_method0_local(out)
+    print(out, "== method0 mut_param")
+    cell_method0_mut_param(out)
+    print(out, "== method0 nested")
+    cell_method0_nested(out)
+    print(out, "== method0 option")
+    cell_method0_option(out)
+    print(out, "== method0 two_fields")
+    cell_method0_two_fields(out)
+    print(out, "== method1 element")
+    cell_method1_element(out)
+    print(out, "== method1 element_field")
+    cell_method1_element_field(out)
+    print(out, "== method1 field")
+    cell_method1_field(out)
+    print(out, "== method1 local")
+    cell_method1_local(out)
+    print(out, "== method1 mut_param")
+    cell_method1_mut_param(out)
+    print(out, "== method1 nested")
+    cell_method1_nested(out)
+    print(out, "== method1 option")
+    cell_method1_option(out)
+    print(out, "== method1 two_fields")
+    cell_method1_two_fields(out)
+    print(out, "== mutparam element")
+    cell_mutparam_element(out)
+    print(out, "== mutparam element_field")
+    cell_mutparam_element_field(out)
+    print(out, "== mutparam field")
+    cell_mutparam_field(out)
+    print(out, "== mutparam local")
+    cell_mutparam_local(out)
+    print(out, "== mutparam mut_param")
+    cell_mutparam_mut_param(out)
+    print(out, "== mutparam nested")
+    cell_mutparam_nested(out)
+    print(out, "== mutparam option")
+    cell_mutparam_option(out)
+    print(out, "== mutparam two_fields")
+    cell_mutparam_two_fields(out)
+    print(out, "== param element")
+    cell_param_element(out)
+    print(out, "== param element_field")
+    cell_param_element_field(out)
+    print(out, "== param field")
+    cell_param_field(out)
+    print(out, "== param local")
+    cell_param_local(out)
+    print(out, "== param mut_param")
+    cell_param_mut_param(out)
+    print(out, "== param nested")
+    cell_param_nested(out)
+    print(out, "== param option")
+    cell_param_option(out)
+    print(out, "== param two_fields")
+    cell_param_two_fields(out)
+    print(out, "== print element")
+    cell_print_element(out)
+    print(out, "== print element_field")
+    cell_print_element_field(out)
+    print(out, "== print field")
+    cell_print_field(out)
+    print(out, "== print local")
+    cell_print_local(out)
+    print(out, "== print mut_param")
+    cell_print_mut_param(out)
+    print(out, "== print nested")
+    cell_print_nested(out)
+    print(out, "== print option")
+    cell_print_option(out)
+    print(out, "== print two_fields")
+    cell_print_two_fields(out)
+    print(out, "== slice element")
+    cell_slice_element(out)
+    print(out, "== slice element_field")
+    cell_slice_element_field(out)
+    print(out, "== slice field")
+    cell_slice_field(out)
+    print(out, "== slice local")
+    cell_slice_local(out)
+    print(out, "== slice mut_param")
+    cell_slice_mut_param(out)
+    print(out, "== slice nested")
+    cell_slice_nested(out)
+    print(out, "== slice option")
+    cell_slice_option(out)
+    print(out, "== slice two_fields")
+    cell_slice_two_fields(out)
+    return 0

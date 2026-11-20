@@ -1,0 +1,23 @@
+# map_work: parallel.map over 4096 independent items, each a chain of 100000 modular steps (PARALLEL.md, program 1).
+import parallel
+
+# The shared work: t starts at seed mod 1000003, then rounds steps of t = (t * 31 + i) mod 1000003.
+func work(seed: int, rounds: int) -> int:
+    mut t = seed % 1000003
+    for i in range(rounds):
+        t = (t * 31 + i) % 1000003
+    return t
+
+
+func main(out: Stream) -> int:
+    const items = 4096
+    const rounds = 100000
+    mut xs: int[] = []
+    for i in range(items):
+        append(mut xs, i)
+    const results = parallel.map(xs, work, rounds)
+    mut checksum = 0
+    for r in results:
+        checksum += r
+    print(out, "map_work", items, rounds, "checksum", checksum)
+    return 0

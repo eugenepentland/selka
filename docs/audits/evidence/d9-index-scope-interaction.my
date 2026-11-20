@@ -1,0 +1,67 @@
+module index_scope_interaction
+
+record Payload:
+    rows: [1]list[int]
+
+union Item:
+    payload: Payload,
+    empty
+
+def update(items: mut list[Item], index: int) -> int:
+    match items[index]:
+        case Item.payload(old):
+            rows = old.rows
+            rows[0].append(2)
+            items[index] = Item.payload(Payload(rows))
+        case Item.empty:
+            pass
+    return 0
+
+def first(items: list[Item]) -> list[int]:
+    match items[0]:
+        case Item.payload(old):
+            return old.rows[0]
+        case Item.empty:
+            return []
+
+def pending_payload(items: mut list[Item]) -> list[int]:
+    match items[0]:
+        case Item.payload(before):
+            kept = before
+            kept.rows[update(mut items, 0)].append(9)
+            return kept.rows[0]
+        case Item.empty:
+            return []
+
+public def test_pending_payload_receiver_keeps_its_own_snapshot() -> bool:
+    items = [Item.payload(Payload([[1]]))]
+    captured = pending_payload(mut items)
+    return first(items) == [1, 2] and captured == [1, 9]
+
+public def test_pending_payload_and_outer_snapshot_both_survive() -> bool:
+    items = [Item.payload(Payload([[1]]))]
+    saved = items
+    captured = pending_payload(mut items)
+    return first(items) == [1, 2] and captured == [1, 9] and first(saved) == [1]
+
+def allocate_index(rows: [1]list[int], saved: mut list[[1]list[int]]) -> int:
+    saved.append(rows)
+    for i in range(80):
+        saved.append([[i]])
+    return 0
+
+def scoped_update(items: mut list[Item], index: int) -> list[[1]list[int]]:
+    saved: list[[1]list[int]] = []
+    match items[index]:
+        case Item.payload(old):
+            rows = old.rows
+            rows[allocate_index(rows, mut saved)].append(3)
+            items[index] = Item.payload(Payload(rows))
+        case Item.empty:
+            pass
+    return saved
+
+public def test_scoped_child_callback_snapshot_survives_indexed_commit() -> bool:
+    items = [Item.payload(Payload([[1]]))]
+    saved = scoped_update(mut items, 0)
+    return first(items) == [1, 3] and saved[0][0] == [1] and len(saved) == 81

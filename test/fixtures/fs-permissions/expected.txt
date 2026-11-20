@@ -1,0 +1,587 @@
+S1 read_file f: ok
+S1 read_text f: ok
+S1 read_regular_file f: ok
+S1 open rb f: ok
+S1 stat f: ok
+S1 stat_follow f: ok
+S1 realpath f: ok
+S1 exists f: True
+S1 listdir d: ok
+S1 list_entries d: ok
+S1 write_file f: ok
+S1 write_text f: ok
+S1 open wb f: ok
+S1 open ab f: ok
+S1 atomic_write_file f: ok
+S1 replace_file f: ok
+S1 replace_file_synced_mode f: ok
+S1 write_file new: ok
+S1 open wb new: ok
+S1 atomic_write_file new: ok
+S1 mkdir sub: ok
+S1 symlink ln: ok
+S1 link f: ok
+S1 link e/y into d: ok
+S1 link h out of d: ok
+S1 link f onto g: link 'S1/d/f' to 'S1/d/g': already exists
+S1 link subdir: link 'S1/d/subdir' to 'S1/d/hls': is a directory
+S1 link ln: link 'S1/d/ln' to 'S1/d/hll': is a symbolic link the sandbox does not follow, or links nest too deeply
+S1 mkdir_mode msub: ok
+S1 mkdir_mode subdir: mkdir 'S1/d/subdir': already exists
+S1 lock f: ok
+S1 lock new: ok
+S1 lock_directory d: ok
+S1 sync_directory d: ok
+S1 chmod c: ok
+S1 touch c: ok
+S1 set_modified c: ok
+S1 rename h h2 (same dir): ok
+S1 rename e/x into d: ok
+S1 rename k out of d: ok
+S1 rename e/y over d/m: ok
+S1 remove g: ok
+S1 remove subdir: ok
+S2 read_file f: ok
+S2 read_text f: ok
+S2 read_regular_file f: ok
+S2 open rb f: ok
+S2 stat f: ok
+S2 stat_follow f: ok
+S2 realpath f: ok
+S2 exists f: True
+S2 listdir d: ok
+S2 list_entries d: ok
+S2 write_file f: ok
+S2 write_text f: ok
+S2 open wb f: ok
+S2 open ab f: ok
+S2 atomic_write_file f: atomic write 'S2/d/f': permission denied
+S2 replace_file f: replace 'S2/d/f': permission denied
+S2 replace_file_synced_mode f: replace 'S2/d/f': permission denied
+S2 write_file new: write 'S2/d/new': permission denied
+S2 open wb new: open 'S2/d/new2': permission denied
+S2 atomic_write_file new: atomic write 'S2/d/new3': permission denied
+S2 mkdir sub: mkdir 'S2/d/sub': permission denied
+S2 symlink ln: symlink 'S2/d/ln': permission denied
+S2 link f: link 'S2/d/f' to 'S2/d/hl': permission denied
+S2 link e/y into d: link 'S2/e/y' to 'S2/d/hly': permission denied
+S2 link h out of d: ok
+S2 link f onto g: link 'S2/d/f' to 'S2/d/g': already exists
+S2 link subdir: link 'S2/d/subdir' to 'S2/d/hls': is a directory
+S2 link ln: link 'S2/d/ln' to 'S2/d/hll': the path does not exist
+S2 mkdir_mode msub: mkdir 'S2/d/msub': permission denied
+S2 mkdir_mode subdir: mkdir 'S2/d/subdir': already exists
+S2 lock f: ok
+S2 lock new: try lock file 'S2/d/newlock': permission denied
+S2 lock_directory d: ok
+S2 sync_directory d: ok
+S2 chmod c: ok
+S2 touch c: ok
+S2 set_modified c: ok
+S2 rename h h2 (same dir): rename 'S2/d/h' to 'S2/d/h2': permission denied
+S2 rename e/x into d: rename 'S2/e/x' to 'S2/d/x': permission denied
+S2 rename k out of d: rename 'S2/d/k' to 'S2/e/k': permission denied
+S2 rename e/y over d/m: rename 'S2/e/y' to 'S2/d/m': permission denied
+S2 remove g: remove 'S2/d/g': permission denied
+S2 remove subdir: remove 'S2/d/subdir': permission denied
+S3 read_file f: ok
+S3 read_text f: ok
+S3 read_regular_file f: ok
+S3 open rb f: ok
+S3 stat f: ok
+S3 stat_follow f: ok
+S3 realpath f: ok
+S3 exists f: True
+S3 listdir d: ok
+S3 list_entries d: ok
+S3 write_file f: write 'S3/d/f': permission denied
+S3 write_text f: write 'S3/d/f': permission denied
+S3 open wb f: open 'S3/d/f': permission denied
+S3 open ab f: open 'S3/d/f': permission denied
+S3 atomic_write_file f: ok
+S3 replace_file f: ok
+S3 replace_file_synced_mode f: ok
+S3 write_file new: ok
+S3 open wb new: ok
+S3 atomic_write_file new: ok
+S3 mkdir sub: ok
+S3 symlink ln: ok
+S3 link f: ok
+S3 link e/y into d: ok
+S3 link h out of d: ok
+S3 link f onto g: link 'S3/d/f' to 'S3/d/g': already exists
+S3 link subdir: link 'S3/d/subdir' to 'S3/d/hls': is a directory
+S3 link ln: link 'S3/d/ln' to 'S3/d/hll': is a symbolic link the sandbox does not follow, or links nest too deeply
+S3 mkdir_mode msub: ok
+S3 mkdir_mode subdir: mkdir 'S3/d/subdir': already exists
+S3 lock f: ok
+S3 lock new: ok
+S3 lock_directory d: ok
+S3 sync_directory d: ok
+S3 chmod c: ok
+S3 touch c: ok
+S3 set_modified c: ok
+S3 rename h h2 (same dir): ok
+S3 rename e/x into d: ok
+S3 rename k out of d: ok
+S3 rename e/y over d/m: ok
+S3 remove g: ok
+S3 remove subdir: ok
+S4 read_file f: read 'S4/d/f': permission denied
+S4 read_text f: read 'S4/d/f': permission denied
+S4 read_regular_file f: regular read 'S4/d/f': permission denied
+S4 open rb f: open 'S4/d/f': permission denied
+S4 stat f: ok
+S4 stat_follow f: ok
+S4 realpath f: ok
+S4 exists f: True
+S4 listdir d: ok
+S4 list_entries d: ok
+S4 write_file f: ok
+S4 write_text f: ok
+S4 open wb f: ok
+S4 open ab f: ok
+S4 atomic_write_file f: ok
+S4 replace_file f: ok
+S4 replace_file_synced_mode f: ok
+S4 write_file new: ok
+S4 open wb new: ok
+S4 atomic_write_file new: ok
+S4 mkdir sub: ok
+S4 symlink ln: ok
+S4 link f: ok
+S4 link e/y into d: ok
+S4 link h out of d: ok
+S4 link f onto g: link 'S4/d/f' to 'S4/d/g': already exists
+S4 link subdir: link 'S4/d/subdir' to 'S4/d/hls': is a directory
+S4 link ln: link 'S4/d/ln' to 'S4/d/hll': is a symbolic link the sandbox does not follow, or links nest too deeply
+S4 mkdir_mode msub: ok
+S4 mkdir_mode subdir: mkdir 'S4/d/subdir': already exists
+S4 lock f: ok
+S4 lock new: ok
+S4 lock_directory d: ok
+S4 sync_directory d: ok
+S4 chmod c: ok
+S4 touch c: ok
+S4 set_modified c: ok
+S4 rename h h2 (same dir): ok
+S4 rename e/x into d: ok
+S4 rename k out of d: ok
+S4 rename e/y over d/m: ok
+S4 remove g: ok
+S4 remove subdir: ok
+S5 read_file f: read 'S5/d/f': permission denied
+S5 read_text f: read 'S5/d/f': permission denied
+S5 read_regular_file f: regular read 'S5/d/f': permission denied
+S5 open rb f: open 'S5/d/f': permission denied
+S5 stat f: ok
+S5 stat_follow f: ok
+S5 realpath f: ok
+S5 exists f: True
+S5 listdir d: ok
+S5 list_entries d: ok
+S5 write_file f: write 'S5/d/f': permission denied
+S5 write_text f: write 'S5/d/f': permission denied
+S5 open wb f: open 'S5/d/f': permission denied
+S5 open ab f: open 'S5/d/f': permission denied
+S5 atomic_write_file f: ok
+S5 replace_file f: ok
+S5 replace_file_synced_mode f: ok
+S5 write_file new: ok
+S5 open wb new: ok
+S5 atomic_write_file new: ok
+S5 mkdir sub: ok
+S5 symlink ln: ok
+S5 link f: ok
+S5 link e/y into d: ok
+S5 link h out of d: ok
+S5 link f onto g: link 'S5/d/f' to 'S5/d/g': already exists
+S5 link subdir: link 'S5/d/subdir' to 'S5/d/hls': is a directory
+S5 link ln: link 'S5/d/ln' to 'S5/d/hll': is a symbolic link the sandbox does not follow, or links nest too deeply
+S5 mkdir_mode msub: ok
+S5 mkdir_mode subdir: mkdir 'S5/d/subdir': already exists
+S5 lock f: ok
+S5 lock new: ok
+S5 lock_directory d: ok
+S5 sync_directory d: ok
+S5 chmod c: ok
+S5 touch c: ok
+S5 set_modified c: ok
+S5 rename h h2 (same dir): ok
+S5 rename e/x into d: ok
+S5 rename k out of d: ok
+S5 rename e/y over d/m: ok
+S5 remove g: ok
+S5 remove subdir: ok
+S6 read_file f: ok
+S6 read_text f: ok
+S6 read_regular_file f: regular read 'S6/d/f': permission denied
+S6 open rb f: ok
+S6 stat f: ok
+S6 stat_follow f: ok
+S6 realpath f: ok
+S6 exists f: True
+S6 listdir d: listdir 'S6/d': permission denied
+S6 list_entries d: directory listing 'S6/d': permission denied
+S6 write_file f: ok
+S6 write_text f: ok
+S6 open wb f: ok
+S6 open ab f: ok
+S6 atomic_write_file f: atomic write 'S6/d/f': permission denied
+S6 replace_file f: replace 'S6/d/f': permission denied
+S6 replace_file_synced_mode f: replace 'S6/d/f': permission denied
+S6 write_file new: ok
+S6 open wb new: ok
+S6 atomic_write_file new: atomic write 'S6/d/new3': permission denied
+S6 mkdir sub: ok
+S6 symlink ln: symlink 'S6/d/ln': permission denied
+S6 link f: link 'S6/d/f' to 'S6/d/hl': permission denied
+S6 link e/y into d: link 'S6/e/y' to 'S6/d/hly': permission denied
+S6 link h out of d: link 'S6/d/h' to 'S6/e/hlo': permission denied
+S6 link f onto g: link 'S6/d/f' to 'S6/d/g': permission denied
+S6 link subdir: link 'S6/d/subdir' to 'S6/d/hls': permission denied
+S6 link ln: link 'S6/d/ln' to 'S6/d/hll': permission denied
+S6 mkdir_mode msub: mkdir 'S6/d/msub': permission denied
+S6 mkdir_mode subdir: mkdir 'S6/d/subdir': permission denied
+S6 lock f: try lock file 'S6/d/f': permission denied
+S6 lock new: try lock file 'S6/d/newlock': permission denied
+S6 lock_directory d: directory lock 'S6/d': permission denied
+S6 sync_directory d: directory sync 'S6/d': permission denied
+S6 chmod c: chmod 'S6/d/c': permission denied
+S6 touch c: touch 'S6/d/c': permission denied
+S6 set_modified c: set modified 'S6/d/c': permission denied
+S6 rename h h2 (same dir): rename 'S6/d/h' to 'S6/d/h2': permission denied
+S6 rename e/x into d: rename 'S6/e/x' to 'S6/d/x': permission denied
+S6 rename k out of d: rename 'S6/d/k' to 'S6/e/k': permission denied
+S6 rename e/y over d/m: rename 'S6/e/y' to 'S6/d/m': permission denied
+S6 remove g: ok
+S6 remove subdir: ok
+S7 read_file f: read 'S7/d/f': permission denied
+S7 read_text f: read 'S7/d/f': permission denied
+S7 read_regular_file f: regular read 'S7/d/f': permission denied
+S7 open rb f: open 'S7/d/f': permission denied
+S7 stat f: stat 'S7/d/f': permission denied
+S7 stat_follow f: stat 'S7/d/f': permission denied
+S7 realpath f: realpath 'S7/d/f': permission denied
+S7 exists f: False
+S7 listdir d: ok
+S7 list_entries d: ok
+S7 write_file f: write 'S7/d/f': permission denied
+S7 write_text f: write 'S7/d/f': permission denied
+S7 open wb f: open 'S7/d/f': permission denied
+S7 open ab f: open 'S7/d/f': permission denied
+S7 atomic_write_file f: atomic write 'S7/d/f': permission denied
+S7 replace_file f: replace 'S7/d/f': permission denied
+S7 replace_file_synced_mode f: replace 'S7/d/f': permission denied
+S7 write_file new: write 'S7/d/new': permission denied
+S7 open wb new: open 'S7/d/new2': permission denied
+S7 atomic_write_file new: atomic write 'S7/d/new3': permission denied
+S7 mkdir sub: mkdir 'S7/d/sub': permission denied
+S7 symlink ln: symlink 'S7/d/ln': permission denied
+S7 link f: link 'S7/d/f' to 'S7/d/hl': permission denied
+S7 link e/y into d: link 'S7/e/y' to 'S7/d/hly': permission denied
+S7 link h out of d: link 'S7/d/h' to 'S7/e/hlo': permission denied
+S7 link f onto g: link 'S7/d/f' to 'S7/d/g': permission denied
+S7 link subdir: link 'S7/d/subdir' to 'S7/d/hls': permission denied
+S7 link ln: link 'S7/d/ln' to 'S7/d/hll': permission denied
+S7 mkdir_mode msub: mkdir 'S7/d/msub': permission denied
+S7 mkdir_mode subdir: mkdir 'S7/d/subdir': permission denied
+S7 lock f: try lock file 'S7/d/f': permission denied
+S7 lock new: try lock file 'S7/d/newlock': permission denied
+S7 lock_directory d: ok
+S7 sync_directory d: ok
+S7 chmod c: chmod 'S7/d/c': permission denied
+S7 touch c: touch 'S7/d/c': permission denied
+S7 set_modified c: set modified 'S7/d/c': permission denied
+S7 rename h h2 (same dir): rename 'S7/d/h' to 'S7/d/h2': permission denied
+S7 rename e/x into d: rename 'S7/e/x' to 'S7/d/x': permission denied
+S7 rename k out of d: rename 'S7/d/k' to 'S7/e/k': permission denied
+S7 rename e/y over d/m: rename 'S7/e/y' to 'S7/d/m': permission denied
+S7 remove g: remove 'S7/d/g': permission denied
+S7 remove subdir: remove 'S7/d/subdir': permission denied
+S8 read_file f: read 'S8/d/f': permission denied
+S8 read_text f: read 'S8/d/f': permission denied
+S8 read_regular_file f: regular read 'S8/d/f': permission denied
+S8 open rb f: open 'S8/d/f': permission denied
+S8 stat f: stat 'S8/d/f': permission denied
+S8 stat_follow f: stat 'S8/d/f': permission denied
+S8 realpath f: realpath 'S8/d/f': permission denied
+S8 exists f: False
+S8 listdir d: ok
+S8 list_entries d: ok
+S8 write_file f: write 'S8/d/f': permission denied
+S8 write_text f: write 'S8/d/f': permission denied
+S8 open wb f: open 'S8/d/f': permission denied
+S8 open ab f: open 'S8/d/f': permission denied
+S8 atomic_write_file f: atomic write 'S8/d/f': permission denied
+S8 replace_file f: replace 'S8/d/f': permission denied
+S8 replace_file_synced_mode f: replace 'S8/d/f': permission denied
+S8 write_file new: write 'S8/d/new': permission denied
+S8 open wb new: open 'S8/d/new2': permission denied
+S8 atomic_write_file new: atomic write 'S8/d/new3': permission denied
+S8 mkdir sub: mkdir 'S8/d/sub': permission denied
+S8 symlink ln: symlink 'S8/d/ln': permission denied
+S8 link f: link 'S8/d/f' to 'S8/d/hl': permission denied
+S8 link e/y into d: link 'S8/e/y' to 'S8/d/hly': permission denied
+S8 link h out of d: link 'S8/d/h' to 'S8/e/hlo': permission denied
+S8 link f onto g: link 'S8/d/f' to 'S8/d/g': permission denied
+S8 link subdir: link 'S8/d/subdir' to 'S8/d/hls': permission denied
+S8 link ln: link 'S8/d/ln' to 'S8/d/hll': permission denied
+S8 mkdir_mode msub: mkdir 'S8/d/msub': permission denied
+S8 mkdir_mode subdir: mkdir 'S8/d/subdir': permission denied
+S8 lock f: try lock file 'S8/d/f': permission denied
+S8 lock new: try lock file 'S8/d/newlock': permission denied
+S8 lock_directory d: ok
+S8 sync_directory d: ok
+S8 chmod c: chmod 'S8/d/c': permission denied
+S8 touch c: touch 'S8/d/c': permission denied
+S8 set_modified c: set modified 'S8/d/c': permission denied
+S8 rename h h2 (same dir): rename 'S8/d/h' to 'S8/d/h2': permission denied
+S8 rename e/x into d: rename 'S8/e/x' to 'S8/d/x': permission denied
+S8 rename k out of d: rename 'S8/d/k' to 'S8/e/k': permission denied
+S8 rename e/y over d/m: rename 'S8/e/y' to 'S8/d/m': permission denied
+S8 remove g: remove 'S8/d/g': permission denied
+S8 remove subdir: remove 'S8/d/subdir': permission denied
+S9 read_file f: ok
+S9 read_text f: ok
+S9 read_regular_file f: regular read 'S9/d/f': permission denied
+S9 open rb f: ok
+S9 stat f: ok
+S9 stat_follow f: ok
+S9 realpath f: ok
+S9 exists f: True
+S9 listdir d: listdir 'S9/d': permission denied
+S9 list_entries d: directory listing 'S9/d': permission denied
+S9 write_file f: ok
+S9 write_text f: ok
+S9 open wb f: ok
+S9 open ab f: ok
+S9 atomic_write_file f: atomic write 'S9/d/f': permission denied
+S9 replace_file f: replace 'S9/d/f': permission denied
+S9 replace_file_synced_mode f: replace 'S9/d/f': permission denied
+S9 write_file new: write 'S9/d/new': permission denied
+S9 open wb new: open 'S9/d/new2': permission denied
+S9 atomic_write_file new: atomic write 'S9/d/new3': permission denied
+S9 mkdir sub: mkdir 'S9/d/sub': permission denied
+S9 symlink ln: symlink 'S9/d/ln': permission denied
+S9 link f: link 'S9/d/f' to 'S9/d/hl': permission denied
+S9 link e/y into d: link 'S9/e/y' to 'S9/d/hly': permission denied
+S9 link h out of d: link 'S9/d/h' to 'S9/e/hlo': permission denied
+S9 link f onto g: link 'S9/d/f' to 'S9/d/g': permission denied
+S9 link subdir: link 'S9/d/subdir' to 'S9/d/hls': permission denied
+S9 link ln: link 'S9/d/ln' to 'S9/d/hll': permission denied
+S9 mkdir_mode msub: mkdir 'S9/d/msub': permission denied
+S9 mkdir_mode subdir: mkdir 'S9/d/subdir': permission denied
+S9 lock f: try lock file 'S9/d/f': permission denied
+S9 lock new: try lock file 'S9/d/newlock': permission denied
+S9 lock_directory d: directory lock 'S9/d': permission denied
+S9 sync_directory d: directory sync 'S9/d': permission denied
+S9 chmod c: chmod 'S9/d/c': permission denied
+S9 touch c: touch 'S9/d/c': permission denied
+S9 set_modified c: set modified 'S9/d/c': permission denied
+S9 rename h h2 (same dir): rename 'S9/d/h' to 'S9/d/h2': permission denied
+S9 rename e/x into d: rename 'S9/e/x' to 'S9/d/x': permission denied
+S9 rename k out of d: rename 'S9/d/k' to 'S9/e/k': permission denied
+S9 rename e/y over d/m: rename 'S9/e/y' to 'S9/d/m': permission denied
+S9 remove g: remove 'S9/d/g': permission denied
+S9 remove subdir: remove 'S9/d/subdir': permission denied
+F1 try_lock_file l: ok
+F1 lock_file l: ok
+F1 open ab new: ok
+F1 write_text new: ok
+F1 open ab m: ok
+F1 open wb m: ok
+F1 read_text m: ok
+F1 open rb m: ok
+F2 try_lock_file l: try lock file 'F2/l': permission denied
+F2 lock_file l: lock file 'F2/l': permission denied
+F2 open ab new: ok
+F2 write_text new: ok
+F2 open ab m: open 'F2/m': permission denied
+F2 open wb m: open 'F2/m': permission denied
+F2 read_text m: ok
+F2 open rb m: ok
+F3 try_lock_file l: try lock file 'F3/l': permission denied
+F3 lock_file l: lock file 'F3/l': permission denied
+F3 open ab new: ok
+F3 write_text new: ok
+F3 open ab m: ok
+F3 open wb m: ok
+F3 read_text m: read 'F3/m': permission denied
+F3 open rb m: open 'F3/m': permission denied
+F4 try_lock_file l: try lock file 'F4/l': permission denied
+F4 lock_file l: lock file 'F4/l': permission denied
+F4 open ab new: ok
+F4 write_text new: ok
+F4 open ab m: open 'F4/m': permission denied
+F4 open wb m: open 'F4/m': permission denied
+F4 read_text m: read 'F4/m': permission denied
+F4 open rb m: open 'F4/m': permission denied
+F5 try_lock_file l: ok
+F5 lock_file l: ok
+F5 open ab new: ok
+F5 write_text new: ok
+F5 open ab m: ok
+F5 open wb m: ok
+F5 read_text m: ok
+F5 open rb m: ok
+F6 try_lock_file l: try lock file 'F6/l': permission denied
+F6 lock_file l: lock file 'F6/l': permission denied
+F6 open ab new: ok
+F6 write_text new: ok
+F6 open ab m: open 'F6/m': permission denied
+F6 open wb m: open 'F6/m': permission denied
+F6 read_text m: ok
+F6 open rb m: ok
+F7 try_lock_file l: try lock file 'F7/l': permission denied
+F7 lock_file l: lock file 'F7/l': permission denied
+F7 open ab new: ok
+F7 write_text new: ok
+F7 open ab m: ok
+F7 open wb m: ok
+F7 read_text m: read 'F7/m': permission denied
+F7 open rb m: open 'F7/m': permission denied
+D1 read_file f: ok
+D1 read_regular_file f: ok
+D1 stat f: ok
+D1 stat_follow f: ok
+D1 listdir b: ok
+D1 lock_directory b: ok
+D1 sync_directory b: ok
+D1 chmod f: ok
+D1 touch f: ok
+D1 atomic_write f: ok
+D1 write_file new: ok
+D1 mkdir s: ok
+D1 mkdir_mode s2: ok
+D1 link f beside: ok
+D1 link f into e: ok
+D1 remove g: ok
+D1 rename e/dd into b: ok
+D1 rename b/dd out to e: ok
+D2 read_file f: ok
+D2 read_regular_file f: ok
+D2 stat f: ok
+D2 stat_follow f: ok
+D2 listdir b: ok
+D2 lock_directory b: directory lock 'D2/a/b': permission denied
+D2 sync_directory b: directory sync 'D2/a/b': permission denied
+D2 chmod f: ok
+D2 touch f: ok
+D2 atomic_write f: ok
+D2 write_file new: ok
+D2 mkdir s: ok
+D2 mkdir_mode s2: ok
+D2 link f beside: ok
+D2 link f into e: ok
+D2 remove g: ok
+D2 rename e/dd into b: ok
+D2 rename b/dd out to e: ok
+D3 read_file f: ok
+D3 read_regular_file f: regular read 'D3/a/b/f': permission denied
+D3 stat f: ok
+D3 stat_follow f: ok
+D3 listdir b: listdir 'D3/a/b': permission denied
+D3 lock_directory b: directory lock 'D3/a/b': permission denied
+D3 sync_directory b: directory sync 'D3/a/b': permission denied
+D3 chmod f: chmod 'D3/a/b/f': permission denied
+D3 touch f: touch 'D3/a/b/f': permission denied
+D3 atomic_write f: atomic write 'D3/a/b/f': permission denied
+D3 write_file new: ok
+D3 mkdir s: ok
+D3 mkdir_mode s2: mkdir 'D3/a/b/s2': permission denied
+D3 link f beside: link 'D3/a/b/f' to 'D3/a/b/hl': permission denied
+D3 link f into e: link 'D3/a/b/f' to 'D3/e/hlf': permission denied
+D3 remove g: ok
+D3 rename e/dd into b: rename 'D3/e/dd' to 'D3/a/b/dd2': permission denied
+D3 rename b/dd out to e: rename 'D3/a/b/dd' to 'D3/e/dd3': permission denied
+D4 read_file f: read 'D4/a/b/f': permission denied
+D4 read_regular_file f: regular read 'D4/a/b/f': permission denied
+D4 stat f: stat 'D4/a/b/f': permission denied
+D4 stat_follow f: stat 'D4/a/b/f': permission denied
+D4 listdir b: listdir 'D4/a/b': permission denied
+D4 lock_directory b: directory lock 'D4/a/b': permission denied
+D4 sync_directory b: directory sync 'D4/a/b': permission denied
+D4 chmod f: chmod 'D4/a/b/f': permission denied
+D4 touch f: touch 'D4/a/b/f': permission denied
+D4 atomic_write f: atomic write 'D4/a/b/f': permission denied
+D4 write_file new: write 'D4/a/b/new': permission denied
+D4 mkdir s: mkdir 'D4/a/b/s': permission denied
+D4 mkdir_mode s2: mkdir 'D4/a/b/s2': permission denied
+D4 link f beside: link 'D4/a/b/f' to 'D4/a/b/hl': permission denied
+D4 link f into e: link 'D4/a/b/f' to 'D4/e/hlf': permission denied
+D4 remove g: remove 'D4/a/b/g': permission denied
+D4 rename e/dd into b: rename 'D4/e/dd' to 'D4/a/b/dd2': permission denied
+D4 rename b/dd out to e: rename 'D4/a/b/dd' to 'D4/e/dd3': permission denied
+D5 read_file f: ok
+D5 read_regular_file f: ok
+D5 stat f: ok
+D5 stat_follow f: ok
+D5 listdir b: ok
+D5 lock_directory b: ok
+D5 sync_directory b: ok
+D5 chmod f: ok
+D5 touch f: ok
+D5 atomic_write f: ok
+D5 write_file new: ok
+D5 mkdir s: ok
+D5 mkdir_mode s2: ok
+D5 link f beside: ok
+D5 link f into e: ok
+D5 remove g: ok
+D5 rename e/dd into b: rename 'D5/e/dd' to 'D5/a/b/dd2': permission denied
+D5 rename b/dd out to e: ok
+D6 read_file f: ok
+D6 read_regular_file f: ok
+D6 stat f: ok
+D6 stat_follow f: ok
+D6 listdir b: ok
+D6 lock_directory b: ok
+D6 sync_directory b: ok
+D6 chmod f: ok
+D6 touch f: ok
+D6 atomic_write f: ok
+D6 write_file new: ok
+D6 mkdir s: ok
+D6 mkdir_mode s2: ok
+D6 link f beside: ok
+D6 link f into e: ok
+D6 remove g: ok
+D6 rename e/dd into b: rename 'D6/e/dd' to 'D6/a/b/dd2': permission denied
+D6 rename b/dd out to e: ok
+D7 read_file f: read 'D7/a/b/f': permission denied
+D7 read_regular_file f: regular read 'D7/a/b/f': permission denied
+D7 stat f: stat 'D7/a/b/f': permission denied
+D7 stat_follow f: stat 'D7/a/b/f': permission denied
+D7 listdir b: listdir 'D7/a/b': permission denied
+D7 lock_directory b: directory lock 'D7/a/b': permission denied
+D7 sync_directory b: directory sync 'D7/a/b': permission denied
+D7 chmod f: chmod 'D7/a/b/f': permission denied
+D7 touch f: touch 'D7/a/b/f': permission denied
+D7 atomic_write f: atomic write 'D7/a/b/f': permission denied
+D7 write_file new: write 'D7/a/b/new': permission denied
+D7 mkdir s: mkdir 'D7/a/b/s': permission denied
+D7 mkdir_mode s2: mkdir 'D7/a/b/s2': permission denied
+D7 link f beside: link 'D7/a/b/f' to 'D7/a/b/hl': permission denied
+D7 link f into e: link 'D7/a/b/f' to 'D7/e/hlf': permission denied
+D7 remove g: remove 'D7/a/b/g': permission denied
+D7 rename e/dd into b: rename 'D7/e/dd' to 'D7/a/b/dd2': permission denied
+D7 rename b/dd out to e: rename 'D7/a/b/dd' to 'D7/e/dd3': permission denied
+D8 read_file f: ok
+D8 read_regular_file f: ok
+D8 stat f: ok
+D8 stat_follow f: ok
+D8 listdir b: ok
+D8 lock_directory b: ok
+D8 sync_directory b: ok
+D8 chmod f: ok
+D8 touch f: ok
+D8 atomic_write f: ok
+D8 write_file new: ok
+D8 mkdir s: ok
+D8 mkdir_mode s2: ok
+D8 link f beside: ok
+D8 link f into e: ok
+D8 remove g: ok
+D8 rename e/dd into b: ok
+D8 rename b/dd out to e: ok

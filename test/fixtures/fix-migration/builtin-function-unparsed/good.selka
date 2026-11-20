@@ -1,0 +1,5 @@
+import lib
+
+
+public func use_good(n: int) -> int:
+    return lib.len(n)

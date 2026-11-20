@@ -1,0 +1,51 @@
+# The echo worker: the smallest resident component, and the reference for the framed protocol of
+# `src/component_launch.zig` (component-worker-v1; the frame is `frame.selka`). It reads request frames from standard
+# input until the host closes it or sends a quit frame, and answers each request with a reply frame carrying the same
+# payload, request id and snapshot identity. It writes nothing else on standard output.
+#
+# It fails closed: a header that breaks a rule, or input that ends inside a frame, makes it diagnose on standard error
+# and exit with status 1, so the host sees a dead worker and never a half answer. End of input between frames, or a
+# quit frame, is a clean exit with status 0.
+import frame
+
+# Answer one request. `None` when it was answered, else the status to exit with after the diagnosis was printed.
+func answer(stdin: Input, out: Stream, err: Stream, header: frame.Header) -> int?:
+    match stdin.read_exact(header.payload_length):
+        case None:
+            print(err, "echo worker: standard input ends inside a frame payload")
+            return Some(1)
+        case Some(payload):
+            write(out, frame.encode(frame.reply_kind(), header.request_id, header.snapshot, payload))
+            flush(out)
+            return None
+
+
+func serve(stdin: Input, out: Stream, err: Stream) -> int:
+    while True:
+        const first = stdin.read(1)
+        if len(first) == 0:
+            return 0
+        match stdin.read_exact(63):
+            case None:
+                print(err, "echo worker: standard input ends inside a frame header")
+                return 1
+            case Some(rest):
+                match frame.decode_header(first + rest):
+                    case Err(message):
+                        print(err, message)
+                        return 1
+                    case Ok(header):
+                        if header.kind == frame.quit_kind():
+                            return 0
+                        if header.kind != frame.request_kind():
+                            print(err, "echo worker: a reply frame is not a request")
+                            return 1
+                        match answer(stdin, out, err, header):
+                            case Some(status):
+                                return status
+                            case None:
+                                continue
+
+
+func main(stdin: Input, out: Stream, err: Stream) -> int:
+    return serve(stdin, out, err)

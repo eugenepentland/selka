@@ -1,0 +1,10 @@
+# In an inner block: `head` lends from `xs`, so the append while `h` is live is refused.
+import lib
+
+func main() -> int:
+    mut xs = ["a", "b"]
+    if len(xs) > 1:
+        const h = lib.head(xs)
+        append(mut xs, "c")
+        return len(h)
+    return 0

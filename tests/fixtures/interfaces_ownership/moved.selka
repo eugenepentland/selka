@@ -1,0 +1,7 @@
+# An `own` parameter takes its argument: reading `xs` after `keep(own xs)` is refused.
+import lib
+
+func main() -> int:
+    mut xs = ["a"]
+    const kept = lib.keep(own xs)
+    return len(xs) + len(kept)

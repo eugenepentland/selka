@@ -1,0 +1,288 @@
+# Generator expressions passed to the calls that consume them. Every expected
+# value below is the answer CPython 3 gives for the same program.
+import sets
+import strings
+
+func noted(mut seen: int[], value: int) -> bool:
+    append(mut seen, value)
+    return value > 2
+
+
+# spec-case: PY-GENERATOR-1
+public func test_sum_any_all_fold_a_generator() -> bool:
+    mut xs = [1, 2, 3]
+    mut gather_result: int = 0
+    for x in xs:
+        const gather_value: int = x * x
+        gather_result += gather_value
+    if gather_result != 14:
+        return False
+    mut gather_result_next: bool = False
+    mut gather_seen = False
+    for x in xs:
+        const gather_value_next: bool = x > 2
+        if (gather_value_next):
+            gather_result_next = True
+            gather_seen = True
+            break
+        if gather_seen:
+            break
+    if not gather_result_next:
+        return False
+    mut above_five = False
+    for x in xs:
+        if x > 5:
+            above_five = True
+            break
+    if above_five:
+        return False
+    mut gather_result_next_next: bool = True
+    mut gather_seen_next = False
+    for x in xs:
+        const gather_value_next_next: bool = x > 0
+        if not (gather_value_next_next):
+            gather_result_next_next = False
+            gather_seen_next = True
+            break
+        if gather_seen_next:
+            break
+    if not gather_result_next_next:
+        return False
+    mut above_one = True
+    for x in xs:
+        if not (x > 1):
+            above_one = False
+            break
+    return not above_one
+
+
+# spec-case: PY-GENERATOR-1
+public func test_any_and_all_stop_at_the_deciding_value() -> bool:
+    mut seen: int[] = []
+    mut gather_result: bool = False
+    mut gather_seen = False
+    for x in [1, 3, 4, 5]:
+        const gather_value: bool = noted(mut seen, x)
+        if (gather_value):
+            gather_result = True
+            gather_seen = True
+            break
+        if gather_seen:
+            break
+    mut found = gather_result
+    if not found or seen != [1, 3]:
+        return False
+    mut checked: int[] = []
+    mut gather_result_next: bool = True
+    mut gather_seen_next = False
+    for x in [1, 2, 9, 1]:
+        const gather_value_next: bool = not noted(mut checked, x)
+        if not (gather_value_next):
+            gather_result_next = False
+            gather_seen_next = True
+            break
+        if gather_seen_next:
+            break
+    mut every = gather_result_next
+    return not every and checked == [1, 2, 9]
+
+
+# spec-case: PY-GENERATOR-1
+public func test_any_leaves_every_loop_of_a_nested_generator() -> bool:
+    mut seen: int[] = []
+    mut grid = [[1, 2], [3, 4], [5, 6]]
+    mut gather_result: bool = False
+    mut gather_seen = False
+    for row in grid:
+        for x in row:
+            const gather_value: bool = noted(mut seen, x)
+            if (gather_value):
+                gather_result = True
+                gather_seen = True
+                break
+            if gather_seen:
+                break
+        if gather_seen:
+            break
+    mut found = gather_result
+    return found and seen == [1, 2, 3]
+
+
+# spec-case: PY-GENERATOR-1
+public func test_min_and_max_fold_ints_floats_and_text() -> bool:
+    mut xs = [4, -2, 9]
+    mut words = ["pear", "fig", "kiwi"]
+    mut gather_result: int? = None
+    for x in xs:
+        const gather_value: int = x * 2
+        match gather_result:
+            case Some(gather_previous):
+                if gather_value < gather_previous:
+                    gather_result = Some(gather_value)
+            case None:
+                gather_result = Some(gather_value)
+    const gather_final: int
+    match gather_result:
+        case Some(gather_value):
+            gather_final = gather_value
+        case None:
+            assert False, "min() arg is an empty sequence"
+            const gather_empty: int[] = []
+            gather_final = min(gather_empty)
+    if gather_final != -4:
+        return False
+    mut successor_max: int? = None
+    for x in xs:
+        const candidate: int = x + 1
+        match successor_max:
+            case Some(previous):
+                if candidate > previous:
+                    successor_max = Some(candidate)
+            case None:
+                successor_max = Some(candidate)
+    const successor_max_value: int
+    match successor_max:
+        case Some(value):
+            successor_max_value = value
+        case None:
+            assert False, "max() arg is an empty sequence"
+            const empty: int[] = []
+            successor_max_value = max(empty)
+    if successor_max_value != 10:
+        return False
+    mut word_max: str? = None
+    for w in words:
+        const candidate: str = copy((w))
+        match copy(word_max):
+            case Some(previous):
+                if candidate > previous:
+                    word_max = Some(own candidate)
+            case None:
+                word_max = Some(own candidate)
+    const word_max_value: str
+    match word_max:
+        case Some(value):
+            word_max_value = copy((value))
+        case None:
+            assert False, "max() arg is an empty sequence"
+            const empty: str[] = []
+            word_max_value = max(empty)
+    if word_max_value != "pear":
+        return False
+    mut length_min: int? = None
+    for w in words:
+        const candidate: int = strings.char_count(w)
+        match length_min:
+            case Some(previous):
+                if candidate < previous:
+                    length_min = Some(candidate)
+            case None:
+                length_min = Some(candidate)
+    const length_min_value: int
+    match length_min:
+        case Some(value):
+            length_min_value = value
+        case None:
+            assert False, "min() arg is an empty sequence"
+            const empty: int[] = []
+            length_min_value = min(empty)
+    if length_min_value != 3:
+        return False
+    mut half_max: float? = None
+    for x in xs:
+        const candidate: float = x * 0.5
+        match half_max:
+            case Some(previous):
+                if candidate > previous:
+                    half_max = Some(candidate)
+            case None:
+                half_max = Some(candidate)
+    const half_max_value: float
+    match half_max:
+        case Some(value):
+            half_max_value = value
+        case None:
+            assert False, "max() arg is an empty sequence"
+            const empty: float[] = []
+            half_max_value = max(empty)
+    return half_max_value == 4.5
+
+
+# spec-case: PY-GENERATOR-1
+public func test_sum_of_floats_and_of_an_empty_generator() -> bool:
+    mut gather_result: float = 0.0
+    for x in [1, 2, 3]:
+        const gather_value: float = x / 2
+        gather_result += gather_value
+    mut halves = gather_result
+    mut gather_result_next: int = 0
+    for x in [1, 2, 3]:
+        if x > 5:
+            const gather_value_next: int = x
+            gather_result_next += gather_value_next
+    mut nothing = gather_result_next
+    return halves == 3.0 and nothing == 0
+
+
+# spec-case: PY-GENERATOR-1
+public func test_sorted_list_set_and_dict_collect_a_generator() -> bool:
+    mut xs = [3, 1, 2]
+    mut gather_result: int[] = []
+    for x in xs:
+        const gather_value: int = x * 10
+        append(mut gather_result, gather_value)
+    mut ordered = sorted(gather_result)
+    mut gather_result_next: int[] = []
+    for x in xs:
+        const gather_value_next: int = x
+        append(mut gather_result_next, gather_value_next)
+    mut descending = sorted(gather_result_next, reverse=True)
+    mut gather_result_next_next: int[] = []
+    for x in xs:
+        if x != 1:
+            const gather_value_next_next: int = x
+            append(mut gather_result_next_next, gather_value_next_next)
+    mut copied = list(gather_result_next_next)
+    mut gather_result_next_next_next: set[int] = set()
+    for x in xs:
+        const gather_value_next_next_next: int = x % 2
+        sets.add(mut gather_result_next_next_next, gather_value_next_next_next)
+    mut unique = set(gather_result_next_next_next)
+    mut table: dict[str, int] = {}
+    for x in xs:
+        const key = str(x)
+        const value = x
+        table[own key] = value
+    return ordered == [10, 20, 30] and descending == [3, 2, 1] and copied == [3, 2] and unique == {0, 1} and table["2"] == 2
+
+
+# spec-case: PY-GENERATOR-1
+public func test_join_collects_a_generator_of_text() -> bool:
+    mut words = ["a", "b", "c"]
+    mut capitals: str[] = []
+    for w in words:
+        append(mut capitals, strings.upper(w))
+    if strings.join(capitals, "-") != "A-B-C":
+        return False
+    mut digits: str[] = []
+    for n in range(3):
+        append(mut digits, str(n))
+    return strings.join(digits, "") == "012"
+
+
+# spec-case: PY-GENERATOR-1
+public func test_a_parenthesized_generator_and_a_count() -> bool:
+    mut xs = [1, 5, 7, 2]
+    mut gather_result: int = 0
+    for x in xs:
+        if x > 4:
+            const gather_value: int = 1
+            gather_result += gather_value
+    mut big = gather_result
+    if big != 2:
+        return False
+    mut above_one = 0
+    for x in xs:
+        if x > 1:
+            above_one += 1
+    return above_one == 3

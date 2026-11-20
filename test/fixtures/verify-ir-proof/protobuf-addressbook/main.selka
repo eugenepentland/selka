@@ -1,0 +1,102 @@
+# An address book kept in a protobuf file, the way the protobuf tutorials do it.
+#
+#   addressbook add FILE NAME ID EMAIL [KIND:NUMBER ...]   append a person (KIND is mobile, home or work)
+#   addressbook list FILE                                  print every person
+#
+# Uses the packages `protobuf` (wire runtime) and `pbgen` (code generated from addressbook.proto).
+import pbgen.addressbook as ab
+import pbgen.google.protobuf.timestamp as stamp
+import protobuf.wire as wire
+import strings
+import time
+
+func load(fs: Filesystem, path: str) -> ab.AddressBook fails str:
+    if not fs.exists(path):
+        return ab.AddressBook()
+    const data = try fs.read_file(path)
+    match ab.parse_AddressBook(data):
+        case Ok(book):
+            return book
+        case Err(error):
+            fail "cannot decode " + path + ": " + wire.message(error)
+
+
+func kind_of(name: str) -> ab.Person_PhoneType:
+    if name == "mobile":
+        return ab.Person_PhoneType.MOBILE
+    if name == "home":
+        return ab.Person_PhoneType.HOME
+    if name == "work":
+        return ab.Person_PhoneType.WORK
+    return ab.Person_PhoneType.PHONE_TYPE_UNSPECIFIED
+
+
+func kind_name(kind: ab.Person_PhoneType) -> str:
+    match kind:
+        case MOBILE:
+            return "mobile"
+        case HOME:
+            return "home"
+        case WORK:
+            return "work"
+        case PHONE_TYPE_UNSPECIFIED:
+            return "other"
+        case unrecognized(value=n):
+            return f"unknown({n})"
+
+
+func add(fs: Filesystem, clock: Clock, args: str[]) -> Unit fails str:
+    if len(args) < 5:
+        fail "usage: addressbook add FILE NAME ID EMAIL [KIND:NUMBER ...]"
+    mut book = try load(fs, args[1])
+    const id = parse_int(args[3])
+    if id is None:
+        fail "ID must be a number"
+    mut phones: ab.Person_PhoneNumber[] = []
+    for i in range(5, len(args)):
+        const parts = strings.split(args[i], ":")
+        if len(parts) != 2:
+            fail "a phone is KIND:NUMBER, got " + args[i]
+        append(mut phones, ab.Person_PhoneNumber(number=copy(parts[1]), type_=kind_of(parts[0])))
+    const now = try time.now(clock)
+    const seconds = now.unix_nanoseconds // 1000000000
+    const nanos = now.unix_nanoseconds % 1000000000
+    const person = ab.Person(name=copy(args[2]), id=i32(id), email=copy(args[4]), phones=own phones, last_updated=Some(stamp.Timestamp(seconds=i64(seconds), nanos=i32(nanos))))
+    append(mut book.people, own person)
+    try fs.write_file(args[1], ab.serialize_AddressBook(book))
+
+
+func main_list(fs: Filesystem, out: Stream, path: str) -> Unit fails str:
+    const book = try load(fs, path)
+    for person in book.people:
+        print(out, f"{person.name} (id {person.id}) <{person.email}>")
+        for phone in person.phones:
+            print(out, f"  {kind_name(phone.type_)}: {phone.number}")
+        match person.last_updated:
+            case Some(updated):
+                const instant = time.from_unix_nanoseconds(int(updated.seconds) * 1000000000 + int(updated.nanos))
+                print(out, "  updated " + time.format_rfc3339(instant))
+            case None:
+                pass
+
+
+func main(args: str[], fs: Filesystem, clock: Clock, out: Stream, err: Stream) -> int:
+    if len(args) < 2:
+        print(err, "usage: addressbook add|list FILE ...")
+        return 2
+    if args[0] == "add":
+        match add(fs, clock, args):
+            case Ok(_):
+                return 0
+            case Err(message):
+                print(err, message)
+                return 1
+    if args[0] == "list":
+        match main_list(fs, out, args[1]):
+            case Ok(_):
+                return 0
+            case Err(message):
+                print(err, message)
+                return 1
+    print(err, "unknown command " + args[0])
+    return 2

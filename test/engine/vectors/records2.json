@@ -1,0 +1,118 @@
+{
+  "format": "selka-engine-vectors-v2",
+  "records": [
+    {
+      "name": "a parts table, a projection read of present and absent parts, and a whole-result read",
+      "kind": "module-interface",
+      "identity_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+      "key_hex": "7f9f69ba96ee4c5b5c5de90ab174de83293d78192bd6df2fac6303c5ba047a0f",
+      "argument_hex": "7372632f6c657865722e73656c6b61",
+      "result_hex": "6168807733218a6969483f28b8f6ff7aa596af2c3c2ff45a8a80846a9cfee586",
+      "payload": {
+        "inline_hex": "696e74657266616365206f66207372632f6c657865722e73656c6b61"
+      },
+      "parts": [
+        {
+          "name": "decl:Token",
+          "digest_hex": "d637350feb65ec866142873b5ff665d6dfde3588abe23729042d0b43dd108096"
+        },
+        {
+          "name": "decl:next_token",
+          "digest_hex": "f720fa7f53f8cac847f33e281bb94752a2aba5900dcdcd7fc39e9fb7260c5b40"
+        },
+        {
+          "name": "imports",
+          "digest_hex": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        }
+      ],
+      "reads": [
+        {
+          "tag": "file",
+          "path": "src/lexer.selka",
+          "present": true,
+          "digest_hex": "7d1aa223722b2aaa89b92fc6b2ef0baa709c01eab9f8494b1de5c335f2750707",
+          "stat": {
+            "inode": 77,
+            "size": 6,
+            "mtime": 1761800000000000001,
+            "ctime": 1761800000000000002
+          }
+        },
+        {
+          "tag": "part",
+          "kind": "module-syntax",
+          "key_hex": "e8f9e2c9281d258eec3bd9ff2a9c7abe4f5f2b31a7ff31b97e1361edb63a35ff",
+          "parts": [
+            {
+              "name": "decl:Token",
+              "present": true,
+              "digest_hex": "d637350feb65ec866142873b5ff665d6dfde3588abe23729042d0b43dd108096"
+            },
+            {
+              "name": "decl:next_token",
+              "present": true,
+              "digest_hex": "f720fa7f53f8cac847f33e281bb94752a2aba5900dcdcd7fc39e9fb7260c5b40"
+            },
+            {
+              "name": "decl:retired",
+              "present": false,
+              "digest_hex": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        },
+        {
+          "tag": "query",
+          "kind": "module-syntax",
+          "digest_hex": "20fbded08d3f6b8ebb2dc0ee8e9890792bf4a22f5d82ec1a9558bbe7d409a9b2",
+          "key_hex": "e8f9e2c9281d258eec3bd9ff2a9c7abe4f5f2b31a7ff31b97e1361edb63a35ff"
+        },
+        {
+          "tag": "part",
+          "kind": "module-syntax",
+          "key_hex": "3740df3ddac65be8d55aaa5c39158a86d86674a8716321597d86453330877e31",
+          "parts": []
+        }
+      ],
+      "bytes_hex": "534c4b524543303102000000100000006d6f64756c652d696e746572666163650102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f207f9f69ba96ee4c5b5c5de90ab174de83293d78192bd6df2fac6303c5ba047a0f0f0000007372632f6c657865722e73656c6b616168807733218a6969483f28b8f6ff7aa596af2c3c2ff45a8a80846a9cfee586001c000000696e74657266616365206f66207372632f6c657865722e73656c6b61030000000a0000006465636c3a546f6b656ed637350feb65ec866142873b5ff665d6dfde3588abe23729042d0b43dd1080960f0000006465636c3a6e6578745f746f6b656ef720fa7f53f8cac847f33e281bb94752a2aba5900dcdcd7fc39e9fb7260c5b4007000000696d706f727473d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab04000000010f0000007372632f6c657865722e73656c6b61017d1aa223722b2aaa89b92fc6b2ef0baa709c01eab9f8494b1de5c335f27507074d000000000000000600000000000000018048fdc32b7318028048fdc32b7318070d0000006d6f64756c652d73796e746178e8f9e2c9281d258eec3bd9ff2a9c7abe4f5f2b31a7ff31b97e1361edb63a35ff030000000a0000006465636c3a546f6b656e01d637350feb65ec866142873b5ff665d6dfde3588abe23729042d0b43dd1080960f0000006465636c3a6e6578745f746f6b656e01f720fa7f53f8cac847f33e281bb94752a2aba5900dcdcd7fc39e9fb7260c5b400c0000006465636c3a7265746972656400060d0000006d6f64756c652d73796e746178e8f9e2c9281d258eec3bd9ff2a9c7abe4f5f2b31a7ff31b97e1361edb63a35ff20fbded08d3f6b8ebb2dc0ee8e9890792bf4a22f5d82ec1a9558bbe7d409a9b2070d0000006d6f64756c652d73796e7461783740df3ddac65be8d55aaa5c39158a86d86674a8716321597d86453330877e3100000000f34927cbb173e2f226bd726eb1e170b8e5a6ff57a5d6b9edeae1b3b6e9d7258a"
+    },
+    {
+      "name": "an empty parts table",
+      "kind": "engine-probe",
+      "identity_hex": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "key_hex": "8b0be96082aaa4edbb2dd975de3659923648cb6151b4ea9fc2b8e7912acf25fd",
+      "argument_hex": "",
+      "result_hex": "3ae7d805f6789a6402acb70ad4096a85a56bf6804eaf25c0493ac697548d30b5",
+      "payload": {
+        "inline_hex": "78"
+      },
+      "parts": [],
+      "reads": [
+        {
+          "tag": "exists",
+          "path": "selka.json",
+          "present": true
+        }
+      ],
+      "bytes_hex": "534c4b5245433031020000000c000000656e67696e652d70726f6265cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd8b0be96082aaa4edbb2dd975de3659923648cb6151b4ea9fc2b8e7912acf25fd000000003ae7d805f6789a6402acb70ad4096a85a56bf6804eaf25c0493ac697548d30b50001000000780000000001000000020a00000073656c6b612e6a736f6e01c1a6ab8e987fb30a219665d0645dd0b9e60203da0e444f7830fce80e261713a2"
+    },
+    {
+      "name": "an object payload with a parts table and no reads",
+      "kind": "module-check",
+      "identity_hex": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+      "key_hex": "2cc0b8aeeb265f04c49e9d184a068d4f41775daadba02ef4a977358a82a64f2b",
+      "argument_hex": "7372632f6d61696e2e73656c6b61",
+      "result_hex": "90f009d41bfa9db75ef3e969bfc0b358c824562e23380560bfe477ec234f505a",
+      "payload": {
+        "object_hex": "9126336801f60480ab46100850ecc9bb61b0508496a53a339da63f3ae2e0147c"
+      },
+      "parts": [
+        {
+          "name": "body:main",
+          "digest_hex": "9eec6d94b3ee82108f6d41e798261cd3d0147b7c1c2c87c10e72ea7af8f0a8b3"
+        }
+      ],
+      "reads": [],
+      "bytes_hex": "534c4b5245433031020000000c0000006d6f64756c652d636865636befefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef2cc0b8aeeb265f04c49e9d184a068d4f41775daadba02ef4a977358a82a64f2b0e0000007372632f6d61696e2e73656c6b6190f009d41bfa9db75ef3e969bfc0b358c824562e23380560bfe477ec234f505a019126336801f60480ab46100850ecc9bb61b0508496a53a339da63f3ae2e0147c0100000009000000626f64793a6d61696e9eec6d94b3ee82108f6d41e798261cd3d0147b7c1c2c87c10e72ea7af8f0a8b300000000cb423c0a3f887055ea4913a7693b4400b50415ad829d6805c7d012d6828565e6"
+    }
+  ]
+}

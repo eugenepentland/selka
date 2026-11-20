@@ -1,0 +1,12 @@
+# The wall-clock limit of a batched test (NEW-CORE-TEST-BATCH-1) is its own: a test that
+# hangs times out, ends the shared process, and the test after it runs on, passing. Run
+# with --max-steps 0 and a --timeout-ms that only the hang can reach; nothing else here
+# does work, so the limit is a verdict about the hang and not a race with the machine.
+public func test_e_hangs() -> bool:
+    while True:
+        pass
+    return True
+
+
+public func test_f_passes_after_a_hang() -> bool:
+    return True

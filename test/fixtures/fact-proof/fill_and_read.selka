@@ -1,0 +1,10 @@
+func main(args: str[], out: Stream) -> int:
+    mut n = len(args) + 100
+    mut values: int[] = []
+    for j in range(n):
+        append(mut values, (j * 7) % 1009)
+    mut total = 0
+    for j in range(n):
+        total += values[j] // 3
+    print(out, total)
+    return 0

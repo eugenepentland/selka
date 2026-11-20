@@ -1,0 +1,5 @@
+# A double-quoted text ends at a quote inside a word (F-61, FR14).
+func main(out: Stream) -> int:
+    const name = "x"
+    print(out, "say a"b c", f"{name}")
+    return 0

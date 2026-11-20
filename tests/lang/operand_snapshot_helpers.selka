@@ -1,0 +1,3 @@
+# A module-qualified callee for operand_snapshots.selka (VALUE-SEMANTICS-14).
+public func weigh(a: int[], b: int) -> int:
+    return len(a) * 100 + b

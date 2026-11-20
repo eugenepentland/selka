@@ -1,0 +1,46 @@
+func put_after_read(mut values: int[], index: int, next: int) -> Unit:
+    values[index] = next
+
+
+func last_index(values: int[]) -> int:
+    return len(values) - 1
+
+
+func noted_index(values: int[], mut calls: int[]) -> int:
+    append(mut calls, 1)
+    return len(values) - 1
+
+
+func noted_value(mut calls: int[]) -> int:
+    append(mut calls, 2)
+    return len(calls) + 7
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_scalar_read_finishes_before_mut_callee() -> bool:
+    mut values = [1, 2, 3]
+    put_after_read(mut values, len(values) - 1, 9)
+    return values == [1, 2, 9]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_callback_read_finishes_before_mut_callee() -> bool:
+    const measure: func(int[]) -> int = last_index
+    mut values = [1, 2, 3]
+    put_after_read(mut values, measure(values), 9)
+    return values == [1, 2, 9]
+
+
+# spec-case: OWNERSHIP-CONTRACT-1
+public func test_scalar_read_preserves_other_argument_effect_order() -> bool:
+    mut values = [1, 2, 3]
+    mut calls: int[] = []
+    put_after_read(mut values, noted_index(values, mut calls), noted_value(mut calls))
+    return values == [1, 2, 9] and calls == [1, 2]
+
+
+func main() -> int:
+    assert test_scalar_read_finishes_before_mut_callee()
+    assert test_callback_read_finishes_before_mut_callee()
+    assert test_scalar_read_preserves_other_argument_effect_order()
+    return 0

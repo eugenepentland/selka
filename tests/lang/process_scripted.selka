@@ -1,0 +1,424 @@
+# A scripted Process: `process.scripted(rules)` and a test's `proc: Process` parameter start nothing. `process.run` on one
+# logs the request and answers from the first rule that covers it (`process.expect` adds rules, `process.calls` reads the
+# log), so the code that runs git, curl or a child of itself is tested without running them. Every answer is a function of
+# the program text, so these tests are as cacheable as any other.
+import process
+import strings
+
+func quiet(code: int) -> process.Output:
+    return process.exited(code, b"", b"")
+
+
+func said(text: str) -> process.Output:
+    return process.exited(0, strings.encode(text), b"")
+
+
+# What `process.run` answered, as one line: its stdout, `exit N`, or the error.
+func outcome(proc: Process, argv: str[]) -> str:
+    match process.run(proc, process.command(copy(argv))):
+        case Ok(result):
+            match strings.decode(result.stdout):
+                case Ok(text):
+                    return f"{text}|exit {result.code}"
+                case Err(_):
+                    return "not text"
+        case Err(error):
+            match error:
+                case NotFound(program=name):
+                    return f"not found {name}"
+                case Failed(message=text):
+                    return f"failed {text}"
+
+
+func git_script() -> Process:
+    return process.scripted(
+        [
+            process.Rule(program="git", reply=process.Reply.Exit(output=said("clean\n")), args=Some(["status"])),
+            process.Rule(program="git", reply=process.Reply.Exit(output=quiet(128)), args=Some(["push"])),
+            process.Rule(program="curl", reply=process.Reply.Missing),
+            process.Rule(program="rsync", reply=process.Reply.Refused(message="cannot run 'rsync': permission denied")),
+        ],
+    )
+
+
+public func test_rules_answer_by_program_and_argument_prefix() -> bool:
+    const proc = git_script()
+    if outcome(proc, ["git", "status"]) != "clean\n|exit 0":
+        return False
+    if outcome(proc, ["git", "status", "--short"]) != "clean\n|exit 0":
+        return False
+    return outcome(proc, ["git", "push", "origin"]) == "|exit 128"
+
+
+public func test_a_rule_without_arguments_covers_any_arguments() -> bool:
+    const proc = process.scripted([process.Rule(program="echo", reply=process.Reply.Exit(output=said("any\n")))])
+    return outcome(proc, ["echo"]) == "any\n|exit 0" and outcome(proc, ["echo", "a", "b"]) == "any\n|exit 0"
+
+
+public func test_a_request_with_too_few_arguments_is_not_covered() -> bool:
+    const proc = process.scripted([process.Rule(program="git", reply=process.Reply.Exit(output=quiet(0)), args=Some(["remote", "add"]))])
+    if outcome(proc, ["git", "remote"]) != "failed scripted Process has no rule for ['git', 'remote']":
+        return False
+    if outcome(proc, ["git", "remote", "rm"]) != "failed scripted Process has no rule for ['git', 'remote', 'rm']":
+        return False
+    return outcome(proc, ["git", "remote", "add", "x"]) == "|exit 0"
+
+
+public func test_the_first_covering_rule_in_order_answers() -> bool:
+    const proc = process.scripted(
+        [
+            process.Rule(program="tool", reply=process.Reply.Exit(output=said("specific\n")), args=Some(["run"])),
+            process.Rule(program="tool", reply=process.Reply.Exit(output=said("general\n"))),
+        ],
+    )
+    return outcome(proc, ["tool", "run"]) == "specific\n|exit 0" and outcome(proc, ["tool", "list"]) == "general\n|exit 0"
+
+
+public func test_a_program_that_is_not_there_is_not_found_naming_the_request() -> bool:
+    const proc = git_script()
+    return outcome(proc, ["curl", "-s", "http://example.com"]) == "not found curl"
+
+
+public func test_a_refusal_is_a_failure_with_the_rules_message() -> bool:
+    const proc = git_script()
+    return outcome(proc, ["rsync", "a", "b"]) == "failed cannot run 'rsync': permission denied"
+
+
+public func test_a_request_no_rule_covers_fails_with_the_argv() -> bool:
+    const proc = git_script()
+    return outcome(proc, ["ssh", "host"]) == "failed scripted Process has no rule for ['ssh', 'host']"
+
+
+public func test_times_bounds_a_rule_and_the_next_rule_answers() -> bool:
+    const proc = process.scripted(
+        [
+            process.Rule(program="job", reply=process.Reply.Exit(output=said("first\n")), times=Some(1)),
+            process.Rule(program="job", reply=process.Reply.Exit(output=said("second\n")), times=Some(2)),
+            process.Rule(program="job", reply=process.Reply.Exit(output=said("forever\n"))),
+        ],
+    )
+    const seen = [outcome(proc, ["job"]), outcome(proc, ["job"]), outcome(proc, ["job"]), outcome(proc, ["job"]), outcome(proc, ["job"])]
+    return seen == ["first\n|exit 0", "second\n|exit 0", "second\n|exit 0", "forever\n|exit 0", "forever\n|exit 0"]
+
+
+public func test_a_rule_with_no_uses_left_covers_nothing() -> bool:
+    const proc = process.scripted([process.Rule(program="never", reply=process.Reply.Exit(output=quiet(0)), times=Some(0))])
+    return outcome(proc, ["never"]) == "failed scripted Process has no rule for ['never']"
+
+
+public func test_a_signal_death_is_reported_as_not_exited() -> bool:
+    const killed = process.Output(exited=False, code=9, stdout=b"part", stderr=b"", truncated=True)
+    const proc = process.scripted([process.Rule(program="crash", reply=process.Reply.Exit(output=own killed))])
+    match process.run(proc, process.command(["crash"])):
+        case Ok(result):
+            return not result.exited and result.code == 9 and result.stdout == b"part" and result.truncated
+        case Err(_):
+            return False
+
+
+public func test_the_log_keeps_every_request_in_order_answered_or_not() -> bool:
+    const proc = git_script()
+    _ = outcome(proc, ["git", "status"])
+    _ = outcome(proc, ["ssh", "host"])
+    _ = outcome(proc, ["curl"])
+    const calls = process.calls(proc)
+    return len(calls) == 3 and calls[0].argv == ["git", "status"] and calls[1].argv == ["ssh", "host"] and calls[2].argv == ["curl"]
+
+
+public func test_the_log_carries_the_directory_input_environment_and_limit_of_each_request() -> bool:
+    const proc = process.scripted([process.Rule(program="tool", reply=process.Reply.Exit(output=quiet(0)))])
+    mut request = process.command(["tool", "--flag"])
+    request.directory = "/work"
+    request.input = b"stdin"
+    request.environment = Some(["A=1", "B=2"])
+    request.limit = 99
+    match process.run(proc, request):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    _ = process.run(proc, process.command(["tool"]))
+    const calls = process.calls(proc)
+    if len(calls) != 2:
+        return False
+    if calls[0].argv != ["tool", "--flag"] or calls[0].directory != "/work" or calls[0].input != b"stdin" or calls[0].limit != 99:
+        return False
+    match calls[0].environment:
+        case Some(entries):
+            if entries != ["A=1", "B=2"]:
+                return False
+        case None:
+            return False
+    match calls[1].environment:
+        case Some(_):
+            return False
+        case None:
+            return calls[1].limit == process.DEFAULT_LIMIT and calls[1].directory == "" and len(calls[1].input) == 0
+
+
+public func test_a_process_that_was_not_asked_to_run_anything_has_an_empty_log() -> bool:
+    const proc = git_script()
+    return len(process.calls(proc)) == 0
+
+
+public func test_expect_adds_a_rule_after_the_ones_it_already_has() -> bool:
+    const proc = process.scripted([process.Rule(program="a", reply=process.Reply.Exit(output=said("A\n")))])
+    if outcome(proc, ["b"]) != "failed scripted Process has no rule for ['b']":
+        return False
+    process.expect(proc, process.Rule(program="b", reply=process.Reply.Exit(output=said("B\n"))))
+    process.expect(proc, process.Rule(program="a", reply=process.Reply.Exit(output=said("late\n"))))
+    return outcome(proc, ["b"]) == "B\n|exit 0" and outcome(proc, ["a"]) == "A\n|exit 0"
+
+
+public func test_a_scripted_process_with_no_rules_has_none_until_expected() -> bool:
+    const proc = process.scripted([])
+    if outcome(proc, ["x"]) != "failed scripted Process has no rule for ['x']":
+        return False
+    process.expect(proc, process.Rule(program="x", reply=process.Reply.Exit(output=quiet(7)), times=Some(1)))
+    return outcome(proc, ["x"]) == "|exit 7" and outcome(proc, ["x"]) == "failed scripted Process has no rule for ['x']"
+
+
+public func test_a_test_process_parameter_has_an_empty_script(proc: Process) -> bool:
+    if outcome(proc, ["git", "status"]) != "failed scripted Process has no rule for ['git', 'status']":
+        return False
+    process.expect(proc, process.Rule(program="git", reply=process.Reply.Exit(output=said("expected\n")), args=Some(["status"])))
+    if outcome(proc, ["git", "status"]) != "expected\n|exit 0":
+        return False
+    const calls = process.calls(proc)
+    return len(calls) == 2 and calls[0].argv == ["git", "status"]
+
+
+public func test_a_test_process_parameter_works_beside_a_stream_and_a_filesystem(out: Stream, fs: Filesystem, proc: Process) -> bool:
+    print(out, "using", len(process.calls(proc)))
+    return len(process.calls(proc)) == 0 and not fs.exists("x")
+
+
+public func test_two_scripted_processes_share_nothing() -> bool:
+    const first = git_script()
+    const second = git_script()
+    _ = outcome(first, ["git", "status"])
+    return len(process.calls(first)) == 1 and len(process.calls(second)) == 0
+
+
+public func test_the_scripted_executable_path_is_the_documented_one() -> bool:
+    const proc = process.scripted([])
+    match process.executable_path(proc):
+        case Ok(path):
+            return path == process.SCRIPTED_EXECUTABLE_PATH and path == "/scripted/program"
+        case Err(_):
+            return False
+
+
+public func test_a_test_process_parameter_reports_the_same_executable_path(proc: Process) -> bool:
+    match process.executable_path(proc):
+        case Ok(path):
+            return path == process.SCRIPTED_EXECUTABLE_PATH
+        case Err(_):
+            return False
+
+
+public func test_request_validation_runs_before_the_script() -> bool:
+    const proc = git_script()
+    match process.run(proc, process.command([])):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case NotFound(program=_):
+                    return False
+                case Failed(message=text):
+                    if text != "a process request needs a program to run":
+                        return False
+    mut request = process.command(["git", "status"])
+    request.limit = -1
+    match process.run(proc, request):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case NotFound(program=_):
+                    return False
+                case Failed(message=text):
+                    return text == "a process request needs a limit of zero or more octets" and len(process.calls(proc)) == 0
+
+
+public func test_the_same_reply_serves_every_use_of_an_unbounded_rule() -> bool:
+    const proc = process.scripted([process.Rule(program="date", reply=process.Reply.Exit(output=said("noon\n")))])
+    mut count = 0
+    for round in range(5):
+        if outcome(proc, ["date"]) == "noon\n|exit 0":
+            count += 1
+    return count == 5 and len(process.calls(proc)) == 5
+
+
+# ---- started programs on a scripted Process (FR6) ------------------------------------------------------------------
+# `process.start` on a scripted Process starts nothing: it logs the request and answers as `run` would, and its Child has
+# already ended with the rule's `Output` (pid `SCRIPTED_PID`), so `wait_within`, `wait` and `stop` answer it at once
+# and `signal` sends nothing.
+func started(proc: Process, argv: str[]) -> str:
+    match process.start(proc, process.command(copy(argv)), Some("server.log"), None):
+        case Ok(child):
+            mut held = own child
+            const number = process.pid(mut held)
+            match process.wait(proc, own held):
+                case Ok(output):
+                    return f"pid {number} exit {output.code} {output.exited}"
+                case Err(error):
+                    return "wait failed " + process.message(error)
+        case Err(error):
+            return process.message(error)
+
+
+public func test_start_on_a_scripted_process_answers_from_the_rules_and_logs_the_request() -> bool:
+    const proc = process.scripted(
+        [
+            process.Rule(program="site", reply=process.Reply.Exit(output=quiet(0))),
+            process.Rule(program="chromium", reply=process.Reply.Missing),
+            process.Rule(program="wardd", reply=process.Reply.Refused(message="cannot run 'wardd': permission denied")),
+        ],
+    )
+    assert started(proc, ["site", "--port", "8123"]) == "pid 0 exit 0 True"
+    assert started(proc, ["chromium"]) == "no program 'chromium' was found"
+    assert started(proc, ["wardd"]) == "cannot run 'wardd': permission denied"
+    assert started(proc, ["git"]) == "scripted Process has no rule for ['git']"
+    const calls = process.calls(proc)
+    assert len(calls) == 4
+    return calls[0].argv == ["site", "--port", "8123"]
+
+
+public func test_a_scripted_child_has_ended_so_signal_sends_nothing_and_every_wait_answers_at_once(proc: Process) -> bool:
+    process.expect(proc, process.Rule(program="server", reply=process.Reply.Exit(output=process.Output(exited=False, code=15, stdout=b"", stderr=b"", truncated=False))))
+    mut child = process.start(proc, process.command(["server"]), None, None) else Err(_):
+        return False
+    assert child.pid == process.SCRIPTED_PID
+    const signalled = process.signal(proc, mut child, process.SIGTERM)
+    assert signalled == Ok(())
+    const polled = process.wait_within(proc, mut child, 0)
+    const ended = process.stop(proc, own child, 1000)
+    assert polled == Ok(Some(process.Output(exited=False, code=15, stdout=b"", stderr=b"", truncated=False)))
+    return ended == Ok(process.Output(exited=False, code=15, stdout=b"", stderr=b"", truncated=False))
+
+
+public func test_start_refuses_input_and_an_empty_request_before_a_scripted_process_logs_it(proc: Process) -> bool:
+    mut fed = process.command(["cat"])
+    fed.input = b"x"
+    assert started_request(proc, fed) == "process.start gives the program no standard input: leave request.input empty"
+    assert started_request(proc, process.command([])) == "a process request needs a program to run"
+    return len(process.calls(proc)) == 0
+
+
+func started_request(proc: Process, request: process.Request) -> str:
+    match process.start(proc, request, None, None):
+        case Ok(child):
+            _ = process.stop(proc, own child, 0)
+            return "started"
+        case Err(error):
+            return process.message(error)
+
+
+public func test_wait_within_and_signal_check_their_numbers_on_a_scripted_child(proc: Process) -> bool:
+    process.expect(proc, process.Rule(program="server", reply=process.Reply.Exit(output=quiet(0))))
+    mut child = process.start(proc, process.command(["server"]), None, None) else Err(_):
+        return False
+    const negative = process.wait_within(proc, mut child, -1)
+    const zero = process.signal(proc, mut child, 0)
+    const ended = process.wait(proc, own child)
+    assert negative == Err(process.Error.Failed(message="process.wait_within needs a limit of zero or more milliseconds; process.wait has none"))
+    assert zero == Err(process.Error.Failed(message="a signal number is 1 to 64, not 0"))
+    return ended == Ok(quiet(0))
+
+
+# A started program kept in a union's arm, the shape of a state machine (FX8, decision LIN): `match mut` lends the Child,
+# so it is polled and signalled in place, and the union is still to be ended afterwards (here by `stop` under `match own`).
+enum Server:
+    busy(child: process.Child)
+    idle
+
+
+func poll(proc: Process, mut server: Server) -> bool:
+    match mut server:
+        case busy(child):
+            const polled = process.wait_within(proc, mut child, 0)
+            const signalled = process.signal(proc, mut child, process.SIGTERM)
+            const answered = polled == Ok(Some(quiet(0)))
+            const sent = signalled == Ok(())
+            return answered and sent
+        case idle:
+            return False
+
+
+func shut(proc: Process, own server: Server) -> bool:
+    match own server:
+        case busy(child):
+            return process.stop(proc, own child, 1000) == Ok(quiet(0))
+        case idle:
+            return False
+
+
+public func test_a_child_in_a_union_arm_is_polled_and_signalled_in_place_and_stopped_later(proc: Process) -> bool:
+    process.expect(proc, process.Rule(program="server", reply=process.Reply.Exit(output=quiet(0))))
+    const launched = process.start(proc, process.command(["server"]), None, None) else Err(_):
+        return False
+    mut server = Server.busy(child=own launched)
+    match mut server:
+        case busy(child):
+            _ = process.wait_within(proc, mut child, 0)
+        case idle:
+            pass
+    const again = poll(proc, mut server)
+    const ended = shut(proc, own server)
+    return again and ended
+
+
+# ---- `start_to` on a scripted Process (F-40) -------------------------------------------------------------------------
+# `process.start_to` takes a `Destination` for each of the two output streams, and `Caller` lets the program write to the
+# caller's own streams. A scripted Process starts nothing, so there is nothing to let through: it answers every
+# destination exactly as `start` answers a path or None, logs the same request, and writes no file.
+func started_to(proc: Process, stdout: process.Destination, stderr: process.Destination) -> str:
+    match process.start_to(proc, process.command(["site"]), stdout, stderr):
+        case Ok(child):
+            mut held = own child
+            const number = process.pid(mut held)
+            match process.wait(proc, own held):
+                case Ok(output):
+                    return f"pid {number} exit {output.code} {output.exited} {len(output.stdout)}"
+                case Err(error):
+                    return "wait failed " + process.message(error)
+        case Err(error):
+            return process.message(error)
+
+
+public func test_start_to_on_a_scripted_process_answers_every_destination_like_start(proc: Process) -> bool:
+    process.expect(proc, process.Rule(program="site", reply=process.Reply.Exit(output=quiet(3))))
+    assert started_to(proc, process.Destination.Caller, process.Destination.Caller) == "pid 0 exit 3 True 0"
+    assert started_to(proc, process.Destination.Discard, process.Destination.Caller) == "pid 0 exit 3 True 0"
+    assert started_to(proc, process.Destination.File(path="server.log"), process.Destination.File(path="server.log")) == "pid 0 exit 3 True 0"
+    assert started_to(proc, process.Destination.Caller, process.Destination.Discard) == "pid 0 exit 3 True 0"
+    return len(process.calls(proc)) == 4
+
+
+func start_to_request(proc: Process, request: process.Request) -> str:
+    match process.start_to(proc, request, process.Destination.Caller, process.Destination.Caller):
+        case Ok(child):
+            _ = process.stop(proc, own child, 0)
+            return "started"
+        case Err(error):
+            return process.message(error)
+
+
+public func test_start_to_refuses_input_and_an_empty_request_like_start(proc: Process) -> bool:
+    mut fed = process.command(["cat"])
+    fed.input = b"x"
+    assert start_to_request(proc, fed) == "process.start gives the program no standard input: leave request.input empty"
+    assert start_to_request(proc, process.command([])) == "a process request needs a program to run"
+    return len(process.calls(proc)) == 0
+
+
+public func test_start_to_on_a_scripted_missing_program_fails_not_found(proc: Process) -> bool:
+    process.expect(proc, process.Rule(program="chromium", reply=process.Reply.Missing))
+    match process.start_to(proc, process.command(["chromium"]), process.Destination.Caller, process.Destination.Caller):
+        case Ok(child):
+            _ = process.stop(proc, own child, 0)
+            return False
+        case Err(error):
+            return process.message(error) == "no program 'chromium' was found"

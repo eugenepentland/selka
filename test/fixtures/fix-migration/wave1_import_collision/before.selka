@@ -1,0 +1,15 @@
+func count(lists: int) -> int:
+    return lists
+
+
+func main() -> int:
+    const lists = 3
+    const strings = 4
+    const byte_builder = 5
+    const octets: bytes = b"x"
+    const values = [7] * lists
+    if len(values) != count(lists) or not (7 in values):
+        return 1
+    if len("x" * strings) != 4 or len(octets * byte_builder) != 5:
+        return 2
+    return 42

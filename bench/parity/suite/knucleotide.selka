@@ -1,0 +1,46 @@
+# knucleotide: every k-letter substring of a generated DNA sequence counted in a
+# dict[str, int] keyed by slices of one str (SUITE.md section 6).
+import dicts
+import strings
+
+record Entry:
+    key: str
+    count: int
+
+
+func generate(length: int) -> str:
+    mut bases = "ACGT"
+    mut parts: str[] = []
+    mut seed = 42
+    for _ in range(length):
+        seed = (seed * 3877 + 29573) % 139968
+        append(mut parts, strings.char_at(bases, seed * 4 // 139968))
+    return strings.join(parts, "")
+
+
+func frequencies(seq: str, k: int) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for i in range(strings.char_count(seq) - k + 1):
+        mut key = copy(strings.char_slice(seq, i, i + k))
+        counts[own key] = dicts.get(counts, key, 0) + 1
+    return counts
+
+
+func descending_count(entry: Entry) -> int:
+    return -entry.count
+
+
+func main(out: Stream) -> int:
+    mut seq = generate(1000000)
+    for k in [1, 2]:
+        mut counts = frequencies(seq, k)
+        # Two stable passes: key ascending, then count descending.
+        mut by_key: Entry[] = []
+        for key in sorted(list(dicts.keys(counts))):
+            append(mut by_key, Entry(key=copy(key), count=counts[key]))
+        for entry in sorted(by_key, key=descending_count):
+            print(out, entry.key, entry.count)
+    for key in ["GGT", "GGTA", "GGTATT", "GGTATTTTAATT", "GGTATTTTAATTTATAGT"]:
+        const counts = frequencies(seq, strings.char_count(key))
+        print(out, f"{dicts.get(counts, key, 0)}\t{copy(key)}")
+    return 0

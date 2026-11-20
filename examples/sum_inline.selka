@@ -1,0 +1,7 @@
+func main() -> int:
+    mut total = 0
+    mut i = 0
+    while i < 100:
+        total += i
+        i += 1
+    return total

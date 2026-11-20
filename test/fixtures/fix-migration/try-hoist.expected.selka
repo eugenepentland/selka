@@ -1,0 +1,70 @@
+# What `selka fix` wrote for try-hoist.selka before TRY-2 (17 November 2026): each `try` inside an expression declared on
+# its own line before its statement. A program already rewritten this way keeps checking and printing what it printed.
+record Pair:
+    left: int
+    right: int
+
+
+func read(text: str) -> int fails str:
+    if text == "":
+        fail "empty"
+    return len(text)
+
+
+func names(n: int) -> str[] fails str:
+    if n < 0:
+        fail "negative"
+    return ["a", "bc"]
+
+
+func header_line(name: str) -> str fails str:
+    return name + ";"
+
+
+func pair(a: str, b: str) -> Pair fails str:
+    return Pair(left=try read(a), right=try read(b))
+
+
+func larger(a: str, b: str) -> int fails str:
+    const x = max(try read(a), 1)
+    const y = max(try read(b), 2)
+    return x + y
+
+
+func text_of(name: str) -> str fails str:
+    mut text = "head: "
+    const header_line_value = try header_line(name)
+    text = text + header_line_value
+    return text
+
+
+func count(n: int) -> int fails str:
+    mut seen = 0
+    const names_value = try names(n)
+    for name in names_value:
+        seen += len(name)
+    return seen
+
+
+func main(out: Stream) -> int:
+    match pair("ab", "c"):
+        case Ok(found):
+            print(out, found.left + found.right)
+        case Err(reason):
+            print(out, reason)
+    match larger("abc", "d"):
+        case Ok(found):
+            print(out, found)
+        case Err(reason):
+            print(out, reason)
+    match text_of("x"):
+        case Ok(found):
+            print(out, found)
+        case Err(reason):
+            print(out, reason)
+    match count(1):
+        case Ok(found):
+            print(out, found)
+        case Err(reason):
+            print(out, reason)
+    return 0

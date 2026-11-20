@@ -1,0 +1,7 @@
+# spec-case: CORE-1
+public func test_precedence_grouping_left_associativity_and_o_3() -> bool:
+    return 20 - 6 - 2 == 12
+
+
+func main() -> int:
+    return 0

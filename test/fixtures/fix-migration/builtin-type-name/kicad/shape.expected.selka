@@ -1,0 +1,23 @@
+# Before 7 November 2026 a record, enum or alias named like a builtin type (`Unit`, `int`, `u8`) was declared without complaint and
+# then could be neither built nor read in its own module. Other modules reached it by its qualified name, and this project does.
+public record ShapeUnit:
+    number: int
+    name: str = "u"
+
+
+public enum Mode:
+    plain
+    inverted
+
+
+public func describe(unit: Mode) -> int:
+    match unit:
+        case plain:
+            return 0
+        case inverted:
+            return 1
+
+
+# The builtin unit type, used as it always was: a bare `Unit` here has never meant the record, so the repair leaves it alone.
+public func note(out: Stream) -> Unit:
+    print(out, "noted")

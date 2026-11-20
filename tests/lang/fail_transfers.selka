@@ -1,0 +1,132 @@
+# Bare error names transfer by the same boundary rule as bare returns.
+record Failure:
+    message: str
+    values: int[]
+
+
+record Carrier:
+    message: str
+    sibling: int[]
+
+
+enum WrappedFailure:
+    message(text: str)
+
+
+func message_error(own message: str) -> int fails str:
+    fail message
+
+
+func local_error(value: int) -> int fails str:
+    const message = "error-" + str(value)
+    fail message
+
+
+func list_error(own values: int[]) -> int fails int[]:
+    fail values
+
+
+func record_error(own error: Failure) -> int fails Failure:
+    fail error
+
+
+func optional_error(own error: int[]?) -> int fails int[]?:
+    fail error
+
+
+func coerce_error(own message: str) -> int fails WrappedFailure:
+    fail message
+
+
+func field_error(own carrier: Carrier) -> int fails str:
+    fail own carrier.message
+
+
+@ensures(len(result) > 0)
+func contracted_error(own values: int[], reject: bool) -> int[] fails int[]:
+    if reject:
+        fail values
+    return values
+
+
+public func test_F5_bare_local_error() -> bool:
+    match local_error(7):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "error-7"
+
+
+public func test_F5_bare_owned_parameter_error() -> bool:
+    const message = "owned-" + str(3)
+    match message_error(own message):
+        case Ok(_):
+            return False
+        case Err(error):
+            return error == "owned-3"
+
+
+public func test_F5_list_error() -> bool:
+    match list_error([40, 2]):
+        case Ok(_):
+            return False
+        case Err(values):
+            return values[0] + values[1] == 42
+
+
+public func test_F5_record_error() -> bool:
+    match record_error(Failure(message="error-" + str(7), values=[40, 2])):
+        case Ok(_):
+            return False
+        case Err(error):
+            return error.message == "error-7" and error.values[0] + error.values[1] == 42
+
+
+public func test_F5_optional_errors() -> bool:
+    match optional_error(Some([40, 2])):
+        case Ok(_):
+            return False
+        case Err(Some(values)):
+            if values[0] + values[1] != 42:
+                return False
+        case Err(None):
+            return False
+    match optional_error(None):
+        case Ok(_):
+            return False
+        case Err(Some(_)):
+            return False
+        case Err(None):
+            return True
+
+
+public func test_F5_implicitly_injected_error() -> bool:
+    const message = "wrapped-" + str(7)
+    match coerce_error(own message):
+        case Ok(_):
+            return False
+        case Err(message(text=error)):
+            return error == "wrapped-7"
+
+
+public func test_F5_field_consumes_carrier_and_drops_sibling() -> bool:
+    match field_error(Carrier(message="field-" + str(7), sibling=[1, 2, 3])):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "field-7"
+
+
+public func test_F5_contract_success_and_error_boundaries() -> bool:
+    # The empty error skips the successful-result postcondition.
+    match contracted_error([], True):
+        case Ok(_):
+            return False
+        case Err(values):
+            if len(values) != 0:
+                return False
+    match contracted_error([42], False):
+        case Ok(values):
+            return values[0] == 42
+        case Err(_):
+            return False

@@ -1,0 +1,2091 @@
+# The bit pattern of a binary64 value, as its u64 IEEE encoding. Every NaN
+# answers the canonical quiet NaN, since no program may observe a NaN's payload.
+public func bits(value: float) -> u64:
+    if value != value:
+        return 9221120237041090560
+    return __float_bits(value)
+
+
+# The binary64 value whose IEEE encoding is the given u64 pattern.
+public func from_bits(pattern: u64) -> float:
+    return __float_from_bits(pattern)
+
+
+# The bit pattern of a binary32 value, as its u32 IEEE encoding; every NaN answers the canonical quiet NaN.
+public func f32_bits(value: f32) -> u32:
+    if value != value:
+        return 2143289344
+    return __f32_bits(value)
+
+
+# The binary32 value whose IEEE encoding is the given u32 pattern.
+public func f32_from_bits(pattern: u32) -> f32:
+    return __f32_from_bits(pattern)
+
+
+# Fused multiply-add: `a * b + c` with a single rounding (IEEE fusedMultiplyAdd, `llvm.fma`).
+public func fma(a: float, b: float, c: float) -> float:
+    return __float_fma(a, b, c)
+
+
+# Fused multiply-add of binary32 values: `a * b + c` rounded once to binary32.
+public func f32_fma(a: f32, b: f32, c: f32) -> f32:
+    return __f32_fma(a, b, c)
+
+
+# Scaling bounds of `hypot`, as Zig's std.math defines them: sqrt of the largest finite value
+# halved, sqrt of the smallest normal, and the smallest subnormal times the upper bound.
+const HYPOT_UPPER: float = __float_sqrt(1.7976931348623157e308 / 2.0)
+
+
+const HYPOT_LOWER: float = __float_sqrt(2.2250738585072014e-308)
+
+
+const HYPOT_SCALE: float = 5e-324 * HYPOT_UPPER
+
+
+# Zig's `hypotFused` for x >= y >= 0: one correction step with fused multiply-adds.
+func hypot_fused(x: float, y: float) -> float:
+    const r = __float_sqrt(fma(x, x, y * y))
+    const rr = r * r
+    const xx = x * x
+    const z = fma(-y, y, rr - xx) + fma(r, r, -rr) - fma(x, x, -xx)
+    return r - z / (2.0 * r)
+
+
+# Zig's `std.math.hypot`: sqrt(x * x + y * y) without unnecessary overflow or underflow, with
+# the same rounding, so a value ported from Zig answers the same bits.
+public func hypot(x: float, y: float) -> float:
+    if is_inf(x) or is_inf(y):
+        return infinity()
+    if is_nan(x) or is_nan(y):
+        return nan()
+    mut major = fabs(x)
+    mut minor = fabs(y)
+    if minor > major:
+        const tempo = major
+        major = minor
+        minor = tempo
+    if minor == 0.0:
+        return major
+    if major - minor == major:
+        return major
+    if major > HYPOT_UPPER:
+        return hypot_fused(major * HYPOT_SCALE, minor * HYPOT_SCALE) / HYPOT_SCALE
+    if minor < HYPOT_LOWER:
+        return hypot_fused(major / HYPOT_SCALE, minor / HYPOT_SCALE) * HYPOT_SCALE
+    return hypot_fused(major, minor)
+
+
+# Zig's `std.math.hypot` for binary32: the squares are formed and summed in binary64 and the root
+# is rounded once to binary32, as Zig does.
+public func f32_hypot(x: f32, y: f32) -> f32:
+    if is_inf(float(x)) or is_inf(float(y)):
+        return f32(infinity())
+    if is_nan(float(x)) or is_nan(float(y)):
+        return f32(nan())
+    const wide_x = float(x)
+    const wide_y = float(y)
+    return f32(__float_sqrt(fma(wide_x, wide_x, wide_y * wide_y)))
+
+
+# --- Zig-exact log10, exp, atan2 and pow_float -----------------------------------------------------------------
+# These four answer the bits of the pinned Zig toolchain's `std.math.log10`, `exp`, `atan2` and `pow` for `f64`: each
+# follows the code Zig runs, operation for operation and in the same order (no reordering, no fused multiply-add).
+# `log10` and `exp` are the compiler_rt routines `@log10` and `@exp` lower to (musl / fdlibm); `atan2` and `atan` are
+# `std/math/atan2.zig` and `atan.zig`; `pow_float` is `std/math/pow.zig` (Go's algorithm), which calls `ln`
+# and `exp`. Special values (NaN, infinities,
+# zeros, subnormals, negative bases) follow Zig's special cases. A NaN result is the canonical NaN, as everywhere in
+# this module. The integer exponents Zig keeps as `i32` and the 32-bit words it keeps as `u32` are `int` here.
+# 2^54: scale of a subnormal argument of `log10`.
+const TWO54: float = 18014398509481984.0
+
+
+# 2^52: scale of a subnormal argument of `ln`.
+const TWO52: float = 4503599627370496.0
+
+
+# The sign bit, the exponent field and the fraction field of a binary64 pattern.
+const SIGN_BIT_MASK: u64 = 0x8000000000000000u64
+
+
+const EXPONENT_MASK: u64 = 0x7ff0000000000000u64
+
+
+const FRACTION_MASK: u64 = 0x000fffffffffffffu64
+
+
+# ATAN2_PI and its low part, the constants of `atan2_64`.
+const ATAN2_PI: float = 3.1415926535897931160e+00
+
+
+const ATAN2_PI_LO: float = 1.2246467991473531772e-16
+
+
+# The high 32 bits of a float's IEEE pattern, as an int.
+func bits_high_word(x: float) -> int:
+    return int(shift_right(bits(x), 32u64))
+
+
+# Whether the sign bit is set (true for -0.0 and -inf).
+func bits_sign_set(x: float) -> bool:
+    return shift_right(bits(x), 63u64) == 1u64
+
+
+# The number of leading zero bits of a 64-bit pattern (64 for zero).
+func bits_leading_zeros(v: u64) -> int:
+    mut count = 0
+    mut probe = SIGN_BIT_MASK
+    while count < 64 and bit_and(v, probe) == 0u64:
+        count = count + 1
+        probe = shift_right(probe, 1u64)
+    return count
+
+
+# The number of trailing zero bits of a 64-bit pattern (64 for zero).
+func bits_trailing_zeros(v: u64) -> int:
+    mut count = 0
+    mut probe = 1u64
+    while count < 64 and bit_and(v, probe) == 0u64:
+        count = count + 1
+        probe = shift_left(probe, 1u64)
+    return count
+
+
+# Zig's `std.math.Frexp(f64)`: the significand and exponent `frexp_parts` answers.
+record FrexpParts:
+    significand: float
+    exponent: int
+
+
+# Zig's `std.math.frexp(f64)`: x = significand * 2^exponent with |significand| in [0.5, 1) (zero and
+# infinity give exponent 0; for a NaN Zig leaves the exponent undefined and this gives 0).
+func frexp_parts(x: float) -> FrexpParts:
+    const v = bits(x)
+    const biased = int(bit_and(shift_right(v, 52u64), 0x7ffu64))
+    const m = bit_and(v, FRACTION_MASK)
+    if biased == 0:
+        if m == 0u64:
+            return FrexpParts(significand=x, exponent=0)
+        # Subnormal: move the leading one of `m` to the (implicit) bit 52 and drop it.
+        const top = 63 - bits_leading_zeros(m)
+        const kept = bit_and(m, shift_left(1u64, u64(top)) - 1u64)
+        const moved = shift_left(kept, u64(52 - top))
+        const pattern = bit_or(bit_or(bit_and(v, SIGN_BIT_MASK), shift_left(1022u64, 52u64)), moved)
+        return FrexpParts(significand=from_bits(pattern), exponent=top - 1073)
+    if biased == 2047:
+        return FrexpParts(significand=x, exponent=0)
+    const pattern = bit_or(bit_and(v, 0x800fffffffffffffu64), shift_left(1022u64, 52u64))
+    return FrexpParts(significand=from_bits(pattern), exponent=biased - 1022)
+
+
+# Zig's `std.math.scalbn(f64, x, n)` (= `ldexp`): x * 2^n, rounded to nearest even in the subnormal range.
+func scalbn_exact(x: float, n: int) -> float:
+    if x != x or is_inf(x):
+        return x
+    const repr = bits(x)
+    const sign_bit = bit_and(repr, SIGN_BIT_MASK)
+    mut exponent = int(bit_and(shift_right(repr, 52u64), 0x7ffu64))
+    if exponent == 0:
+        exponent = exponent + 11 - bits_leading_zeros(shift_left(repr, 1u64))
+    if n >= 0:
+        if n > 2046 - exponent:
+            return from_bits(bit_or(EXPONENT_MASK, sign_bit))
+        if exponent + n <= 0:
+            # The result is subnormal.
+            return from_bits(bit_or(shift_left(repr, u64(n)), sign_bit))
+        if exponent <= 0:
+            # The result is normal but the argument needs shifting.
+            const field = shift_left(u64(n + exponent), 52u64)
+            const fraction = bit_and(shift_left(repr, u64(1 - exponent)), FRACTION_MASK)
+            return from_bits(bit_or(bit_or(field, fraction), sign_bit))
+        return from_bits(repr + shift_left(u64(n), 52u64))
+    if n <= -exponent:
+        if n < -(52 + exponent):
+            # Severe underflow: a signed zero.
+            return from_bits(sign_bit)
+        # The result underflowed: shift and round, ties to even.
+        mut shift = -n
+        if -(exponent + n) + 1 < shift:
+            shift = -(exponent + n) + 1
+        const exact_tie = bits_trailing_zeros(repr) == shift - 1
+        mut result = bit_and(repr, FRACTION_MASK)
+        if exponent > 0:
+            result = bit_or(result, 0x0010000000000000u64)
+        result = shift_right(result, u64(shift - 1))
+        result = shift_right(result + 1u64, 1u64)
+        if exact_tie:
+            result = bit_and(result, 0xfffffffffffffffeu64)
+        return from_bits(bit_or(result, sign_bit))
+    return from_bits(repr - shift_left(u64(-n), 52u64))
+
+
+# Zig's `@log10` for f64 (compiler_rt `log10_f64`), bit for bit: the base-10 logarithm.
+public func log10(x: float) -> float:
+    const ix = bits(x)
+    mut hx = int(shift_right(ix, 32u64))
+    mut v = x
+    mut k = 0
+    if hx < 0x00100000 or hx >= 0x80000000:
+        # log10(+-0) = -inf; log10(negative) = nan; a subnormal is scaled up.
+        if bit_and(ix, 0x7fffffffffffffffu64) == 0u64:
+            return -infinity()
+        if hx >= 0x80000000:
+            return nan()
+        k = k - 54
+        v = v * TWO54
+        hx = bits_high_word(v)
+    elif hx >= 0x7ff00000:
+        return x
+    elif hx == 0x3ff00000 and bit_and(ix, 0xffffffffu64) == 0u64:
+        return 0.0
+    # x into [sqrt(2) / 2, sqrt(2)].  As in the Zig, the low word is the *unscaled* argument's.
+    hx = hx + (0x3ff00000 - 0x3fe6a09e)
+    k = k + shift_right(hx, 20) - 0x3ff
+    hx = bit_and(hx, 0x000fffff) + 0x3fe6a09e
+    v = from_bits(bit_or(shift_left(u64(hx), 32u64), bit_and(ix, 0xffffffffu64)))
+    const f = v - 1.0
+    const hfsq = 0.5 * f * f
+    const s = f / (2.0 + f)
+    const z = s * s
+    const w = z * z
+    const t1 = w * (3.999999999940941908e-01 + w * (2.222219843214978396e-01 + w * 1.531383769920937332e-01))
+    const t2 = z * (6.666666666666735130e-01 + w * (2.857142874366239149e-01 + w * (1.818357216161805012e-01 + w * 1.479819860511658591e-01)))
+    const r = t2 + t1
+    # hi + lo = f - hfsq + s * (hfsq + r) ~ log(1 + f)
+    const hi = from_bits(bit_and(bits(f - hfsq), 0xffffffff00000000u64))
+    const lo = f - hi - hfsq + s * (hfsq + r)
+    # val_hi + val_lo ~ log10(1 + f) + k * log10(2)
+    mut val_hi = hi * 4.34294481878168880939e-01
+    const dk = float(k)
+    const y = dk * 3.01029995663611771306e-01
+    mut val_lo = dk * 3.69423907715893078616e-13 + (lo + hi) * 2.50829467116452752298e-11 + lo * 4.34294481878168880939e-01
+    # Extra precision multiplication.
+    const ww = y + val_hi
+    val_lo = val_lo + ((y - ww) + val_hi)
+    val_hi = ww
+    return val_lo + val_hi
+
+
+# One 64-bit word of `LOG_TABLE`, big endian, as a float (two 32-bit halves, no loop).
+func log_table_word(row: int, column: int) -> float:
+    const base = row * 32 + column * 8
+    const high = LOG_TABLE[base] * 16777216 + LOG_TABLE[base + 1] * 65536 + LOG_TABLE[base + 2] * 256 + LOG_TABLE[base + 3]
+    const low = LOG_TABLE[base + 4] * 16777216 + LOG_TABLE[base + 5] * 65536 + LOG_TABLE[base + 6] * 256 + LOG_TABLE[base + 7]
+    return from_bits(bit_or(shift_left(u64(high), 32u64), u64(low)))
+
+
+# The natural logarithm's table (compiler_rt `log_f64`'s `tab` and `tab2`): 128 rows of four
+# big-endian binary64 words, `invc`, `logc`, `chi`, `clo`.  Generated from lib/compiler_rt/log.zig
+# of the pinned toolchain (hex floats converted exactly); `support_math_test.selka` checks its crc32.
+const LOG_TABLE: bytes = b"\x3f\xf7\x34\xf0\xc3\xe0\xde\x9f\xbf\xd7\xcc\x7f\x79\xe6\x90\x00\x3f\xe6\x10\x00\x01\x4f\xb6\x6b\x3c\x7e\x02\x6c\x91\x42\x5b\x3c\x3f\xf7\x13\x78\x6a\x2c\xe9\x1f\xbf\xd7\x6f\xee\xc2\x0d\x00\x00\x3f\xe6\x30\x00\x03\x4d\xb4\x95\x3c\x8d\xbf\xea\x48\x00\x5d\x41\x3f\xf6\xf2\x60\x08\xfa\xb5\xa0\xbf\xd7\x13\xe3\x13\x51\xe0\x00\x3f\xe6\x50\x00\x0d\x94\xd4\x78\x3c\x8e\x7f\xa7\x86\xd6\xa5\xb7\x3f\xf6\xd1\xa6\x1f\x13\x8c\x7d\xbf\xd6\xb8\x5b\x38\x28\x78\x00\x3f\xe6\x70\x00\x07\x4e\x6f\xad\x3c\x61\xfc\xea\x6b\x54\x25\x4c\x3f\xf6\xb1\x49\x0b\xc5\xb4\xd1\xbf\xd6\x5d\x55\x90\x80\x78\x00\x3f\xe6\x8f\xff\xfe\xdf\x0f\xae\xbc\x7c\x7e\x27\x4c\x59\x0e\xfd\x3f\xf6\x91\x47\x33\x2f\x0c\xba\xbf\xd6\x02\xd0\x76\x18\x00\x00\x3f\xe6\xb0\x00\x07\x63\xc5\xbc\xbc\x8a\xc1\x68\x48\xdc\xda\x01\x3f\xf6\x71\x9f\x18\x22\x42\x23\xbf\xd5\xa8\xca\x86\x90\x90\x00\x3f\xe6\xd0\x00\x1e\x5c\xc1\xf6\x3c\x83\x3f\x1c\x9d\x49\x93\x11\x3f\xf6\x52\x4f\x99\xa5\x1e\xd9\xbf\xd5\x4f\x43\x56\x03\x50\x00\x3f\xe6\xef\xff\xeb\x05\xf6\x3e\xbc\x7e\x80\x04\x1a\xe2\x2d\x53\x3f\xf6\x33\x56\xaa\x8f\x24\xc4\xbf\xd4\xf6\x37\xc3\x6b\x40\x00\x3f\xe7\x10\x00\x0e\x86\x97\x80\x3c\x7b\xff\x66\x71\x09\x79\x52\x3f\xf6\x14\xb3\x6b\x9d\xdc\x14\xbf\xd4\x9d\xa7\xfd\xa8\x50\x00\x3f\xe7\x2f\xff\xfc\x67\xe9\x12\x3c\x8c\x00\xe2\x26\xbd\x87\x24\x3f\xf5\xf6\x64\x52\xc6\x5c\x4c\xbf\xd4\x45\x92\x39\x89\xa8\x00\x3f\xe7\x4f\xff\xdf\x81\x11\x6a\xbc\x6e\x02\x91\x6e\xf1\x01\xd2\x3f\xf5\xd8\x67\xb5\x91\x2c\x4f\xbf\xd3\xed\xf4\x39\xb0\xb8\x00\x3f\xe7\x70\x00\x0f\x67\x9c\x90\xbc\x67\xfc\x71\xcd\x54\x9c\x74\x3f\xf5\xba\xbc\xcb\x5b\x90\xde\xbf\xd3\x96\xce\x44\x8f\x70\x00\x3f\xe7\x8f\xff\xfa\x7e\xc8\x35\x3c\x81\xbe\xc1\x9e\xf5\x04\x83\x3f\xf5\x9d\x61\xf2\xd9\x1a\x78\xbf\xd3\x40\x1e\x17\xbd\xa0\x00\x3f\xe7\xaf\xff\xfe\x20\xc2\xe6\xbc\x70\x7e\x17\x29\xcc\x64\x65\x3f\xf5\x80\x56\x12\x46\x56\x87\xbf\xd2\xe9\xe2\xef\x46\x80\x00\x3f\xe7\xcf\xff\xed\x3f\xc9\x00\xbc\x80\x80\x72\x08\x7b\x8b\x1c\x3f\xf5\x63\x97\xce\xe7\x6b\xd3\xbf\xd2\x94\x1b\x38\x30\xe0\x00\x3f\xe7\xef\xff\xe9\x26\x1a\x76\x3c\x8d\xc0\x28\x6d\x9d\xf9\xae\x3f\xf5\x47\x25\xe2\xa7\x7f\x93\xbf\xd2\x3e\xc5\x8c\xda\x88\x00\x3f\xe8\x10\x00\x04\x9c\xa3\xe8\x3c\x89\x7f\xd2\x51\xe5\x4c\x33\x3f\xf5\x2a\xff\x42\x06\x45\x83\xbf\xd1\xe9\xe1\x29\x27\x90\x00\x3f\xe8\x30\x00\x17\x93\x2c\x8f\xbc\x8a\xfe\xe9\xb6\x30\xf3\x81\x3f\xf5\x0f\x22\xdb\xb2\xbd\xdf\xbf\xd1\x95\x6d\x2b\x48\xf8\x00\x3f\xe8\x50\x00\x06\x33\x73\x9c\x3c\x89\xbf\xbf\x6b\x65\x35\xbc\x3f\xf4\xf3\x8f\x47\x34\xde\xd7\xbf\xd1\x41\x67\x9a\xb9\xf8\x00\x3f\xe8\x70\x00\x20\x42\x89\xc6\xbc\x8b\xbf\x65\xf3\x11\x7b\x75\x3f\xf4\xd8\x43\xcf\xde\x28\x40\xbf\xd0\xed\xd0\x94\xef\x98\x00\x3f\xe8\x8f\xff\xeb\xf5\x79\x04\xbc\x89\x00\x6e\xa2\x3d\xcb\x57\x3f\xf4\xbd\x3e\xc0\x78\xa3\xc8\xbf\xd0\x9a\xa5\x18\xdb\x10\x00\x3f\xe8\xb0\x00\x22\xbc\x04\xdf\xbc\x7d\x00\xdf\x38\xe0\x4b\x0a\x3f\xf4\xa2\x7f\xc3\xe0\x25\x8a\xbf\xd0\x47\xe6\x52\x63\xb8\x00\x3f\xe8\xcf\xff\xe5\x0c\x1b\x8a\xbc\x88\x00\x71\x46\xff\x9f\x05\x3f\xf4\x88\x05\x24\xd4\x84\x34\xbf\xcf\xeb\x22\x45\x86\xf0\x00\x3f\xe8\xef\xff\xfc\x91\x8e\x43\x3c\x83\x81\x7b\xd0\x7a\x70\x38\x3f\xf4\x6d\xce\x1b\x19\x2d\x0b\xbf\xcf\x47\x4a\x75\x17\xb0\x00\x3f\xe9\x10\x00\x1e\xfa\x5f\xc7\x3c\x89\x3e\x91\x76\xdf\xb4\x03\x3f\xf4\x53\xd9\xd3\x39\x18\x54\xbf\xce\xa4\x44\x3d\x10\x30\x00\x3f\xe9\x30\x00\x13\x46\x7b\xb9\x3c\x7f\x80\x4e\x4b\x98\x02\x76\x3f\xf4\x3a\x27\x44\xb4\x84\x5a\xbf\xce\x02\x0d\x44\xe9\xb0\x00\x3f\xe9\x4f\xff\xe6\xee\x07\x6f\xbc\x8f\x7e\xf0\xd9\xff\x62\x2e\x3f\xf4\x20\xb5\x41\x15\xf8\xfb\xbf\xcd\x60\xa2\x29\x77\xf0\x00\x3f\xe9\x6f\xff\xde\x3c\x12\xd1\xbc\x70\x82\xaa\x96\x26\x38\xba\x3f\xf4\x07\x82\xda\x3e\xf4\xb1\xbf\xcc\xc0\x01\x04\x95\x90\x00\x3f\xe9\x8f\xff\xf4\x45\x8a\x0d\xbc\x87\x80\x1b\x91\x64\xa8\xef\x3f\xf3\xee\x8f\x5d\x57\xfe\x8f\xbf\xcc\x20\x29\x56\x89\x10\x00\x3f\xe9\xaf\xff\xdd\x98\x2e\x3e\xbc\x87\x40\xe0\x8a\x5a\x93\x37\x3f\xf3\xd5\xd9\xa0\x0b\x4c\xe9\xbf\xcb\x81\x17\x8d\x81\x10\x00\x3f\xe9\xcf\xff\xed\x49\xfb\x66\x3c\x3f\xce\x08\xc1\x9b\xe0\x00\x3f\xf3\xbd\x60\xc0\x10\xc1\x2b\xbf\xca\xe2\xc9\xcc\xd3\xd0\x00\x3f\xe9\xf0\x00\x20\xf1\x9c\x51\xbc\x8a\x3f\xaa\x27\x88\x5b\x0a\x3f\xf3\xa5\x24\x2b\x75\xda\xb8\xbf\xca\x45\x40\x2e\x12\x90\x00\x3f\xea\x10\x00\x11\x45\xb0\x06\x3c\x74\xff\x48\x99\x58\xda\x56\x3f\xf3\x8d\x22\xcd\x9f\xd0\x02\xbf\xc9\xa8\x77\x68\x1d\xf0\x00\x3f\xea\x30\x00\x07\xbb\xf6\xfa\x3c\x8c\xbe\xab\x8a\x2b\x6d\x18\x3f\xf3\x75\x5b\xc5\x84\x7a\x1c\xbf\xc9\x0c\x6d\x69\x48\x30\x00\x3f\xea\x50\x00\x10\x97\x1d\x79\x3c\x88\xfe\xca\xdd\x78\x79\x30\x3f\xf3\x5d\xce\x49\xad\x36\xe2\xbf\xc8\x71\x20\xa6\x45\xc0\x00\x3f\xea\x70\x00\x1d\xf5\x2e\x48\xbc\x8f\x41\x76\x3d\xd8\xab\xdb\x3f\xf3\x46\x79\x98\x4d\xd4\x40\xbf\xc7\xd6\x8f\xb4\x14\x30\x00\x3f\xea\x90\x00\x1c\x59\x33\x52\xbc\x8e\xbf\x02\x84\xc2\x76\x12\x3f\xf3\x2f\x5c\xce\xff\xcb\x24\xbf\xc7\x3c\xb8\x3c\x62\x70\x00\x3f\xea\xb0\x00\x2a\x4f\x3e\x4b\xbc\x69\xfd\x04\x3c\xff\x3f\x5f\x3f\xf3\x18\x77\x75\xa1\x0d\x49\xbf\xc6\xa3\x9a\x9b\x37\x60\x00\x3f\xea\xcf\xff\xd7\xae\x1e\xd1\xbc\x82\x3e\xe7\x12\x90\x70\xb4\x3f\xf3\x01\xc8\x37\x3e\x39\x90\xbf\xc6\x0b\x31\x54\xb7\xa0\x00\x3f\xea\xef\xff\xee\x51\x04\x78\x3c\x6a\x06\x3e\xe0\x0e\xde\xa3\x3f\xf2\xeb\x4e\xbb\x95\xf8\x41\xbf\xc5\x73\x7d\x76\x24\x30\x00\x3f\xeb\x0f\xff\xdb\x65\x0d\x5b\x3c\x5a\x06\xc8\x38\x1f\x0a\xb9\x3f\xf2\xd5\x0a\x02\x19\xa9\xd1\xbf\xc4\xdc\x7b\x8f\xc2\x30\x00\x3f\xeb\x2f\xff\xfe\xaa\xca\x57\xbc\x79\x01\x1e\x74\x23\x3c\x1d\x3f\xf2\xbe\xf9\xa8\xb7\xfd\x2a\xbf\xc4\x46\x2c\x51\xd2\x00\x00\x3f\xeb\x4f\xff\xd9\x95\xba\xdc\xbc\x79\xff\x10\x68\x86\x2a\x9f\x3f\xf2\xa9\x1c\x7a\x0c\x1b\xab\xbf\xc3\xb0\x8a\xbc\x83\x00\x00\x3f\xeb\x70\x00\x24\x9e\x65\x9c\x3c\x8a\xff\x45\xd0\x86\x4f\x3e\x3f\xf2\x93\x72\x60\x14\xb5\x30\xbf\xc3\x1b\x99\x6b\x49\x00\x00\x3f\xeb\x8f\xff\xf9\x87\x16\x40\x3c\x7c\xfe\x77\x96\xc2\xc3\xf9\x3f\xf2\x7d\xfa\x57\x57\xa1\xf5\xbf\xc2\x87\x54\x90\xa4\x40\x00\x3f\xeb\xaf\xff\xd2\x04\xcb\x4f\xbc\x63\xff\x27\xee\xf2\x2b\xc4\x3f\xf2\x68\xb3\x9b\x1d\x3b\xbf\xbf\xc1\xf3\xb9\xf8\x79\xa0\x00\x3f\xeb\xcf\xff\xd2\x41\x5c\x45\xbc\x6c\xff\xb7\xee\x3b\xea\x21\x3f\xf2\x53\x9d\x83\x8f\xf5\xbd\xbf\xc1\x60\xc8\x25\x2c\xa0\x00\x3f\xeb\xef\xff\xf8\x63\x09\xdf\xbc\x81\x41\x03\x97\x2e\x0b\x5c\x3f\xf2\x3e\xb7\xaa\xc9\x08\x3b\xbf\xc0\xce\x7f\x57\xf7\x20\x00\x3f\xec\x0f\xff\xe1\xb5\x76\x53\x3c\x8b\xc1\x64\x94\xb7\x6a\x19\x3f\xf2\x2a\x01\x2b\xa9\x40\xb6\xbf\xc0\x3c\xdc\x49\xfe\xa0\x00\x3f\xec\x2f\xff\xf1\xfa\x57\xe3\xbc\x64\xfe\xef\x8d\x30\xc6\xed\x3f\xf2\x15\x79\x96\xcc\x41\x32\xbf\xbf\x57\xbd\xbc\x4b\x80\x00\x3f\xec\x4f\xff\xdc\xbf\xe4\x24\xbc\x84\x3f\x68\xbc\xec\x47\x75\x3f\xf2\x01\x20\x1d\xd2\xfc\x9b\xbf\xbe\x37\x08\x96\x40\x40\x00\x3f\xec\x6f\xff\xed\x54\xb9\xf7\x3c\x84\x7e\xa3\xf0\x53\xe0\xec\x3f\xf1\xec\xf4\x49\x4d\x48\x0b\xbf\xbd\x17\x98\x3e\xf9\x40\x00\x3f\xec\x8f\xff\xeb\x99\x8f\xd5\x3c\x73\x83\x06\x8d\xf9\x92\xf1\x3f\xf1\xd8\xf5\x52\x8f\x65\x69\xbf\xbb\xf9\x67\x4e\xd8\xa0\x00\x3f\xec\xb0\x00\x21\x25\x21\x9a\xbc\x68\xfd\x8e\x64\x18\x0e\x04\x3f\xf1\xc5\x23\x11\x57\x7e\x7c\xbf\xba\xdc\x79\x20\x2f\x60\x00\x3f\xec\xcf\xff\xdd\x94\x46\x9c\x3c\x8e\x7e\xbe\x1c\xc7\xea\x72\x3f\xf1\xb1\x7c\x74\xcb\x26\xe9\xbf\xb9\xc0\xc3\xe7\x28\x80\x00\x3f\xec\xef\xff\xea\xfd\xc4\x76\x3c\x8e\xbe\x39\xad\x9f\x88\xfe\x3f\xf1\x9e\x01\x0c\x2c\x1a\xb6\xbf\xb8\xa6\x46\xb3\x72\xc0\x00\x3f\xed\x10\x00\x16\x9a\xf8\x2b\x3c\x75\x7d\x91\xa8\xb9\x5a\x71\x3f\xf1\x8a\xb0\x7b\xb6\x70\xbd\xbf\xb7\x8d\x01\xb3\xac\x00\x00\x3f\xed\x30\x00\x0d\x0f\xf7\x1d\x3c\x89\xc1\x90\x69\x70\xc7\xda\x3f\xf1\x77\x8a\x25\xef\xbc\xb6\xbf\xb6\x74\xf1\x45\x38\x00\x00\x3f\xed\x4f\xff\xea\x79\x0f\xc4\xbc\x58\x0e\x37\xc5\x58\xfe\x0c\x3f\xf1\x64\x8d\x35\x4c\x31\xda\xbf\xb5\x5e\x0e\x6d\x87\x80\x00\x3f\xed\x70\x00\x2e\xdc\x87\xe5\xbc\x7f\x80\xd6\x4d\xc1\x0f\x44\x3f\xf1\x51\xb9\x90\x27\x5f\xdd\xbf\xb4\x48\x5c\xde\xa1\xe0\x00\x3f\xed\x90\x00\x21\xdc\x82\xaa\xbc\x74\x7c\x8f\x94\xfd\x5c\x5c\x3f\xf1\x3f\x0e\xa4\x32\xd2\x4c\xbf\xb3\x33\xd9\x4d\x6a\xa0\x00\x3f\xed\xaf\xff\xd8\x6b\x02\x83\x3c\x8c\x7f\x1d\xc5\x21\x61\x7e\x3f\xf1\x2c\x8b\x72\x10\xf9\xda\xbf\xb2\x20\x79\xf8\xc5\x60\x00\x3f\xed\xd0\x00\x29\x6c\x47\x39\x3c\x88\x01\x9e\xb2\xff\xb1\x53\x3f\xf1\x1a\x30\x28\xec\xb5\x31\xbf\xb1\x0e\x46\x98\x62\x20\x00\x3f\xed\xef\xff\xe5\x44\x90\xf5\x3c\x6e\x00\xd2\xc6\x52\xcc\x89\x3f\xf1\x07\xfb\xda\x84\x34\xaf\xbf\xaf\xfa\x6c\x6a\xd2\x00\x00\x3f\xee\x0f\xff\xcd\xab\xf6\x94\xbc\x7f\x83\x40\x20\x2d\x69\xd2\x3f\xf0\xf5\xee\x0f\x4e\x6b\xb3\xbf\xad\xda\x8d\x4a\x77\x40\x00\x3f\xee\x2f\xff\xdb\x52\xc8\xdd\x3c\x7b\x00\xc1\xca\x1b\x08\x64\x3f\xf0\xe4\x06\x5d\x2a\x9f\xce\xbf\xab\xbc\xec\xe4\x85\x00\x00\x3f\xee\x4f\xff\xf2\x42\x16\xef\x3c\x72\xff\xa8\xb0\x94\xab\x51\x3f\xf0\xd2\x44\x63\x2c\xa5\x21\xbf\xa9\xa1\x89\x40\x12\xc0\x00\x3f\xee\x6f\xff\xe8\x8a\x5e\x11\xbc\x57\xf6\x73\xb1\xef\xbe\x59\x3f\xf0\xc0\xa7\x7c\xe2\x98\x1a\xbf\xa7\x88\x58\x33\x02\xc0\x00\x3f\xee\x90\x00\x11\x9e\xff\x0d\xbc\x84\x80\x8d\x5e\x0b\xc8\x01\x3f\xf0\xaf\x2f\x83\xc6\x36\xd1\xbf\xa5\x71\x5e\x67\xd6\x80\x00\x3f\xee\xaf\xff\xdf\xa5\x17\x44\x3c\x78\x00\x06\xd5\x43\x20\xb5\x3f\xf0\x9d\xdb\x98\xa0\x13\x39\xbf\xa3\x5c\x8a\x49\x65\x80\x00\x3f\xee\xd0\x00\x1a\x12\x7f\xa1\xbc\x50\x02\xf8\x60\x56\x5c\x92\x3f\xf0\x8c\xab\xaf\x52\xe7\xdf\xbf\xa1\x49\xe3\x64\x15\x40\x00\x3f\xee\xf0\x00\x07\xba\xbc\xc4\xbc\x85\x40\x44\x5d\x35\xe6\x11\x3f\xf0\x7b\x9f\x2f\x4e\x28\xfb\xbf\x9e\x72\xc0\x82\xeb\x80\x00\x3f\xef\x0f\xff\xf5\x7a\x8d\x02\xbc\x4f\xfb\x31\x39\xef\x91\x05\x3f\xf0\x6a\xb5\x8c\x35\x8f\x19\xbf\x9a\x55\xf1\x52\x52\x80\x00\x3f\xef\x30\x00\x1e\xe5\x8a\xc7\x3c\x8a\x81\xac\xf2\x73\x11\x55\x3f\xf0\x59\xee\xa5\xec\xf9\x2c\xbf\x96\x3d\x62\xcf\x81\x80\x00\x3f\xef\x4f\xff\xf5\x82\x34\x94\x3c\x8a\x3f\x41\xd4\xd7\xc7\x43\x3f\xf0\x49\x49\xcd\xd1\x2c\x90\xbf\x92\x28\xfb\x8c\xaa\x00\x00\x3f\xef\x6f\xff\xfc\xa9\x4c\x6b\xbc\x62\x02\xf4\x1c\x98\x78\x75\x3f\xf0\x38\xc6\xc6\xf0\xad\xa9\xbf\x8c\x31\x7b\x20\xf9\x00\x00\x3f\xef\x8f\xff\xe1\xf9\xc4\x41\x3c\x77\x7d\xd1\xf4\x77\xe7\x4b\x3f\xf0\x28\x65\x13\x79\x32\xa9\xbf\x84\x19\x35\x5d\xaa\x00\x00\x3f\xef\xaf\xff\xd2\xe0\xe3\x7e\xbc\x6f\x01\x19\x9a\x7c\xa3\x31\x3f\xf0\x18\x24\x27\xea\x73\x48\xbf\x78\x12\x03\xc2\xec\x00\x00\x3f\xef\xd0\x00\x1c\x77\xe4\x9e\x3c\x71\x81\xee\x4b\xce\xac\xb1\x3f\xf0\x08\x04\x06\x14\xb1\x95\xbf\x60\x04\x09\x79\x24\x00\x00\x3f\xef\xef\xff\xf7\xe0\xc3\x31\xbc\x6e\x05\x37\x01\x70\x87\x5a\x3f\xef\xe0\x1f\xf7\x26\xfa\x1a\x3f\x6f\xef\xf3\x84\x90\x00\x00\x3f\xf0\x0f\xff\xf4\x65\x60\x6e\xbc\x8a\x7e\xad\x49\x1c\x0a\xda\x3f\xef\xa1\x1c\xc2\x61\xea\x74\x3f\x87\xdc\x41\x35\x3d\x00\x00\x3f\xf0\x2f\xff\xf3\x86\x7a\x58\xbc\x97\x7f\x69\xc3\xfc\xb2\xe0\x3f\xef\x63\x10\xb0\x81\x99\x2e\x3f\x93\xce\xa3\xc4\xc2\x80\x00\x3f\xf0\x4f\xff\xfd\xfc\x0d\x17\x3c\x97\xbf\xfe\x34\xcb\x94\x5b\x3f\xef\x25\xf6\x3c\xee\xad\xcd\x3f\x9b\x9f\xc1\x14\x89\x00\x00\x3f\xf0\x70\x00\x03\xcd\x4d\x82\x3c\x82\x00\x83\xc0\xe4\x56\xcb\x3f\xee\xe9\xc8\x03\x91\x13\xe7\x3f\xa1\xb0\xd8\xce\x11\x00\x00\x3f\xf0\x8f\xff\xf9\xf2\xcb\xe8\xbc\x6d\xff\xdf\xbe\x37\x75\x1a\x3f\xee\xae\x80\x78\xcb\xb1\xab\x3f\xa5\x8a\x5b\xd0\x01\xc0\x00\x3f\xf0\xb0\x00\x01\x0c\xda\x65\xbc\x91\x3f\x7f\xae\xe6\x26\xeb\x3f\xee\x74\x1a\xa2\x9d\x0c\x9b\x3f\xa9\x5c\x83\x40\xd8\x80\x00\x3f\xf0\xd0\x00\x01\xa4\xd3\x38\x3c\x80\x7d\xfa\x79\x48\x9f\xf7\x3f\xee\x3a\x91\x83\x0a\x99\xb5\x3f\xad\x27\x6a\xef\x57\x80\x00\x3f\xf0\xef\xff\xfa\xda\xfd\xfd\xbc\x77\x04\x05\x70\xd6\x6b\xc0\x3f\xee\x01\xe0\x09\x60\x9a\x56\x3f\xb0\x75\x98\xe5\x98\xc0\x00\x3f\xf1\x10\x00\x0b\xba\xfd\x96\x3c\x8e\x80\xd4\x84\x6d\x0b\x62\x3f\xed\xca\x01\xe5\x77\xbb\x98\x3f\xb2\x53\xf5\xe3\x0d\x20\x00\x3f\xf1\x2f\xff\xfa\xe5\xf4\x5d\x3c\x9d\xbf\xfa\x64\xfd\x36\xef\x3f\xed\x92\xf2\x0b\x7c\x91\x03\x3f\xb4\x2e\xdd\x8b\x38\x00\x00\x3f\xf1\x50\x00\x0d\xd5\x9a\xd9\x3c\x9a\x00\x77\x70\x12\x50\xae\x3f\xed\x5c\xac\x66\xfb\x5c\xce\x3f\xb6\x06\x59\x87\x57\xc0\x00\x3f\xf1\x70\x00\x0f\x21\x55\x9a\x3c\x8d\xfd\xf9\xe2\xe3\xde\xee\x3f\xed\x27\x2c\xaa\x5e\xde\x9d\x3f\xb7\xda\x76\x35\x6a\x00\x00\x3f\xf1\x8f\xff\xfc\x27\x54\x26\x3c\x91\x00\x30\xdc\x3b\x72\x73\x3f\xec\xf2\x6e\x3e\x6b\x2c\xcd\x3f\xb9\xab\x43\x4e\x1c\x60\x00\x3f\xf1\xb0\x00\x12\x3d\x3c\x59\x3c\x99\x7f\x79\x80\x03\x01\x88\x3f\xec\xbe\x6d\xa2\xa7\x79\x02\x3f\xbb\x78\xc7\xbb\x0d\x60\x00\x3f\xf1\xcf\xff\xf8\x29\x9e\xb7\xbc\x65\xf9\x32\xab\x9f\x8c\x67\x3f\xec\x8b\x26\x6d\x37\x08\x6d\x3f\xbd\x43\x13\x32\xe7\x20\x00\x3f\xf1\xef\xff\xf4\x8a\xd4\x00\x3c\x93\x7f\xbf\x9d\xa7\x5b\xeb\x3f\xec\x58\x94\xbd\x5d\x58\x04\x3f\xbf\x0a\x31\x71\xde\x60\x00\x3f\xf2\x10\x00\x0c\x8b\x86\xa4\x3c\x9f\x80\x6b\x91\xfd\x5b\x22\x3f\xec\x26\xb5\x33\xbb\x9f\x8c\x3f\xc0\x67\x15\x2b\x91\x40\x00\x3f\xf2\x30\x00\x03\x85\x43\x03\x3c\x93\xff\xc2\xeb\x9f\xbf\x33\x3f\xeb\xf5\x83\xee\xec\xe7\x3f\x3f\xc1\x47\x85\x82\x92\xb0\x00\x3f\xf2\x4f\xff\xff\xbc\xf6\x84\x3c\x76\x01\xe7\x7e\x2e\x2e\x72\x3f\xeb\xc4\xfd\x75\xdb\x96\xc1\x3f\xc2\x26\x6e\xcd\xca\x30\x00\x3f\xf2\x6f\xff\xf5\x29\x21\xd9\x3c\x7f\xfc\xbb\x76\x7f\x0c\x61\x3f\xeb\x95\x1e\x0c\x86\x4a\x28\x3f\xc3\x03\xd7\xa6\xc5\x50\x00\x3f\xf2\x90\x00\x14\x93\x3a\x3c\xbc\x72\x02\xca\x3c\x02\x41\x2b\x3f\xeb\x65\xe2\xc5\xef\x3e\x2c\x3f\xc3\xdf\xc3\x3c\x33\x10\x00\x3f\xf2\xb0\x00\x14\x55\x63\x13\xbc\x92\x80\x82\x33\xf2\x1f\x02\x3f\xeb\x37\x48\x67\xc9\x88\x8b\x3f\xc4\xba\x36\x6b\x7a\x80\x00\x3f\xf2\xcf\xff\xeb\xfe\x52\x3b\xbc\x88\xff\x7e\x38\x4f\xdc\xf2\x3f\xeb\x09\x4b\x21\x1d\x30\x4a\x3f\xc5\x93\x39\x28\xd1\xf0\x00\x3f\xf2\xf0\x00\x0b\xb8\xad\x96\xbc\x85\xff\x51\x50\x30\x41\xc5\x3f\xea\xdb\xe8\x85\xf2\xef\x7e\x3f\xc6\x6a\xcd\x24\x18\xf0\x00\x3f\xf3\x0f\xff\xfb\x7a\xe2\xaf\xbc\x81\x00\x71\x88\x5e\x28\x9d\x3f\xea\xaf\x1d\x31\x60\x3d\xa2\x3f\xc7\x40\xf8\xec\x66\x90\x00\x3f\xf3\x2f\xff\xfe\xac\x5f\x7f\xbc\x91\xff\x5d\x3f\xb7\xb7\x15\x3f\xea\x82\xe6\x3f\xd3\x58\xa7\x3f\xc8\x15\xc0\xf5\x1a\xf0\x00\x3f\xf3\x50\x00\x0c\xa6\x67\x56\x3c\x95\x7f\x82\x22\x8b\x82\xbd\x3f\xea\x57\x40\xef\x09\x73\x8b\x3f\xc8\xe9\x29\x54\xf6\x80\x00\x3f\xf3\x70\x00\x11\xfb\xf7\x21\x3c\x80\x00\xba\xc4\x0d\xd5\xcc\x3f\xea\x2c\x2a\x90\xab\x4b\x27\x3f\xc9\xbb\x36\x02\xf8\x40\x00\x3f\xf3\x8f\xff\xf9\x59\x2f\xb9\xbc\x94\x3f\x9d\x2d\xb2\xa7\x51\x3f\xea\x01\xa0\x13\x93\xf2\xd1\x3f\xca\x8b\xed\x1c\x2c\x00\x00\x3f\xf3\xb0\x00\x04\xdd\xd2\x42\x3c\x85\x7f\x6b\x70\x76\x38\xe1\x3f\xe9\xd7\x9f\x24\xdb\x3c\x1b\x3f\xcb\x5b\x51\x5c\x01\xd0\x00\x3f\xf3\xcf\xff\xf5\xb2\xc9\x57\x3c\x7a\x02\x3a\x10\xbf\x12\x31\x3f\xe9\xae\x25\x05\xc7\xb1\x90\x3f\xcc\x29\x67\xcc\xbc\xc0\x00\x3f\xf3\xef\xff\xea\xb0\xb4\x18\x3c\x98\x7f\x6d\x66\xb1\x52\xb0\x3f\xe9\x85\x2e\xf2\x97\xce\x2f\x3f\xcc\xf6\x35\xd5\x48\x60\x00\x3f\xf4\x10\x00\x15\x32\xaf\xf4\x3c\x67\xf8\x37\x5f\x19\x85\x24\x3f\xe9\x5c\xba\xee\xa4\x4b\x75\x3f\xcd\xc1\xbd\x34\x46\xc0\x00\x3f\xf4\x30\x00\x17\x47\x8b\x29\x3c\x83\x01\xe6\x72\xdc\x51\x43\x3f\xe9\x34\xc6\x9d\xe7\x48\x38\x3f\xce\x8c\x01\xb8\xcf\xe0\x00\x3f\xf4\x4f\xff\xe7\x95\xb4\x63\x3c\x89\xff\x69\xb8\xb2\x89\x5a\x3f\xe9\x0d\x4f\x2f\x67\x52\xe6\x3f\xcf\x55\x09\xc0\x17\x90\x00\x3f\xf4\x6f\xff\xe8\x04\x75\xe0\xbc\x95\xc0\xb1\x9b\xc2\xf2\x54\x3f\xe8\xe6\x52\x8e\xff\xd7\x9d\x3f\xd0\x0e\x6c\x12\x1f\xb8\x00\x3f\xf4\x8f\xff\xef\x6f\xc1\xe7\x3c\x9b\x40\x09\xf2\x3a\x2a\x72\x3f\xe8\xbf\xce\x9f\xcc\x00\x7c\x3f\xd0\x71\xb8\x0e\x93\xd0\x00\x3f\xf4\xaf\xff\xe5\xbe\xa7\x04\xbc\x94\xff\xb7\xbf\x0d\x7d\x45\x3f\xe8\x99\xc0\xda\xbe\xc3\x0e\x3f\xd0\xd4\x6b\x9e\x86\x70\x00\x3f\xf4\xd0\x00\x17\x10\x27\xde\xbc\x99\xc0\x64\x71\xdc\x6a\x3d\x3f\xe8\x74\x27\xaa\x23\x17\xfb\x3f\xd1\x36\x87\x33\x4b\xd0\x00\x3f\xf4\xf0\x00\x0f\xf0\x3e\xe2\x3c\x97\x7f\x89\x0b\x85\x53\x1c\x3f\xe8\x4f\x00\xac\xb3\x9a\x08\x3f\xd1\x98\x0d\x67\x23\x48\x00\x3f\xf5\x10\x00\x12\xdc\x4b\xd1\x3c\x60\x04\x65\x71\x66\xa4\x36\x3f\xe8\x2a\x49\xe8\x65\x3e\x55\x3f\xd1\xf8\xff\xe0\xcc\x80\x00\x3f\xf5\x30\x00\x16\x05\x27\x7a\xbc\x96\xbf\xce\xce\x23\x32\x09\x3f\xe8\x06\x01\x95\xf4\x02\x60\x3f\xd2\x59\x5f\xd7\x63\x68\x00\x3f\xf5\x4f\xff\xec\xdb\x70\x4c\xbc\x89\x02\x72\x05\x05\xa1\xd7\x3f\xe7\xe2\x25\x63\xe0\xa3\x29\x3f\xd2\xb9\x30\x09\x14\xa8\x00\x3f\xf5\x6f\xff\xef\x5f\x54\xa9\x3c\x9b\xbf\xe6\x0e\xc9\x64\x12\x3f\xe7\xbe\xb3\x77\xdc\xb5\xad\x3f\xd3\x18\x72\x10\x43\x60\x00\x3f\xf5\x90\x00\x17\xe6\x10\x12\x3c\x88\x7e\xc5\x81\xaf\xef\x90\x3f\xe7\x9b\xaa\x67\x97\x25\xc2\x3f\xd3\x77\x26\x6d\xec\x18\x00\x3f\xf5\xb0\x00\x03\xc9\x3e\x92\xbc\x9f\x41\x08\x0a\xbf\x0c\xc0\x3f\xe7\x79\x07\xf2\x17\x06\x57\x3f\xd3\xd5\x4f\xfb\xaf\x30\x00\x3f\xf5\xd0\x00\x1d\x49\x19\xbc\xbc\x98\x81\x2a\xfb\x25\x47\x29\x3f\xe7\x56\xca\xdb\xd6\x13\x0c\x3f\xd4\x32\xee\xe3\x2f\xe0\x00\x3f\xf5\xef\xff\xe7\xb8\x7a\x89\xbc\x94\x7e\xb7\x80\xed\x69\x04"
+
+
+# Zig's `@log` for f64 (compiler_rt `log_f64`, the table-driven ARM optimized-routines algorithm), bit for bit: the natural
+# logarithm, and the kernel of `pow_float`. The logarithm of zero is minus infinity and of a negative value is NaN.
+public func ln(x: float) -> float:
+    const ix = bits(x)
+    # [1 - 2^-4, 1 + 0x1.09p-4): the polynomial about 1.
+    if 0x3fee000000000000u64 <= ix < 0x3ff1090000000000u64:
+        if ix == 0x3ff0000000000000u64:
+            return 0.0
+        const r = x - 1.0
+        const r2 = r * r
+        const r3 = r * r2
+        const y = r3 * (3.333333333333352e-01 + r * -2.4999999999998432e-01 + r2 * 1.9999999999320328e-01 + r3 * (-1.6666666669929706e-01 + r * 1.4285715076560868e-01 + r2 * -1.2499997863982555e-01 + r3 * (1.1110712032936046e-01 + r * -1.0000486757818193e-01 + r2 * 9.181994006195467e-02 + r3 * -8.328363062289341e-02)))
+        mut w = r * 134217728.0
+        const rhi = r + w - w
+        const rlo = r - rhi
+        w = rhi * rhi * -0.5
+        const hi = r + w
+        const lo = r - hi + w + -0.5 * rlo * (rhi + r)
+        return y + lo + hi
+    const top = int(shift_right(ix, 48u64))
+    mut scaled = 0
+    if top < 0x0010 or top >= 0x7ff0:
+        if bit_and(ix, 0x7fffffffffffffffu64) == 0u64:
+            return -infinity()
+        if ix == EXPONENT_MASK:
+            return x
+        if top >= 0x8000 or bit_and(top, 0x7ff0) == 0x7ff0:
+            return nan()
+        # Subnormal: scale by 2^52 and take the exponent back off the pattern.
+        scaled = int(bits(x * TWO52)) - 0x0340000000000000
+    else:
+        scaled = int(ix)
+    # ix - 0x3fe6000000000000 splits into the row (bits 45..51) and the exponent k (bits 52..63, signed).
+    const tmp = scaled - 0x3fe6000000000000
+    const row = bit_and(shift_right(tmp, 45), 127)
+    const k = shift_right(tmp, 52)
+    const z = from_bits(u64(scaled - shift_left(k, 52)))
+    const invc = log_table_word(row, 0)
+    const logc = log_table_word(row, 1)
+    const r = (z - log_table_word(row, 2) - log_table_word(row, 3)) * invc
+    const kd = float(k)
+    const w = kd * 6.931471805598903e-01 + logc
+    const hi = w + r
+    const lo = w - hi + r + kd * 5.497923018708371e-14
+    const r2 = r * r
+    return lo + r2 * -5.000000000000001e-01 + r * r2 * (3.3333333331825593e-01 + r * -2.499999999622955e-01 + r2 * (2.0000304511814496e-01 + r * -1.6667054827627667e-01)) + hi
+
+
+# Zig's `@exp` for f64 (compiler_rt `exp_f64`), bit for bit: e raised to the power x.
+public func exp(x: float) -> float:
+    if x != x:
+        return x
+    const ux = bits(x)
+    const sign_bit = int(shift_right(ux, 63u64))
+    const hx = bit_and(int(shift_right(ux, 32u64)), 0x7fffffff)
+    # |x| >= 708.39: overflow, underflow to zero, or fall through to the reduction.
+    if hx >= 0x4086232b:
+        if x > 709.782712893383973096:
+            return infinity()
+        if x < -708.39641853226410622 and x < -745.13321910194110842:
+            return 0.0
+    mut xr = x
+    mut k = 0
+    mut hi = 0.0
+    mut lo = 0.0
+    if hx > 0x3fd62e42:
+        # |x| > 0.5 * ln2
+        if hx > 0x3ff0a2b2:
+            if sign_bit == 1:
+                k = int(1.44269504088896338700e+00 * x + -0.5)
+            else:
+                k = int(1.44269504088896338700e+00 * x + 0.5)
+        else:
+            k = 1 - sign_bit - sign_bit
+        const dk = float(k)
+        hi = x - dk * 6.93147180369123816490e-01
+        lo = dk * 1.90821492927058770002e-10
+        xr = hi - lo
+    elif hx > 0x3e300000:
+        # |x| > 2^-28
+        hi = x
+    else:
+        return 1.0 + x
+    const xx = xr * xr
+    const c = xr - xx * (1.66666666666666019037e-01 + xx * (-2.77777777770155933842e-03 + xx * (6.61375632143793436117e-05 + xx * (-1.65339022054652515390e-06 + xx * 4.13813679705723846039e-08))))
+    const y = 1.0 + (xr * c / (2.0 - c) - lo + hi)
+    if k == 0:
+        return y
+    return scalbn_exact(y, k)
+
+
+# Zig's `std.math.atan(f64)` (`atanBinary64`), bit for bit: the arc tangent in [-pi/2, pi/2], and the kernel of `atan2`.
+public func atan(x: float) -> float:
+    const pattern = bits(x)
+    const ix = bit_and(int(shift_right(pattern, 32u64)), 0x7fffffff)
+    const negative = shift_right(pattern, 63u64) == 1u64
+    # |x| >= 2^66, infinity or nan.
+    if ix >= 0x44100000:
+        if x != x:
+            return x
+        const big = 1.57079632679489655800e+00 + 7.52316384526264e-37
+        if negative:
+            return -big
+        return big
+    mut v = x
+    mut id = -1
+    if ix < 0x3fdc0000:
+        # |x| < 0.4375
+        if ix < 0x3e400000:
+            return x
+    else:
+        v = fabs(x)
+        if ix < 0x3ff30000:
+            if ix < 0x3fe60000:
+                id = 0
+                v = (2.0 * v - 1.0) / (2.0 + v)
+            else:
+                id = 1
+                v = (v - 1.0) / (v + 1.0)
+        elif ix < 0x40038000:
+            id = 2
+            v = (v - 1.5) / (1.0 + 1.5 * v)
+        else:
+            id = 3
+            v = -1.0 / v
+    const z = v * v
+    const w = z * z
+    const s1 = z * (3.33333333333329318027e-01 + w * (1.42857142725034663711e-01 + w * (9.09088713343650656196e-02 + w * (6.66107313738753120669e-02 + w * (4.97687799461593236017e-02 + w * 1.62858201153657823623e-02)))))
+    const s2 = w * (-1.99999999998764832476e-01 + w * (-1.11111104054623557880e-01 + w * (-7.69187620504482999495e-02 + w * (-5.83357013379057348645e-02 + w * -3.65315727442169155270e-02))))
+    if id < 0:
+        return v - v * (s1 + s2)
+    mut hi = 0.0
+    mut lo = 0.0
+    match id:
+        case 0:
+            hi = 4.63647609000806093515e-01
+            lo = 2.26987774529616870924e-17
+        case 1:
+            hi = 7.85398163397448278999e-01
+            lo = 3.06161699786838301793e-17
+        case 2:
+            hi = 9.82793723247329054082e-01
+            lo = 1.39033110312309984516e-17
+        case _:
+            hi = 1.57079632679489655800e+00
+            lo = 6.12323399573676603587e-17
+    const r = hi - (v * (s1 + s2) - lo - v)
+    if negative:
+        return -r
+    return r
+
+
+# Zig's `std.math.atan2(f64, f64)` (`atan2_64`), bit for bit: the angle of the point (x, y), in [-pi, pi].
+public func atan2(y: float, x: float) -> float:
+    if x != x or y != y:
+        return x + y
+    const ux = bits(x)
+    const uy = bits(y)
+    const ix0 = int(shift_right(ux, 32u64))
+    const lx = int(bit_and(ux, 0xffffffffu64))
+    const iy0 = int(shift_right(uy, 32u64))
+    const ly = int(bit_and(uy, 0xffffffffu64))
+    # x = 1.0
+    if ix0 == 0x3ff00000 and lx == 0:
+        return atan(y)
+    # 2 * sign(x) + sign(y)
+    const m = bit_or(bit_and(shift_right(iy0, 31), 1), bit_and(shift_right(ix0, 30), 2))
+    const ix = bit_and(ix0, 0x7fffffff)
+    const iy = bit_and(iy0, 0x7fffffff)
+    if bit_or(iy, ly) == 0:
+        # atan2(+-0, x)
+        if m == 0 or m == 1:
+            return y
+        if m == 2:
+            return ATAN2_PI
+        return -ATAN2_PI
+    if bit_or(ix, lx) == 0:
+        # atan2(y, +-0)
+        if bit_and(m, 1) != 0:
+            return -ATAN2_PI / 2.0
+        return ATAN2_PI / 2.0
+    if ix == 0x7ff00000:
+        if iy == 0x7ff00000:
+            if m == 0:
+                return ATAN2_PI / 4.0
+            if m == 1:
+                return -ATAN2_PI / 4.0
+            if m == 2:
+                return 3.0 * ATAN2_PI / 4.0
+            return -3.0 * ATAN2_PI / 4.0
+        if m == 0:
+            return 0.0
+        if m == 1:
+            return -0.0
+        if m == 2:
+            return ATAN2_PI
+        return -ATAN2_PI
+    # |y / x| > 0x1p64
+    if ix + 0x4000000 < iy or iy == 0x7ff00000:
+        if bit_and(m, 1) != 0:
+            return -ATAN2_PI / 2.0
+        return ATAN2_PI / 2.0
+    # z = atan(|y / x|) with correct underflow
+    mut z = 0.0
+    if not (bit_and(m, 2) != 0 and iy + 0x4000000 < ix):
+        z = atan(fabs(y / x))
+    if m == 0:
+        return z
+    if m == 1:
+        return -z
+    if m == 2:
+        return ATAN2_PI - (z - ATAN2_PI_LO)
+    return (z - ATAN2_PI_LO) - ATAN2_PI
+
+
+# Zig's private `isOddInteger(f64)` of `pow.zig`.
+func is_odd_integer(x: float) -> bool:
+    if fabs(x) >= 9007199254740992.0:
+        return False
+    const whole = trunc(x)
+    return x - whole == 0.0 and bit_and(int(whole), 1) == 1
+
+
+# Zig's `std.math.pow(f64, x, y)`, bit for bit: x raised to the float power y (Go's algorithm, which Zig ports).
+public func pow_float(x: float, y: float) -> float:
+    if y == 0.0 or x == 1.0:
+        return 1.0
+    if x != x or y != y:
+        return nan()
+    if y == 1.0:
+        return x
+    if x == 0.0:
+        if y < 0.0:
+            if is_odd_integer(y):
+                # copysign(inf, x)
+                if bits_sign_set(x):
+                    return -infinity()
+                return infinity()
+            return infinity()
+        if is_odd_integer(y):
+            return x
+        return 0.0
+    if is_inf(y):
+        if x == -1.0:
+            return 1.0
+        if (fabs(x) < 1.0) == (y > 0.0):
+            return 0.0
+        return infinity()
+    if is_inf(x):
+        if x < 0.0:
+            return pow_float(1.0 / x, -y)
+        if y < 0.0:
+            return 0.0
+        if y > 0.0:
+            return infinity()
+    if y == 0.5:
+        return sqrt(x)
+    if y == -0.5:
+        return 1.0 / sqrt(x)
+    const ay = fabs(y)
+    mut yi = trunc(ay)
+    mut yf = ay - yi
+    if yf != 0.0 and x < 0.0:
+        return nan()
+    if yi >= 9223372036854775808.0:
+        # yi is a large even int, so the result is positive whatever the sign of x.
+        return exp(y * ln(fabs(x)))
+    # a = a1 * 2^ae
+    mut a1 = 1.0
+    mut ae = 0
+    # a *= x^yf
+    if yf != 0.0:
+        if yf > 0.5:
+            yf = yf - 1.0
+            yi = yi + 1.0
+        a1 = exp(yf * ln(x))
+    # a *= x^yi
+    const parts = frexp_parts(x)
+    mut xe = parts.exponent
+    mut x1 = parts.significand
+    mut i = int(yi)
+    while i != 0:
+        if xe < -4096 or 4096 < xe:
+            # xe would overflow the shift below; the lower bound on ae already decides under/overflow.
+            ae = ae + xe
+            break
+        if bit_and(i, 1) == 1:
+            a1 = a1 * x1
+            ae = ae + xe
+        x1 = x1 * x1
+        xe = xe * 2
+        if x1 < 0.5:
+            x1 = x1 + x1
+            xe = xe - 1
+        i = shift_right(i, 1)
+    # a *= a1 * 2^ae
+    if y < 0.0:
+        a1 = 1.0 / a1
+        ae = -ae
+    return scalbn_exact(a1, ae)
+
+
+# --- the rest of the Zig-exact binary64 functions ---------------------------------------------------------------------
+# `acos`, `asin`, `expm1`, `sinh`, `cosh`, `tanh` and `cbrt` are the routines of the pinned Zig's `std/math/*.zig`, and `sin`,
+# `cos` and `tan` are compiler_rt's `sin_f64`, `cos_f64` and `tan_f64` with their `__sin`, `__cos` and `__tan` kernels
+# (`trig.zig`) and the `rem_pio2` argument reduction, Payne-Hanek `rem_pio2_large` included, so no finite argument traps.
+# Each follows the Zig operation for operation and in the same order, with no reordering and no fused multiply-add. The
+# special values are Zig's, and a NaN result is the canonical NaN. The 32-bit words Zig keeps as `u32` and `i32` are `int`.
+# 2^-120, the "inexact" addend Zig writes as `0x1.0p-120`.
+const TINY_2M120: float = 7.52316384526264e-37
+
+
+# pi/2 split in two: the high word and the low part, as the musl routines carry them.
+const PIO2_HI: float = 1.57079632679489655800e+00
+
+
+const PIO2_LO: float = 6.12323399573676603587e-17
+
+
+# The rational approximation shared by Zig's `acosBinary64` and `asinBinary64`: p(z) / q(z), musl's `R`.
+func asin_acos_rational(z: float) -> float:
+    const p = z * (1.66666666666666657415e-01 + z * (-3.25565818622400915405e-01 + z * (2.01212532134862925881e-01 + z * (-4.00555345006794114027e-02 + z * (7.91534994289814532176e-04 + z * 3.47933107596021167570e-05)))))
+    const q = 1.0 + z * (-2.40339491173441421878e+00 + z * (2.02094576023350569471e+00 + z * (-6.88283971605453293030e-01 + z * 7.70381505559019352791e-02)))
+    return p / q
+
+
+# Zig's `std.math.acos(f64)` (`acosBinary64`, from musl), bit for bit: the arc cosine of x in [0, pi], NaN for |x| > 1.
+public func acos(x: float) -> float:
+    const ux = bits(x)
+    const hx = int(shift_right(ux, 32u64))
+    const ix = bit_and(hx, 0x7fffffff)
+    # |x| >= 1 or nan
+    if ix >= 0x3ff00000:
+        const lx = int(bit_and(ux, 0xffffffffu64))
+        if bit_or(ix - 0x3ff00000, lx) == 0:
+            if shift_right(hx, 31) != 0:
+                return 2.0 * PIO2_HI + TINY_2M120
+            return 0.0
+        return 0.0 / (x - x)
+    # |x| < 0.5
+    if ix < 0x3fe00000:
+        # |x| < 2^-57
+        if ix <= 0x3c600000:
+            return PIO2_HI + TINY_2M120
+        return PIO2_HI - (x - (PIO2_LO - x * asin_acos_rational(x * x)))
+    # x < -0.5
+    if shift_right(hx, 31) != 0:
+        const zn = (1.0 + x) * 0.5
+        const sn = sqrt(zn)
+        const wn = asin_acos_rational(zn) * sn - PIO2_LO
+        return 2.0 * (PIO2_HI - (sn + wn))
+    # x > 0.5
+    const z = (1.0 - x) * 0.5
+    const s = sqrt(z)
+    const df = from_bits(bit_and(bits(s), 0xffffffff00000000u64))
+    const c = (z - df * df) / (s + df)
+    const w = asin_acos_rational(z) * s + c
+    return 2.0 * (df + w)
+
+
+# Zig's `std.math.asin(f64)` (`asinBinary64`, from musl), bit for bit: the arc sine of x in [-pi/2, pi/2], NaN for |x| > 1.
+public func asin(x: float) -> float:
+    const ux = bits(x)
+    const hx = int(shift_right(ux, 32u64))
+    const ix = bit_and(hx, 0x7fffffff)
+    # |x| >= 1 or nan
+    if ix >= 0x3ff00000:
+        const lx = int(bit_and(ux, 0xffffffffu64))
+        # asin(1) = +-pi/2 with inexact
+        if bit_or(ix - 0x3ff00000, lx) == 0:
+            return x * PIO2_HI + TINY_2M120
+        return 0.0 / (x - x)
+    # |x| < 0.5
+    if ix < 0x3fe00000:
+        # 0x1p-1022 <= |x| < 0x1p-26
+        if 0x00100000 <= ix < 0x3e500000:
+            return x
+        return x + x * asin_acos_rational(x * x)
+    # 1 > |x| >= 0.5
+    const z = (1.0 - fabs(x)) * 0.5
+    const s = sqrt(z)
+    const r = asin_acos_rational(z)
+    # |x| > 0.975
+    if ix >= 0x3fef3333:
+        const near_one = PIO2_HI - (2.0 * (s + s * r) - PIO2_LO)
+        if shift_right(hx, 31) != 0:
+            return -near_one
+        return near_one
+    # f + c = sqrt(z)
+    const f = from_bits(bit_and(bits(s), 0xffffffff00000000u64))
+    const c = (z - f * f) / (s + f)
+    const middle = 0.5 * PIO2_HI - (2.0 * s * r - (PIO2_LO - 2.0 * c) - (0.5 * PIO2_HI - 2.0 * f))
+    if shift_right(hx, 31) != 0:
+        return -middle
+    return middle
+
+
+# Zig's `std.math.expm1(f64)` (`expm1_64`, from musl), bit for bit: e^x - 1, accurate for small x.
+public func expm1(x_in: float) -> float:
+    if x_in != x_in:
+        return nan()
+    const o_threshold = 7.09782712893383973096e+02
+    const ln2_hi = 6.93147180369123816490e-01
+    const ln2_lo = 1.90821492927058770002e-10
+    const invln2 = 1.44269504088896338700e+00
+    const q1 = -3.33333333333331316428e-02
+    const q2 = 1.58730158725481460165e-03
+    const q3 = -7.93650757867487942473e-05
+    const q4 = 4.00821782732936239552e-06
+    const q5 = -2.01099218183624371326e-07
+    mut x = x_in
+    const ux = bits(x)
+    const hx = bit_and(int(shift_right(ux, 32u64)), 0x7fffffff)
+    const negative = shift_right(ux, 63u64) != 0u64
+    if x == -infinity():
+        return -1.0
+    # |x| >= 56 * ln2
+    if hx >= 0x4043687A:
+        # expm1(-ve) = -1
+        if negative:
+            return -1.0
+        if x > o_threshold:
+            return infinity()
+    mut hi = 0.0
+    mut lo = 0.0
+    mut c = 0.0
+    mut k = 0
+    if hx > 0x3FD62E42:
+        # |x| > 0.5 * ln2
+        if hx < 0x3FF0A2B2:
+            # |x| < 1.5 * ln2
+            if not negative:
+                hi = x - ln2_hi
+                lo = ln2_lo
+                k = 1
+            else:
+                hi = x + ln2_hi
+                lo = -ln2_lo
+                k = -1
+        else:
+            mut kf = invln2 * x
+            if negative:
+                kf = kf - 0.5
+            else:
+                kf = kf + 0.5
+            k = int(kf)
+            const kd = float(k)
+            hi = x - kd * ln2_hi
+            lo = kd * ln2_lo
+        x = hi - lo
+        c = (hi - x) - lo
+    elif hx < 0x3C900000:
+        # |x| < 2^-54
+        return x
+    const hfx = 0.5 * x
+    const hxs = x * hfx
+    const r1 = 1.0 + hxs * (q1 + hxs * (q2 + hxs * (q3 + hxs * (q4 + hxs * q5))))
+    const t = 3.0 - r1 * hfx
+    mut err = hxs * ((r1 - t) / (6.0 - x * t))
+    # c is 0
+    if k == 0:
+        return x - (x * err - hxs)
+    err = x * (err - c) - c
+    err = err - hxs
+    # exp(x) ~ 2^k (x_reduced - err + 1)
+    if k == -1:
+        return 0.5 * (x - err) - 0.5
+    if k == 1:
+        if x < -0.25:
+            return -2.0 * (err - (x + 0.5))
+        return 1.0 + 2.0 * (x - err)
+    if k < 0 or k > 56:
+        mut y = x - err + 1.0
+        if k == 1024:
+            y = y * 2.0 * 8.98846567431158e+307
+        else:
+            y = y * from_bits(shift_left(u64(0x3FF + k), 52u64))
+        return y - 1.0
+    const twopk = from_bits(shift_left(u64(0x3FF + k), 52u64))
+    const uf = from_bits(shift_left(u64(0x3FF - k), 52u64))
+    if k < 20:
+        return (x - err + (1.0 - uf)) * twopk
+    return (x - (err + uf) + 1.0) * twopk
+
+
+# Zig's `std.math.expo2(f64)`: exp(x) / 2 for x >= log(maxFloat), as `exp(x - 1416.09...) * 2^1021 * 2^1021`.
+func expo2(x: float) -> float:
+    return exp(x - 1416.0996898839683) * 2.247116418577895e+307 * 2.247116418577895e+307
+
+
+# Zig's `std.math.sinh(f64)` (`sinh64`, from musl), bit for bit: the hyperbolic sine.
+public func sinh(x: float) -> float:
+    const ux = bits(x)
+    const w = bit_and(int(shift_right(ux, 32u64)), 0x7fffffff)
+    const ax = from_bits(bit_and(ux, 0x7fffffffffffffffu64))
+    if x == 0.0 or x != x:
+        return x
+    mut h = 0.5
+    if shift_right(ux, 63u64) != 0u64:
+        h = -0.5
+    # |x| < log(FLT_MAX)
+    if w < 0x40862E42:
+        const t = expm1(ax)
+        if w < 0x3FF00000:
+            # |x| < 2^-26
+            if w < 0x3E500000:
+                return x
+            return h * (2.0 * t - t * t / (t + 1.0))
+        return h * (t + t / (t + 1.0))
+    # |x| > log(DBL_MAX) or nan
+    return 2.0 * h * expo2(ax)
+
+
+# Zig's `std.math.cosh(f64)` (`cosh64`, from musl), bit for bit: the hyperbolic cosine.
+public func cosh(x: float) -> float:
+    const ux = bits(x)
+    const w = bit_and(int(shift_right(ux, 32u64)), 0x7fffffff)
+    const ax = from_bits(bit_and(ux, 0x7fffffffffffffffu64))
+    if x == 0.0:
+        return 1.0
+    # |x| < log(2)
+    if w < 0x3FE62E42:
+        # |x| < 2^-26
+        if w < 0x3E500000:
+            return 1.0
+        const t = expm1(ax)
+        return 1.0 + t * t / (2.0 * (1.0 + t))
+    # |x| < log(DBL_MAX)
+    if w < 0x40862E42:
+        const t = exp(ax)
+        return 0.5 * (t + 1.0 / t)
+    # |x| > log(DBL_MAX) or nan
+    return expo2(ax)
+
+
+# Zig's `std.math.tanh(f64)` (`tanh64`, from musl), bit for bit: the hyperbolic tangent.
+public func tanh(x: float) -> float:
+    const ux = bits(x)
+    const w = bit_and(int(shift_right(ux, 32u64)), 0x7fffffff)
+    const ax = from_bits(bit_and(ux, 0x7fffffffffffffffu64))
+    mut t = 0.0
+    if w > 0x3FE193EA:
+        # |x| < log(3) / 2 ~= 0.5493 or nan
+        if w > 0x40340000:
+            # |x| > 20 or nan
+            t = 1.0 - 0.0 / ax
+        else:
+            t = expm1(2.0 * ax)
+            t = 1.0 - 2.0 / (t + 2.0)
+    elif w > 0x3FD058AE:
+        # |x| > log(5 / 3) / 2 ~= 0.2554
+        t = expm1(2.0 * ax)
+        t = t / (t + 2.0)
+    elif w >= 0x00100000:
+        # |x| >= 0x1.0p-1022
+        t = expm1(-2.0 * ax)
+        t = -t / (t + 2.0)
+    else:
+        # |x| is subnormal
+        t = ax
+    if shift_right(ux, 63u64) != 0u64:
+        return -t
+    return t
+
+
+# Zig's `std.math.cbrt(f64)` (`cbrt64`, from FreeBSD), bit for bit: the cube root.
+public func cbrt(x: float) -> float:
+    const p0 = 1.87595182427177009643
+    const p1 = -1.88497979543377169875
+    const p2 = 1.621429720105354466140
+    const p3 = -0.758397934778766047437
+    const p4 = 0.145996192886612446982
+    mut u = bits(x)
+    mut hx = bit_and(int(shift_right(u, 32u64)), 0x7fffffff)
+    # cbrt(nan, inf) = itself
+    if hx >= 0x7FF00000:
+        return x + x
+    # cbrt to ~5bits
+    if hx < 0x00100000:
+        u = bits(x * 1.8014398509481984e+16)
+        hx = bit_and(int(shift_right(u, 32u64)), 0x7fffffff)
+        # cbrt(+-0) = itself
+        if hx == 0:
+            return x
+        hx = hx // 3 + 696219795
+    else:
+        hx = hx // 3 + 715094163
+    u = bit_or(bit_and(u, SIGN_BIT_MASK), shift_left(u64(hx), 32u64))
+    mut t = from_bits(u)
+    # cbrt to 23 bits: cbrt(x) = t * cbrt(x / t^3) ~= t * P(t^3 / x)
+    const r = (t * t) * (t / x)
+    t = t * ((p0 + r * (p1 + r * p2)) + ((r * r) * r) * (p3 + r * p4))
+    # Round t away from 0 to 23 bits
+    u = bit_and(bits(t) + 0x80000000u64, 0xFFFFFFFFC0000000u64)
+    t = from_bits(u)
+    # one step newton to 53 bits
+    const s = t * t
+    mut q = x / s
+    const w = t + t
+    q = (q - t) / (w + q)
+    return t + t * q
+
+
+# The coefficients and the splitting of pi/2 into 33-bit pieces that `rem_pio2` uses (compiler_rt `rem_pio2.zig`).
+const RP_PIO4: float = 7.85398163397448278999e-01
+
+
+const RP_INVPIO2: float = 6.36619772367581382433e-01
+
+
+const RP_PIO2_1: float = 1.57079632673412561417e+00
+
+
+const RP_PIO2_1T: float = 6.07710050650619224932e-11
+
+
+const RP_PIO2_2: float = 6.07710050630396597660e-11
+
+
+const RP_PIO2_2T: float = 2.02226624879595063154e-21
+
+
+const RP_PIO2_3: float = 2.02226624871116645580e-21
+
+
+const RP_PIO2_3T: float = 8.47842766036889956997e-32
+
+
+# The remainder of a reduction by pi/2: `x = n * (pi/2) + (y0 + y1)`, Zig's `rem_pio2(x, &y)` result and `y`.
+record Pio2Reduction:
+    n: int
+    y0: float
+    y1: float
+
+
+# 396 hexadecimal digits of 2/pi, as 690 big-endian 24-bit words (compiler_rt `rem_pio2_large.zig`'s `ipio2`, generated from it):
+# word `i` is the (24*i)-th to (24*i+23)-th bit of 2/pi after the binary point.
+const IPIO2: bytes = b"\xa2\xf9\x83\x6e\x4e\x44\x15\x29\xfc\x27\x57\xd1\xf5\x34\xdd\xc0\xdb\x62\x95\x99\x3c\x43\x90\x41\xfe\x51\x63\xab\xde\xbb\xc5\x61\xb7\x24\x6e\x3a\x42\x4d\xd2\xe0\x06\x49\x2e\xea\x09\xd1\x92\x1c\xfe\x1d\xeb\x1c\xb1\x29\xa7\x3e\xe8\x82\x35\xf5\x2e\xbb\x44\x84\xe9\x9c\x70\x26\xb4\x5f\x7e\x41\x39\x91\xd6\x39\x83\x53\x39\xf4\x9c\x84\x5f\x8b\xbd\xf9\x28\x3b\x1f\xf8\x97\xff\xde\x05\x98\x0f\xef\x2f\x11\x8b\x5a\x0a\x6d\x1f\x6d\x36\x7e\xcf\x27\xcb\x09\xb7\x4f\x46\x3f\x66\x9e\x5f\xea\x2d\x75\x27\xba\xc7\xeb\xe5\xf1\x7b\x3d\x07\x39\xf7\x8a\x52\x92\xea\x6b\xfb\x5f\xb1\x1f\x8d\x5d\x08\x56\x03\x30\x46\xfc\x7b\x6b\xab\xf0\xcf\xbc\x20\x9a\xf4\x36\x1d\xa9\xe3\x91\x61\x5e\xe6\x1b\x08\x65\x99\x85\x5f\x14\xa0\x68\x40\x8d\xff\xd8\x80\x4d\x73\x27\x31\x06\x06\x15\x56\xca\x73\xa8\xc9\x60\xe2\x7b\xc0\x8c\x6b\x47\xc4\x19\xc3\x67\xcd\xdc\xe8\x09\x2a\x83\x59\xc4\x76\x8b\x96\x1c\xa6\xdd\xaf\x44\xd1\x57\x19\x05\x3e\xa5\xff\x07\x05\x3f\x7e\x33\xe8\x32\xc2\xde\x4f\x98\x32\x7d\xbb\xc3\x3d\x26\xef\x6b\x1e\x5e\xf8\x9f\x3a\x1f\x35\xca\xf2\x7f\x1d\x87\xf1\x21\x90\x7c\x7c\x24\x6a\xfa\x6e\xd5\x77\x2d\x30\x43\x3b\x15\xc6\x14\xb5\x9d\x19\xc3\xc2\xc4\xad\x41\x4d\x2c\x5d\x00\x0c\x46\x7d\x86\x2d\x71\xe3\x9a\xc6\x9b\x00\x62\x33\x7c\xd2\xb4\x97\xa7\xb4\xd5\x55\x37\xf6\x3e\xd7\x18\x10\xa3\xfc\x76\x4d\x2a\x9d\x64\xab\xd7\x70\xf8\x7c\x63\x57\xb0\x7a\xe7\x15\x17\x56\x49\xc0\xd9\xd6\x3b\x38\x84\xa7\xcb\x23\x24\x77\x8a\xd6\x23\x54\x5a\xb9\x1f\x00\x1b\x0a\xf1\xdf\xce\x19\xff\x31\x9f\x6a\x1e\x66\x61\x57\x99\x47\xfb\xac\xd8\x7f\x7e\xb7\x65\x22\x89\xe8\x32\x60\xbf\xe6\xcd\xc4\xef\x09\x36\x6c\xd4\x3f\x5d\xd7\xde\x16\xde\x3b\x58\x92\x9b\xde\x28\x22\xd2\xe8\x86\x28\x4d\x58\xe2\x32\xca\xc6\x16\xe3\x08\xcb\x7d\xe0\x50\xc0\x17\xa7\x1d\xf3\x5b\xe0\x18\x34\x13\x2e\x62\x12\x83\x01\x48\x83\x5b\x8e\xf5\x7f\xb0\xad\xf2\xe9\x1e\x43\x4a\x48\xd3\x67\x10\xd8\xdd\xaa\x42\x5f\xae\xce\x61\x6a\xa4\x28\x0a\xb4\x99\xd3\xf2\xa6\x06\x7f\x77\x5c\x83\xc2\xa3\x88\x3c\x61\x78\x73\x8a\x5a\x8c\xaf\xbd\xd7\x6f\x63\xa6\x2d\xcb\xbf\xf4\xef\x81\x8d\x67\xc1\x26\x45\xca\x55\x36\xd9\xca\xd2\xa8\x28\x8d\x61\xc2\x77\xc9\x12\x14\x26\x04\x9b\x46\x12\xc4\x59\xc4\x44\xc5\xc8\x91\xb2\x4d\xf3\x17\x00\xad\x43\xd4\xe5\x49\x29\x10\xd5\xfd\xfc\xbe\x00\xcc\x94\x1e\xee\xce\x70\xf5\x3e\x13\x80\xf1\xec\xc3\xe7\xb3\x28\xf8\xc7\x94\x05\x93\x3e\x71\xc1\xb3\x09\x2e\xf3\x45\x0b\x9c\x12\x88\x7b\x20\xab\x9f\xb5\x2e\xc2\x92\x47\x2f\x32\x7b\x6d\x55\x0c\x90\xa7\x72\x1f\xe7\x6b\x96\xcb\x31\x4a\x16\x79\xe2\x79\x41\x89\xdf\xf4\x97\x94\xe8\x84\xe6\xe2\x97\x31\x99\x6b\xed\x88\x36\x5f\x5f\x0e\xfd\xbb\xb4\x9a\x48\x6c\xa4\x67\x42\x72\x71\x32\x5d\x8d\xb8\x15\x9f\x09\xe5\xbc\x25\x31\x8d\x39\x74\xf7\x1c\x05\x30\x01\x0c\x0d\x68\x08\x4b\x58\xee\x2c\x90\xaa\x47\x02\xe7\x74\x24\xd6\xbd\xa6\x7d\xf7\x72\x48\x6e\xef\x16\x9f\xa6\x94\x8e\xf6\x91\xb4\x51\x53\xd1\xf2\x0a\xcf\x33\x98\x20\x7e\x4b\xf5\x68\x63\xb2\x5f\x3e\xdd\x03\x5d\x40\x7f\x89\x85\x29\x52\x55\xc0\x64\x37\x10\xd8\x6d\x32\x48\x32\x75\x4c\x5b\xd4\x71\x4e\x6e\x54\x45\xc1\x09\x0b\x69\xf5\x2a\xd5\x66\x14\x9d\x07\x27\x50\x04\x5d\xdb\x3b\xb4\xc5\x76\xea\x17\xf9\x87\x7d\x6b\x49\xba\x27\x1d\x29\x69\x96\xac\xcc\xc6\x54\x14\xad\x6a\xe2\x90\x89\xd9\x88\x50\x72\x2c\xbe\xa4\x04\x94\x07\x77\x70\x30\xf3\x27\xfc\x00\xa8\x71\xea\x49\xc2\x66\x3d\xe0\x64\x83\xdd\x97\x97\x3f\xa3\xfd\x94\x43\x8c\x86\x0d\xde\x41\x31\x9d\x39\x92\x8c\x70\xdd\xe7\xb7\x17\x3b\xdf\x08\x2b\x37\x15\xa0\x80\x5c\x93\x80\x5a\x92\x11\x10\xd8\xe8\x0f\xaf\x80\x6c\x4b\xff\xdb\x0f\x90\x38\x76\x18\x59\x15\xa5\x62\xbb\xcb\x61\xb9\x89\xc7\xbd\x40\x10\x04\xf2\xd2\x27\x75\x49\xf6\xb6\xeb\xbb\x22\xdb\xaa\x14\x0a\x2f\x26\x89\x76\x83\x64\x33\x3b\x09\x1a\x94\x0e\xaa\x3a\x51\xc2\xa3\x1d\xae\xed\xaf\x12\x26\x5c\x4d\xc2\x6d\x9c\x7a\x2d\x97\x56\xc0\x83\x3f\x03\xf6\xf0\x09\x8c\x40\x2b\x99\x31\x6d\x07\xb4\x39\x15\x20\x0c\x5b\xc3\xd8\xc4\x92\xf5\x4b\xad\xc6\xa5\xca\x4e\xcd\x37\xa7\x36\xa9\xe6\x94\x92\xab\x68\x42\xdd\xde\x63\x19\xef\x8c\x76\x52\x8b\x68\x37\xdb\xfc\xab\xa1\xae\x31\x15\xdf\xa1\xae\x00\xda\xfb\x0c\x66\x4d\x64\xb7\x05\xed\x30\x65\x29\xbf\x56\x57\x3a\xff\x47\xb9\xf9\x6a\xf3\xbe\x75\xdf\x93\x28\x30\x80\xab\xf6\x8c\x66\x15\xcb\x04\x06\x22\xfa\x1d\xe4\xd9\xa4\xb3\x3d\x8f\x1b\x57\x09\xcd\x36\xe9\x42\x4e\xa4\xbe\x13\xb5\x23\x33\x1a\xaa\xf0\xa8\x65\x4f\xa5\xc1\xd2\x0f\x3f\x0b\xcd\x78\x5b\x76\xf9\x23\x04\x8b\x7b\x72\x17\x89\x53\xa6\xc6\xe2\x6e\x6f\x00\xeb\xef\x58\x4a\x9b\xb7\xda\xc4\xba\x66\xaa\xcf\xcf\x76\x1d\x02\xd1\x2d\xf1\xb1\xc1\x99\x8c\x77\xad\xc3\xda\x48\x86\xa0\x5d\xf7\xf4\x80\xc6\x2f\xf0\xac\x9a\xec\xdd\xbc\x5c\x3f\x6d\xde\xd0\x1f\xc7\x90\xb6\xdb\x2a\x3a\x25\xa3\x9a\xaf\x00\x93\x53\xad\x04\x57\xb6\xb4\x2d\x29\x7e\x80\x4b\xa7\x07\xda\x0e\xaa\x76\xa1\x59\x7b\x2a\x12\x16\x2d\xb7\xdc\xfd\xe5\xfa\xfe\xdb\x89\xfd\xbe\x89\x6c\x76\xe4\xfc\xa9\x06\x70\x80\x3e\x15\x6e\x85\xff\x87\xfd\x07\x3e\x28\x33\x67\x61\x86\x18\x2a\xea\xbd\x4d\xaf\xe7\xb3\x6e\x6d\x8f\x39\x67\x95\x5b\xbf\x31\x48\xd7\x84\x16\xdf\x30\x43\x2d\xc7\x35\x61\x25\xce\x70\xc9\xb8\xcb\x30\xfd\x6c\xbf\xa2\x00\xa4\xe4\x6c\x05\xa0\xdd\x5a\x47\x6f\x21\xd2\x12\x62\x84\x5c\xb9\x49\x61\x70\xe0\x56\x6b\x01\x52\x99\x37\x55\x50\xb7\xd5\x1e\xc4\xf1\x33\x5f\x6e\x13\xe4\x30\x5d\xa9\x2e\x85\xc3\xb2\x1d\x36\x32\xa1\xa4\xb7\x08\xd4\xb1\xea\x21\xf7\x16\xe4\x69\x8f\x77\xff\x27\x80\x03\x0c\x2d\x40\x8d\xa0\xcd\x4f\x99\xa5\x20\xd3\xa2\xb3\x0a\x5d\x2f\x42\xf9\xb4\xcb\xda\x11\xd0\xbe\x7d\xc1\xdb\x9b\xbd\x17\xab\x81\xa2\xca\x5c\x6a\x08\x17\x55\x2e\x55\x00\x27\xf0\x14\x7f\x86\x07\xe1\x64\x0b\x14\x8d\x41\x96\xde\xbe\x87\x2a\xfd\xda\xb6\x25\x6b\x34\x89\x7b\xfe\xf3\x05\x9e\xbf\xb9\x4f\x6a\x68\xa8\x2a\x4a\x5a\xc4\x4f\xbc\xf8\x2d\x98\x5a\xd7\x95\xc7\xf4\x8d\x4d\x0d\xa6\x3a\x20\x5f\x57\xa4\xb1\x3f\x14\x95\x38\x80\x01\x20\xcc\x86\xdd\x71\xb6\xde\xc9\xf5\x60\xbf\x11\x65\x4d\x6b\x07\x01\xac\xb0\x8c\xd0\xc0\xb2\x48\x55\x51\x0e\xfb\x1e\xc3\x72\x95\x3b\x06\xa3\x35\x40\xc0\x7b\xdc\x06\xcc\x45\xe0\xfa\x29\x4e\xc8\xca\xd6\x41\xf3\xe8\xde\x64\x7c\xd8\x64\x9b\x31\xbe\xd9\xc3\x97\xa4\xd4\x58\x77\xc5\xe3\x69\x13\xda\xf0\x3c\x3a\xba\x46\x18\x46\x5f\x75\x55\xf5\xbd\xd2\xc6\x92\x6e\x5d\x2e\xac\xed\x44\x0e\x42\x3e\x1c\x87\xc4\x61\xe9\xfd\x29\xf3\xd6\xe7\xca\x7c\x22\x35\x91\x6f\xc5\xe0\x08\x8d\xd7\xff\xe2\x6a\x6e\xc6\xfd\xb0\xc1\x08\x93\x74\x5d\x7c\xb2\xad\x6b\x9d\x6e\xcd\x7b\x72\x3e\x6a\x11\xc6\xa9\xcf\xf7\xdf\x73\x29\xba\xc9\xb5\x51\x00\xb7\x0d\xb2\xe2\x24\xba\x74\x60\x7d\xe5\x8a\xd8\x74\x2c\x15\x0d\x0c\x18\x81\x94\x66\x7e\x16\x29\x01\x76\x7a\x9f\xbe\xfd\xfd\xef\x45\x56\x36\x7e\xd9\x13\xd9\xec\xb9\xba\x8b\xfc\x97\xc4\x27\xa8\x31\xc3\x6e\xf1\x36\xc5\x94\x56\xa8\xd8\xb5\xa8\xb4\x0e\xcc\xcf\x2d\x89\x12\x34\x57\x6f\x89\x56\x2c\xe3\xce\x99\xb9\x20\xd6\xaa\x5e\x6b\x9c\x2a\x3e\xcc\x5f\x11\x4a\x0b\xfd\xfb\xf4\xe1\x6d\x3b\x8e\x2c\x86\xe2\x84\xd4\xe9\xa9\xb4\xfc\xd1\xee\xef\xc9\x35\x2e\x61\x39\x2f\x44\x21\x38\xc8\xd9\x1b\x0a\xfc\x81\x6a\x4a\xfb\xd8\x1c\x2f\x84\xb4\x53\x8c\x99\x4e\xcc\x22\x54\xdc\x55\x2a\xd6\xc6\xc0\x96\x19\x0b\xb8\x70\x1a\x64\x95\x69\x60\x5a\x26\xee\x52\x3f\x0f\x11\x7f\x11\xb5\xf4\xf5\xcb\xfc\x2d\xbc\x34\xee\xbc\x34\xcc\x5d\xe8\x60\x5e\xdd\x9b\x8e\x67\xef\x33\x92\xb8\x17\xc9\x9b\x58\x61\xbc\x57\xe1\xc6\x83\x51\x10\x3e\xd8\x48\x71\xdd\xdd\x1c\x2d\xa1\x18\xaf\x46\x2c\x21\xd7\xf3\x59\x98\x7a\xd9\xc0\x54\x9e\xfa\x86\x4f\xfc\x06\x56\xae\x79\xe5\x36\x22\x89\x22\xad\x38\xdc\x93\x67\xaa\xe8\x55\x38\x26\x82\x9b\xe7\xca\xa4\x0d\x51\xb1\x33\x99\x0e\xd7\xa9\x48\x05\x69\xf0\xb2\x65\xa7\x88\x7f\x97\x4c\x88\x36\xd1\xf9\xb3\x92\x21\x4a\x82\x7b\x21\xcf\x98\xdc\x9f\x40\x55\x47\xdc\x3a\x74\xe1\x42\xeb\x67\xdf\x9d\xfe\x5f\xd4\x5e\xa4\x67\x7b\x7a\xac\xba\xa2\xf6\x55\x23\x88\x2b\x55\xba\x41\x08\x6e\x59\x86\x2a\x21\x83\x47\x39\xe6\xe3\x89\xd4\x9e\xe5\x40\xfb\x49\xe9\x56\xff\xca\x0f\x1c\x8a\x59\xc5\x2b\xfa\x94\xc5\xc1\xd3\xcf\xc5\x0f\xae\x5a\xdb\x86\xc5\x47\x62\x43\x85\x3b\x86\x21\x94\x79\x2c\x87\x61\x10\x7b\x4c\x2a\x1a\x2c\x80\x12\xbf\x43\x90\x26\x88\x89\x3c\x78\xe4\xc4\xa8\x7b\xdb\xe5\xc2\x3a\xc4\xea\xf4\x26\x8a\x67\xf7\xbf\x92\x0d\x2b\xa3\x65\xb1\x93\x3d\x0b\x7c\xbd\xdc\x51\xa4\x63\xdd\x27\xdd\xe1\x69\x19\x94\x9a\x95\x29\xa8\x28\xce\x68\xb4\xed\x09\x20\x9f\x44\xca\x98\x4e\x63\x82\x70\x23\x7c\x7e\x32\xb9\x0f\x8e\xf5\xa7\xe7\x56\x14\x08\xf1\x21\x2a\x9d\xb5\x4d\x7e\x6f\x51\x19\xa5\xab\xf9\xb5\xd6\xdf\x82\x61\xdd\x96\x02\x36\x16\x9f\x3a\xc4\xa1\xa2\x83\x6d\xed\x72\x7a\x8d\x39\xa9\xb8\x82\x5c\x32\x6b\x5b\x27\x46\xed\x34\x00\x77\x00\xd2\x55\xf4\xfc\x4d\x59\x01\x80\x71\xe0"
+
+
+# One 24-bit word of 2/pi.
+func ipio2_word(index: int) -> int:
+    const base = index * 3
+    return IPIO2[base] * 65536 + IPIO2[base + 1] * 256 + IPIO2[base + 2]
+
+
+# A list of `count` zeros, the scratch arrays of `rem_pio2_large`.
+func zero_floats(count: int) -> float[]:
+    mut values: float[] = []
+    for position in range(0, count):
+        append(mut values, 0.0)
+    return values
+
+
+func zero_ints(count: int) -> int[]:
+    mut values: int[] = []
+    for position in range(0, count):
+        append(mut values, 0)
+    return values
+
+
+# pi/2 cut into 24-bit chunks (compiler_rt `PIo2`).
+func pio2_chunks() -> float[]:
+    return [1.57079625129699707031e+00, 7.54978941586159635335e-08, 5.39030252995776476554e-15, 3.28200341580791294123e-22, 1.27065575308067607349e-29, 1.22933308981111328932e-36, 2.73370053816464559624e-44, 2.16741683877804819444e-51]
+
+
+# compiler_rt `rem_pio2_large` (musl `__rem_pio2_large`) for binary64 (`prec` = 1): the remainder of x * 2^e0 by pi/2 from the
+# Payne-Hanek reduction, with `x` the `nx` 24-bit pieces of the argument. The same steps, indexes and `goto recompute` loop.
+func rem_pio2_large(x: float[], e0: int, nx: int) -> Pio2Reduction:
+    const jk = 4
+    const jp = 4
+    const two24 = 16777216.0
+    const two_m24 = 5.960464477539063e-08
+    const jx = nx - 1
+    mut jv = (e0 - 3) // 24
+    if jv < 0:
+        jv = 0
+    mut q0 = e0 - 24 * (jv + 1)
+    mut f = zero_floats(20)
+    mut fq = zero_floats(20)
+    mut q = zero_floats(20)
+    mut iq = zero_ints(20)
+    # set up f[0] to f[jx+jk] where f[jx+jk] = ipio2[jv+jk]
+    mut j = jv - jx
+    const m = jx + jk
+    mut i = 0
+    while i <= m:
+        if j < 0:
+            f[i] = 0.0
+        else:
+            f[i] = float(ipio2_word(j))
+        i = i + 1
+        j = j + 1
+    # compute q[0],q[1],...q[jk]
+    i = 0
+    while i <= jk:
+        j = 0
+        mut fw = 0.0
+        while j <= jx:
+            fw = fw + x[j] * f[jx + i - j]
+            j = j + 1
+        q[i] = fw
+        i = i + 1
+    mut jz = jk
+    mut n = 0
+    mut ih = 0
+    mut z = 0.0
+    mut recompute = True
+    while recompute:
+        recompute = False
+        # distill q[] into iq[] reversingly
+        i = 0
+        j = jz
+        z = q[jz]
+        while j > 0:
+            const chunk = float(int(two_m24 * z))
+            iq[i] = int(z - two24 * chunk)
+            z = q[j - 1] + chunk
+            i = i + 1
+            j = j - 1
+        # compute n
+        z = scalbn_exact(z, q0)
+        z = z - 8.0 * floor(z * 0.125)
+        n = int(z)
+        z = z - float(n)
+        ih = 0
+        if q0 > 0:
+            # need iq[jz-1] to determine n
+            i = shift_right(iq[jz - 1], 24 - q0)
+            n = n + i
+            iq[jz - 1] = iq[jz - 1] - shift_left(i, 24 - q0)
+            ih = shift_right(iq[jz - 1], 23 - q0)
+        elif q0 == 0:
+            ih = shift_right(iq[jz - 1], 23)
+        elif z >= 0.5:
+            ih = 2
+        if ih > 0:
+            # q > 0.5
+            n = n + 1
+            mut carry = 0
+            i = 0
+            while i < jz:
+                # compute 1-q
+                j = iq[i]
+                if carry == 0:
+                    if j != 0:
+                        carry = 1
+                        iq[i] = 0x1000000 - j
+                else:
+                    iq[i] = 0xffffff - j
+                i = i + 1
+            if q0 > 0:
+                # rare case: chance is 1 in 12
+                if q0 == 1:
+                    iq[jz - 1] = bit_and(iq[jz - 1], 0x7fffff)
+                elif q0 == 2:
+                    iq[jz - 1] = bit_and(iq[jz - 1], 0x3fffff)
+            if ih == 2:
+                z = 1.0 - z
+                if carry != 0:
+                    z = z - scalbn_exact(1.0, q0)
+        # check if recomputation is needed
+        if z == 0.0:
+            j = 0
+            i = jz - 1
+            while i >= jk:
+                j = bit_or(j, iq[i])
+                i = i - 1
+            if j == 0:
+                # need recomputation: k = no. of terms needed
+                mut k = 1
+                while iq[jk - k] == 0:
+                    k = k + 1
+                # add q[jz+1] to q[jz+k]
+                i = jz + 1
+                while i <= jz + k:
+                    f[jx + i] = float(ipio2_word(jv + i))
+                    j = 0
+                    mut fw = 0.0
+                    while j <= jx:
+                        fw = fw + x[j] * f[jx + i - j]
+                        j = j + 1
+                    q[i] = fw
+                    i = i + 1
+                jz = jz + k
+                recompute = True
+        if not recompute:
+            # chop off zero terms
+            if z == 0.0:
+                jz = jz - 1
+                q0 = q0 - 24
+                while iq[jz] == 0:
+                    jz = jz - 1
+                    q0 = q0 - 24
+            else:
+                # break z into 24-bit if necessary
+                z = scalbn_exact(z, -q0)
+                if z >= two24:
+                    const chunk = float(int(two_m24 * z))
+                    iq[jz] = int(z - two24 * chunk)
+                    jz = jz + 1
+                    q0 = q0 + 24
+                    iq[jz] = int(chunk)
+                else:
+                    iq[jz] = int(z)
+    # convert integer "bit" chunk to floating-point value
+    mut fw = scalbn_exact(1.0, q0)
+    i = jz
+    while i >= 0:
+        q[i] = fw * float(iq[i])
+        fw = fw * two_m24
+        i = i - 1
+    # compute PIo2[0,...,jp]*q[jz,...,0]
+    const pio2 = pio2_chunks()
+    i = jz
+    while i >= 0:
+        fw = 0.0
+        mut k = 0
+        while k <= jp and k <= jz - i:
+            fw = fw + pio2[k] * q[i + k]
+            k = k + 1
+        fq[jz - i] = fw
+        i = i - 1
+    # compress fq[] into y[]
+    fw = 0.0
+    i = jz
+    while i >= 0:
+        fw = fw + fq[i]
+        i = i - 1
+    mut y0 = fw
+    if ih != 0:
+        y0 = -fw
+    fw = fq[0] - fw
+    i = 1
+    while i <= jz:
+        fw = fw + fq[i]
+        i = i + 1
+    mut y1 = fw
+    if ih != 0:
+        y1 = -fw
+    return Pio2Reduction(n=bit_and(n, 7), y0=y0, y1=y1)
+
+
+# The biased exponent field of a float.
+func exponent_field(x: float) -> int:
+    return int(bit_and(shift_right(bits(x), 52u64), 0x7ffu64))
+
+
+# compiler_rt `rem_pio2`'s `medium`: `fn = rint(x / (pi/2))` with up to three rounds of the 33-bit pieces
+# of pi/2 (good to 151 bits). `ix` is the high word of |x| without the sign.
+func rem_pio2_medium(ix: int, x: float) -> Pio2Reduction:
+    # 1.5 / floatEps(f64) = 1.5 * 2^52.
+    const toint = 6755399441055744.0
+    mut fnv = x * RP_INVPIO2 + toint - toint
+    mut n = int(fnv)
+    mut r = x - fnv * RP_PIO2_1
+    mut w = fnv * RP_PIO2_1T
+    # Matters with directed rounding.
+    if r - w < -RP_PIO4:
+        n = n - 1
+        fnv = fnv - 1.0
+        r = x - fnv * RP_PIO2_1
+        w = fnv * RP_PIO2_1T
+    elif r - w > RP_PIO4:
+        n = n + 1
+        fnv = fnv + 1.0
+        r = x - fnv * RP_PIO2_1
+        w = fnv * RP_PIO2_1T
+    mut y0 = r - w
+    mut ey = exponent_field(y0)
+    const ex = shift_right(ix, 20)
+    # 2nd round, good to 118 bits
+    if ex - ey > 16:
+        mut t = r
+        w = fnv * RP_PIO2_2
+        r = t - w
+        w = fnv * RP_PIO2_2T - ((t - r) - w)
+        y0 = r - w
+        ey = exponent_field(y0)
+        # 3rd round, good to 151 bits, covers all cases
+        if ex - ey > 49:
+            t = r
+            w = fnv * RP_PIO2_3
+            r = t - w
+            w = fnv * RP_PIO2_3T - ((t - r) - w)
+            y0 = r - w
+    return Pio2Reduction(n=n, y0=y0, y1=(r - y0) - w)
+
+
+# The reduction of x by `m` quarter turns with one round of the 33-bit piece (`z = x -+ m*pio2_1`, `y0 = z -+ m*pio2_1t`,
+# `y1 = (z - y0) -+ m*pio2_1t`), as Zig's `rem_pio2` writes each of its cases. `m` is exact in binary64.
+func rem_pio2_quarters(x: float, negative: bool, m: float) -> Pio2Reduction:
+    const hi = m * RP_PIO2_1
+    const lo = m * RP_PIO2_1T
+    if not negative:
+        const z = x - hi
+        const y0 = z - lo
+        return Pio2Reduction(n=int(m), y0=y0, y1=(z - y0) - lo)
+    const z = x + hi
+    const y0 = z + lo
+    return Pio2Reduction(n=-int(m), y0=y0, y1=(z - y0) + lo)
+
+
+# compiler_rt `rem_pio2` (musl `__rem_pio2`) for a finite x with |x| > pi/4: `x = n * (pi/2) + (y0 + y1)`. An infinity or a NaN
+# answers n = 0 and NaN, as in Zig; the callers handle those first.
+func rem_pio2(x: float) -> Pio2Reduction:
+    const ui = bits(x)
+    const negative = shift_right(ui, 63u64) == 1u64
+    const ix = int(bit_and(shift_right(ui, 32u64), 0x7fffffffu64))
+    # |x| ~<= 5pi/4
+    if ix <= 0x400f6a7a:
+        # |x| ~= pi/2 or 2pi/2
+        if bit_and(ix, 0xfffff) == 0x921fb:
+            return rem_pio2_medium(ix, x)
+        # |x| ~<= 3pi/4
+        if ix <= 0x4002d97c:
+            return rem_pio2_quarters(x, negative, 1.0)
+        return rem_pio2_quarters(x, negative, 2.0)
+    # |x| ~<= 9pi/4
+    if ix <= 0x401c463b:
+        # |x| ~<= 7pi/4
+        if ix <= 0x4015fdbc:
+            # |x| ~= 3pi/2
+            if ix == 0x4012d97c:
+                return rem_pio2_medium(ix, x)
+            return rem_pio2_quarters(x, negative, 3.0)
+        # |x| ~= 4pi/2
+        if ix == 0x401921fb:
+            return rem_pio2_medium(ix, x)
+        return rem_pio2_quarters(x, negative, 4.0)
+    # |x| ~< 2^20*(pi/2), medium size
+    if ix < 0x413921fb:
+        return rem_pio2_medium(ix, x)
+    # all other (large) arguments: x is inf or NaN
+    if ix >= 0x7ff00000:
+        const bad = x - x
+        return Pio2Reduction(n=0, y0=bad, y1=bad)
+    # set z = scalbn(|x|, -ilogb(x) + 23)
+    mut z = from_bits(bit_or(bit_and(ui, 0x000fffffffffffffu64), shift_left(1046u64, 52u64)))
+    mut tx: float[] = []
+    for index in range(0, 2):
+        const piece = float(int(z))
+        append(mut tx, piece)
+        z = (z - piece) * 16777216.0
+    append(mut tx, z)
+    # skip zero terms, first term is non-zero
+    mut last = 2
+    while tx[last] == 0.0:
+        last = last - 1
+    const reduced = rem_pio2_large(tx, shift_right(ix, 20) - 1046, last + 1)
+    if negative:
+        return Pio2Reduction(n=-reduced.n, y0=-reduced.y0, y1=-reduced.y1)
+    return reduced
+
+
+# compiler_rt `trig.zig` `sin` (musl `__sin`): sin(x + y) for |x| <= pi/4, with `y` the tail of `x`; `tail` is false when `y` is zero.
+func kernel_sin(x: float, y: float, tail: bool) -> float:
+    const s1 = -1.66666666666666324348e-01
+    const s2 = 8.33333333332248946124e-03
+    const s3 = -1.98412698298579493134e-04
+    const s4 = 2.75573137070700676789e-06
+    const s5 = -2.50507602534068634195e-08
+    const s6 = 1.58969099521155010221e-10
+    const z = x * x
+    const w = z * z
+    const r = s2 + z * (s3 + z * s4) + z * w * (s5 + z * s6)
+    const v = z * x
+    if not tail:
+        return x + v * (s1 + z * r)
+    return x - ((z * (0.5 * y - v * r) - y) - v * s1)
+
+
+# compiler_rt `trig.zig` `cos` (musl `__cos`): cos(x + y) for |x| <= pi/4, with `y` the tail of `x`.
+func kernel_cos(x: float, y: float) -> float:
+    const c1 = 4.16666666666666019037e-02
+    const c2 = -1.38888888888741095749e-03
+    const c3 = 2.48015872894767294178e-05
+    const c4 = -2.75573143513906633035e-07
+    const c5 = 2.08757232129817482790e-09
+    const c6 = -1.13596475577881948265e-11
+    const z = x * x
+    const zs = z * z
+    const r = z * (c1 + z * (c2 + z * c3)) + zs * zs * (c4 + z * (c5 + z * c6))
+    const hz = 0.5 * z
+    const w = 1.0 - hz
+    return w + (((1.0 - w) - hz) + (z * r - x * y))
+
+
+# compiler_rt `trig.zig` `tan` (musl `__tan`): tan(x + y) for |x| <= pi/4 (`odd` false) or -1/tan(x + y) (`odd` true), with `y` the
+# tail of `x`.
+func kernel_tan(x_in: float, y_in: float, odd: bool) -> float:
+    const t0 = 3.33333333333334091986e-01
+    const t1 = 1.33333333333201242699e-01
+    const t2 = 5.39682539762260521377e-02
+    const t3 = 2.18694882948595424599e-02
+    const t4 = 8.86323982359930005737e-03
+    const t5 = 3.59207910759131235356e-03
+    const t6 = 1.45620945432529025516e-03
+    const t7 = 5.88041240820264096874e-04
+    const t8 = 2.46463134818469906812e-04
+    const t9 = 7.81794442939557092300e-05
+    const t10 = 7.14072491382608190305e-05
+    const t11 = -1.85586374855275456654e-05
+    const t12 = 2.59073051863633712884e-05
+    const pio4 = 7.85398163397448278999e-01
+    const pio4lo = 3.06161699786838301793e-17
+    mut x = x_in
+    mut y = y_in
+    const hx = int(shift_right(bits(x), 32u64))
+    # |x| >= 0.6744
+    const big = bit_and(hx, 0x7fffffff) >= 0x3fe59428
+    mut negative = False
+    if big:
+        negative = shift_right(hx, 31) != 0
+        if negative:
+            x = -x
+            y = -y
+        x = (pio4 - x) + (pio4lo - y)
+        y = 0.0
+    const z = x * x
+    mut w = z * z
+    # Break x^5*(T[1]+x^2*T[2]+...) into x^5(T[1]+x^4*T[3]+...+x^20*T[11]) + x^5(x^2*(T[2]+x^4*T[4]+...+x^22*[T12]))
+    mut r = t1 + w * (t3 + w * (t5 + w * (t7 + w * (t9 + w * t11))))
+    mut v = z * (t2 + w * (t4 + w * (t6 + w * (t8 + w * (t10 + w * t12)))))
+    mut s = z * x
+    r = y + z * (s * (r + v) + y) + s * t0
+    w = x + r
+    if big:
+        s = 1.0
+        if odd:
+            s = -1.0
+        v = s - 2.0 * (x + (r - w * w / (w + s)))
+        if negative:
+            return -v
+        return v
+    if not odd:
+        return w
+    # -1.0/(x+r) has up to 2ulp error, so compute it accurately
+    const w0 = from_bits(bit_and(bits(w), 0xffffffff00000000u64))
+    v = r - (w0 - x)
+    const a = -1.0 / w
+    const a0 = from_bits(bit_and(bits(a), 0xffffffff00000000u64))
+    return a0 + a * (1.0 + a0 * w0 + a0 * v)
+
+
+# Zig's `@sin` for f64 (compiler_rt `sin_f64`, from musl), bit for bit: the sine of an angle in radians. Sine of an
+# infinity or a NaN is NaN, and the sine of a signed zero is that zero.
+public func sin(x: float) -> float:
+    const ix = bit_and(int(shift_right(bits(x), 32u64)), 0x7fffffff)
+    # |x| ~< pi/4
+    if ix <= 0x3fe921fb:
+        # |x| < 2^-26
+        if ix < 0x3e500000:
+            return x
+        return kernel_sin(x, 0.0, False)
+    # sin(Inf or NaN) is NaN
+    if ix >= 0x7ff00000:
+        return x - x
+    const reduced = rem_pio2(x)
+    const quadrant = bit_and(reduced.n, 3)
+    if quadrant == 0:
+        return kernel_sin(reduced.y0, reduced.y1, True)
+    if quadrant == 1:
+        return kernel_cos(reduced.y0, reduced.y1)
+    if quadrant == 2:
+        return -kernel_sin(reduced.y0, reduced.y1, True)
+    return -kernel_cos(reduced.y0, reduced.y1)
+
+
+# Zig's `@cos` for f64 (compiler_rt `cos_f64`, from musl), bit for bit: the cosine of an angle in radians. Cosine of an
+# infinity or a NaN is NaN.
+public func cos(x: float) -> float:
+    const ix = bit_and(int(shift_right(bits(x), 32u64)), 0x7fffffff)
+    # |x| ~< pi/4
+    if ix <= 0x3fe921fb:
+        # |x| < 2^-27 * sqrt(2)
+        if ix < 0x3e46a09e:
+            return 1.0
+        return kernel_cos(x, 0.0)
+    # cos(Inf or NaN) is NaN
+    if ix >= 0x7ff00000:
+        return x - x
+    const reduced = rem_pio2(x)
+    const quadrant = bit_and(reduced.n, 3)
+    if quadrant == 0:
+        return kernel_cos(reduced.y0, reduced.y1)
+    if quadrant == 1:
+        return -kernel_sin(reduced.y0, reduced.y1, True)
+    if quadrant == 2:
+        return -kernel_cos(reduced.y0, reduced.y1)
+    return kernel_sin(reduced.y0, reduced.y1, True)
+
+
+# Zig's `@tan` for f64 (compiler_rt `tan_f64`, from musl), bit for bit: the tangent of an angle in radians. Tangent of an
+# infinity or a NaN is NaN.
+public func tan(x: float) -> float:
+    const ix = bit_and(int(shift_right(bits(x), 32u64)), 0x7fffffff)
+    # |x| ~< pi/4
+    if ix <= 0x3fe921fb:
+        # |x| < 2^-27
+        if ix < 0x3e400000:
+            return x
+        return kernel_tan(x, 0.0, False)
+    # tan(Inf or NaN) is NaN
+    if ix >= 0x7ff00000:
+        return x - x
+    const reduced = rem_pio2(x)
+    return kernel_tan(reduced.y0, reduced.y1, bit_and(reduced.n, 1) != 0)
+
+
+# --- binary32 forms: f32_log10, f32_exp, f32_atan2 and f32_pow_float ------------------------------------------------
+# The same four for `f32`, each following Zig's binary32 code: `log10_f32` and `exp_f32` and `log_f32` of compiler_rt (musl's
+# `log10f`, `expf` and `logf`), `atan2_32` and `atanBinary32`, and the generic `pow`, `frexp` and `ldexp` instantiated at `f32`.
+# Every operation rounds to binary32, as Zig's do; the patterns are handled as `u64`, whose upper half stays zero.
+# The binary32 pattern of a value, widened so the pattern arithmetic can share the binary64 helpers.
+func f32_pattern(x: f32) -> u64:
+    return u64(f32_bits(x))
+
+
+# The value a binary32 pattern held in a `u64` names.
+func f32_of_pattern(pattern: u64) -> f32:
+    return f32_from_bits(u32(pattern))
+
+
+# The absolute value of a binary32 number, by clearing the sign bit.
+func f32_magnitude(x: f32) -> f32:
+    return f32_of_pattern(bit_and(f32_pattern(x), 0x7fffffffu64))
+
+
+# Whether a binary32 number is infinite.
+func f32_is_inf(x: f32) -> bool:
+    return bit_and(f32_pattern(x), 0x7fffffffu64) == 0x7f800000u64
+
+
+# The square root of a binary32 number: binary64 carries the root of a binary32 value to enough bits that rounding it once more
+# to binary32 is the correctly rounded binary32 root, which is what Zig's `@sqrt` answers.
+func f32_root(x: f32) -> f32:
+    return f32(__float_sqrt(float(x)))
+
+
+# The number of leading zero bits of a 32-bit pattern (32 for zero).
+func bits_leading_zeros32(v: u64) -> int:
+    return bits_leading_zeros(v) - 32
+
+
+# Zig's `std.math.scalbn(f32, x, n)` (= `ldexp`): x * 2^n, rounded to nearest even in the subnormal range.
+func scalbn_f32(x: f32, n: int) -> f32:
+    const repr = f32_pattern(x)
+    if bit_and(repr, 0x7fffffffu64) >= 0x7f800000u64:
+        return x
+    const sign_bit = bit_and(repr, 0x80000000u64)
+    mut exponent = int(bit_and(shift_right(repr, 23u64), 0xffu64))
+    if exponent == 0:
+        exponent = exponent + 8 - bits_leading_zeros32(bit_and(shift_left(repr, 1u64), 0xffffffffu64))
+    if n >= 0:
+        if n > 254 - exponent:
+            return f32_of_pattern(bit_or(0x7f800000u64, sign_bit))
+        if exponent + n <= 0:
+            return f32_of_pattern(bit_or(bit_and(shift_left(repr, u64(n)), 0xffffffffu64), sign_bit))
+        if exponent <= 0:
+            const field = shift_left(u64(n + exponent), 23u64)
+            const fraction = bit_and(shift_left(repr, u64(1 - exponent)), 0x7fffffu64)
+            return f32_of_pattern(bit_or(bit_or(field, fraction), sign_bit))
+        return f32_of_pattern(repr + shift_left(u64(n), 23u64))
+    if n <= -exponent:
+        if n < -(23 + exponent):
+            return f32_of_pattern(sign_bit)
+        mut shift = -n
+        if -(exponent + n) + 1 < shift:
+            shift = -(exponent + n) + 1
+        const exact_tie = bits_trailing_zeros(repr) == shift - 1
+        mut result = bit_and(repr, 0x7fffffu64)
+        if exponent > 0:
+            result = bit_or(result, 0x800000u64)
+        result = shift_right(result, u64(shift - 1))
+        result = shift_right(result + 1u64, 1u64)
+        if exact_tie:
+            result = bit_and(result, 0xfffffffeu64)
+        return f32_of_pattern(bit_or(result, sign_bit))
+    return f32_of_pattern(repr - shift_left(u64(-n), 23u64))
+
+
+# Zig's `std.math.frexp(f32)`: x = significand * 2^exponent with |significand| in [0.5, 1) for a finite nonzero x.
+record Frexp32Parts:
+    significand: f32
+    exponent: int
+
+
+func frexp32_parts(x: f32) -> Frexp32Parts:
+    const v = f32_pattern(x)
+    const biased = int(bit_and(shift_right(v, 23u64), 0xffu64))
+    const m = bit_and(v, 0x7fffffu64)
+    if biased == 0:
+        if m == 0u64:
+            return Frexp32Parts(significand=x, exponent=0)
+        # Subnormal: the offset counts the zeros above the leading one of the 23-bit fraction.
+        const offset = bits_leading_zeros32(m) - 9
+        const moved = bit_and(shift_left(m, u64(offset + 1)), 0x7fffffu64)
+        const pattern = bit_or(bit_or(bit_and(v, 0x80000000u64), shift_left(126u64, 23u64)), moved)
+        return Frexp32Parts(significand=f32_of_pattern(pattern), exponent=-126 - offset)
+    if biased == 255:
+        return Frexp32Parts(significand=x, exponent=0)
+    const pattern = bit_or(bit_and(v, 0x807fffffu64), shift_left(126u64, 23u64))
+    return Frexp32Parts(significand=f32_of_pattern(pattern), exponent=biased - 126)
+
+
+# Zig's `@log10` for f32 (compiler_rt `log10_f32`, musl's `log10f`): the base-10 logarithm, bit for bit.
+public func f32_log10(value: f32) -> f32:
+    const ivln10hi = 4.3432617188e-01f32
+    const ivln10lo = -3.1689971365e-05f32
+    const log10_2hi = 3.0102920532e-01f32
+    const log10_2lo = 7.9034151668e-07f32
+    const lg1 = 0.66666662693023681640625f32
+    const lg2 = 0.4000097215175628662109375f32
+    const lg3 = 0.284987866878509521484375f32
+    const lg4 = 0.2427907884120941162109375f32
+    mut x = value
+    mut ix = f32_pattern(x)
+    mut k = 0
+    if ix < 0x00800000u64 or shift_right(ix, 31u64) != 0u64:
+        # log(+-0) = -inf; log(negative) = nan; a subnormal is scaled up.
+        if bit_and(ix, 0x7fffffffu64) == 0u64:
+            return f32(-infinity())
+        if shift_right(ix, 31u64) != 0u64:
+            return f32(nan())
+        k = k - 25
+        x = x * 33554432.0f32
+        ix = f32_pattern(x)
+    elif ix >= 0x7f800000u64:
+        return x
+    elif ix == 0x3f800000u64:
+        return 0.0f32
+    # x into [sqrt(2) / 2, sqrt(2)]
+    ix = ix + (0x3f800000u64 - 0x3f3504f3u64)
+    k = k + int(shift_right(ix, 23u64)) - 0x7f
+    ix = bit_and(ix, 0x007fffffu64) + 0x3f3504f3u64
+    x = f32_of_pattern(ix)
+    const f = x - 1.0f32
+    const s = f / (2.0f32 + f)
+    const z = s * s
+    const w = z * z
+    const t1 = w * (lg2 + w * lg4)
+    const t2 = z * (lg1 + w * lg3)
+    const r = t2 + t1
+    const hfsq = 0.5f32 * f * f
+    const hi = f32_of_pattern(bit_and(f32_pattern(f - hfsq), 0xfffff000u64))
+    const lo = f - hi - hfsq + s * (hfsq + r)
+    const dk = f32(k)
+    return dk * log10_2lo + (lo + hi) * ivln10lo + lo * ivln10hi + hi * ivln10hi + dk * log10_2hi
+
+
+# Zig's `@log` for f32 (compiler_rt `log_f32`, musl's `logf`): the natural logarithm, the kernel of `f32_pow_float`.
+func f32_ln(value: f32) -> f32:
+    const ln2_hi = 6.9313812256e-01f32
+    const ln2_lo = 9.0580006145e-06f32
+    const lg1 = 0.66666662693023681640625f32
+    const lg2 = 0.4000097215175628662109375f32
+    const lg3 = 0.284987866878509521484375f32
+    const lg4 = 0.2427907884120941162109375f32
+    mut x = value
+    mut ix = f32_pattern(x)
+    mut k = 0
+    if ix < 0x00800000u64 or shift_right(ix, 31u64) != 0u64:
+        if bit_and(ix, 0x7fffffffu64) == 0u64:
+            return f32(-infinity())
+        if shift_right(ix, 31u64) != 0u64:
+            return f32(nan())
+        k = k - 25
+        x = x * 33554432.0f32
+        ix = f32_pattern(x)
+    elif ix >= 0x7f800000u64:
+        return x
+    elif ix == 0x3f800000u64:
+        return 0.0f32
+    ix = ix + (0x3f800000u64 - 0x3f3504f3u64)
+    k = k + int(shift_right(ix, 23u64)) - 0x7f
+    ix = bit_and(ix, 0x007fffffu64) + 0x3f3504f3u64
+    x = f32_of_pattern(ix)
+    const f = x - 1.0f32
+    const s = f / (2.0f32 + f)
+    const z = s * s
+    const w = z * z
+    const t1 = w * (lg2 + w * lg4)
+    const t2 = z * (lg1 + w * lg3)
+    const r = t2 + t1
+    const hfsq = 0.5f32 * f * f
+    const dk = f32(k)
+    return s * (hfsq + r) + dk * ln2_lo - hfsq + f + dk * ln2_hi
+
+
+# Zig's `@exp` for f32 (compiler_rt `exp_f32`, musl's `expf`): e raised to the power x, bit for bit.
+public func f32_exp(value: f32) -> f32:
+    const ln2hi = 6.9314575195e-1f32
+    const ln2lo = 1.4286067653e-6f32
+    const invln2 = 1.4426950216e+0f32
+    const p1 = 1.6666625440e-1f32
+    const p2 = -2.7667332906e-3f32
+    mut x = value
+    mut hx = f32_pattern(x)
+    const negative = int(shift_right(hx, 31u64))
+    hx = bit_and(hx, 0x7fffffffu64)
+    if x != x:
+        return x
+    # |x| >= 87.33655 or nan
+    if hx >= 0x42aeac50u64:
+        if hx > 0x7f800000u64:
+            return x
+        # x >= 88.722839
+        if hx >= 0x42b17218u64 and negative == 0:
+            return x * 170141183460469231731687303715884105728.0f32
+        # x <= -103.972084
+        if negative != 0 and hx >= 0x42cff1b5u64:
+            return 0.0f32
+    mut k = 0
+    mut hi = 0.0f32
+    mut lo = 0.0f32
+    if hx > 0x3eb17218u64:
+        # |x| > 0.5 * ln2
+        if hx > 0x3f851592u64:
+            if negative == 1:
+                k = int(invln2 * x + -0.5f32)
+            else:
+                k = int(invln2 * x + 0.5f32)
+        else:
+            k = 1 - negative - negative
+        const fk = f32(k)
+        hi = x - fk * ln2hi
+        lo = fk * ln2lo
+        x = hi - lo
+    elif hx > 0x39000000u64:
+        # |x| > 2^-14
+        hi = x
+    else:
+        return 1.0f32 + x
+    const xx = x * x
+    const c = x - xx * (p1 + xx * p2)
+    const y = 1.0f32 + (x * c / (2.0f32 - c) - lo + hi)
+    if k == 0:
+        return y
+    return scalbn_f32(y, k)
+
+
+# Zig's `std.math.atan(f32)` (`atanBinary32`), the kernel of `f32_atan2`.
+func f32_atan(x: f32) -> f32:
+    const atanhi0 = 4.6364760399e-01f32
+    const atanhi1 = 7.8539812565e-01f32
+    const atanhi2 = 9.8279368877e-01f32
+    const atanhi3 = 1.5707962513e+00f32
+    const atanlo0 = 5.0121582440e-09f32
+    const atanlo1 = 3.7748947079e-08f32
+    const atanlo2 = 3.4473217170e-08f32
+    const atanlo3 = 7.5497894159e-08f32
+    const at0 = 3.3333328366e-01f32
+    const at1 = -1.9999158382e-01f32
+    const at2 = 1.4253635705e-01f32
+    const at3 = -1.0648017377e-01f32
+    const at4 = 6.1687607318e-02f32
+    const pattern = f32_pattern(x)
+    const ix = bit_and(pattern, 0x7fffffffu64)
+    const negative = shift_right(pattern, 31u64) != 0u64
+    # |x| >= 2^26 or nan
+    if ix >= 0x4c800000u64:
+        if x != x:
+            return x
+        const big = atanhi3 + 7.52316384526264e-37f32
+        if negative:
+            return -big
+        return big
+    mut v = x
+    mut id = -1
+    if ix < 0x3ee00000u64:
+        # |x| < 0.4375
+        if ix < 0x39800000u64:
+            return x
+    else:
+        v = f32_magnitude(x)
+        if ix < 0x3f980000u64:
+            if ix < 0x3f300000u64:
+                id = 0
+                v = (2.0f32 * v - 1.0f32) / (2.0f32 + v)
+            else:
+                id = 1
+                v = (v - 1.0f32) / (v + 1.0f32)
+        elif ix < 0x401c0000u64:
+            id = 2
+            v = (v - 1.5f32) / (1.0f32 + 1.5f32 * v)
+        else:
+            id = 3
+            v = -1.0f32 / v
+    const z = v * v
+    const w = z * z
+    const s1 = z * (at0 + w * (at2 + w * at4))
+    const s2 = w * (at1 + w * at3)
+    if id < 0:
+        return v - v * (s1 + s2)
+    mut hi = atanhi3
+    mut lo = atanlo3
+    match id:
+        case 0:
+            hi = atanhi0
+            lo = atanlo0
+        case 1:
+            hi = atanhi1
+            lo = atanlo1
+        case 2:
+            hi = atanhi2
+            lo = atanlo2
+        case _:
+            hi = atanhi3
+            lo = atanlo3
+    const r = hi - ((v * (s1 + s2) - lo) - v)
+    if negative:
+        return -r
+    return r
+
+
+# Zig's `std.math.atan2(f32, f32)` (`atan2_32`, musl's `atan2f`): the angle of the point (x, y), in [-pi, pi], bit for bit.
+public func f32_atan2(y: f32, x: f32) -> f32:
+    const pi32 = 3.1415927410e+00f32
+    const pi32_lo = -8.7422776573e-08f32
+    if x != x or y != y:
+        return x + y
+    const ix0 = f32_pattern(x)
+    const iy0 = f32_pattern(y)
+    # x = 1.0
+    if ix0 == 0x3f800000u64:
+        return f32_atan(y)
+    # 2 * sign(x) + sign(y)
+    const m = bit_or(bit_and(shift_right(iy0, 31u64), 1u64), bit_and(shift_right(ix0, 30u64), 2u64))
+    const ix = bit_and(ix0, 0x7fffffffu64)
+    const iy = bit_and(iy0, 0x7fffffffu64)
+    if iy == 0u64:
+        # atan2(+-0, x)
+        if m == 0u64 or m == 1u64:
+            return y
+        if m == 2u64:
+            return pi32
+        return -pi32
+    if ix == 0u64:
+        # atan2(y, +-0)
+        if bit_and(m, 1u64) != 0u64:
+            return -pi32 / 2.0f32
+        return pi32 / 2.0f32
+    if ix == 0x7f800000u64:
+        if iy == 0x7f800000u64:
+            if m == 0u64:
+                return pi32 / 4.0f32
+            if m == 1u64:
+                return -pi32 / 4.0f32
+            if m == 2u64:
+                return 3.0f32 * pi32 / 4.0f32
+            return -3.0f32 * pi32 / 4.0f32
+        if m == 0u64:
+            return 0.0f32
+        if m == 1u64:
+            return -0.0f32
+        if m == 2u64:
+            return pi32
+        return -pi32
+    # |y / x| > 0x1p26
+    if ix + 218103808u64 < iy or iy == 0x7f800000u64:
+        if bit_and(m, 1u64) != 0u64:
+            return -pi32 / 2.0f32
+        return pi32 / 2.0f32
+    # z = atan(|y / x|) with correct underflow
+    mut z = 0.0f32
+    if not (bit_and(m, 2u64) != 0u64 and iy + 218103808u64 < ix):
+        z = f32_atan(f32_magnitude(y / x))
+    if m == 0u64:
+        return z
+    if m == 1u64:
+        return -z
+    if m == 2u64:
+        return pi32 - (z - pi32_lo)
+    return (z - pi32_lo) - pi32
+
+
+# Zig's `std.math.pow(f32, x, y)`, bit for bit: x raised to the float power y (Go's algorithm, which Zig ports).
+public func f32_pow_float(x: f32, y: f32) -> f32:
+    if y == 0.0f32 or x == 1.0f32:
+        return 1.0f32
+    if x != x or y != y:
+        return f32(nan())
+    if y == 1.0f32:
+        return x
+    if x == 0.0f32:
+        if y < 0.0f32:
+            if is_odd_integer(float(y)):
+                # copysign(inf, x)
+                if bit_and(f32_pattern(x), 0x80000000u64) != 0u64:
+                    return f32(-infinity())
+                return f32(infinity())
+            return f32(infinity())
+        if is_odd_integer(float(y)):
+            return x
+        return 0.0f32
+    if f32_is_inf(y):
+        if x == -1.0f32:
+            return 1.0f32
+        if (f32_magnitude(x) < 1.0f32) == (y > 0.0f32):
+            return 0.0f32
+        return f32(infinity())
+    if f32_is_inf(x):
+        if x < 0.0f32:
+            return f32_pow_float(1.0f32 / x, -y)
+        if y < 0.0f32:
+            return 0.0f32
+        if y > 0.0f32:
+            return f32(infinity())
+    if y == 0.5f32:
+        return f32_root(x)
+    if y == -0.5f32:
+        return 1.0f32 / f32_root(x)
+    const ay = f32_magnitude(y)
+    mut yi = f32(trunc(float(ay)))
+    mut yf = ay - yi
+    if yf != 0.0f32 and x < 0.0f32:
+        return f32(nan())
+    if yi >= 2147483648.0f32:
+        # yi is a large even int, so the result is positive whatever the sign of x.
+        return f32_exp(y * f32_ln(f32_magnitude(x)))
+    # a = a1 * 2^ae
+    mut a1 = 1.0f32
+    mut ae = 0
+    # a *= x^yf
+    if yf != 0.0f32:
+        if yf > 0.5f32:
+            yf = yf - 1.0f32
+            yi = yi + 1.0f32
+        a1 = f32_exp(yf * f32_ln(x))
+    # a *= x^yi
+    const parts = frexp32_parts(x)
+    mut xe = parts.exponent
+    mut x1 = parts.significand
+    mut i = int(yi)
+    while i != 0:
+        if xe < -512 or 512 < xe:
+            # xe would overflow the shift below; the lower bound on ae already decides under/overflow.
+            ae = ae + xe
+            break
+        if bit_and(i, 1) == 1:
+            a1 = a1 * x1
+            ae = ae + xe
+        x1 = x1 * x1
+        xe = xe * 2
+        if x1 < 0.5f32:
+            x1 = x1 + x1
+            xe = xe - 1
+        i = shift_right(i, 1)
+    # a *= a1 * 2^ae
+    if y < 0.0f32:
+        a1 = 1.0f32 / a1
+        ae = -ae
+    return scalbn_f32(a1, ae)
+
+
+# Largest finite binary64 value; anything above it is positive infinity.
+func max_finite() -> float:
+    return 1.7976931348623157e308
+
+
+# Ratio of a circle's circumference to its diameter, rounded to binary64.
+public func pi() -> float:
+    return 3.141592653589793
+
+
+# Base of the natural logarithm, rounded to binary64.
+public func e() -> float:
+    return 2.718281828459045
+
+
+# The canonical quiet not-a-number.
+public func nan() -> float:
+    return 0.0 / 0.0
+
+
+# Positive infinity.
+public func infinity() -> float:
+    return 1.0 / 0.0
+
+
+# Whether a value is not-a-number, which is the only value unequal to itself.
+public func is_nan(value: float) -> bool:
+    return value != value
+
+
+# Whether a value is one of the two infinities.
+public func is_inf(value: float) -> bool:
+    return value > max_finite() or value < 0.0 - max_finite()
+
+
+# Whether a value is neither infinite nor not-a-number.
+public func is_finite(value: float) -> bool:
+    return not is_nan(value) and not is_inf(value)
+
+
+# Magnitude of a floating value, mapping both zeros to positive zero.
+public func fabs(value: float) -> float:
+    if value == 0.0:
+        return 0.0
+    if value < 0.0:
+        return 0.0 - value
+    return value
+
+
+# Sign of a floating value as -1, 0 or 1; not-a-number reports 0.
+public func sign(value: float) -> int:
+    if value > 0.0:
+        return 1
+    if value < 0.0:
+        return 0 - 1
+    return 0
+
+
+# The integer `int(value)` gives, or `None` where `int(value)` would trap: not-a-number, an infinity, or a value
+# whose truncation is outside the signed 64-bit range (from 2^63 up, below -2^63).
+public func to_int(value: float) -> int?:
+    if is_nan(value) or value >= 9223372036854775808.0 or value < 0.0 - 9223372036854775808.0:
+        return None
+    return Some(int(value))
+
+
+# `int(value)` that cannot trap: a value from 2^63 up (and +infinity) gives 9223372036854775807, one below -2^63 (and
+# -infinity) gives -9223372036854775808, not-a-number gives 0, and every other value is truncated toward zero.
+public func to_int_saturating(value: float) -> int:
+    if is_nan(value):
+        return 0
+    if value >= 9223372036854775808.0:
+        return 9223372036854775807
+    if value < 0.0 - 9223372036854775808.0:
+        return 0 - 9223372036854775807 - 1
+    return int(value)
+
+
+# Integral part of a value, rounding toward zero.
+public func trunc(value: float) -> float:
+    if is_nan(value) or is_inf(value):
+        return value
+    if value >= 9223372036854775808.0 or value < 0.0 - 9223372036854775808.0:
+        return value
+    return float(int(value))
+
+
+# Largest integral value that is not greater than the argument.
+public func floor(value: float) -> float:
+    mut whole = trunc(value)
+    if whole > value:
+        return whole - 1.0
+    return whole
+
+
+# Smallest integral value that is not less than the argument.
+public func ceil(value: float) -> float:
+    mut whole = trunc(value)
+    if whole < value:
+        return whole + 1.0
+    return whole
+
+
+# Nearest integral value, with halves rounded away from zero.
+public func round(value: float) -> float:
+    if is_nan(value) or is_inf(value):
+        return value
+    mut whole = trunc(value)
+    mut fraction = value - whole
+    if fraction >= 0.5:
+        return whole + 1.0
+    if fraction <= 0.0 - 0.5:
+        return whole - 1.0
+    return whole
+
+
+# Square root, correctly rounded by the binary64 intrinsic. This module
+# declares `sqrt`, which shadows the prelude helper, so it reaches the
+# compiler-internal intrinsic spelling directly.
+public func sqrt(value: float) -> float:
+    if is_nan(value) or value == 0.0:
+        return value
+    if value < 0.0:
+        return nan()
+    if is_inf(value):
+        return value
+    return __float_sqrt(value)
+
+
+# Repeated squaring for a nonnegative exponent that already fits the budget.
+func positive_power(base: float, exponent: int) -> float:
+    mut total = 1.0
+    mut factor = base
+    mut remaining = exponent
+    while remaining > 0:
+        if remaining % 2 == 1:
+            total = total * factor
+        factor = factor * factor
+        remaining = remaining // 2
+    return total
+
+
+# Exponents past this magnitude only decide overflow, underflow and sign.
+func saturated(exponent: int) -> int:
+    if exponent > 4096 or exponent < 0 - 4096:
+        return 4096 + exponent % 2
+    if exponent < 0:
+        return 0 - exponent
+    return exponent
+
+
+# Base raised to an integer exponent; magnitudes above 4096 saturate by parity.
+public func pow(base: float, exponent: int) -> float:
+    if exponent == 0:
+        return 1.0
+    mut magnitude = positive_power(base, saturated(exponent))
+    if exponent < 0:
+        return 1.0 / magnitude
+    return magnitude
+
+
+# Smaller of two floating values; a not-a-number operand propagates.
+public func fmin(a: float, b: float) -> float:
+    if is_nan(a) or is_nan(b):
+        return nan()
+    if a <= b:
+        return a
+    return b
+
+
+# Larger of two floating values; a not-a-number operand propagates.
+public func fmax(a: float, b: float) -> float:
+    if is_nan(a) or is_nan(b):
+        return nan()
+    if a >= b:
+        return a
+    return b
+
+
+@noalloc
+# Smaller of two integers of any width, compared without subtraction.
+public func min[T: integer](a: T, b: T) -> T:
+    if a <= b:
+        return a
+    return b
+
+
+@noalloc
+# Larger of two integers of any width, compared without subtraction.
+public func max[T: integer](a: T, b: T) -> T:
+    if a >= b:
+        return a
+    return b
+
+
+@noalloc
+# Value restricted to an inclusive integer range; an inverted range yields low.
+public func clamp[T: integer](value: T, low: T, high: T) -> T:
+    if high < low:
+        return low
+    if value < low:
+        return low
+    if value > high:
+        return high
+    return value
+
+
+# Magnitude of an integer; the most negative value has no positive counterpart.
+public func abs(value: int) -> int fails str:
+    if value == 0 - 9223372036854775807 - 1:
+        fail "absolute value of -9223372036854775808 is not representable"
+    if value < 0:
+        return 0 - value
+    return value
+
+
+# Greatest common divisor, reported as a nonnegative integer.
+public func gcd(a: int, b: int) -> int fails str:
+    mut left = a
+    mut right = b
+    while right != 0:
+        mut remainder = left % right
+        left = right
+        right = remainder
+    return try abs(left)
+
+
+# Least common multiple of two integers, reported as a nonnegative integer.
+public func lcm(a: int, b: int) -> int fails str:
+    if a == 0 or b == 0:
+        return 0
+    mut left = try abs(a)
+    mut right = try abs(b)
+    mut divisor = try gcd(left, right)
+    mut quotient = left // divisor
+    if quotient > 9223372036854775807 // right:
+        fail "least common multiple does not fit a 64-bit integer"
+    return quotient * right
+
+
+# Integer square root: the largest whole number whose square is not larger.
+public func isqrt(value: int) -> int fails str:
+    if value < 0:
+        fail "integer square root of a negative value is undefined"
+    if value < 2:
+        return value
+    mut estimate = int(sqrt(float(value)))
+    while estimate > 0 and estimate > value // estimate:
+        estimate = (estimate + value // estimate) // 2
+    while (estimate + 1) <= value // (estimate + 1):
+        estimate += 1
+    return estimate

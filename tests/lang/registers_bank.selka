@@ -1,0 +1,182 @@
+# Register access on Linux (MCU-B1): a simulated bank is one little-endian memory of bytes with a log of every write.
+# `poke32` sets what a read answers without a log entry; two banks are independent; a `Registers` is a shareable handle
+# that a record holds, and the reads and writes allocate nothing, so a `@noalloc` function may make them. A bank models
+# hardware (MCU-B1D): `script32` gives a word's next reads, `pin32` fixes bits a read answers, and a task may make a bank.
+import parallel
+import registers
+
+record Device:
+    reg: Registers
+    base: u32
+
+
+func enable(device: Device, bits: u32):
+    const control = registers.read32(device.reg, device.base)
+    registers.write32(device.reg, device.base, bit_or(control, bits))
+
+
+@noalloc
+func toggle(reg: Registers, address: u32) -> u32:
+    const now = registers.read32(reg, address)
+    registers.write32(reg, address, bit_xor(now, 1))
+    registers.write8(reg, address + 4, 7)
+    registers.write16(reg, address + 6, 513)
+    return registers.read32(reg, address)
+
+
+func keep(reg: Registers) -> Registers:
+    return reg
+
+
+# Wait for the lock bit (bit 31) of a PLL's control word, counting the reads: a driver's busy loop.
+@noalloc
+func wait_locked(reg: Registers, address: u32) -> int:
+    mut reads = 1
+    while bit_and(registers.read32(reg, address), 0x80000000) == 0:
+        reads += 1
+    return reads
+
+
+# A task's own bank: a scripted word read three times, and a pinned bit under a write.
+func in_task(seed: int) -> int:
+    const reg = registers.simulated()
+    registers.script32(reg, 0x10, [u32(seed), u32(seed + 1)])
+    registers.pin32(reg, 0x20, 1, 1)
+    registers.write32(reg, 0x20, 0)
+    return int(registers.read32(reg, 0x10)) + int(registers.read32(reg, 0x10)) + int(registers.read32(reg, 0x10)) + int(registers.read32(reg, 0x20))
+
+
+public func test_widths_read_back_each_others_bytes() -> bool:
+    const reg = registers.simulated()
+    registers.write32(reg, 0x40000000, 0x12345678)
+    const low = registers.read8(reg, 0x40000000) == 0x78 and registers.read8(reg, 0x40000003) == 0x12
+    const halves = registers.read16(reg, 0x40000000) == 0x5678 and registers.read16(reg, 0x40000002) == 0x1234
+    registers.write8(reg, 0x40000001, 0xab)
+    registers.write16(reg, 0x40000002, 0xcdef)
+    return low and halves and registers.read32(reg, 0x40000000) == 0xcdefab78
+
+
+public func test_unaligned_word_spans_two_words() -> bool:
+    const reg = registers.simulated()
+    registers.write32(reg, 0x102, 0xaabbccdd)
+    const halves = registers.read16(reg, 0x100) == 0 and registers.read16(reg, 0x102) == 0xccdd and registers.read16(reg, 0x104) == 0xaabb
+    return halves and registers.read32(reg, 0x100) == 0xccdd0000 and registers.read32(reg, 0x104) == 0xaabb and registers.read32(reg, 0x102) == 0xaabbccdd
+
+
+public func test_an_unwritten_address_reads_zero() -> bool:
+    const reg = registers.simulated()
+    registers.write8(reg, 0x10, 1)
+    return registers.read32(reg, 0x2000) == 0 and registers.read8(reg, 0x11) == 0 and registers.read16(reg, 0xfffffffe) == 0
+
+
+public func test_poke_is_read_and_not_logged() -> bool:
+    const reg = registers.simulated()
+    registers.poke32(reg, 0x4000, 0x80000001)
+    return registers.read32(reg, 0x4000) == 0x80000001 and registers.read8(reg, 0x4003) == 0x80 and registers.write_count(reg) == 0
+
+
+public func test_the_log_keeps_order_addresses_values_and_widths() -> bool:
+    const reg = registers.simulated()
+    registers.write32(reg, 0x20, 0xdeadbeef)
+    registers.write8(reg, 0x24, 0x5a)
+    registers.write16(reg, 0x26, 0x1234)
+    registers.write32(reg, 0x20, 1)
+    mut ok = registers.write_count(reg) == 4
+    ok = ok and registers.write_address(reg, 0) == 0x20 and registers.write_value(reg, 0) == 0xdeadbeef
+    ok = ok and registers.write_width(reg, 0) == 32
+    ok = ok and registers.write_address(reg, 1) == 0x24 and registers.write_value(reg, 1) == 0x5a
+    ok = ok and registers.write_width(reg, 1) == 8
+    ok = ok and registers.write_address(reg, 2) == 0x26 and registers.write_value(reg, 2) == 0x1234
+    ok = ok and registers.write_width(reg, 2) == 16
+    return ok and registers.write_value(reg, 3) == 1
+
+
+public func test_writes_and_last_write() -> bool:
+    const reg = registers.simulated()
+    registers.write32(reg, 0x30, 5)
+    registers.write8(reg, 0x34, 6)
+    registers.write32(reg, 0x30, 7)
+    const log = registers.writes(reg)
+    mut ok = len(log) == 3 and log[0].address == 0x30 and log[0].value == 5 and log[0].width == 32
+    ok = ok and log[1].address == 0x34 and log[1].width == 8 and log[2].value == 7
+    ok = ok and registers.last_write(reg, 0x30) == Some(7) and registers.last_write(reg, 0x34) == Some(6)
+    return ok and registers.last_write(reg, 0x38) is None
+
+
+public func test_two_banks_are_independent() -> bool:
+    const first = registers.simulated()
+    const second = registers.simulated()
+    registers.write32(first, 0x8, 11)
+    registers.poke32(second, 0x8, 22)
+    const copy = keep(first)
+    registers.write8(copy, 0xc, 3)
+    return registers.read32(first, 0x8) == 11 and registers.read32(second, 0x8) == 22 and registers.write_count(first) == 2 and registers.write_count(second) == 0
+
+
+public func test_a_record_holds_a_bank() -> bool:
+    const device = Device(reg=registers.simulated(), base=0x1000)
+    registers.poke32(device.reg, 0x1000, 0x10)
+    enable(device, 0x3)
+    const devices = [device, device]
+    enable(devices[1], 0x100)
+    return registers.read32(device.reg, 0x1000) == 0x113 and registers.write_count(device.reg) == 2
+
+
+public func test_a_noalloc_function_reads_and_writes() -> bool:
+    const reg = registers.simulated()
+    registers.poke32(reg, 0x50, 0x10)
+    const answer = toggle(reg, 0x50)
+    return answer == 0x11 and registers.read8(reg, 0x54) == 7 and registers.read16(reg, 0x56) == 513 and registers.write_count(reg) == 3
+
+
+public func test_a_script_answers_its_values_in_order_then_the_stored_word() -> bool:
+    const reg = registers.simulated()
+    registers.write32(reg, 0x40, 9)
+    registers.script32(reg, 0x40, [100, 200, 300])
+    const first = registers.read32(reg, 0x40) == 100 and registers.read32(reg, 0x40) == 200
+    registers.write32(reg, 0x40, 10)
+    const rest = registers.read32(reg, 0x40) == 300 and registers.read32(reg, 0x40) == 10 and registers.read32(reg, 0x40) == 10
+    return first and rest and registers.write_count(reg) == 2
+
+
+public func test_each_read_of_a_scripted_word_takes_one_value_whatever_its_width() -> bool:
+    const reg = registers.simulated()
+    registers.script32(reg, 0x40, [0x11223344, 0x55667788])
+    const ok = registers.read8(reg, 0x41) == 0x33 and registers.read16(reg, 0x42) == 0x5566
+    registers.script32(reg, 0x40, [1, 2])
+    registers.script32(reg, 0x40, [7])
+    const replaced = registers.read32(reg, 0x40) == 7 and registers.read32(reg, 0x40) == 0
+    registers.script32(reg, 0x40, [5, 6])
+    registers.script32(reg, 0x40, [])
+    return ok and replaced and registers.read32(reg, 0x40) == 0
+
+
+public func test_pinned_bits_read_as_pinned_and_the_log_holds_what_was_written() -> bool:
+    const reg = registers.simulated()
+    registers.pin32(reg, 0x100, 0x80000001, 0x80000000)
+    const before = registers.read32(reg, 0x100) == 0x80000000
+    registers.write32(reg, 0x100, 0x00000ff1)
+    const after = registers.read32(reg, 0x100) == 0x80000ff0 and registers.read8(reg, 0x103) == 0x80
+    registers.poke32(reg, 0x100, 0xffffffff)
+    const poked = registers.read32(reg, 0x100) == 0xfffffffe
+    registers.pin32(reg, 0x100, 0, 0)
+    const unpinned = registers.read32(reg, 0x100) == 0xffffffff
+    return before and after and poked and unpinned and registers.last_write(reg, 0x100) == Some(0xff1) and registers.write_count(reg) == 1
+
+
+public func test_a_script_under_a_pinned_bit_drives_a_busy_loop() -> bool:
+    const reg = registers.simulated()
+    registers.script32(reg, 0x200, [0, 0, 0, 0x80000000])
+    registers.pin32(reg, 0x200, 0x2, 0x2)
+    const reads = wait_locked(reg, 0x200)
+    registers.write32(reg, 0x200, 0)
+    return reads == 4 and registers.read32(reg, 0x200) == 0x2 and registers.last_write(reg, 0x200) == Some(0)
+
+
+public func test_tasks_make_their_own_banks() -> bool:
+    const seeds = [1, 10, 100, 1000, 7, 70, 700, 7000]
+    const results = parallel.map(seeds, in_task)
+    mut ok = len(results) == len(seeds)
+    for index in range(len(results)):
+        ok = ok and results[index] == 2 * seeds[index] + 2
+    return ok

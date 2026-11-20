@@ -1,0 +1,230 @@
+# A write through a `match mut` payload binding is followed by the check of every record with an `@invariant` on the
+# matched place, read from the place's root, as a direct write is (FX7b). Before 13 November no check followed such a
+# write. Each test writes a value the invariants allow, in one of the write forms or places, and reads it back; the
+# writes that break an invariant trap `R_INVARIANT` at the write, which src/contracts_test.zig pins.
+enum Bound:
+    open
+    at(value: int)
+    span(lo: int, hi: int)
+
+
+enum Load:
+    idle
+    items(values: int[], cap: int)
+
+
+func limit(b: Bound) -> int:
+    match b:
+        case at(value=v):
+            return v
+        case span(lo=lo, hi=hi):
+            return hi - lo
+        case open:
+            return 1000
+
+
+func load_ok(l: Load) -> bool:
+    match l:
+        case items(values=values, cap=cap):
+            return len(values) <= cap
+        case idle:
+            return True
+
+
+@invariant(limit(self.high) >= 0 and limit(self.high) <= 100, "a bound between 0 and 100")
+record Range:
+    tag: int
+    high: Bound
+
+
+@invariant(self.range.tag >= 0, "a tag is never negative")
+record Window:
+    name: str
+    range: Range
+
+
+@invariant(load_ok(self.load), "never over capacity")
+record Truck:
+    name: str
+    load: Load
+
+
+record Box[T]:
+    value: T
+
+
+func at_value(r: Range) -> int:
+    return limit(r.high)
+
+
+func lower(mut v: int, by: int):
+    v = v - by
+
+
+public func test_assignment_and_compound_assignment() -> bool:
+    mut r = Range(tag=1, high=Bound.at(value=5))
+    match mut r.high:
+        case at(value=v):
+            v = 40
+            v += 2
+            v -= 1
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+    return at_value(r) == 41
+
+
+public func test_a_mut_argument() -> bool:
+    mut r = Range(tag=1, high=Bound.at(value=50))
+    match mut r.high:
+        case at(value=v):
+            lower(mut v, 8)
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+    return at_value(r) == 42
+
+
+public func test_two_payload_fields_written_in_an_order_that_keeps_the_invariant() -> bool:
+    mut r = Range(tag=1, high=Bound.span(lo=1, hi=5))
+    match mut r.high:
+        case span(lo=lo, hi=hi):
+            hi = 50
+            lo = 10
+        case at(value=_):
+            return False
+        case open:
+            return False
+    return at_value(r) == 40
+
+
+public func test_writes_in_a_loop() -> bool:
+    mut r = Range(tag=1, high=Bound.at(value=0))
+    match mut r.high:
+        case at(value=v):
+            for i in range(10):
+                v += i
+            mut n = 0
+            while n < 3:
+                v -= 1
+                n += 1
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+    return at_value(r) == 42
+
+
+public func test_append_take_and_exchange_on_a_list_payload() -> bool:
+    mut t = Truck(name="t", load=Load.items(values=[1], cap=3))
+    match mut t.load:
+        case items(values=values, cap=cap):
+            append(mut values, 2)
+            const old = take(mut values)
+            const before = exchange(mut values, own old)
+            append(mut values, len(before) + 5)
+            cap = 4
+        case idle:
+            return False
+    match t.load:
+        case items(values=values, cap=cap):
+            return len(values) == 3 and values[2] == 5 and cap == 4
+        case idle:
+            return False
+
+
+public func test_a_nested_match_mut_checks_the_outer_record() -> bool:
+    mut w = Window(name="w", range=Range(tag=1, high=Bound.at(value=5)))
+    match mut w.range.high:
+        case at(value=v):
+            v = 30
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+    return at_value(w.range) == 30 and w.range.tag == 1
+
+
+public func test_a_list_element() -> bool:
+    mut rs = [Range(tag=1, high=Bound.at(value=5)), Range(tag=2, high=Bound.at(value=1))]
+    match mut rs[0].high:
+        case at(value=v):
+            v = 7
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+    return at_value(rs[0]) == 7 and len(rs) == 2
+
+
+public func test_an_option_payload() -> bool:
+    mut o: Range? = Some(Range(tag=1, high=Bound.at(value=5)))
+    match mut o:
+        case Some(r):
+            match mut r.high:
+                case at(value=v):
+                    v = 9
+                case span(lo=_, hi=_):
+                    return False
+                case open:
+                    return False
+        case None:
+            return False
+    match o:
+        case Some(r):
+            return at_value(r) == 9
+        case None:
+            return False
+
+
+func raise_to(mut r: Range, value: int) -> bool:
+    match mut r.high:
+        case at(value=v):
+            v = value
+            return True
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+
+
+public func test_a_mut_parameter() -> bool:
+    mut r = Range(tag=1, high=Bound.at(value=5))
+    assert raise_to(mut r, 60)
+    return at_value(r) == 60
+
+
+public func test_a_generic_record_around_the_record() -> bool:
+    mut b = Box[Range](value=Range(tag=1, high=Bound.at(value=5)))
+    match mut b.value.high:
+        case at(value=v):
+            v = 11
+        case span(lo=_, hi=_):
+            return False
+        case open:
+            return False
+    return at_value(b.value) == 11
+
+
+func set_in_fails(k: int) -> int fails str:
+    mut r = Range(tag=1, high=Bound.at(value=5))
+    match mut r.high:
+        case at(value=v):
+            v = k
+            if k > 50:
+                fail "high"
+        case span(lo=_, hi=_):
+            fail "span"
+        case open:
+            fail "open"
+    return at_value(r)
+
+
+public func test_in_a_fails_function() -> bool:
+    match set_in_fails(12):
+        case Ok(n):
+            return n == 12
+        case Err(_):
+            return False

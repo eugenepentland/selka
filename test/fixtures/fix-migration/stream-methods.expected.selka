@@ -1,0 +1,12 @@
+func report(out: Stream, err: Stream, count: int):
+    print(out, "count", count, sep=": ")
+    write(out, "\n")
+    print(err, "note", end="\n")
+    print(out)
+
+
+func main(out: Stream, err: Stream) -> int:
+    report(out, err, 3)
+    write(out, "done\n")
+    print(out, 7)
+    return 0

@@ -1,0 +1,19 @@
+name = "facts"
+version = "0.1.0"
+defaultTargets = ["Facts", "factcheck"]
+
+[leanOptions]
+autoImplicit = false
+
+# The integer semantics and the proofs about the lowering of the proven forms (core Lean 4 only).
+[[require]]
+name = "arith"
+path = "../arith"
+
+[[lean_lib]]
+name = "Facts"
+
+# `lake exe factcheck DIR_OR_FILE` reads fact-certificate-v1 files.
+[[lean_exe]]
+name = "factcheck"
+root = "Main"

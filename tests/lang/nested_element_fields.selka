@@ -1,0 +1,460 @@
+# A field of a record held two lists deep (`rows[i][j].count = w`) is written in place. The record has managed
+# fields (text, a list), which is what the ownership pass used to refuse: E_CORE_UNSUPPORTED, "no safe destruction
+# schedule", at the assignment. A record of scalars was never refused.
+import byte_builder
+import lists
+
+record Tag:
+    label: str
+    ids: int[]
+
+
+record Bucket:
+    old: str
+    count: int
+    tags: Tag[]
+
+
+record Wrapper:
+    name: str
+    inner: Bucket
+
+
+func tag(label: str, id: int) -> Tag:
+    mut ids: int[] = [id]
+    return Tag(label=copy(label), ids=own ids)
+
+
+func bucket(old: str, count: int) -> Bucket:
+    mut tags: Tag[] = [tag(old, count)]
+    return Bucket(old=copy(old), count=count, tags=own tags)
+
+
+func grid() -> Bucket[][]:
+    mut first: Bucket[] = [bucket("a", 1), bucket("b", 2)]
+    mut second: Bucket[] = [bucket("c", 3), bucket("d", 4)]
+    mut rows: Bucket[][] = []
+    append(mut rows, own first)
+    append(mut rows, own second)
+    return rows
+
+
+func set_count(mut rows: Bucket[][], i: int, j: int, w: int):
+    rows[i][j].count = w
+
+
+func add_count(mut rows: Bucket[][], i: int, j: int, w: int):
+    rows[i][j].count += w
+
+
+func set_old(mut rows: Bucket[][], i: int, j: int, text: str):
+    rows[i][j].old = copy(text)
+
+
+public func test_a_scalar_field_two_lists_deep_is_assigned() -> bool:
+    mut rows = grid()
+    set_count(mut rows, 1, 0, 30)
+    return rows[1][0].count == 30 and rows[1][0].old == "c" and rows[1][1].count == 4 and rows[0][0].count == 1
+
+
+public func test_a_compound_assignment_two_lists_deep() -> bool:
+    mut rows = grid()
+    add_count(mut rows, 0, 1, 5)
+    add_count(mut rows, 0, 1, 5)
+    return rows[0][1].count == 12 and rows[0][1].old == "b" and len(rows[0][1].tags) == 1
+
+
+public func test_a_managed_field_two_lists_deep_is_assigned() -> bool:
+    mut rows = grid()
+    set_old(mut rows, 1, 1, "zed")
+    return rows[1][1].old == "zed" and rows[1][1].count == 4 and rows[1][0].old == "c"
+
+
+public func test_the_other_fields_of_the_element_survive() -> bool:
+    mut rows = grid()
+    set_count(mut rows, 0, 0, 9)
+    return rows[0][0].tags[0].label == "a" and rows[0][0].tags[0].ids[0] == 1 and len(rows[0][0].tags[0].ids) == 1
+
+
+public func test_an_assignment_in_a_local_without_a_call() -> bool:
+    mut rows = grid()
+    rows[1][1].count = 40
+    rows[0][1].old = "q"
+    return rows[1][1].count == 40 and rows[0][1].old == "q" and rows[1][0].count == 3
+
+
+public func test_a_copy_taken_before_the_write_does_not_change() -> bool:
+    mut rows = grid()
+    const before = copy(rows)
+    set_count(mut rows, 0, 0, 99)
+    return before[0][0].count == 1 and rows[0][0].count == 99
+
+
+public func test_a_loop_updates_every_element_in_place() -> bool:
+    mut rows = grid()
+    for i in range(2):
+        for j in range(2):
+            rows[i][j].count += 10 * (i + 1)
+    return rows[0][0].count == 11 and rows[0][1].count == 12 and rows[1][0].count == 23 and rows[1][1].count == 24
+
+
+public func test_three_lists_deep() -> bool:
+    mut cube: Bucket[][][] = []
+    mut plane: Bucket[][] = grid()
+    append(mut cube, own plane)
+    cube[0][1][0].count = 77
+    cube[0][1][0].old = "deep"
+    return cube[0][1][0].count == 77 and cube[0][1][0].old == "deep" and cube[0][0][1].count == 2
+
+
+public func test_a_nested_record_field_inside_the_element() -> bool:
+    mut wrappers: Wrapper[][] = []
+    mut row: Wrapper[] = [Wrapper(name="w", inner=bucket("x", 5))]
+    append(mut wrappers, own row)
+    wrappers[0][0].inner.count = 6
+    return wrappers[0][0].inner.count == 6 and wrappers[0][0].name == "w" and wrappers[0][0].inner.old == "x"
+
+
+public func test_an_element_of_a_record_field_list_of_lists() -> bool:
+    mut table: dict[str, Bucket[]] = {}
+    mut cells: Bucket[] = [bucket("k", 1)]
+    table["row"] = own cells
+    table["row"][0].count = 8
+    return table["row"][0].count == 8 and table["row"][0].old == "k"
+
+
+# A field of a dictionary's element held in a record, read and then assigned (FR54, the key-value server's W5-F-4): the
+# ownership pass took `server.conns` for the write ahead of the last use of an earlier read of the element's field, and
+# the build failed ownership validation (J4) where `check` passed.
+record Conn:
+    out: bytes
+    sent: int
+
+
+record Server:
+    conns: dict[int, Conn]
+
+
+func queue_output(mut server: Server, id: int):
+    mut joined = byte_builder.create()
+    _ = byte_builder.append_range(mut joined, server.conns[id].out, server.conns[id].sent, len(server.conns[id].out))
+    server.conns[id].out = byte_builder.finish(joined)
+
+
+func double_output(mut server: Server, id: int):
+    server.conns[id].out = byte_builder.repeat(server.conns[id].out, server.conns[id].sent + 1)
+
+
+func queue_bound(mut server: Server, id: int):
+    const queued = server.conns[id].out
+    mut joined = byte_builder.create()
+    _ = byte_builder.append_range(mut joined, queued, server.conns[id].sent, len(queued))
+    server.conns[id].out = byte_builder.finish(joined)
+
+
+public func test_a_dictionary_element_field_in_a_record_is_read_then_assigned() -> bool:
+    mut server = Server(conns={})
+    server.conns[1] = Conn(out=b"abc", sent=1)
+    queue_output(mut server, 1)
+    return server.conns[1].out == b"bc" and server.conns[1].sent == 1
+
+
+public func test_a_dictionary_element_field_in_a_record_is_assigned_from_itself() -> bool:
+    mut server = Server(conns={})
+    server.conns[1] = Conn(out=b"abc", sent=1)
+    double_output(mut server, 1)
+    return server.conns[1].out == b"abcabc"
+
+
+public func test_a_dictionary_element_field_in_a_record_is_bound_then_assigned() -> bool:
+    mut server = Server(conns={})
+    server.conns[1] = Conn(out=b"abc", sent=1)
+    queue_bound(mut server, 1)
+    return server.conns[1].out == b"bc"
+
+
+record Queue:
+    chunks: bytes[]
+    head: int
+    sent: int
+
+
+record Outbox:
+    queues: dict[int, Queue]
+
+
+func unsent(chunk: bytes, sent: int) -> int:
+    return len(chunk) - sent
+
+
+func flush_queue(mut box: Outbox, id: int):
+    while box.queues[id].head < len(box.queues[id].chunks):
+        const at = box.queues[id].head
+        const n = unsent(box.queues[id].chunks[at], box.queues[id].sent)
+        box.queues[id].sent += n
+        if box.queues[id].sent >= len(box.queues[id].chunks[at]):
+            box.queues[id].head += 1
+            box.queues[id].sent = 0
+
+
+public func test_a_loop_reads_and_assigns_fields_of_a_dictionary_element_in_a_record() -> bool:
+    mut box = Outbox(queues={})
+    box.queues[1] = Queue(chunks=[b"ab", b"cde"], head=0, sent=0)
+    flush_queue(mut box, 1)
+    return box.queues[1].head == 2 and box.queues[1].sent == 0
+
+
+# A compound assignment to a list element's field whose right side lends another element `mut` (FR73) reads the list
+# again after the call, as `x = x op e` does, so the call's write to that element is kept. Each list form was refused
+# on main (E_CORE_UNSUPPORTED, "write to a receiver's place while its arguments are evaluated"). An element with a
+# managed field (text, a list) is refused by `check` instead (E_SINGLE_OWNER_OVERLAP), on main as now.
+record Slot:
+    id: int
+    n: int
+
+
+record Lane:
+    slots: Slot[]
+
+
+record Deck:
+    slots: Slot[]
+    lanes: Lane[]
+    bins: dict[str, Slot[]]
+    maps: dict[str, Slot][]
+
+
+func bump_slot(mut slot: Slot) -> int:
+    slot.n = slot.n + 50
+    return 3
+
+
+func deck_of() -> Deck:
+    mut bins: dict[str, Slot[]] = {}
+    bins["a"] = [Slot(id=10, n=1), Slot(id=11, n=2)]
+    bins["b"] = [Slot(id=20, n=3)]
+    mut first: dict[str, Slot] = {}
+    first["k"] = Slot(id=30, n=7)
+    mut second: dict[str, Slot] = {}
+    second["k"] = Slot(id=31, n=8)
+    const slots = [Slot(id=40, n=1), Slot(id=41, n=2)]
+    const lanes = [Lane(slots=[Slot(id=50, n=1), Slot(id=51, n=2)]), Lane(slots=[Slot(id=60, n=9)])]
+    return Deck(slots=own slots, lanes=own lanes, bins=own bins, maps=[own first, own second])
+
+
+func add_bump(mut deck: Deck, i: int, j: int) -> int:
+    deck.slots[i].n += bump_slot(mut deck.slots[j])
+    return deck.slots[i].n
+
+
+func subtract_bump(mut deck: Deck, i: int, j: int) -> int:
+    deck.slots[i].n -= bump_slot(mut deck.slots[j])
+    return deck.slots[i].n
+
+
+func add_bump_in_a_loop(mut deck: Deck, i: int, j: int, times: int) -> int:
+    mut k = 0
+    while k < times:
+        deck.slots[i].n += bump_slot(mut deck.slots[j])
+        k += 1
+    return deck.slots[i].n
+
+
+func add_bump_two_deep(mut deck: Deck, g: int, h: int, i: int, j: int) -> int:
+    deck.lanes[g].slots[i].n += bump_slot(mut deck.lanes[h].slots[j])
+    return deck.lanes[g].slots[i].n
+
+
+func add_bump_other_field(mut deck: Deck, i: int, g: int) -> int:
+    deck.slots[i].n += bump_slot(mut deck.lanes[g].slots[0])
+    return deck.slots[i].n
+
+
+func add_bump_bin(mut deck: Deck, i: int, other: str, j: int) -> int:
+    deck.bins["a"][i].n += bump_slot(mut deck.bins[other][j])
+    return deck.bins["a"][i].n
+
+
+func add_bump_map(mut deck: Deck, i: int, j: int) -> int:
+    deck.maps[i]["k"].n += bump_slot(mut deck.maps[j]["k"])
+    return deck.maps[i]["k"].n
+
+
+public func test_a_list_element_field_adds_a_call_given_another_element_mut() -> bool:
+    mut deck = deck_of()
+    return add_bump(mut deck, 0, 1) == 4 and deck.slots[1].n == 52 and deck.slots[0].id == 40 and deck.slots[1].id == 41
+
+
+public func test_a_list_element_field_adds_a_call_given_its_own_element_mut() -> bool:
+    mut deck = deck_of()
+    mut again = deck_of()
+    return add_bump(mut deck, 0, 0) == 4 and deck.slots[1].n == 2 and add_bump(mut again, 1, 1) == 5 and again.slots[0].n == 1
+
+
+public func test_a_list_element_field_subtracts_a_call_given_another_element_mut() -> bool:
+    mut deck = deck_of()
+    return subtract_bump(mut deck, 0, 1) == -2 and deck.slots[1].n == 52
+
+
+public func test_a_list_element_field_adds_a_call_given_an_element_mut_in_a_loop() -> bool:
+    mut deck = deck_of()
+    mut again = deck_of()
+    const other = add_bump_in_a_loop(mut deck, 0, 1, 3) == 10 and deck.slots[1].n == 152
+    return other and add_bump_in_a_loop(mut again, 1, 1, 3) == 11 and again.slots[0].n == 1
+
+
+public func test_a_field_two_lists_deep_adds_a_call_given_another_element_mut() -> bool:
+    mut other_lane = deck_of()
+    mut same_lane = deck_of()
+    mut same_slot = deck_of()
+    const across = add_bump_two_deep(mut other_lane, 0, 1, 0, 0) == 4 and other_lane.lanes[1].slots[0].n == 59
+    const beside = add_bump_two_deep(mut same_lane, 0, 0, 0, 1) == 4 and same_lane.lanes[0].slots[1].n == 52
+    return across and beside and add_bump_two_deep(mut same_slot, 0, 0, 1, 1) == 5 and same_slot.lanes[0].slots[0].n == 1
+
+
+public func test_a_list_element_field_adds_a_call_given_an_element_of_another_field_mut() -> bool:
+    mut deck = deck_of()
+    return add_bump_other_field(mut deck, 0, 1) == 4 and deck.lanes[1].slots[0].n == 59 and deck.slots[1].n == 2
+
+
+public func test_an_element_of_a_dictionary_of_lists_adds_a_call_given_an_element_mut() -> bool:
+    mut other_bin = deck_of()
+    mut same_bin = deck_of()
+    const across = add_bump_bin(mut other_bin, 0, "b", 0) == 4 and other_bin.bins["b"][0].n == 53
+    return across and add_bump_bin(mut same_bin, 0, "a", 1) == 4 and same_bin.bins["a"][1].n == 52
+
+
+public func test_an_entry_of_a_list_of_dictionaries_adds_a_call_given_an_entry_mut() -> bool:
+    mut deck = deck_of()
+    mut again = deck_of()
+    return add_bump_map(mut deck, 0, 1) == 10 and deck.maps[1]["k"].n == 58 and add_bump_map(mut again, 1, 1) == 11
+
+
+# The same when the list is the local itself, a `mut` parameter or an element of a local list of lists (FR74): the
+# receiver is the root or lies under its element, so it is read again from the local's current value with the index
+# already evaluated. Each was refused on main (E_CORE_UNSUPPORTED, "write to a receiver's place while its arguments are
+# evaluated"). A call given the whole list (`mut slots`) is refused by `check` (E_SINGLE_OWNER_OVERLAP), on main as now.
+func add_bump_in_a_parameter(mut slots: Slot[], i: int, j: int) -> int:
+    slots[i].n += bump_slot(mut slots[j])
+    return slots[i].n
+
+
+func save_slot(mut slot: Slot) -> int:
+    slot.n = 99
+    return 1
+
+
+public func test_an_element_field_of_a_local_list_adds_a_call_given_another_element_mut() -> bool:
+    mut slots = [Slot(id=1, n=1), Slot(id=2, n=2)]
+    const i = 0
+    const j = 1
+    slots[i].n += bump_slot(mut slots[j])
+    return slots[0].n == 4 and slots[1].n == 52 and slots[1].id == 2
+
+
+public func test_an_element_field_of_a_local_list_adds_a_call_given_its_own_element_mut() -> bool:
+    mut slots = [Slot(id=1, n=1), Slot(id=2, n=2)]
+    const i = 1
+    slots[i].n += bump_slot(mut slots[i])
+    return slots[0].n == 1 and slots[1].n == 5
+
+
+public func test_an_element_field_of_a_local_list_subtracts_a_call_given_an_element_mut_in_a_loop() -> bool:
+    mut slots = [Slot(id=1, n=1), Slot(id=2, n=2)]
+    for k in range(3):
+        slots[0].n -= bump_slot(mut slots[k % 2])
+    return slots[0].n == -8 and slots[1].n == 52
+
+
+public func test_an_element_field_of_a_list_parameter_adds_a_call_given_an_element_mut() -> bool:
+    mut slots = [Slot(id=1, n=1), Slot(id=2, n=2)]
+    const other = add_bump_in_a_parameter(mut slots, 0, 1) == 4 and slots[1].n == 52
+    return other and add_bump_in_a_parameter(mut slots, 1, 1) == 55 and slots[0].n == 4
+
+
+public func test_an_element_field_of_a_local_list_of_lists_adds_a_call_given_an_element_mut() -> bool:
+    mut board = [[Slot(id=1, n=1), Slot(id=2, n=2)], [Slot(id=3, n=5), Slot(id=4, n=6)]]
+    const i = 0
+    const j = 1
+    board[i][1].n += bump_slot(mut board[j][1])
+    const across = board[0][1].n == 5 and board[1][1].n == 56
+    board[j][0].n += bump_slot(mut board[j][0])
+    return across and board[1][0].n == 8 and board[0][0].n == 1
+
+
+public func test_an_element_of_a_local_list_whose_index_lends_an_element_mut() -> bool:
+    mut slots = [Slot(id=1, n=1), Slot(id=2, n=2)]
+    mut board = [[Slot(id=1, n=1), Slot(id=2, n=2)], [Slot(id=3, n=5)]]
+    slots[save_slot(mut slots[0])].n += 13
+    board[0][save_slot(mut board[1][0])].n = 13
+    return slots[0].n == 99 and slots[1].n == 15 and board[0][1].n == 13 and board[1][0].n == 99
+
+
+# An element write whose index lends a sibling field `mut` (FR73, the single-owner test "O2 ... staged index evaluation")
+# reads the list again after the index, as the form with the index bound to a `const` first does. Each was refused on main
+# (E_CORE_UNSUPPORTED, "write to a receiver's place while its arguments are evaluated").
+record Mark:
+    x: int
+
+
+record Halves:
+    left: Mark[]
+    right: int[]
+
+
+record Grid:
+    left: Mark[][]
+    right: int[]
+
+
+record Columns:
+    left: Mark[]
+    right: int[][]
+
+
+func save_last(mut right: int[]) -> int:
+    append(mut right, 7)
+    return len(right) - 1
+
+
+func mark_through_a_sibling(mut halves: Halves) -> int:
+    halves.left[save_last(mut halves.right)].x = 13
+    halves.left[save_last(mut halves.right) - 1].x += 40
+    return halves.left[1].x
+
+
+func mark_two_lists_deep(mut board: Grid, index: int) -> int:
+    board.left[index][save_last(mut board.right)].x = 13
+    board.left[index][save_last(mut board.right) - 2].x -= 5
+    return board.left[index][1].x
+
+
+func mark_through_a_column(mut columns: Columns, index: int) -> int:
+    columns.left[save_last(mut columns.right[index])].x = 13
+    return columns.left[1].x
+
+
+public func test_an_element_write_whose_index_lends_a_sibling_field_mut() -> bool:
+    mut halves = Halves(left=[Mark(x=1), Mark(x=2)], right=[0])
+    return mark_through_a_sibling(mut halves) == 53 and halves.left[0].x == 1 and len(halves.right) == 3
+
+
+public func test_an_element_write_whose_index_pops_a_sibling_field() -> bool:
+    mut halves = Halves(left=[Mark(x=1), Mark(x=2)], right=[1])
+    halves.left[lists.pop(mut halves.right)].x = 13
+    return halves.left[0].x == 1 and halves.left[1].x == 13 and len(halves.right) == 0
+
+
+public func test_an_element_write_two_lists_deep_whose_index_lends_a_sibling_field_mut() -> bool:
+    const first = [Mark(x=1), Mark(x=2), Mark(x=3)]
+    const second = [Mark(x=4), Mark(x=5), Mark(x=6)]
+    mut board = Grid(left=[own first, own second], right=[0])
+    const marked = mark_two_lists_deep(mut board, 1) == 13 and board.left[0][1].x == 2
+    mut fixed = Grid(left=[[Mark(x=1), Mark(x=2)]], right=[0])
+    fixed.left[0][save_last(mut fixed.right)].x = 13
+    return marked and board.left[1][0].x == -1 and len(board.right) == 3 and fixed.left[0][1].x == 13
+
+
+public func test_an_element_write_whose_index_lends_an_element_of_a_sibling_field_mut() -> bool:
+    mut columns = Columns(left=[Mark(x=1), Mark(x=2)], right=[[0], [0]])
+    return mark_through_a_column(mut columns, 1) == 13 and len(columns.right[1]) == 2 and len(columns.right[0]) == 1

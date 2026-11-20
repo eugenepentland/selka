@@ -1,0 +1,123 @@
+import buffers
+
+# Mutable assembly state for an immutable byte string. The buffer is one managed
+# `byte_buffer`: its header keeps spare capacity, so every append writes straight
+# into that capacity, doubling it when it runs out. Appending a fragment therefore
+# allocates no value for that fragment, and `finish` copies the whole result
+# exactly once into the immutable `bytes` it returns. Because only a `byte_buffer`
+# takes the in-place `buffers` appends, a snapshot can never be written through
+# and a byte view of it stays valid.
+public record Builder:
+    buffer: byte_buffer
+
+
+# An empty byte builder.
+public func create() -> Builder:
+    mut empty: int[] = []
+    return Builder(buffer=byte_buffer(empty))
+
+
+# Append one octet directly into the buffer's capacity. An out-of-range value
+# leaves the builder unchanged.
+public func append_byte(mut builder: Builder, value: int) -> bool:
+    return buffers.append_byte(mut builder.buffer, value)
+
+
+# Append the octets `data[start:end]`, copying them straight into the buffer's
+# own capacity. Negative endpoints trap. A nonnegative `end` below `start` or
+# past `len(data)` is rejected with `False` before anything is written, so a
+# rejected range leaves the builder unchanged. An empty range succeeds and changes
+# nothing. `data` may be any byte string or another buffer.
+public func append_range(mut builder: Builder, data: bytes, start: int, end: int) -> bool:
+    return buffers.append_range(mut builder.buffer, data, start, end)
+
+
+# Append every octet of `data` in order. An empty span changes nothing.
+public func append(mut builder: Builder, data: bytes):
+    _ = buffers.append_range(mut builder.buffer, data, 0, len(data))
+
+
+# Append the octets `array[start:end]` of a fixed `u8` array, such as the chunk a
+# `network.Read[N]` returns, with one copy straight into the buffer's capacity,
+# whatever the array's length. A range that is not `0 <= start <= end <= N` is
+# rejected with `False` before anything is written; an empty range succeeds and
+# changes nothing.
+public func append_array_range[const N: u64](mut builder: Builder, array: FixedArray[u8, N], start: int, end: int) -> bool:
+    return builder.buffer.append_array(array, start, end)
+
+
+# Append the first `count` octets of a fixed `u8` array with one copy: the whole
+# of a `network.Read[N]` chunk's `bytes` is only `chunk.length` octets long.
+# A `count` outside `0..N` is rejected with `False` and leaves the builder unchanged.
+public func append_array[const N: u64](mut builder: Builder, array: FixedArray[u8, N], count: int) -> bool:
+    return builder.buffer.append_array(array, 0, count)
+
+
+# Append the UTF-8 encoding of `text`, which the encoder writes straight into
+# the buffer's capacity: no intermediate `bytes` value is built for the text.
+public func append_text(mut builder: Builder, text: str):
+    buffers.append_utf8(mut builder.buffer, text)
+
+
+# Append the decimal spelling of `value`, written digit by digit straight into
+# the buffer's capacity: no intermediate `str` or `bytes` value is built. Every
+# `int` value has a spelling, including the minimum signed value, which has no
+# positive counterpart.
+public func append_int(mut builder: Builder, value: int):
+    buffers.append_int(mut builder.buffer, value)
+
+
+# Append the canonical spelling of `value`, which is byte for byte what
+# `str(value)` prints: shortest round-tripping digits with a `.0` when the value
+# has no fractional part, and `nan`, `inf` and `-inf` for the non-finite values.
+# The spelling is formatted into the buffer's own capacity, so no temporary text
+# or byte value is built for it.
+public func append_float(mut builder: Builder, value: float) -> bool:
+    buffers.append_float(mut builder.buffer, value)
+    return True
+
+
+# Append `count` ASCII spaces, copying them out of one shared literal span. A
+# negative count leaves the builder unchanged.
+public func append_spaces(mut builder: Builder, count: int) -> bool:
+    if count < 0:
+        return False
+    mut spaces = b"                                                                "
+    mut remaining = count
+    while remaining >= 64:
+        if not buffers.append_range(mut builder.buffer, spaces, 0, 64):
+            return False
+        remaining -= 64
+    if remaining > 0:
+        if not buffers.append_range(mut builder.buffer, spaces, 0, remaining):
+            return False
+    return True
+
+
+# Grow the buffer's capacity so `extra` more octets fit without reallocating,
+# without changing the finished length. A negative count is rejected with
+# `False` and leaves the builder unchanged.
+public func reserve(mut builder: Builder, extra: int) -> bool:
+    return buffers.reserve(mut builder.buffer, extra)
+
+
+# An immutable snapshot of everything appended so far, in append order. The
+# snapshot is a fresh copy that shares no storage with the builder, so later
+# appends — including an append of the snapshot itself — never change an earlier
+# result, and the builder stays usable.
+public func finish(builder: Builder) -> bytes:
+    return bytes(builder.buffer)
+
+
+# The octets of `data` repeated `count` times; nonpositive counts give empty bytes.
+public func repeat(data: bytes, count: int) -> bytes:
+    if count <= 0 or len(data) == 0:
+        return b""
+    mut out = copy(data)
+    mut copies = 1
+    while copies <= count - copies:
+        out = out + out
+        copies *= 2
+    if copies < count:
+        out = out + out[:len(data) * (count - copies)]
+    return out

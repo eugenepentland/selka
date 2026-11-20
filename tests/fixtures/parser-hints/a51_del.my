@@ -1,0 +1,7 @@
+# oracle: cpython
+def main() -> int:
+    xs = [1, 2, 3]
+    del xs[0]
+    d = {"a": 1}
+    del d["a"]
+    return len(xs) * 21 + len(d)

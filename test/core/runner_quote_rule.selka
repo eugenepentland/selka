@@ -1,0 +1,44 @@
+# One display rule (FR-418): a `str` is spelled with the same quoting whether it
+# is shown bare, nested in `Err`, in a record field or in a list element.
+public record Tag:
+    label: str
+
+
+public func nested() -> int fails str:
+    """A nested text keeps `repr`'s quoting rule.
+
+    >>> nested()
+    Err("it's")
+    """
+    fail "it's"
+
+
+public func bare() -> str:
+    """A bare text uses the same rule.
+
+    >>> bare()
+    "it's"
+    """
+    return "it's"
+
+
+public func tagged() -> Tag:
+    """A record field uses the same rule.
+
+    >>> tagged()
+    Tag(label="it's")
+    """
+    return Tag(label="it's")
+
+
+public func listed() -> str[]:
+    """A list element uses the same rule.
+
+    >>> listed()
+    ["it's"]
+    """
+    return ["it's"]
+
+
+func main() -> int:
+    return 0

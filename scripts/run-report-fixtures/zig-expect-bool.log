@@ -1,0 +1,16 @@
+test-cli
++- verification action cli member 0 0 pass, 975 skip, 1 fail (976 total)
+test: test wall 1.07s; slowest over 50ms:
+test:   1.07s  fix_cli_test.test.CLI fix deletes a trailing return or fail that follows a statement that always leaves, and the program prints the same (FIXUNREACH)
+test: FAIL — 1 failed of 1
+test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'fix_cli_test.test.CLI fix deletes a trailing return or fail that follows a statement that always leaves, and the program prints the same (FIXUNREACH)' failed:
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1311149 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/u/ai/canopy/mylang-checkbuild/test/fix_cli_test.zig:6113:5: 0x1491016 in test.CLI fix deletes a trailing return or fail that follows a statement that always leaves, and the program prints the same (FIXUNREACH) (integration.zig)
+           try testing.expect(contains(refused.stderr, "`selka fix main.selka` repairs 3 of these 3"));
+           ^
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 0 --root-id test/integ...
+
+Build Summary: 17/19 steps succeeded (1 failed); 0/976 tests passed (975 skipped, 1 failed)

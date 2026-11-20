@@ -1,0 +1,98 @@
+# Lane FR87 (18 November 2026): a generic function names `byte_buffer` bare, in its signature or a local's annotation, as a
+# plain function does. Until FR87 the generic check refused it (E_UNKNOWN_TYPE, "type is not declared") unless something
+# else in the file had already named the buffer, such as `byte_buffer[]` or a field of a generic record.
+import buffers
+import dicts
+
+func filled(count: int) -> byte_buffer:
+    mut data = buffers.empty()
+    for i in range(count):
+        _ = buffers.append_byte(mut data, i)
+    return data
+
+
+func grow(mut out: byte_buffer) -> int:
+    _ = buffers.append_byte(mut out, 7)
+    return len(out)
+
+
+func note[K](mut out: byte_buffer, key: K) -> int:
+    _ = key
+    return grow(mut out)
+
+
+func make[K](count: int, key: K) -> byte_buffer:
+    _ = key
+    return filled(count)
+
+
+func checked[K](count: int, key: K) -> byte_buffer fails str:
+    _ = key
+    if count < 0:
+        fail "negative"
+    return filled(count)
+
+
+func total[K](items: byte_buffer[], key: K) -> int:
+    _ = key
+    mut n: int = 0
+    for item in items:
+        n = n + len(item)
+    return n
+
+
+func held[K](count: int, key: K) -> int:
+    _ = key
+    const local: byte_buffer = filled(count)
+    return len(local)
+
+
+func entries[K](table: dict[str, byte_buffer], key: K) -> int:
+    _ = key
+    return len(table)
+
+
+public func test_generic_buffer_parameter() -> bool:
+    mut data = buffers.empty()
+    const first: int = note(mut data, "k")
+    const second: int = note(mut data, 3)
+    return first == 1 and second == 2 and len(data) == 2
+
+
+public func test_generic_buffer_result() -> bool:
+    const a: byte_buffer = make(3, "k")
+    const b: byte_buffer = make(5, 1)
+    return len(a) == 3 and len(b) == 5
+
+
+public func test_generic_buffer_failure() -> bool:
+    mut good: int = -1
+    match checked(2, "k"):
+        case Ok(data):
+            good = len(data)
+        case Err(_):
+            good = -2
+    mut bad: str = ""
+    match checked(-1, 4):
+        case Ok(_):
+            bad = "accepted"
+        case Err(message):
+            bad = own message
+    return good == 2 and bad == "negative"
+
+
+public func test_generic_buffer_list_and_dict() -> bool:
+    const items: byte_buffer[] = [filled(1), filled(2)]
+    mut table: dict[str, byte_buffer] = {}
+    table["x"] = filled(1)
+    return total(items, "k") == 3 and entries(table, 4) == 1
+
+
+public func test_generic_buffer_local_annotation() -> bool:
+    return held(4, "k") == 4 and held(0, 1) == 0
+
+
+# A standard module's generic bodies are read only when asked for; the buffer scan asks first (a crash before it did).
+public func test_generic_buffer_beside_a_module_generic() -> bool:
+    const table: dict[int, int] = {2: 7}
+    return dicts.get(table, 2, 0) == 7 and held(1, 2) == 1

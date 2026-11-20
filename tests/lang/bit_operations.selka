@@ -1,0 +1,51 @@
+# The named bit operations. Every one of them is a function over one integer
+# type, so a complement is written `bit_not(value)` and answers in that type's
+# own width.
+# spec-case: NAMED-INTEGER-BITWISE-1
+public func test_bit_not_complements_in_the_operand_width() -> bool:
+    mut ok = bit_not(0u8) == 255u8 and bit_not(255u8) == 0u8 and bit_not(5u8) == 250u8
+    ok = ok and bit_not(0u16) == 65535u16 and bit_not(0u64) == 18446744073709551615u64
+    ok = ok and bit_not(0) == -1 and bit_not(7) == -8 and bit_not(-1) == 0 and bit_not(-8) == 7
+    ok = ok and bit_not(0i8) == -1i8 and bit_not(-128i8) == 127i8 and bit_not(127i8) == -128i8
+    return ok
+
+
+# spec-case: NAMED-INTEGER-BITWISE-1
+public func test_bit_not_round_trips_and_composes_with_the_other_operations() -> bool:
+    mut ok = bit_not(bit_not(41u8)) == 41u8 and bit_not(bit_not(-123456)) == -123456
+    ok = ok and bit_and(bit_not(0u8), 15u8) == 15u8
+    ok = ok and bit_or(bit_not(0u8), 0u8) == 255u8
+    ok = ok and bit_xor(bit_not(1u8), 255u8) == 1u8
+    mut flags: u8 = 12u8
+    ok = ok and bit_not(bit_and(flags, 10u8)) == 247u8
+    return ok
+
+
+record Endpoint:
+    number: u32
+    wide: u64
+    small: u8
+    half: u16
+    signed: i32
+
+
+# A product or sum that starts with a suffixed literal is an operand like any
+# other: `2u32 * ep.number` is u32 beside `1u32`, though its `.` and `e` once made
+# it look like a float literal (FR84).
+public func test_a_typed_product_beside_a_literal_of_its_type_is_one_operand() -> bool:
+    const ep = Endpoint(number=3u32, wide=3u64, small=3u8, half=3u16, signed=3i32)
+    const exponent = ep.number
+    mut ok = shift_left(1u32, 2u32 * ep.number) == 64u32 and shift_left(1u32, ep.number * 2u32) == 64u32
+    ok = ok and shift_right(4096u32, 2u32 + ep.number) == 128u32 and shift_left(1u32, 9u32 - ep.number) == 64u32
+    ok = ok and shift_left(1u32, 9u32 // ep.number) == 8u32 and shift_left(1u32, 9u32 % ep.number) == 1u32
+    ok = ok and bit_or(1u32, (2u32 * ep.number)) == 7u32 and bit_xor(1u32, 2u32 * ep.number) == 7u32
+    ok = ok and bit_and(255u32, 2u32 * exponent) == 6u32 and wrapping_sub(100u32, 2u32 * ep.number) == 94u32
+    ok = ok and saturating_mul(3u32, 2u32 * ep.number) == 18u32 and max(1u32, 2u32 * ep.number) == 6u32
+    ok = ok and shift_left(1u8, 2u8 * ep.small) == 64u8 and shift_left(1u16, 2u16 * ep.half) == 64u16
+    ok = ok and shift_left(1i32, 2i32 * ep.signed) == 64i32 and shift_left(1u64, 2u64 * ep.wide) == 64u64
+    ok = ok and bit_or(1i32, 2i32 - ep.signed) == -1i32 and shift_left(ep.number, 2u32 * ep.number) == 192u32
+    return ok
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,72 @@
+import dicts
+import sets
+
+record Pair:
+    name: str
+    count: int
+
+
+func tally(names: str[]) -> int:
+    mut counts: dict[str, int] = {}
+    mut seen: set[str] = set()
+    for name in names:
+        counts[copy(name)] = len(counts)
+        sets.add(mut seen, copy(name))
+    return len(counts) + len(seen)
+
+
+func by_field(pairs: Pair[]) -> int:
+    mut index: dict[str, int] = {}
+    for pair in pairs:
+        index[copy(pair.name)] = pair.count
+    for at in range(len(pairs)):
+        index[copy(pairs[at].name)] = at
+    return len(index)
+
+
+func by_parameter(key: str) -> int:
+    mut index: dict[str, int] = {}
+    index[copy(key)] = 1
+    return len(index)
+
+
+func setdefault_key(key: str) -> int:
+    mut index: dict[str, int] = {}
+    const first = dicts.setdefault(mut index, copy(key), 3)
+    return first + len(index)
+
+
+func owned_last_use() -> int:
+    mut index: dict[str, int] = {}
+    const key: str = "a" + "b"
+    index[copy(key)] = 1
+    return len(index)
+
+
+func slice_key(text: str) -> int:
+    mut index: dict[str, int] = {}
+    index[copy(text[1:3])] = 1
+    return len(index)
+
+
+func call_key(label: str?) -> int:
+    mut index: dict[str, int] = {}
+    index[copy(label.unwrap_or("none"))] = 1
+    return len(index)
+
+
+func grow(mut key: str) -> int:
+    key = key + "!"
+    return 1
+
+
+func changed_by_the_value(mut key: str) -> int:
+    mut index: dict[str, int] = {}
+    index[copy(key)] = grow(mut key)
+    return len(index)
+
+
+public func test_stores() -> bool:
+    mut key = "k"
+    const pairs: Pair[] = [Pair(name="u", count=1), Pair(name="u", count=2)]
+    return tally(["a", "b", "a"]) == 4 and by_field(pairs) == 1 and by_parameter("x") == 1 and setdefault_key("s") == 4 and owned_last_use() == 1 and slice_key("abcd") == 1 and call_key(None) == 1 and changed_by_the_value(mut key) == 1

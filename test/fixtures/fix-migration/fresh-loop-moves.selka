@@ -1,0 +1,105 @@
+# W_NEEDLESS_COPY, a copy of each element of the list a call returns (F-75, FR25): `for x in own CALL():` takes the list, which
+# nothing else names, so each element is owned and the copy becomes a move. The shapes that stay are beside the ones that change:
+# an element read after the copy, a list lent by an argument, `enumerate`, a copy that a loop around it runs twice, and a view.
+record Reading:
+    key: str
+    figure: str
+
+
+func values() -> str[]:
+    return ["a", "b"]
+
+
+func readings() -> Reading[]:
+    return [Reading(key="a", figure="1"), Reading(key="b", figure="2")]
+
+
+func first(xss: str[][]) -> str[] from xss:
+    return xss[0]
+
+
+func pick(value: str) -> str:
+    for one in values():
+        if value == one:
+            return copy(one)
+    return ""
+
+
+func collected() -> str[]:
+    mut out: str[] = []
+    for one in values():
+        append(mut out, copy(one))
+    return out
+
+
+func failing(key: str) -> int fails Reading:
+    for reading in readings():
+        if reading.key == key:
+            fail copy(reading)
+    return 0
+
+
+func twice(flag: bool) -> str[]:
+    mut out: str[] = []
+    for one in values():
+        if flag:
+            append(mut out, copy(one))
+        else:
+            append(mut out, copy(one))
+    return out
+
+
+func read_after() -> int:
+    mut out: str[] = []
+    mut n = 0
+    for one in values():
+        append(mut out, copy(one))
+        n += len(one)
+    return n + len(out)
+
+
+func lent(xss: str[][]) -> str[]:
+    mut out: str[] = []
+    for one in first(xss):
+        append(mut out, copy(one))
+    return out
+
+
+func indexed() -> str[]:
+    mut out: str[] = []
+    for i, one in enumerate(values()):
+        append(mut out, copy(one))
+    return out
+
+
+func nested() -> str[]:
+    mut out: str[] = []
+    for one in values():
+        for i in range(2):
+            append(mut out, copy(one))
+    return out
+
+
+func viewed() -> str[]:
+    mut out: str[] = []
+    mut n_total = 0
+    for one in values():
+        const head = one[0:1]
+        append(mut out, copy(one))
+        n_total += len(head)
+    return out
+
+
+func outer_loop() -> int:
+    mut total = 0
+    for i in range(3):
+        for one in values():
+            mut out: str[] = []
+            append(mut out, copy(one))
+            total += len(out)
+    return total
+
+
+func main(out: Stream) -> int:
+    print(out, pick("b"), len(collected()), twice(True), read_after(), len(lent([["x"]])), len(indexed()), len(nested()), len(viewed()), outer_loop())
+    return 0

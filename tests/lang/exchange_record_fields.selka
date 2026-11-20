@@ -1,0 +1,64 @@
+# An exchange of an element of a list of records with a managed field, whose old element is then read by its field (FX15).
+# The old element is moved out of its slot; when the code reads every managed field of it once, the compiler hands each
+# field over and the element owns nothing more. Until FX15 the compiler stopped such a build with the internal error
+# E_OWNERSHIP_VALIDATION ("a transferred read whose result is not owned"), for `lists.exchange`, the method and the builtin
+# `exchange` alike; the code it made was right, and the certificate writer refused to state it.
+import lists
+
+record Note:
+    text: str
+
+
+record Entry:
+    text: str = ""
+    tags: str[] = []
+    weight: int = 0
+
+
+record Outer:
+    inner: Note
+    count: int
+
+
+public func test_lists_exchange_returns_the_old_record_whose_text_field_is_read() -> bool:
+    mut xs: Note[] = [Note(text="a"), Note(text="b")]
+    const was = lists.exchange(mut xs, 0, Note(text="new"))
+    return was.text == "a" and xs[0].text == "new" and xs[1].text == "b"
+
+
+public func test_builtin_exchange_of_an_element_returns_the_old_record_whose_text_field_is_read() -> bool:
+    mut xs: Note[] = [Note(text="a"), Note(text="b")]
+    const was = exchange(mut xs[1], Note(text="new"))
+    return was.text == "b" and xs[1].text == "new"
+
+
+public func test_take_of_an_element_leaves_the_record_of_its_field_defaults() -> bool:
+    mut xs: Entry[] = [Entry(text="a", tags=["t"], weight=1)]
+    const was = take(mut xs[0])
+    return was.text == "a" and len(was.tags) == 1 and xs[0].text == "" and len(xs[0].tags) == 0 and was.weight == 1
+
+
+func replace_first(mut xs: Entry[], own replacement: Entry) -> str:
+    const was = lists.exchange(mut xs, 0, own replacement)
+    return was.text + str(len(was.tags))
+
+
+public func test_an_exchange_through_a_mut_parameter_with_two_managed_fields_read() -> bool:
+    mut xs: Entry[] = [Entry(text="a", tags=["t", "u"], weight=1)]
+    const fresh = Entry(text="new", tags=[], weight=2)
+    return replace_first(mut xs, own fresh) == "a2" and xs[0].weight == 2
+
+
+public func test_an_exchange_of_a_nested_record_reads_the_inner_field() -> bool:
+    mut xs: Outer[] = [Outer(inner=Note(text="a"), count=1)]
+    const was = lists.exchange(mut xs, 0, Outer(inner=Note(text="new"), count=2))
+    return was.inner.text == "a" and xs[0].inner.text == "new"
+
+
+public func test_an_exchange_in_a_loop_reads_each_old_field() -> bool:
+    mut xs: Note[] = [Note(text="a"), Note(text="b"), Note(text="c")]
+    mut seen = ""
+    for i in range(len(xs)):
+        const was = lists.exchange(mut xs, i, Note(text="x"))
+        seen = seen + was.text
+    return seen == "abc" and xs[2].text == "x"

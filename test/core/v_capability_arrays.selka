@@ -1,0 +1,88 @@
+# Fixed arrays of Stream/Host handles (NEW-CORE-S5-CAP-COLLECTIONS-1) remain valid
+# locals, record fields, union payloads, mut parameters and results. Filesystems
+# use named owners; the original owning-array source is a negative A05 regression.
+# Stdout, stderr and the provider read order match the original fixture.
+import filesystem
+
+record Grid:
+    ports: FixedArray[Stream, 2]
+    label: str
+
+
+enum Route:
+    one(value: Stream)
+    many(value: FixedArray[Stream, 2])
+
+
+func shout(g: Grid, i: int) -> int:
+    const port = g.ports[i]
+    print(port, g.label, i)
+    return i
+
+
+func swap(ports: FixedArray[Stream, 2]) -> FixedArray[Stream, 2]:
+    return FixedArray[stream_cap, 2]([ports[1], ports[0]])
+
+
+func fill(mut ports: FixedArray[Stream, 2], s: Stream) -> Unit:
+    ports[1] = s
+
+
+func send(r: Route, text: str) -> Unit:
+    match r:
+        case one(value=s):
+            print(s, text)
+        case many(value=ss):
+            for s in ss:
+                print(s, text)
+
+
+func read(fs: Filesystem, out: Stream) -> Unit:
+    match fs.read_text("x.txt"):
+        case Ok(t):
+            print(out, t)
+        case Err(e):
+            print(out, e)
+
+
+func files(out: Stream) -> int:
+    const first = filesystem.memory()
+    const second = filesystem.memory()
+    _ = first.write_text("x.txt", "in a")
+    _ = second.write_text("x.txt", "in b")
+    read(first, out)
+    read(second, out)
+    read(first, out)
+    return 2
+
+
+func main(host: Host, out: Stream, err: Stream) -> int:
+    mut ports: FixedArray[Stream, 2] = FixedArray[stream_cap, 2]([out, err])
+    const port0 = ports[0]
+    print(port0, "zero")
+    const port1 = ports[1]
+    print(port1, "one")
+    mut g = Grid(ports=ports, label="grid")
+    mut total = shout(g, 0) + shout(g, 1)
+    mut s = swap(g.ports)
+    const s0 = s[0]
+    print(s0, "swapped")
+    s[1] = s[0]
+    const s1 = s[1]
+    print(s1, "rewritten")
+    const kept = g.ports[0]
+    print(kept, "the record keeps its copy")
+    fill(mut s, out)
+    for i, p in enumerate(s):
+        print(p, "filled", i)
+    mut grid: FixedArray[FixedArray[Stream, 2], 2] = FixedArray[FixedArray[Stream, 2], 2]([FixedArray[Stream, 2]([out, err]), FixedArray[Stream, 2]([err, out])])
+    const nested = grid[1][1]
+    print(nested, "nested")
+    grid[0] = s
+    const row0 = grid[0][0]
+    print(row0, "row replaced")
+    send(Route.one(value=out), "one route")
+    send(Route.many(value=FixedArray[Stream, 2]([out, err])), "many routes")
+    mut hosts: FixedArray[Host, 2] = FixedArray[Host, 2]([host, host])
+    _ = hosts[1]
+    return total + files(out) + len(grid)

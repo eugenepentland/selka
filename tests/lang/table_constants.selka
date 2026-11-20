@@ -1,0 +1,145 @@
+import buffers
+import bytes
+import testing
+
+const SQUARES: bytes = squares(16)
+
+
+const CRC: bytes = crc_table()
+
+
+const DECODE: bytes = decode_table()
+
+
+const RAMP: bytes = ramp(300, 8)
+
+
+const NOTHING: bytes = squares(0)
+
+
+# Sixteen squares, one octet each.
+func squares(count: int) -> bytes:
+    mut table = buffers.empty()
+    for index in range(count):
+        _ = buffers.append_byte(mut table, bit_and(index * index, 255))
+    return bytes(table)
+
+
+# The CRC-32 table, four octets for each entry, least significant first.
+func crc_table() -> bytes:
+    mut table = buffers.empty()
+    for index in range(256):
+        mut value = index
+        for step in range(8):
+            if bit_and(value, 1) == 1:
+                value = bit_xor(shift_right(value, 1), 3988292384)
+            else:
+                value = shift_right(value, 1)
+        for part in range(4):
+            _ = buffers.append_byte(mut table, bit_and(shift_right(value, part * 8), 255))
+    return bytes(table)
+
+
+# The value of each base64 character, and 255 for every other octet.
+func decode_table() -> bytes:
+    mut table = buffers.empty()
+    for code in range(256):
+        mut value = 255
+        if 65 <= code <= 90:
+            value = code - 65
+        elif 97 <= code <= 122:
+            value = code - 71
+        elif 48 <= code <= 57:
+            value = code + 4
+        elif code == 43:
+            value = 62
+        elif code == 47:
+            value = 63
+        _ = buffers.append_byte(mut table, value)
+    return bytes(table)
+
+
+# `count` entries of two octets each, least significant first: `index * step`.
+func ramp(step: int, count: int) -> bytes:
+    mut table = buffers.empty()
+    for index in range(count):
+        const value = index * step
+        _ = buffers.append_byte(mut table, bit_and(value, 255))
+        _ = buffers.append_byte(mut table, bit_and(shift_right(value, 8), 255))
+    return bytes(table)
+
+
+# The same table built at run time, to compare with the constant.
+func crc_entry(index: int) -> int:
+    mut value = index
+    for step in range(8):
+        if bit_and(value, 1) == 1:
+            value = bit_xor(shift_right(value, 1), 3988292384)
+        else:
+            value = shift_right(value, 1)
+    return value
+
+
+func sum_of(table: bytes) -> int:
+    mut total = 0
+    for octet in table:
+        total += octet
+    return total
+
+
+# An octet is read by index, the table has the length its function gave it, and a loop visits every octet.
+public func test_a_table_constant_is_indexed_measured_and_looped_over() -> bool:
+    return SQUARES[5] == 25 and SQUARES[15] == 225 and len(SQUARES) == 16 and sum_of(SQUARES) == 1240 and len(NOTHING) == 0
+
+
+# Every entry of the table equals the same arithmetic run now.
+func every_entry_matches() -> bool:
+    for index in range(256):
+        if int(bytes.read_u32_le(CRC, 4 * index)) != crc_entry(index):
+            return False
+    return True
+
+
+# A fixed-width read of the table is the entry the function computed, and equals the same arithmetic run now.
+public func test_a_table_read_with_a_fixed_width_read_equals_the_run_time_value() -> bool:
+    return len(CRC) == 1024 and bytes.read_u32_le(CRC, 4) == 1996959894u32 and bytes.read_u32_le(CRC, 4 * 255) == 755167117u32 and every_entry_matches()
+
+
+# A table with a branch per entry and one with parameters.
+public func test_tables_built_with_branches_and_parameters() -> bool:
+    return DECODE[65] == 0 and DECODE[97] == 26 and DECODE[48] == 52 and DECODE[43] == 62 and DECODE[47] == 63 and DECODE[33] == 255 and len(DECODE) == 256 and bytes.read_u16_le(RAMP, 6) == 900u16 and len(RAMP) == 16
+
+
+# A table is lent to a `bytes` parameter, sliced, and compared, as any `bytes` is.
+public func test_a_table_is_lent_sliced_and_compared() -> bool:
+    return sum_of(SQUARES) == 1240 and sum_of(SQUARES[0:4]) == 14 and SQUARES[0:3] == b"\x00\x01\x04" and SQUARES != NOTHING
+
+
+# The octets can be had in a buffer that changes, and the table does not.
+public func test_the_octets_of_a_table_copy_into_a_buffer_that_can_change() -> bool:
+    mut buffer = buffers.empty()
+    buffers.append(mut buffer, SQUARES)
+    _ = buffers.append_byte(mut buffer, 7)
+    return len(buffer) == 17 and buffer[16] == 7 and len(SQUARES) == 16 and bytes(buffer) == SQUARES + b"\x07"
+
+
+func read_work(rounds: int) -> int:
+    mut total = 0
+    for round in range(rounds):
+        total += int(bytes.read_u32_le(CRC, 4 * (round % 256))) + SQUARES[round % 16] + len(DECODE)
+    return total
+
+
+# A function that only reads a table makes no allocation promise it cannot keep.
+@noalloc
+func noalloc_entry(index: int) -> int:
+    return int(bytes.read_u32_le(CRC, 4 * index)) + SQUARES[index % 16] + DECODE[index]
+
+
+public func test_a_function_that_only_reads_a_table_passes_noalloc() -> bool:
+    return noalloc_entry(255) == 755167117 + 225 + 255
+
+
+# Reading a table allocates nothing, however often it is read.
+public func test_reading_a_table_allocates_nothing() -> bool:
+    return read_work(10) > 0 and testing.allocations(read_work, 200) == 0 and testing.allocations(read_work, 200) - testing.allocations(read_work, 100) == 0

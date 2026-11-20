@@ -1,0 +1,215 @@
+# One process plays both ends of loopback connections and prints what the time limits of an outbound connection
+# (`network.connect_within`) and a connection's own idle timeout (`network.set_connection_idle_timeout`) do. The poller
+# listens on the first port below; a test holds the second with a full backlog, so a connect to it is never answered,
+# and leaves nothing on the third, so a connect to it is refused. The test replaces the three ports and compares the
+# transcript. A time is printed only as a bound (at least the limit asked for, under twenty seconds), because the
+# machine may be loaded.
+import byte_builder
+import network
+import time
+
+func main(net: Network, clock: Clock, out: Stream) -> int:
+    with net.host("127.0.0.1:18101") as scoped:
+        # Each step opens its own poller on the endpoint, so the idle step sees only its own connections.
+        match network.open_poller(scoped):
+            case ok(poller):
+                limits(own poller, scoped, clock, out)
+            case err(code):
+                print(out, "open failed", code)
+                return 1
+        match network.open_poller(scoped):
+            case ok(poller):
+                idle(own poller, scoped, out)
+            case err(code):
+                print(out, "open again failed", code)
+                return 1
+    with net.host("127.0.0.1:18102") as silent:
+        connect_unanswered(silent, clock, out)
+    with net.host("127.0.0.1:18103") as refused:
+        connect_refused(refused, out)
+    return 0
+
+
+# The milliseconds of the clock's monotonic reading.
+func now_ms(clock: Clock) -> int:
+    return time.monotonic(clock) // 1000000
+
+
+# Whether `elapsed` milliseconds is at least `asked` less a little rounding, and under twenty seconds.
+func within(elapsed: int, asked: int) -> bool:
+    return asked - 20 <= elapsed < 20000
+
+
+# Accept the connection the listener has waiting and return its id in `outcome.value`.
+func accept_one(own poller: network.Poller, mut outcome: network.Outcome) -> network.Poller:
+    mut live = own poller
+    mut ready = network.new_ready()
+    live = network.wait(own live, 5000, mut ready)
+    live = network.accept(own live, mut outcome)
+    return live
+
+
+# Offer 64 KiB at a time to a peer that never reads until a write cannot proceed within the limit.
+func fill(own client: network.Connection, out: Stream) -> network.Connection:
+    mut live = own client
+    const chunk = byte_builder.repeat(b"x", 65536)
+    mut rounds = 0
+    while rounds < 4000:
+        match write_resource[network.Written](live, chunk):
+            case Ok(_):
+                rounds += 1
+            case Err(code):
+                print(out, "write timed out", code == network.timed_out(), rounds > 0, network.describe(code))
+                return live
+    print(out, "write never blocked")
+    return live
+
+
+# A read with a limit on a connection whose peer sends nothing, then the same connection reading what the peer sends.
+func limits(own poller: network.Poller, scoped: Network, clock: Clock, out: Stream):
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    match network.connect_within(scoped, network.Timeouts(read_ms=200, write_ms=200)):
+        case ok(dialed):
+            mut client = own dialed
+            live = accept_one(own live, mut outcome)
+            const id = outcome.value
+            const started = now_ms(clock)
+            match read_resource[network.Read[16]](client):
+                case Ok(chunk):
+                    print(out, "read returned", chunk.length)
+                case Err(code):
+                    print(out, "read timed out", code == network.timed_out(), within(now_ms(clock) - started, 200))
+            live = network.send(own live, id, b"hi", 0, mut outcome)
+            match read_resource[network.Read[16]](client):
+                case Ok(chunk):
+                    print(out, "read after the timeout", chunk.length, chunk.eof)
+                case Err(code):
+                    print(out, "read after the timeout failed", code)
+            client = fill(own client, out)
+            live = network.close_connection(own live, id, mut outcome)
+            match network.close(own client):
+                case ok(_):
+                    pass
+                case err(failure):
+                    print(out, "close failed", failure.code)
+        case err(code):
+            print(out, "connect failed", code)
+    # A closed peer is end of stream, not a timeout.
+    match network.connect_within(scoped, network.Timeouts(read_ms=5000)):
+        case ok(dialed):
+            mut client = own dialed
+            live = accept_one(own live, mut outcome)
+            const id = outcome.value
+            live = network.shutdown_send(own live, id, mut outcome)
+            match read_resource[network.Read[16]](client):
+                case Ok(chunk):
+                    print(out, "closed peer", chunk.length, chunk.eof)
+                case Err(code):
+                    print(out, "closed peer failed", code)
+            live = network.close_connection(own live, id, mut outcome)
+            match network.close(own client):
+                case ok(_):
+                    pass
+                case err(failure):
+                    print(out, "close failed", failure.code)
+        case err(code):
+            print(out, "connect failed", code)
+    # No limits is `connect`: the read waits for the peer's bytes however long they take.
+    match network.connect_within(scoped, network.Timeouts()):
+        case ok(dialed):
+            mut client = own dialed
+            live = accept_one(own live, mut outcome)
+            const id = outcome.value
+            live = network.send(own live, id, b"plain", 0, mut outcome)
+            match read_resource[network.Read[16]](client):
+                case Ok(chunk):
+                    print(out, "no limits", chunk.length)
+                case Err(code):
+                    print(out, "no limits failed", code)
+            live = network.close_connection(own live, id, mut outcome)
+            match network.close(own client):
+                case ok(_):
+                    pass
+                case err(failure):
+                    print(out, "close failed", failure.code)
+        case err(code):
+            print(out, "connect failed", code)
+
+
+# Two connections of one poller: the one that sets nothing goes idle at the poller's timeout, the one that set its own
+# longer timeout stays.
+func idle(own poller: network.Poller, scoped: Network, out: Stream):
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    match network.connect(scoped):
+        case ok(first):
+            mut short = own first
+            live = accept_one(own live, mut outcome)
+            const a = outcome.value
+            match network.connect(scoped):
+                case ok(second):
+                    mut long = own second
+                    live = accept_one(own live, mut outcome)
+                    const b = outcome.value
+                    live = network.set_connection_idle_timeout(own live, network.LISTENER, 100, mut outcome)
+                    print(out, "listener", outcome.code == network.OUTCOME_BAD)
+                    live = network.set_connection_idle_timeout(own live, b + 1, 100, mut outcome)
+                    print(out, "unknown id", outcome.code == network.OUTCOME_UNKNOWN)
+                    live = network.set_idle_timeout(own live, 200, mut outcome)
+                    live = network.set_connection_idle_timeout(own live, b, 60000, mut outcome)
+                    print(out, "own timeout", outcome.code == network.OUTCOME_OK)
+                    live = network.wait(own live, 10000, mut ready)
+                    print(out, "idle", ready.count, ready.ids[0] == a, ready.flags[0])
+                    live = network.close_connection(own live, a, mut outcome)
+                    live = network.wait(own live, 600, mut ready)
+                    print(out, "the longer one stays", ready.count)
+                    # Back to the poller's value: it goes idle at 200 ms like the first did.
+                    live = network.set_connection_idle_timeout(own live, b, -1, mut outcome)
+                    live = network.wait(own live, 10000, mut ready)
+                    print(out, "back to the poller's", ready.count, ready.ids[0] == b, ready.flags[0])
+                    # A connection's own timeout works with none on the poller, and 0 never reports it.
+                    live = network.set_idle_timeout(own live, 0, mut outcome)
+                    live = network.set_connection_idle_timeout(own live, b, 150, mut outcome)
+                    live = network.wait(own live, 10000, mut ready)
+                    print(out, "own with none on the poller", ready.count, ready.ids[0] == b, ready.flags[0])
+                    live = network.set_connection_idle_timeout(own live, b, 0, mut outcome)
+                    live = network.wait(own live, 400, mut ready)
+                    print(out, "never", ready.count)
+                    live = network.close_connection(own live, b, mut outcome)
+                    match network.close(own long):
+                        case ok(_):
+                            pass
+                        case err(failure):
+                            print(out, "close failed", failure.code)
+                case err(code):
+                    print(out, "connect failed", code)
+            match network.close(own short):
+                case ok(_):
+                    pass
+                case err(failure):
+                    print(out, "close failed", failure.code)
+        case err(code):
+            print(out, "connect failed", code)
+
+
+# A connect to an endpoint whose backlog is full is never answered: it fails at the limit with `timed_out()`.
+func connect_unanswered(silent: Network, clock: Clock, out: Stream):
+    const started = now_ms(clock)
+    match network.connect_within(silent, network.Timeouts(connect_ms=300)):
+        case ok(dialed):
+            print(out, "unanswered connect succeeded")
+            _ = network.close(own dialed)
+        case err(code):
+            print(out, "connect timed out", code == network.timed_out(), within(now_ms(clock) - started, 300), network.describe(code))
+
+
+# A connect to a port nobody listens on is refused at once, which is not a timeout.
+func connect_refused(refused: Network, out: Stream):
+    match network.connect_within(refused, network.Timeouts(connect_ms=5000)):
+        case ok(dialed):
+            print(out, "refused connect succeeded")
+            _ = network.close(own dialed)
+        case err(code):
+            print(out, "connect refused", code, code == network.timed_out())

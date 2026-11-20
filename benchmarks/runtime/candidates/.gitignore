@@ -1,0 +1,2 @@
+# Raw working copies are archived as exact-byte gzip evidence.
+*.json

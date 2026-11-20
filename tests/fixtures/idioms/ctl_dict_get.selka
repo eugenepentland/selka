@@ -1,0 +1,3 @@
+func main() -> int:
+    mut d = {"a": 1, "b": 2}
+    return d["b"]

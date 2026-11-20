@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "default_action": "allow",
+  "rules": [
+    {"from": "core.*", "to": "app.*", "action": "deny", "reason": "The core layer never depends on the application layer."},
+    {"from": "core.*", "to": "main", "action": "deny", "reason": "Nothing imports the entry."}
+  ]
+}

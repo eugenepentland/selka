@@ -1,0 +1,65 @@
+# A text, bytes or list parameter used as the default of `dicts.get` (CX2): the selection is a view of the found value or of
+# the default, read in place. A read copies nothing; a `copy(...)` of the selection copies it once. Each family is covered
+# with a found key and a missing key, and with a read and a copy.
+import dicts
+
+func bytes_length(table: dict[str, bytes], key: str, net: bytes) -> int:
+    return len(dicts.get(table, key, net))
+
+
+func bytes_copy(table: dict[str, bytes], key: str, net: bytes) -> bytes:
+    return copy(dicts.get(table, key, net))
+
+
+func text_length(table: dict[str, str], key: str, label: str) -> int:
+    return len(dicts.get(table, key, label))
+
+
+func text_copy(table: dict[str, str], key: str, label: str) -> str:
+    return copy(dicts.get(table, key, label))
+
+
+func list_length(table: dict[str, int[]], key: str, fallback: int[]) -> int:
+    return len(dicts.get(table, key, fallback))
+
+
+func list_copy(table: dict[str, int[]], key: str, fallback: int[]) -> int[]:
+    return copy(dicts.get(table, key, fallback))
+
+
+public func test_bytes_default_is_read_in_place_for_a_found_and_a_missing_key() -> bool:
+    const table: dict[str, bytes] = {"net": b"found-value"}
+    return bytes_length(table, "net", b"default") == 11 and bytes_length(table, "other", b"default") == 7
+
+
+public func test_bytes_default_copied_once_is_independent_of_the_default() -> bool:
+    const table: dict[str, bytes] = {"net": b"found-value"}
+    const missing = bytes_copy(table, "other", b"default")
+    const found = bytes_copy(table, "net", b"default")
+    return missing == b"default" and found == b"found-value"
+
+
+public func test_text_default_is_read_in_place_for_a_found_and_a_missing_key() -> bool:
+    const table: dict[str, str] = {"net": "found-text"}
+    return text_length(table, "net", "fallback") == 10 and text_length(table, "other", "fallback") == 8
+
+
+public func test_text_default_copied_once_is_independent_of_the_default() -> bool:
+    const table: dict[str, str] = {"net": "found-text"}
+    const missing = text_copy(table, "other", "fallback")
+    const found = text_copy(table, "net", "fallback")
+    return missing == "fallback" and found == "found-text"
+
+
+public func test_list_default_is_read_in_place_for_a_found_and_a_missing_key() -> bool:
+    const table: dict[str, int[]] = {"net": [1, 2, 3]}
+    const fallback = [7, 8]
+    return list_length(table, "net", fallback) == 3 and list_length(table, "other", fallback) == 2
+
+
+public func test_list_default_copied_once_is_independent_of_the_default() -> bool:
+    const table: dict[str, int[]] = {"net": [1, 2, 3]}
+    const fallback = [7, 8]
+    const missing = list_copy(table, "other", fallback)
+    const found = list_copy(table, "net", fallback)
+    return len(missing) == 2 and missing[0] == 7 and len(found) == 3 and found[2] == 3

@@ -1,0 +1,46 @@
+func mark_count(mut log: int[]) -> u64:
+    log.append(1)
+    return 18446744073709551615u64
+
+
+func mark_bytes(mut log: int[]) -> bytes:
+    log.append(2)
+    return b""
+
+
+func list_count(mut values: int[]) -> u64:
+    values.append(9)
+    return 2u64
+
+
+public func generic_empty[T](tag: T, count: u64) -> str:
+    _ = tag
+    return "" * count
+
+
+func main() -> int:
+    mut log: int[] = []
+    const huge: u64 = 18446744073709551615
+    const empty: int[] = []
+    if "" * huge != "" or mark_count(mut log) * mark_bytes(mut log) != b"":
+        return 1
+    if len(empty * huge) != 0 or generic_empty(0, huge) != "":
+        return 2
+    mut text = "ab"
+    text *= 3u64
+    mut data = b"ab"
+    data *= 3u64
+    mut values: int[] = []
+    values *= huge
+    mut snapshots = [1]
+    snapshots *= list_count(mut snapshots)
+    if snapshots != [1, 1]:
+        return 4
+    const narrow: u8 = 2
+    mut narrow_values = [5]
+    narrow_values *= narrow
+    if narrow_values != [5, 5]:
+        return 3
+    if text == "ababab" and data == b"ababab" and len(values) == 0 and log == [1, 2]:
+        return 42
+    return 0

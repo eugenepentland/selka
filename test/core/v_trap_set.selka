@@ -1,0 +1,16 @@
+record Cell:
+    code: int
+    flag: bool
+
+
+func v_trap_set_write(cells0: Cell[], i: int, v: int) -> int:
+    mut cells = copy(cells0)
+    cells[i] = Cell(code=v, flag=True)
+    return cells[i].code
+
+
+func main(out: Stream) -> int:
+    mut cells = [Cell(code=1, flag=False), Cell(code=2, flag=False)]
+    print(out, v_trap_set_write(cells, 1, 9))
+    print(out, v_trap_set_write(cells, 2, 9))
+    return 0

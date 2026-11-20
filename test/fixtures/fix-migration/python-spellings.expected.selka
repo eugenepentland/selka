@@ -1,0 +1,14 @@
+import strings
+# Two spellings that come from Python: a conversion in a format string hole, and a text times an integer.
+func label(text: str, count: int) -> str:
+    return f"{repr(text)} twice {str(count):>4} {repr(len(text) + count)}"
+
+
+func rule(width: int) -> str:
+    return strings.repeat("=", width) + " end"
+
+
+func main(out: Stream) -> int:
+    print(out, label("ab", 7))
+    print(out, rule(3))
+    return 0

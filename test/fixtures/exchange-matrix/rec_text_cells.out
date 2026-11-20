@@ -1,0 +1,637 @@
+fn_cell_local_fresh_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_fresh_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_fresh_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_fresh_returned
+  at
+  got RT(text='a')
+fn_cell_local_fresh_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_own_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_own_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_own_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_own_returned
+  at
+  got RT(text='a')
+fn_cell_local_own_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_own_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_call_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_call_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_call_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_call_returned
+  at
+  got RT(text='a')
+fn_cell_local_call_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_local_call_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_fresh_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_fresh_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_fresh_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_fresh_returned
+  at
+  got RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_fresh_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_own_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_own_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_own_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_own_returned
+  at
+  got RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_own_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_own_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_call_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_call_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_call_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_call_returned
+  at
+  got RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_call_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_param_call_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+fn_cell_field_fresh_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_fresh_field
+  at
+  field a
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_fresh_dropped
+  at
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_fresh_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_fresh_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_own_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_own_field
+  at
+  field a
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_own_dropped
+  at
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_own_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_own_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_own_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_call_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_call_field
+  at
+  field a
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_call_dropped
+  at
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_call_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_call_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_field_call_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+fn_cell_matchmut_fresh_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_fresh_field
+  at
+  field a
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_fresh_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_fresh_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_own_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_own_field
+  at
+  field a
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_own_dropped
+  at
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_own_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_own_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_own_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_call_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_call_field
+  at
+  field a
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_call_dropped
+  at
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_call_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_call_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+fn_cell_matchmut_call_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_local_fresh_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_fresh_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_fresh_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_fresh_returned
+  at
+  got RT(text='a')
+builtin_cell_local_fresh_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_own_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_own_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_own_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_own_returned
+  at
+  got RT(text='a')
+builtin_cell_local_own_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_own_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_call_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_call_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_call_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_call_returned
+  at
+  got RT(text='a')
+builtin_cell_local_call_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_local_call_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_fresh_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_fresh_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_fresh_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_fresh_returned
+  at
+  got RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_fresh_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_own_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_own_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_own_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_own_returned
+  at
+  got RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_own_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_own_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_call_bound
+  at
+  was RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_call_field
+  at
+  field a
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_call_dropped
+  at
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_call_returned
+  at
+  got RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_call_passed
+  at
+  passed RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_param_call_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text='new'), RT(text='b')]
+builtin_cell_field_fresh_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_fresh_field
+  at
+  field a
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_fresh_dropped
+  at
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_fresh_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_fresh_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_own_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_own_field
+  at
+  field a
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_own_dropped
+  at
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_own_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_own_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_own_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_call_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_call_field
+  at
+  field a
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_call_dropped
+  at
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_call_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_call_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_field_call_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text='new'), RT(text='b')], tag=0)
+builtin_cell_matchmut_fresh_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_fresh_field
+  at
+  field a
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_fresh_dropped
+  at
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_fresh_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_fresh_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_fresh_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_own_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_own_field
+  at
+  field a
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_own_dropped
+  at
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_own_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_own_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_own_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_call_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_call_field
+  at
+  field a
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_call_dropped
+  at
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_call_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_call_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+builtin_cell_matchmut_call_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text='new'), RT(text='b')])
+take_cell_local_none_bound
+  at
+  was RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_local_none_field
+  at
+  field a
+  after [RT(text=''), RT(text='b')]
+take_cell_local_none_dropped
+  at
+  after [RT(text=''), RT(text='b')]
+take_cell_local_none_returned
+  at
+  got RT(text='a')
+take_cell_local_none_passed
+  at
+  passed RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_local_none_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_param_none_bound
+  at
+  was RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_param_none_field
+  at
+  field a
+  after [RT(text=''), RT(text='b')]
+take_cell_param_none_dropped
+  at
+  after [RT(text=''), RT(text='b')]
+take_cell_param_none_returned
+  at
+  got RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_param_none_passed
+  at
+  passed RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_param_none_passed_own
+  at
+  sunk RT(text='a')
+  after [RT(text=''), RT(text='b')]
+take_cell_field_none_bound
+  at
+  was RT(text='a')
+  after Holder(items=[RT(text=''), RT(text='b')], tag=0)
+take_cell_field_none_field
+  at
+  field a
+  after Holder(items=[RT(text=''), RT(text='b')], tag=0)
+take_cell_field_none_dropped
+  at
+  after Holder(items=[RT(text=''), RT(text='b')], tag=0)
+take_cell_field_none_returned
+  at
+  got RT(text='a')
+  after Holder(items=[RT(text=''), RT(text='b')], tag=0)
+take_cell_field_none_passed
+  at
+  passed RT(text='a')
+  after Holder(items=[RT(text=''), RT(text='b')], tag=0)
+take_cell_field_none_passed_own
+  at
+  sunk RT(text='a')
+  after Holder(items=[RT(text=''), RT(text='b')], tag=0)
+take_cell_matchmut_none_bound
+  at
+  was RT(text='a')
+  after Box.full(items=[RT(text=''), RT(text='b')])
+take_cell_matchmut_none_field
+  at
+  field a
+  after Box.full(items=[RT(text=''), RT(text='b')])
+take_cell_matchmut_none_dropped
+  at
+  after Box.full(items=[RT(text=''), RT(text='b')])
+take_cell_matchmut_none_returned
+  at
+  got RT(text='a')
+  after Box.full(items=[RT(text=''), RT(text='b')])
+take_cell_matchmut_none_passed
+  at
+  passed RT(text='a')
+  after Box.full(items=[RT(text=''), RT(text='b')])
+take_cell_matchmut_none_passed_own
+  at
+  sunk RT(text='a')
+  after Box.full(items=[RT(text=''), RT(text='b')])

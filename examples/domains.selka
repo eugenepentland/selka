@@ -1,0 +1,32 @@
+@invariant(self.value <= 1000u32, "a distance fits the representable range")
+record Millimeters:
+    value: u32
+
+
+func millimeters(value: u32) -> Millimeters:
+    # Clamp to the range this record promises to represent.
+    if value > 1000u32:
+        return Millimeters(value=1000u32)
+    return Millimeters(value=value)
+
+
+func add(a: Millimeters, b: Millimeters) -> Millimeters:
+    return millimeters(a.value + b.value)
+
+
+record Seconds:
+    value: u32
+
+
+func seconds(value: u32) -> Seconds:
+    return Seconds(value=value)
+
+
+record Measurement:
+    distance: Millimeters
+    elapsed: Seconds
+
+
+func main() -> int:
+    mut sample = Measurement(distance=add(millimeters(700u32), millimeters(500u32)), elapsed=seconds(3u32))
+    return int(sample.distance.value) + int(sample.elapsed.value)

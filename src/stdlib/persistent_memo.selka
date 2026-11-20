@@ -1,0 +1,136 @@
+import cache_record
+import hashes
+import hex
+import lists
+import memo
+import strings
+
+# Retention bounds: at most 256 entries, each with at most 1 MiB of key and value.
+# Zero entries forces computation without touching storage.
+public record Options:
+    max_entries: int
+    max_bytes: int
+
+
+# A byte snapshot and whether a verified completed computation was reused.
+public record Lookup:
+    value: bytes
+    reused: bool
+
+
+# Invalid bounds or a real storage failure. Corrupt cache records are misses.
+public enum Error:
+    Invalid
+    Storage(value: str)
+
+
+# Describe a rejected request or failed provider operation.
+public func message(error: Error) -> str:
+    match error:
+        case Invalid:
+            return "invalid persistent memo bounds"
+        case Storage(value=detail):
+            return copy(detail)
+
+
+func argument(key: memo.Key) -> str:
+    match key:
+        case Number(value):
+            return "number:" + str(value)
+        case Text(value):
+            return "text:" + hex.encode(strings.encode(value))
+        case Data(value):
+            return "data:" + hex.encode(value)
+
+
+func size(key: memo.Key) -> int:
+    match key:
+        case Number(value=_):
+            return 8
+        case Text(value):
+            return len(strings.encode(value))
+        case Data(value):
+            return len(value)
+
+
+func owned(name: str) -> bool:
+    if strings.char_count(name) != 75 or not strings.starts_with(name, "memo-") or not strings.ends_with(name, ".entry"):
+        return False
+    for digit in strings.chars(strings.char_slice(name, 5, 69)):
+        if digit not in "0123456789abcdef":
+            return False
+    return True
+
+
+func lookup(data: bytes, identity: str, key: str, limit: int) -> bytes?:
+    match cache_record.decode(data):
+        case Err(_):
+            return None
+        case Ok(fields):
+            if len(fields) != 4:
+                return None
+            if fields[0] != "persistent-memo-v1" or fields[1] != identity or fields[2] != key:
+                return None
+            match bytes.fromhex(fields[3]):
+                case Err(_):
+                    return None
+                case Ok(value):
+                    if len(value) > limit or hex.encode(value) != fields[3]:
+                        return None
+                    return Some(own value)
+
+
+# Reuse an exact tagged input only under compiler-issued implementation identity.
+# The directory must already exist and be dedicated to this cache. Unsupported
+# identities and oversized results execute normally without persistent receipts.
+public func call(fs: Filesystem, options: Options, compute: func(memo.Key) -> bytes, key: memo.Key) -> Lookup fails Error:
+    if options.max_entries < 0 or options.max_entries > 256 or options.max_bytes < 0 or options.max_bytes > 1048576:
+        fail Error.Invalid
+    if options.max_entries == 0:
+        return Lookup(value=compute(key), reused=False)
+    const identity = function_digest(compute)
+    const key_size = size(key)
+    if strings.char_count(identity) == 0 or key_size > options.max_bytes:
+        return Lookup(value=compute(key), reused=False)
+    const encoded_key = argument(key)
+    const name = "memo-" + hashes.sha256(cache_record.encode([copy(identity), copy(encoded_key)])) + ".entry"
+    with try fs.lock_directory("") as lease:
+        mut names = try fs.list_directory("", 4096)
+        sort(mut names)
+        mut entries: str[] = []
+        mut removed = False
+        for item in names:
+            if strings.starts_with(item, ".myl-durable-"):
+                _ = try fs.remove(item)
+                removed = True
+            elif owned(item):
+                append(mut entries, copy(item))
+        # Lowering the limit also bounds an existing cache. Keep the requested
+        # entry when possible; sorted enumeration makes eviction deterministic.
+        mut count = len(entries)
+        for item in entries:
+            if count > options.max_entries and item != name:
+                _ = try fs.remove(item)
+                count -= 1
+                removed = True
+        if removed:
+            _ = try fs.sync_directory("")
+        if lists.contains(entries, name):
+            const data = try fs.read_regular_file(name, 4195328)
+            match lookup(data, identity, encoded_key, options.max_bytes - key_size):
+                case Some(value):
+                    _ = try fs.sync_directory("")
+                    return Lookup(value=own value, reused=True)
+                case None:
+                    pass
+        const value = compute(key)
+        if len(value) > options.max_bytes - key_size:
+            return Lookup(value=own value, reused=False)
+        if not lists.contains(entries, name) and count >= options.max_entries:
+            for item in entries:
+                if item != name and fs.exists(item):
+                    _ = try fs.remove(item)
+                    break
+            _ = try fs.sync_directory("")
+        _ = try fs.atomic_write_file(name, cache_record.encode(["persistent-memo-v1", copy(identity), copy(encoded_key), hex.encode(value)]))
+        return Lookup(value=own value, reused=False)

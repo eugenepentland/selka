@@ -1,0 +1,99 @@
+{
+  "schema": "runtime-representative-assessment-validation-v2",
+  "recorded_utc": "2026-10-03T14:55:35.967567+00:00",
+  "scope": "Normalize each case and input size to its fastest observed median among all six configurations; reanalyze saved raw rounds without new guest timing or CPU sampling.",
+  "baseline_sha256": "b595d9638e243e18692b5cef491c2b5273949c93ebf22a0ae604a08704c1d3f7",
+  "archived_source_revision": "b725360f5f86ac67bc405db9407ae51c332a9931",
+  "historical_source_blobs_verified": 42,
+  "comparison_cells": 480,
+  "families": 8,
+  "applications": 5,
+  "existing_baseline_checksums_and_statistics_revalidated": true,
+  "prior_payload_hashes_verified": 199,
+  "benchmark_ports_compiler_raw_timings_and_saved_profiles_unchanged": true,
+  "commands": [
+    {
+      "command": "python3 -m unittest discover -s benchmarks/runtime/assessment -p 'test_*.py'",
+      "exit_status": 0,
+      "tests_passed": 11,
+      "log": "validation/fastest-assessment-tests.txt.gz"
+    },
+    {
+      "command": "python3 benchmarks/runtime/assessment/assess.py",
+      "exit_status": 0,
+      "log": "validation/fastest-assessment-run.txt.gz"
+    }
+  ],
+  "source_hashes": {
+    "benchmarks/runtime/assessment/assess.py": "13afcc144731b44b187e6a04dce04a58a3e7adf31ceb7d236aa77a84c3f4c9a3",
+    "benchmarks/runtime/assessment/test_assess.py": "00d565dba56ab491837da8f477911d51c34cf0609138ddc8b9f7f99cf39776eb",
+    "benchmarks/runtime/assessment/README.md": "772261dcc2d5418b7c816e1a9ddee99e364ef3818d2ab880aeb5e508cf0fab9d",
+    "benchmarks/runtime/expanded/coverage.json": "91aba29e546a881b50738a06b4f4e8d74efc97895bf8fd41c068a31765464bf7",
+    "benchmarks/runtime/expanded/profile.py": "70d3c909b08b0e751c765f357672bbefc771726645be9bf8852fe954fd11af79",
+    "benchmarks/runtime/expanded/profile_rules.json": "a0d272a9b2dc9ad78893f9178e91595af8ce9c084700e6c394fc649115a74603",
+    "benchmarks/runtime/expanded/test_profile.py": "ca204ee76c21eb9c2b4602c7be03cffd4f8c2620cd363e1c20a5162d24d7b384",
+    "benchmarks/runtime/expanded/README.md": "d423485419c5cc0a37ca41ff76aaee3d2c3aac717891573b8345d89bc5cd1ca5"
+  },
+  "payloads": {
+    "assessment_main_20261003.json": {
+      "sha256": "c0fd3a9afd8f12b070148f49eaafc87c0cf28202460f30f910ef5913ee4d8a42",
+      "bytes": 1287694
+    },
+    "assessment_main_20261003.md": {
+      "sha256": "df3a4315dc9398ee5f712b7bede1fb03e1be717bb988f0e9a4bcf2b38c2b6aa0",
+      "bytes": 119247
+    },
+    "validation/fastest-assessment-run.txt.gz": {
+      "sha256": "c536dd40733da4e5225554b39bca3362a1cf02f060d17a3239ee5bbdebb72450",
+      "bytes": 106
+    },
+    "validation/fastest-assessment-tests.txt.gz": {
+      "sha256": "b352605a14879f1ea3961e2a346b235f2409930c747c1522a9edb9c8032cbf9b",
+      "bytes": 55
+    },
+    "validation/representative-assessment-run.txt.gz": {
+      "sha256": "c536dd40733da4e5225554b39bca3362a1cf02f060d17a3239ee5bbdebb72450",
+      "bytes": 106
+    },
+    "validation/representative-assessment-tests.txt.gz": {
+      "sha256": "dbbe8b973afa3215e9ff7094dbc4b2048faddabdb7589a2ea5dac6d9c9a50473",
+      "bytes": 54
+    },
+    "validation/representative-expanded-tests.txt.gz": {
+      "sha256": "f7f3904efe2c4c5cd88b4c2d498e0c0ae4a1b263a49981f4c4a00367006f155a",
+      "bytes": 476
+    }
+  },
+  "normalization": {
+    "point_estimate": "median runtime / minimum median runtime within case and size",
+    "all_normalized_ratios_at_least_one": true,
+    "case_size_groups_with_fastest_equal_one": 80,
+    "comparison_cells": 480,
+    "intervals": "2000 paired-round bootstrap ratio-of-medians resamples against fixed selected reference",
+    "observed_winner_selection_uncertainty_included": false
+  },
+  "previous_assessment_commands": [
+    {
+      "command": "python3 -m unittest discover -s benchmarks/runtime/expanded -p 'test_*.py' -v",
+      "exit_status": 0,
+      "tests_passed": 14,
+      "log": "validation/representative-expanded-tests.txt.gz"
+    },
+    {
+      "command": "python3 -m unittest discover -s benchmarks/runtime/assessment -p 'test_*.py' -v",
+      "exit_status": 0,
+      "tests_passed": 8,
+      "log": "validation/representative-assessment-tests.txt.gz"
+    },
+    {
+      "command": "python3 benchmarks/runtime/assessment/assess.py",
+      "exit_status": 0,
+      "log": "validation/representative-assessment-run.txt.gz"
+    }
+  ],
+  "independent_root_review": [
+    "All 480 ratios independently match raw-sample medians divided by case/size minimum; all 80 references equal1.0.",
+    "Exact units and median times unchanged; Go-relative assessment row fields removed.",
+    "Family counts/ranges recomputed independently; Markdown table shapes and links checked."
+  ]
+}

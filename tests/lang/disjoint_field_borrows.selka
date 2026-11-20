@@ -1,0 +1,265 @@
+# A borrow of a place blocks a write to, or a move of, another place only when the two overlap. `const item = self.items[i]`
+# borrows the element in place; a write to a different field of the same record (`self.links`, `self.count`, `self.inner.n`)
+# does not touch it, so both may happen while `item` is live, and `item` may be read after the write. The same holds for a
+# nested record (`self.a.b` against `self.a.c`) and for a local record. Writes to the borrowed field, to the whole record and to
+# an element of the borrowed list overlap and stay refused (src/core/field_borrow_test.zig).
+record Inner:
+    n: int
+    tags: str[]
+    other: str[]
+
+
+record Inst:
+    name: str
+    pins: int[]
+
+
+record Builder:
+    items: str[]
+    links: str[]
+    count: int
+    inner: Inner
+    insts: Inst[]
+    table: dict[str, int]
+
+
+func fresh() -> Builder:
+    return Builder(items=["a", "bb"], links=[], count=0, inner=Inner(n=0, tags=["t"], other=[]), insts=[Inst(name="i0", pins=[1, 2])], table={})
+
+
+func grow(mut xs: str[], s: str) -> int:
+    append(mut xs, copy(s))
+    return len(xs)
+
+
+func link_all(mut self: Builder):
+    for i in range(len(self.items)):
+        const item = self.items[i]
+        append(mut self.links, copy(item))
+
+
+func count_pins(mut self: Builder):
+    for i in range(len(self.insts)):
+        const inst = self.insts[i]
+        for k in range(len(inst.pins)):
+            self.count = self.count + inst.pins[k]
+        append(mut self.links, copy(inst.name))
+
+
+func nested(mut self: Builder) -> int:
+    const t = self.inner.tags[0]
+    self.inner.other = ["q"]
+    self.inner.n = 5
+    append(mut self.inner.other, copy(t))
+    return len(t) + self.inner.n + len(self.inner.other)
+
+
+func read_after(mut self: Builder) -> int:
+    const item = self.items[1]
+    append(mut self.links, "w")
+    self.count = 2
+    return len(item) + len(item) + self.count
+
+
+func table_write(mut self: Builder) -> int:
+    const item = self.items[1]
+    self.table[copy(item)] = 5
+    return self.table[copy(item)] + len(item)
+
+
+func in_branch(mut self: Builder) -> int:
+    const item = self.items[1]
+    if len(self.links) == 0:
+        append(mut self.links, "x")
+        self.count = len(item)
+    else:
+        self.count = 99
+    return self.count + len(item)
+
+
+func across_loop(mut self: Builder) -> int:
+    const first = self.items[0]
+    for i in range(3):
+        self.count = self.count + len(first)
+        append(mut self.links, copy(first))
+    return self.count * 10 + len(self.links)
+
+
+func after_while(mut self: Builder) -> int:
+    const first = self.items[1]
+    mut i = 0
+    while i < 3:
+        append(mut self.links, "z")
+        i = i + 1
+    return len(first) * 10 + len(self.links)
+
+
+func as_arguments(mut self: Builder) -> int:
+    const item = self.items[0]
+    const n = grow(mut self.inner.other, item)
+    const m = grow(mut self.links, item)
+    return n + m + len(item)
+
+
+public func test_an_element_borrow_does_not_block_a_write_to_another_field() -> bool:
+    mut b = fresh()
+    link_all(mut b)
+    assert len(b.links) == 2
+    assert b.links[0] == "a" and b.links[1] == "bb"
+    assert len(b.items) == 2
+    return True
+
+
+public func test_a_borrowed_record_element_is_read_across_writes() -> bool:
+    mut b = fresh()
+    count_pins(mut b)
+    assert b.count == 3
+    assert len(b.links) == 1 and b.links[0] == "i0"
+    return True
+
+
+public func test_nested_records_are_disjoint_below_a_shared_field() -> bool:
+    mut b = fresh()
+    assert nested(mut b) == 8
+    assert b.inner.n == 5 and len(b.inner.other) == 2
+    assert b.inner.tags[0] == "t"
+    return True
+
+
+public func test_the_borrow_is_read_after_the_write() -> bool:
+    mut b = fresh()
+    assert read_after(mut b) == 6
+    assert len(b.links) == 1 and b.count == 2
+    return True
+
+
+public func test_a_dictionary_field_is_written_while_a_list_element_is_borrowed() -> bool:
+    mut b = fresh()
+    assert table_write(mut b) == 7
+    return True
+
+
+public func test_the_borrow_is_read_in_a_branch_that_does_not_write() -> bool:
+    mut b = fresh()
+    assert in_branch(mut b) == 4
+    mut c = fresh()
+    append(mut c.links, "x")
+    assert in_branch(mut c) == 101
+    return True
+
+
+public func test_a_borrow_taken_before_a_loop_survives_the_loops_writes() -> bool:
+    mut b = fresh()
+    assert across_loop(mut b) == 33
+    assert after_while(mut b) == 26
+    return True
+
+
+public func test_a_borrow_and_a_mutable_field_pass_to_one_call() -> bool:
+    mut b = fresh()
+    assert as_arguments(mut b) == 3
+    assert len(b.links) == 1 and len(b.inner.other) == 1
+    return True
+
+
+public func test_a_local_record_is_disjoint_by_field_too() -> bool:
+    mut b = fresh()
+    const item = b.items[0]
+    append(mut b.links, copy(item))
+    b.count = len(item) + 1
+    b.inner.n = 3
+    assert len(b.links) == 1 and b.count == 2 and b.inner.n == 3
+    assert len(item) == 1
+    return True
+
+
+record Node:
+    label: str
+    items: str[]
+    count: int
+    next: Node?
+
+
+record Box[T]:
+    values: T[]
+    log: str[]
+    hits: int
+
+
+func with_exits(mut self: Builder) -> int:
+    const first = self.items[0]
+    mut i = 0
+    while i < 5:
+        i = i + 1
+        if i == 2:
+            continue
+        append(mut self.links, copy(first))
+        self.count = self.count + len(first)
+        if i == 4:
+            break
+    return self.count * 10 + len(self.links)
+
+
+func early_return(mut self: Builder) -> int:
+    const item = self.items[1]
+    for i in range(3):
+        append(mut self.links, copy(item))
+        if i == 1:
+            return len(item) * 100 + len(self.links)
+    return 0
+
+
+func owned(own self: Builder) -> int:
+    const item = self.items[0]
+    append(mut self.links, copy(item))
+    self.count = 4
+    return len(item) + len(self.links) + self.count
+
+
+func record_valued(mut self: Builder) -> int:
+    const inner = self.inner
+    self.count = 7
+    append(mut self.links, "x")
+    return inner.n + len(inner.tags) + self.count
+
+
+func list_inside_element(mut self: Builder) -> int:
+    const pins = self.insts[0].pins
+    append(mut self.links, "x")
+    self.count = len(pins)
+    return pins[1] + self.count
+
+
+public func test_a_borrow_survives_break_continue_and_an_early_return() -> bool:
+    mut b = fresh()
+    assert with_exits(mut b) == 33
+    mut c = fresh()
+    assert early_return(mut c) == 202
+    return True
+
+
+public func test_an_owned_record_parameter_is_disjoint_by_field() -> bool:
+    assert owned(fresh()) == 6
+    return True
+
+
+public func test_a_record_valued_field_and_a_list_inside_an_element_are_borrowed_by_place() -> bool:
+    mut b = fresh()
+    assert record_valued(mut b) == 8
+    mut c = fresh()
+    assert list_inside_element(mut c) == 4
+    return True
+
+
+public func test_recursive_and_generic_records_are_disjoint_by_field() -> bool:
+    mut n = Node(label="a", items=["p", "qq"], count=0, next=None)
+    const item = n.items[1]
+    n.count = len(item)
+    n.label = "zz"
+    assert n.count + len(item) + len(n.items) + len(n.label) == 8
+    mut b = Box[int](values=[4, 5], log=[], hits=0)
+    const value = b.values[1]
+    append(mut b.log, "k")
+    b.hits = value
+    assert value + b.hits + len(b.log) == 11
+    return True

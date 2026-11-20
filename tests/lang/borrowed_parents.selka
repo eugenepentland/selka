@@ -1,0 +1,203 @@
+# A borrowed record may hold `Some(p)` of a read-only record parameter (O4), so a recursive walk passes its context down
+# with no copy: `walk(Scope(block=sb.block, name=sb.name, parent=Some(scope)))`. A recursive field's box is a slot of the
+# caller's frame, which outlives every callee; `None` beside the borrows owns nothing. A value that holds a box of its own
+# call's frame is never returned, even under `from`, while a box an ancestor made is returned `from` the parameter that
+# holds it (src/core/borrowed_parent_test.zig has the refusals).
+import parallel
+import strings
+
+record Block:
+    name: bytes
+    ports: bytes[]
+    subs: Sub[]
+
+
+record Sub:
+    name: bytes
+    block: Block
+
+
+record Scope:
+    block: Block
+    name: bytes = b""
+    parent: Scope? = None
+    tag: bytes? = None
+
+
+record Bridged:
+    scope: Scope
+    net: bytes
+
+
+record Frame:
+    depth: int
+    up: Scope? = None
+
+
+func leaf(name: bytes, ports: bytes[]) -> Block:
+    return Block(name=copy(name), ports=copy(ports), subs=[])
+
+
+# A chain of six blocks, `b0` at the top, each port list naming the next block's ports.
+func chain() -> Block:
+    mut block = leaf(b"b5", [b"p5"])
+    mut i = 4
+    while i >= 0:
+        const name = b"b" + strings.encode(str(i))
+        block = Block(name=own name, ports=[b"p" + strings.encode(str(i))], subs=[Sub(name=b"s" + strings.encode(str(i + 1)), block=own block)])
+        i -= 1
+    return block
+
+
+func depth(scope: Scope) -> int:
+    match scope.parent:
+        case None:
+            return 0
+        case Some(parent):
+            return 1 + depth(parent)
+
+
+# The names of the scope and every ancestor, innermost first: reads the whole parent chain.
+func path(scope: Scope) -> bytes:
+    match scope.parent:
+        case None:
+            return copy(scope.block.name)
+        case Some(parent):
+            return scope.block.name + b"<" + path(parent)
+
+
+func walk(scope: Scope, mut out: bytes[]):
+    append(mut out, path(scope))
+    for sb in scope.block.subs:
+        walk(Scope(block=sb.block, name=sb.name, parent=Some(scope), tag=scope.tag), mut out)
+
+
+public func test_parent_chain_five_deep() -> bool:
+    const top = chain()
+    const tag: bytes? = Some(b"t")
+    mut out: bytes[] = []
+    walk(Scope(block=top, tag=tag), mut out)
+    return len(out) == 6 and out[0] == b"b0" and out[5] == b"b5<b4<b3<b2<b1<b0"
+
+
+func deepest(scope: Scope) -> int:
+    mut best = depth(scope)
+    for sb in scope.block.subs:
+        const child = Scope(block=sb.block, name=sb.name, parent=Some(scope))
+        const d = deepest(child)
+        if d > best:
+            best = d
+    return best
+
+
+public func test_const_child_scope() -> bool:
+    const top = chain()
+    return deepest(Scope(block=top)) == 5
+
+
+# A deep copy of a scope copies its frame-boxed parents into owned boxes.
+func kept(scope: Scope, mut out: Scope[]):
+    append(mut out, copy(scope))
+    for sb in scope.block.subs:
+        kept(Scope(block=sb.block, parent=Some(scope)), mut out)
+
+
+public func test_copy_of_a_framed_scope_is_owned() -> bool:
+    mut out: Scope[] = []
+    kept(Scope(block=chain()), mut out)
+    return len(out) == 6 and depth(out[5]) == 5 and path(out[3]) == b"b3<b2<b1<b0"
+
+
+# The Bridged shape: a box an ancestor's frame made is returned `from` the parameter that holds it.
+func bridged(self: Scope, net: bytes) -> Bridged? from self:
+    match self.parent:
+        case None:
+            return None
+        case Some(parent):
+            for port in parent.block.ports:
+                if port == net:
+                    return Some(Bridged(scope=parent, net=port))
+            return None
+
+
+func rail_depth(scope: Scope, net: bytes) -> int:
+    match bridged(scope, net):
+        case None:
+            return 0
+        case Some(up):
+            return 1 + rail_depth(up.scope, b"p" + strings.encode(str(depth(up.scope) - 1)))
+
+
+func find(scope: Scope, name: bytes) -> int:
+    if scope.block.name == name:
+        return rail_depth(scope, b"p" + strings.encode(str(depth(scope) - 1)))
+    for sb in scope.block.subs:
+        const found = find(Scope(block=sb.block, parent=Some(scope)), name)
+        if found >= 0:
+            return found
+    return -1
+
+
+public func test_bridged_from_an_ancestor_box() -> bool:
+    return find(Scope(block=chain()), b"b4") == 4
+
+
+# `None` of an option beside the borrows owns nothing: a root scope borrows its block.
+func root_name(scope: Scope) -> bytes from scope:
+    return scope.block.name
+
+
+func named(block: Block) -> int:
+    return len(root_name(Scope(block=block)))
+
+
+public func test_none_beside_borrows() -> bool:
+    return named(chain()) == 2
+
+
+# An unboxed option holds the lent parameter itself.
+func frame_depth(f: Frame) -> int:
+    match f.up:
+        case None:
+            return f.depth
+        case Some(up):
+            return f.depth + depth(up)
+
+
+func framed(scope: Scope) -> int:
+    return frame_depth(Frame(depth=1, up=Some(scope)))
+
+
+public func test_unboxed_lent_option() -> bool:
+    return framed(Scope(block=chain())) == 1
+
+
+# A `mut` local whose every assignment is a borrowed record (4f) may hold the frame box across loop iterations.
+func last_child_path(scope: Scope) -> bytes:
+    mut current = Scope(block=scope.block, parent=Some(scope))
+    for sb in scope.block.subs:
+        current = Scope(block=sb.block, name=sb.name, parent=Some(scope))
+    return path(current)
+
+
+public func test_borrowed_mut_scope_in_a_loop() -> bool:
+    return last_child_path(Scope(block=chain())) == b"b1<b0"
+
+
+# A task reads a parameter that holds an ancestor's frame box, inside its group's join.
+func task_depth(scope: Scope) -> int:
+    return depth(scope)
+
+
+func spread(scope: Scope) -> int:
+    mut total = 0
+    with parallel.group() as g:
+        const t = g.submit(task_depth, scope)
+        total = t.result()
+    for sb in scope.block.subs:
+        total += spread(Scope(block=sb.block, parent=Some(scope)))
+    return total
+
+
+public func test_task_reads_a_framed_parameter() -> bool:
+    return spread(Scope(block=chain())) == 15

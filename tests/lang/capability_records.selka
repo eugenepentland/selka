@@ -1,0 +1,87 @@
+# Capability records written the way they were before capabilities became shareable handles (5C): every capability that
+# reaches a record is taken with an `own` parameter and passed with `own`. These markers still check (each is the warning
+# W_CAPABILITY_OWN, which `selka fix` removes), so this file pins that old code keeps its behaviour. The handle forms
+# are in capability_handles.selka. (G3 fix 2: F-G2b-23, F-G2c-18, F-G2e-b-1.)
+import filesystem
+import random
+
+record Caps:
+    fs: Filesystem
+    entropy: Entropy
+
+
+record Services:
+    caps: Caps
+    runs: int
+
+
+func start(own fs: Filesystem, own entropy: Entropy) -> Services:
+    return Services(caps=Caps(fs=own fs, entropy=own entropy), runs=0)
+
+
+func start_fresh() -> Services:
+    return Services(caps=Caps(fs=filesystem.memory(), entropy=random.seeded_entropy(7)), runs=0)
+
+
+func record_run(mut services: Services):
+    services.runs = services.runs + 1
+
+
+func started_and_used(own fs: Filesystem, own entropy: Entropy) -> Services:
+    mut services = start(own fs, own entropy)
+    record_run(mut services)
+    return services
+
+
+func write_note(mut services: Services, text: bytes) -> bool:
+    match services.caps.fs.write_file("note", text):
+        case Ok(_):
+            return services.caps.fs.exists("note")
+        case Err(_):
+            return False
+
+
+public func test_a_function_returns_the_record_that_holds_its_capabilities() -> bool:
+    mut fs = filesystem.memory()
+    mut entropy = random.seeded_entropy(7)
+    mut services = start(own fs, own entropy)
+    assert services.runs == 0
+    return not services.caps.fs.exists("note")
+
+
+public func test_a_record_built_from_fresh_capabilities_needs_no_parameters() -> bool:
+    mut services = start_fresh()
+    record_run(mut services)
+    record_run(mut services)
+    return services.runs == 2 and not services.caps.fs.exists("note")
+
+
+public func test_the_bound_record_passes_mut_and_its_capabilities_still_work() -> bool:
+    mut services = start_fresh()
+    record_run(mut services)
+    assert write_note(mut services, b"hello")
+    match services.caps.fs.read_file("note"):
+        case Ok(data):
+            return data == b"hello" and services.runs == 1
+        case Err(_):
+            return False
+
+
+public func test_named_capabilities_are_forwarded_through_a_second_helper() -> bool:
+    mut fs = filesystem.memory()
+    mut entropy = random.seeded_entropy(3)
+    mut services = started_and_used(own fs, own entropy)
+    record_run(mut services)
+    return services.runs == 2
+
+
+public func test_a_capability_stored_in_the_record_is_the_one_that_was_given() -> bool:
+    mut fs = filesystem.memory()
+    match fs.write_file("given", b"x"):
+        case Ok(_):
+            pass
+        case Err(_):
+            return False
+    mut entropy = random.seeded_entropy(5)
+    mut services = start(own fs, own entropy)
+    return services.caps.fs.exists("given")

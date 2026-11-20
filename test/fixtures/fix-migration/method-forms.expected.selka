@@ -1,0 +1,82 @@
+# W13 slice 2: every spelling W13 retires that `selka fix` rewrites with certainty, written as a program before the
+# change. `method-forms.expected.selka` is the same program after `selka fix`; both print the same lines. The spellings
+# that keep a warning with no edit are in `method-forms-uncertain.selka`.
+import buffers
+import bytes
+import hashes
+import hex
+import sets
+import strings
+
+# The text methods with function homes in `strings` and `hashes`; `strings` is imported already, `hashes` is not.
+func text_forms(out: Stream, s: str) -> Unit:
+    print(out, strings.strip_chars(s, " "), strings.lstrip_chars(s, " "), strings.rstrip_chars(s, " "), strings.zfill("7", 3))
+    print(out, strings.words(s), strings.join(["a", "b"], ", "), len(strings.encode(s)))
+    print(out, strings.count(s, ","), strings.count(s, ",", 3), strings.count(s, ",", 3, 6))
+    print(out, strings.text_index(s, ",", 1), strings.text_index(s, ",", 1, 9), strings.text_rindex(s, ",", 1), strings.text_rindex(s, ",", 1, 9))
+    print(out, strings.starts_with(s, "a", 2), strings.starts_with(s, "a", 2, 5), strings.ends_with(s, "c", 0), strings.ends_with(s, "c ", 0, 9))
+    print(out, len(hashes.sha256_text_bytes(s)), len(hashes.blake3_text_bytes(s)))
+    print(out, strings.find(s, ",", 1) is None, strings.find(s, ",", 1, 9) is not None, strings.rfind(s, ",", 1) is not None, strings.rfind(s, ",", 1, 9) is None)
+    print(out, parse_int("12"), parse_float("1.5"), parse_f32("2.5"))
+
+
+# The byte methods with homes in `bytes`, `strings`, `hex` and `hashes`.
+func byte_forms(out: Stream, b: bytes) -> Unit:
+    const line = b" x y "
+    const words = bytes.words(line)
+    print(out, len(words), bytes.strip_chars(b, b" "), bytes.lstrip_chars(b, b" "), bytes.rstrip_chars(b, b" "))
+    print(out, bytes.find(b, b",", 1), bytes.find(b, b",", 1, 4), bytes.rfind(b, b",", 1), bytes.rfind(b, b",", 1, 4))
+    print(out, bytes.count(b, b",", 1), bytes.count(b, b",", 1, 4), bytes.starts_with(b, b"x", 1), bytes.starts_with(b, b"x", 1, 4))
+    print(out, bytes.ends_with(b, b" ", 0), bytes.ends_with(b, b"y", 0, 4), bytes.index(b, b","), bytes.index(b, b",", 1), bytes.index(b, b",", 1, 4))
+    print(out, bytes.rindex(b, b","), bytes.rindex(b, b",", 1), bytes.rindex(b, b",", 1, 4))
+    print(out, bytes.parse_int(b"12"), bytes.parse_float(b"1.5"), bytes.scalar_count(b), bytes.to_list(b), bytes.find_any(b, b",y", 0))
+    print(out, strings.decode(b), hex.encode(b), len(hashes.sha256_bytes(b)), len(hashes.blake3_bytes(b)))
+
+
+# A byte_buffer reads through the `bytes` functions too, the reads retired on `bytes` included.
+func buffer_forms(out: Stream) -> Unit:
+    const empty: int[] = []
+    mut buf = byte_buffer(empty)
+    buffers.append(mut buf, b" k,v ")
+    print(out, bytes.find(buf, b","), bytes.count(buf, b","), bytes.starts_with(buf, b" "), bytes.ends_with(buf, b" "))
+    print(out, bytes(bytes.strip(buf)), bytes(bytes.lstrip(buf)), bytes(bytes.rstrip(buf)), len(bytes.split(buf, b",")))
+    print(out, bytes.parse_int_range(buf, 0, 1), bytes.parse_float_range(buf, 0, 1), bytes.scalar_count_range(buf, 0, 3))
+    print(out, strings.decode(buf), hex.encode(buf))
+
+
+# The set's four writes, and two rewrites on one line.
+func collection_forms(out: Stream) -> Unit:
+    mut seen: set[int] = {1, 2, 3}
+    sets.remove(mut seen, 2)
+    sets.update(mut seen, {7, 8})
+    const popped = sets.pop(mut seen)
+    print(out, len(seen), popped >= 1)
+    sets.clear(mut seen)
+    const both = strings.count("a-b", "-") + strings.count("c-d-e", "-")
+    print(out, len(seen), both)
+
+
+# The duplicates that are not methods: the bare `unwrap_or`, `math`'s twins of the prelude, the `strings` parses and
+# the bare file functions. The float twins' inputs round away from zero, where the two forms print alike.
+func duplicates(out: Stream, fs: Filesystem, maybe: int?) -> Unit:
+    const a = 4
+    const b = 9
+    print(out, maybe.unwrap_or(3), maybe.unwrap_or(a) + 1, min(a, b), max(a, b), sqrt(16.0))
+    print(out, parse_int("41"), parse_float("0.5"))
+    print(out, round(2.6), floor(2.6), ceil(2.2), trunc(0.0 - 2.7))
+    print(out, fs.exists("no-such-file"), is_ok(fs.read_text("no-such-file")))
+
+
+func is_ok(result: Result[str, str]) -> bool:
+    if result is Ok(_):
+        return True
+    return False
+
+
+func main(out: Stream, fs: Filesystem) -> int:
+    text_forms(out, " a,b,c ")
+    byte_forms(out, b"x,y ")
+    buffer_forms(out)
+    collection_forms(out)
+    duplicates(out, fs, None)
+    return 0

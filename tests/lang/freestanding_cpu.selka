@@ -1,0 +1,68 @@
+# The `cpu` functions inside `@freestanding` and `@freestanding(ram)` code (MCU-NOC2F). On a device each is its instruction
+# inline, in the freestanding function itself (`test/bare/freestanding_ram_cpu.selka` runs them on QEMU); here, under
+# `selka test` on Linux, each records on the simulated bank as it does from ordinary code, so a flash routine that holds
+# interrupts off around register writes is tested against the bank's event log. The bank's readers are not freestanding:
+# they are called from the tests, which are not.
+import cpu
+import registers
+
+const FLASH_CS: u32 = 0x40018000
+
+
+@freestanding
+func rest(reg: Registers):
+    cpu.send_event(reg)
+    cpu.wait_for_event(reg)
+    cpu.wait_for_interrupt(reg)
+    cpu.barrier(reg)
+    cpu.breakpoint(reg)
+
+
+@freestanding(ram)
+func rest_in_ram(reg: Registers):
+    cpu.send_event(reg)
+    cpu.wait_for_event(reg)
+    cpu.wait_for_interrupt(reg)
+    cpu.barrier(reg)
+    cpu.breakpoint(reg)
+
+
+@freestanding(ram)
+func select_held(reg: Registers, value: u32) -> u32:
+    const held = cpu.interrupts_off(reg)
+    registers.write32(reg, FLASH_CS, value)
+    const inner = cpu.interrupts_off(reg)
+    const nested = inner.primask
+    registers.write32(reg, FLASH_CS + 4, value + 1)
+    cpu.interrupts_restore(reg, own inner)
+    cpu.interrupts_restore(reg, own held)
+    return nested
+
+
+@freestanding
+func select_held_in_flash(reg: Registers, value: u32):
+    const held = cpu.interrupts_off(reg)
+    registers.write32(reg, FLASH_CS, value)
+    cpu.interrupts_restore(reg, own held)
+
+
+public func test_each_cpu_function_records_from_freestanding_and_ram_code() -> bool:
+    const reg = registers.simulated()
+    rest(reg)
+    rest_in_ram(reg)
+    const kinds = [cpu.count_of(reg, "send_event"), cpu.count_of(reg, "wait_for_event"), cpu.count_of(reg, "wait_for_interrupt"), cpu.count_of(reg, "barrier"), cpu.count_of(reg, "breakpoint")]
+    return kinds == [2, 2, 2, 2, 2] and cpu.event_count(reg) == 10 and cpu.event_operation(reg, 0) == "send_event" and cpu.event_operation(reg, 9) == "breakpoint"
+
+
+public func test_interrupts_held_inside_a_ram_function_cover_its_writes() -> bool:
+    const reg = registers.simulated()
+    const nested = select_held(reg, 7)
+    registers.write32(reg, FLASH_CS, 9)
+    const operations = [cpu.event_operation(reg, 0), cpu.event_operation(reg, 1), cpu.event_operation(reg, 2), cpu.event_operation(reg, 3)]
+    return nested == 1 and operations == ["interrupts_off", "interrupts_off", "interrupts_restore", "interrupts_restore"] and cpu.write_with_interrupts_off(reg, 0) and cpu.write_with_interrupts_off(reg, 1) and not cpu.write_with_interrupts_off(reg, 2) and not cpu.interrupts_are_off(reg)
+
+
+public func test_interrupts_held_inside_a_freestanding_function_in_flash() -> bool:
+    const reg = registers.simulated()
+    select_held_in_flash(reg, 3)
+    return cpu.count_of(reg, "interrupts_off") == 1 and cpu.count_of(reg, "interrupts_restore") == 1 and cpu.write_with_interrupts_off(reg, 0) and not cpu.interrupts_are_off(reg)

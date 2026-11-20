@@ -1,0 +1,47 @@
+# Task groups: a local list, a list element and a record field lent to a task, and a parallel map; every task-loan fault class has mutants here.
+import parallel
+
+record Bag:
+    items: int[]
+    tag: int
+
+
+func weigh(values: int[], work: int) -> int:
+    mut total = work
+    for v in values:
+        total += v
+    return total
+
+
+func double(value: int) -> int:
+    return value * 2
+
+
+func lend_local() -> int:
+    with parallel.group() as g:
+        const xs = [1, 2, 3, 4]
+        const t = g.submit(weigh, xs, 2)
+        return t.result()
+
+
+func lend_element() -> int:
+    const rows = [[1, 2], [3, 4, 5]]
+    mut out = 0
+    with parallel.group() as g:
+        const row = rows[1]
+        const t = g.submit(weigh, row, 4)
+        out = t.result()
+    return out
+
+
+func lend_field(bag: Bag) -> int:
+    with parallel.group() as g:
+        const t = g.submit(weigh, bag.items, 3)
+        return t.result()
+
+
+func main(out: Stream) -> int:
+    const bag = Bag(items=[1, 2], tag=0)
+    const doubled = parallel.map([1, 2, 3], double)
+    print(out, lend_local(), lend_element(), lend_field(bag), len(doubled))
+    return 0

@@ -1,0 +1,17 @@
+func parse(text: str) -> int?:
+    return parse_int(text)
+
+
+func select(value: int?) -> int:
+    if value == None:
+        return 0
+    return value.unwrap_or(7)
+
+
+func main() -> int:
+    mut absent = parse("x") != None
+    mut missing = parse("2").is_none()
+    mut present = parse("3").is_some()
+    if absent and missing and present:
+        return select(parse("4"))
+    return 0

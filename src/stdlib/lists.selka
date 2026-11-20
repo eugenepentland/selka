@@ -1,0 +1,101 @@
+# A list of `count` independent copies of `value`; nonpositive counts give [].
+public func filled[T: copy + storable](count: int, value: T) -> T[]:
+    mut out: T[] = []
+    mut index = 0
+    while index < count:
+        append(mut out, copy(value))
+        index += 1
+    return out
+
+
+# Whether any element equals `value`, scanning from the beginning.
+public func contains[T: equality](values: T[], value: T) -> bool:
+    for element in values:
+        if element == value:
+            return True
+    return False
+
+
+# The position of the first element equal to `value`, trapping when absent.
+public builtin func index_of[T: equality](values: T[], value: T) -> int
+
+
+# Remove the first element equal to `value`, trapping when absent.
+public builtin func remove[T: equality](mut values: T[], value: T)
+
+
+# The final element, or None for an empty list.
+public func last[T: copy + storable](values: T[]) -> T?:
+    if len(values) == 0:
+        return None
+    return Some(copy(values[len(values) - 1]))
+
+
+# Replace the element at `index` and return the former value. Neither is copied: the
+# former element moves out of the list and the replacement moves in, so a named
+# replacement is given with `own` (or as `copy(value)` to keep using it).
+public builtin func exchange[T: storable](mut values: T[], index: int, own replacement: T) -> T
+
+
+# Copy every element of `other` to the end of `values`.
+public builtin func extend[T: copy + storable](mut values: T[], other: T[])
+
+
+# Move every element of `other` to the end of `values`, in order, and free the emptied `other`. Nothing is copied
+# and nothing is allocated but the room `values` grows by: each element is popped off `other` onto `values`, which
+# brings them last first, and the moved run is then turned around in place. A named list is given with `own`
+# (`lists.extend_own(mut rows, own more)`), or as `copy(more)` to keep using it.
+public func extend_own[T: storable](mut values: T[], own other: T[]):
+    mut rest = own other
+    mut left = len(values)
+    while len(rest) > 0:
+        append(mut values, pop(mut rest))
+    # The emptied list is discarded whole: a list of pending results may be emptied, never dropped unread.
+    _ = rest
+    mut right = len(values) - 1
+    while left < right:
+        swap_moved(mut values, left, right)
+        left += 1
+        right -= 1
+
+
+# Swap the elements at `first` < `second` without copying either and without a placeholder value: the last element
+# is moved out, the two elements move through the free hand, and the last element moves back.
+func swap_moved[T: storable](mut values: T[], first: int, second: int):
+    mut held = pop(mut values)
+    if second == len(values):
+        held = exchange(mut values, first, own held)
+    else:
+        held = exchange(mut values, first, own held)
+        held = exchange(mut values, second, own held)
+        held = exchange(mut values, first, own held)
+    append(mut values, own held)
+
+
+# Insert `value` at `index`, clamping a position past the end to the length and
+# trapping on a negative one.
+public builtin func insert[T: copy + storable](mut values: T[], index: int, own value: T)
+
+
+# Remove and return the final element.
+public builtin func pop[T: storable](mut values: T[]) -> T
+
+
+# Remove and return the element at `index`, trapping on a position outside it. The
+# elements after it move down one place: the last element is taken out first, then
+# each exchange moves the carried element into its slot and carries the slot's
+# former element on, so the tail moves without a copy.
+public builtin func pop_at[T: copy + storable](mut values: T[], index: int) -> T
+
+
+# Remove every element.
+public builtin func clear[T: copy + storable](mut values: T[])
+
+
+# Reverse the elements in place.
+public builtin func reverse[T: copy + storable](mut values: T[])
+
+
+# A copy of the elements from `start` up to `end` taking every `step`-th one. `None` is the start or the end of the
+# list, and a position past either end is clamped to it; a slice of a list is contiguous, so a stepped one is this copy.
+public builtin func stride[T: copy + storable](values: T[], start: int?, end: int?, step: int) -> T[]

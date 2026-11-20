@@ -1,0 +1,52 @@
+import bytes
+
+@noalloc
+func canonical(raw: bytes) -> bool:
+    match bytes.parse_int(raw[2:4]):
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match bytes.parse_float(raw[5:8]):
+        case Some(value):
+            if value != 2.5:
+                return False
+        case None:
+            return False
+    match bytes.parse_int(raw[8:2]):
+        case Some(_):
+            return False
+        case None:
+            return True
+
+
+# spec-case: PY-BYTES-FUSED-RANGE-1
+public func test_immediate_byte_ranges_use_the_numeric_range_parser() -> bool:
+    return canonical(b"xx42=2.5yy")
+
+
+@allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+# spec-case: PY-BYTES-FUSED-RANGE-1
+public func test_omitted_negative_and_clamped_bounds_keep_slice_semantics() -> bool:
+    match bytes.parse_int(b"42"[:]):
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match bytes.parse_int(b"xx42yy"[max(len(b"xx42yy") - 4, 0):max(len(b"xx42yy") - 2, 0)]):
+        case Some(value):
+            if value != 42:
+                return False
+        case None:
+            return False
+    match bytes.parse_int(b"42"[max(len(b"42") - 99, 0):99]):
+        case Some(value):
+            return value == 42
+        case None:
+            return False
+
+
+func main() -> int:
+    return 0

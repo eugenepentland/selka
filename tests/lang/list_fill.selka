@@ -1,0 +1,59 @@
+# lists.filled: a scalar fill allocates its list once, at full size (its body cannot trap); a
+# managed fill keeps one independent copy per element; a nonpositive count gives [].
+import lists
+import testing
+
+func scalar_fill(n: int) -> int:
+    const values = lists.filled(n, 7)
+    return len(values)
+
+
+func float_fill(n: int) -> int:
+    const values = lists.filled(n, 0.5)
+    return len(values)
+
+
+func bool_fill(n: int) -> int:
+    const values = lists.filled(n, True)
+    return len(values)
+
+
+func managed_fill(n: int) -> int:
+    const texts = lists.filled(n, "ab")
+    return len(texts)
+
+
+public func test_a_scalar_fill_allocates_once() -> bool:
+    return testing.allocations(scalar_fill, 1000) == 1
+
+
+public func test_a_large_scalar_fill_allocates_once() -> bool:
+    return testing.allocations(scalar_fill, 200000) == 1
+
+
+public func test_float_and_bool_fills_allocate_once() -> bool:
+    return testing.allocations(float_fill, 1000) == 1 and testing.allocations(bool_fill, 1000) == 1
+
+
+public func test_a_managed_fill_allocates_one_copy_per_element() -> bool:
+    return testing.allocations(managed_fill, 1000) == 1001
+
+
+public func test_a_scalar_fill_holds_its_value_in_every_slot() -> bool:
+    const values = lists.filled(5, 3)
+    return len(values) == 5 and values[0] == 3 and values[4] == 3 and values[2] == 3
+
+
+public func test_a_fill_past_the_old_cap_still_fills_every_slot() -> bool:
+    const values = lists.filled(5000, 1)
+    return len(values) == 5000 and values[0] == 1 and values[4999] == 1
+
+
+public func test_a_nonpositive_count_gives_an_empty_list() -> bool:
+    return len(lists.filled(0, 1)) == 0 and len(lists.filled(-3, 1)) == 0
+
+
+public func test_managed_copies_are_independent() -> bool:
+    mut rows = lists.filled(3, [0])
+    rows[0][0] = 9
+    return rows[0][0] == 9 and rows[1][0] == 0 and rows[2][0] == 0

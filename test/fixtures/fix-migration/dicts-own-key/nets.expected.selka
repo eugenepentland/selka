@@ -1,0 +1,23 @@
+import dicts
+
+# The per-net and per-pin maps. Before the key was borrowed, `dicts.add` and `dicts.append_to` took it `own`, so a key the
+# caller still needed was written `copy(key)` and an owned one at its last use `own key`.
+public record Pin:
+    net: str
+    slot: int
+
+
+public func degrees(pins: Pin[]) -> dict[str, int]:
+    mut degree: dict[str, int] = {}
+    for pin in pins:
+        dicts.add(mut degree, pin.net, 1)
+    return degree
+
+
+public func slots_by_net(own nets: str[], slots: int[]) -> dict[str, int[]]:
+    mut groups: dict[str, int[]] = {}
+    mut at = 0
+    for net in own nets:
+        dicts.append_to(mut groups, net, slots[at])
+        at += 1
+    return groups

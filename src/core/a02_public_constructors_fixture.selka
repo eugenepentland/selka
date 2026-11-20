@@ -1,0 +1,242 @@
+# spec-case: SET-1
+import dicts
+import lists
+import sets
+
+record Label:
+    text: str
+
+
+record Entry:
+    key: str
+    value: str[]
+
+
+func make(mut seen: int[], i: int) -> str:
+    append(mut seen, i)
+    return "value-" + str(i)
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) > 0:
+        mut empty: str[] = []
+        if args[0] == "min":
+            mut empty_min_fold: str? = None
+            for w in empty:
+                const candidate = copy(w)
+                mut replace_best = False
+                match empty_min_fold:
+                    case Some(previous):
+                        if candidate < previous:
+                            replace_best = True
+                    case None:
+                        replace_best = True
+                if replace_best:
+                    empty_min_fold = Some(own candidate)
+            const empty_min: str
+            match empty_min_fold:
+                case Some(value):
+                    empty_min = copy(value)
+                case None:
+                    assert False, "min() arg is an empty sequence"
+                    const empty_fold: str[] = []
+                    empty_min = min(empty_fold)
+            _ = empty_min
+        else:
+            mut empty_max_fold: str? = None
+            for w in empty:
+                const candidate = copy(w)
+                mut replace_best = False
+                match empty_max_fold:
+                    case Some(previous):
+                        if candidate > previous:
+                            replace_best = True
+                    case None:
+                        replace_best = True
+                if replace_best:
+                    empty_max_fold = Some(own candidate)
+            const empty_max: str
+            match empty_max_fold:
+                case Some(value):
+                    empty_max = copy(value)
+                case None:
+                    assert False, "max() arg is an empty sequence"
+                    const empty_fold: str[] = []
+                    empty_max = max(empty_fold)
+            _ = empty_max
+        return 9
+    mut words = ["pear-" + str(1), "fig-" + str(2), "kiwi-" + str(3), "pear-" + str(1)]
+    mut keys = set(words)
+    mut duplicated = set(keys)
+    mut mapping = {"alpha-" + str(1): "one", "beta-" + str(2): "two"}
+    const mapped = set(mapping)
+    const values = set(dicts.values(mapping))
+    const pairs = set(dicts.items(mapping))
+    dicts.clear(mut mapping)
+    sets.clear(mut keys)
+    assert len(duplicated) == 3 and "pear-1" in duplicated
+    assert "alpha-1" in mapped and "two" in values and len(pairs) == 2
+    mut found = False
+    for pair in pairs:
+        if pair.key == "beta-2" and pair.value == "two":
+            found = True
+    assert found
+    mut largest_fold: str? = None
+    for w in words:
+        const candidate = copy(w)
+        mut replace_best = False
+        match largest_fold:
+            case Some(previous):
+                if candidate > previous:
+                    replace_best = True
+            case None:
+                replace_best = True
+        if replace_best:
+            largest_fold = Some(own candidate)
+    const largest: str
+    match largest_fold:
+        case Some(value):
+            largest = copy(value)
+        case None:
+            assert False, "max() arg is an empty sequence"
+            const empty_fold: str[] = []
+            largest = max(empty_fold)
+    mut smallest_fold: str? = None
+    for w in words:
+        const candidate = copy(w)
+        mut replace_best = False
+        match smallest_fold:
+            case Some(previous):
+                if candidate < previous:
+                    replace_best = True
+            case None:
+                replace_best = True
+        if replace_best:
+            smallest_fold = Some(own candidate)
+    const smallest: str
+    match smallest_fold:
+        case Some(value):
+            smallest = copy(value)
+        case None:
+            assert False, "min() arg is an empty sequence"
+            const empty_fold: str[] = []
+            smallest = min(empty_fold)
+    mut copied_fold: str? = None
+    for w in words:
+        const candidate = copy(w)
+        mut replace_best = False
+        match copied_fold:
+            case Some(previous):
+                if candidate > previous:
+                    replace_best = True
+            case None:
+                replace_best = True
+        if replace_best:
+            copied_fold = Some(own candidate)
+    const copied: str
+    match copied_fold:
+        case Some(value):
+            copied = copy(value)
+        case None:
+            assert False, "max() arg is an empty sequence"
+            const empty_fold: str[] = []
+            copied = max(empty_fold)
+    lists.clear(mut words)
+    assert largest == "pear-1" and smallest == "fig-2" and copied == "pear-1"
+    mut labels = [Label(text="a-" + str(1)), Label(text="b-" + str(2))]
+    const labelled = set(labels)
+    labels[0].text = "changed"
+    lists.clear(mut labels)
+    assert Label(text="a-1") in labelled and len(labelled) == 2
+    mut seen: int[] = []
+    mut fresh_fold: str? = None
+    for i in [3, 1, 4, 2]:
+        const candidate = make(mut seen, i)
+        mut replace_best = False
+        match fresh_fold:
+            case Some(previous):
+                if candidate > previous:
+                    replace_best = True
+            case None:
+                replace_best = True
+        if replace_best:
+            fresh_fold = Some(own candidate)
+    const fresh: str
+    match fresh_fold:
+        case Some(value):
+            fresh = copy(value)
+        case None:
+            assert False, "max() arg is an empty sequence"
+            const empty_fold: str[] = []
+            fresh = max(empty_fold)
+    assert fresh == "value-4" and seen == [3, 1, 4, 2]
+    lists.clear(mut seen)
+    mut nested_fold: str? = None
+    for row in [[8, 7], [5, 6]]:
+        for i in row:
+            const candidate = make(mut seen, i)
+            mut replace_best = False
+            match nested_fold:
+                case Some(previous):
+                    if candidate < previous:
+                        replace_best = True
+                case None:
+                    replace_best = True
+            if replace_best:
+                nested_fold = Some(own candidate)
+    const nested: str
+    match nested_fold:
+        case Some(value):
+            nested = copy(value)
+        case None:
+            assert False, "min() arg is an empty sequence"
+            const empty_fold: str[] = []
+            nested = min(empty_fold)
+    assert nested == "value-5" and seen == [8, 7, 5, 6]
+    mut original_pairs = [Entry(key="key-1", value=["one"]), Entry(key="key-2", value=["two"])]
+    mut gathered: dict[str, str[]] = {}
+    for pair in original_pairs:
+        const key = copy(pair.key)
+        const value = copy(pair.value)
+        gathered[own key] = own value
+    append(mut gathered["key-1"], "changed")
+    assert original_pairs == [Entry(key="key-1", value=["one"]), Entry(key="key-2", value=["two"])] and gathered["key-1"] == ["one", "changed"]
+    dicts.clear(mut gathered)
+    assert original_pairs == [Entry(key="key-1", value=["one"]), Entry(key="key-2", value=["two"])]
+    lists.clear(mut original_pairs)
+    lists.clear(mut seen)
+    mut produced: dict[str, str[]] = {}
+    for i in range(8):
+        const key = make(mut seen, i % 2)
+        const value = ["payload-" + str(i)]
+        produced[own key] = own value
+    assert seen == [0, 1, 0, 1, 0, 1, 0, 1]
+    assert produced["value-0"] == ["payload-6"] and produced["value-1"] == ["payload-7"]
+    for n in range(20):
+        mut inputs = ["z-" + str(n), "a-" + str(n)]
+        mut selected_fold: str? = None
+        for w in inputs:
+            const candidate = copy(w)
+            mut replace_best = False
+            match selected_fold:
+                case Some(previous):
+                    if candidate < previous:
+                        replace_best = True
+                case None:
+                    replace_best = True
+            if replace_best:
+                selected_fold = Some(own candidate)
+        const selected: str
+        match selected_fold:
+            case Some(value):
+                selected = copy(value)
+            case None:
+                assert False, "min() arg is an empty sequence"
+                const empty_fold: str[] = []
+                selected = min(empty_fold)
+        lists.clear(mut inputs)
+        assert selected == "a-" + str(n)
+    assert set([1, 2, 1]) == {1, 2} and set(b"abca") == {97, 98, 99}
+    assert set("banana") == {"b", "a", "n"}
+    print(out, len(duplicated), len(mapped), len(labelled), largest, fresh, nested)
+    return 0

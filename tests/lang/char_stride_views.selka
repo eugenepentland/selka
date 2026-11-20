@@ -1,0 +1,32 @@
+# N5 (12 November 2026): `strings.char_stride` on a borrowed text reads it in place. Before N5 lowering copied the view
+# first and dropped the copy unread, a hidden copy the check now refuses; these are the values it must keep giving.
+import lists
+import strings
+
+func reversed_text(text: str) -> str:
+    return strings.char_stride(text, None, None, -1)
+
+
+func every_other(text: str) -> str:
+    return strings.char_stride(text, 0, None, 2)
+
+
+public func test_char_stride_of_a_text_parameter_reverses_and_steps_by_scalars() -> bool:
+    return reversed_text("héllo") == "olléh" and every_other("héllo wörld") == "hlowrd" and reversed_text("") == ""
+
+
+public func test_char_stride_of_a_slice_and_of_a_slice_binding() -> bool:
+    const text = "añb€c"
+    const middle = text[3:8]
+    return strings.char_stride(text[0:3], None, None, -1) == "ña" and strings.char_stride(middle, None, None, -1) == "c€b"
+
+
+public func test_char_stride_with_bounds_and_a_negative_step_of_three() -> bool:
+    const text = "0é2ü4ö6"
+    return strings.char_stride(text, 6, 0, -3) == "6ü" and strings.char_stride(text, None, None, -3) == "6ü0"
+
+
+public func test_lists_stride_of_an_owned_list() -> bool:
+    mut values = [1, 2, 3, 4, 5]
+    append(mut values, 6)
+    return lists.stride(values, None, None, -2) == [6, 4, 2] and lists.stride(values, 1, 5, 2) == [2, 4]

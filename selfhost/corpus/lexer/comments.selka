@@ -1,0 +1,9 @@
+# leading comment
+x = 1 # trailing comment
+# comment with "quotes" and 'quotes' and # more hashes
+    # indented comment before any block
+if x:
+    # comment inside the block
+    y = 2
+  # a comment dedented to a level that no block has
+z = 3 # last line comment with no newline

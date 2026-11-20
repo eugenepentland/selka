@@ -1,0 +1,275 @@
+# A compact binary record format over the byte builders: fixed-width little-endian integers, LEB128 varints (the
+# signed form zigzag-encoded), and length-prefixed bytes and text. Writing appends to a `byte_builder.Builder`
+# (`byte_builder.create()`, `byte_builder.finish(...)`). Reading walks an immutable `bytes` with an `int` position
+# the caller keeps: each `get_*` takes the data and a `mut position`, advances it past what it read, and fails with
+# `Error` instead of trapping when the input is short or malformed, leaving the position where it was, so a damaged
+# record is a value the caller matches. `get_length` reads a variable-length field's size without copying it.
+import byte_builder
+import strings
+
+# Why a read failed.
+public enum Error:
+    Truncated
+    Overlong
+    Text
+
+
+# A readable reason for an `Error`.
+public func message(error: Error) -> str:
+    match error:
+        case Truncated:
+            return "the input ends before the value does"
+        case Overlong:
+            return "a varint is longer than ten octets or does not fit 64 bits"
+        case Text:
+            return "length-prefixed text is not valid UTF-8"
+
+
+# Append one octet.
+public func put_u8(mut builder: byte_builder.Builder, value: u8):
+    _ = byte_builder.append_byte(mut builder, int(value))
+
+
+# The low octet of `value` after an arithmetic shift of `part` octets, as 0 to 255.
+func octet_of(value: int, part: int) -> int:
+    return bit_and(shift_right(value, part * 8), 255)
+
+
+# Append `value` as two little-endian octets.
+public func put_u16_le(mut builder: byte_builder.Builder, value: u16):
+    _ = byte_builder.append_byte(mut builder, int(bit_and(value, 255u16)))
+    _ = byte_builder.append_byte(mut builder, int(shift_right(value, 8u16)))
+
+
+# Append `value` as four little-endian octets.
+public func put_u32_le(mut builder: byte_builder.Builder, value: u32):
+    for part in range(4):
+        _ = byte_builder.append_byte(mut builder, int(bit_and(shift_right(value, u32(part * 8)), 255u32)))
+
+
+# Append `value` as eight little-endian octets.
+public func put_u64_le(mut builder: byte_builder.Builder, value: u64):
+    for part in range(8):
+        _ = byte_builder.append_byte(mut builder, int(bit_and(shift_right(value, u64(part * 8)), 255u64)))
+
+
+# Append `value` as one two's-complement octet.
+public func put_i8(mut builder: byte_builder.Builder, value: i8):
+    _ = byte_builder.append_byte(mut builder, octet_of(int(value), 0))
+
+
+# Append `value` as two little-endian two's-complement octets.
+public func put_i16_le(mut builder: byte_builder.Builder, value: i16):
+    const wide = int(value)
+    for part in range(2):
+        _ = byte_builder.append_byte(mut builder, octet_of(wide, part))
+
+
+# Append `value` as four little-endian two's-complement octets.
+public func put_i32_le(mut builder: byte_builder.Builder, value: i32):
+    const wide = int(value)
+    for part in range(4):
+        _ = byte_builder.append_byte(mut builder, octet_of(wide, part))
+
+
+# Append `value` as eight little-endian two's-complement octets.
+public func put_i64_le(mut builder: byte_builder.Builder, value: i64):
+    for part in range(8):
+        _ = byte_builder.append_byte(mut builder, octet_of(value, part))
+
+
+# Append `value` as an unsigned LEB128 varint: seven bits per octet, least significant group first, the high bit set
+# on every octet but the last. One to ten octets.
+public func put_uvarint(mut builder: byte_builder.Builder, value: u64):
+    mut rest = value
+    while rest >= 128u64:
+        _ = byte_builder.append_byte(mut builder, int(bit_or(bit_and(rest, 127u64), 128u64)))
+        rest = shift_right(rest, 7u64)
+    _ = byte_builder.append_byte(mut builder, int(rest))
+
+
+# Append `value` as a signed varint: zigzag-mapped (0, -1, 1, -2, ... to 0, 1, 2, 3, ...) then unsigned LEB128, so
+# small magnitudes of either sign are short.
+public func put_varint(mut builder: byte_builder.Builder, value: i64):
+    if value >= 0:
+        put_uvarint(mut builder, shift_left(u64(value), 1u64))
+    else:
+        put_uvarint(mut builder, bit_or(shift_left(u64(bit_not(value)), 1u64), 1u64))
+
+
+# Append the octets of `data` preceded by their count as an unsigned varint.
+public func put_bytes(mut builder: byte_builder.Builder, data: bytes):
+    put_uvarint(mut builder, u64(len(data)))
+    byte_builder.append(mut builder, data)
+
+
+# Append the UTF-8 octets of `text` preceded by their count as an unsigned varint.
+public func put_text(mut builder: byte_builder.Builder, text: str):
+    put_uvarint(mut builder, u64(len(text)))
+    byte_builder.append_text(mut builder, text)
+
+
+func need(data: bytes, position: int, count: int) -> Unit fails Error:
+    if count < 0 or len(data) - position < count:
+        fail Error.Truncated
+    return ()
+
+
+# Read one octet at `position`.
+public func get_u8(data: bytes, mut position: int) -> u8 fails Error:
+    try need(data, position, 1)
+    const value = __read_u8_le(data, position)
+    position += 1
+    return value
+
+
+# Read two little-endian octets as an unsigned integer.
+public func get_u16_le(data: bytes, mut position: int) -> u16 fails Error:
+    try need(data, position, 2)
+    const value = __read_u16_le(data, position)
+    position += 2
+    return value
+
+
+# Read four little-endian octets as an unsigned integer.
+public func get_u32_le(data: bytes, mut position: int) -> u32 fails Error:
+    try need(data, position, 4)
+    const value = __read_u32_le(data, position)
+    position += 4
+    return value
+
+
+# Read eight little-endian octets as an unsigned integer.
+public func get_u64_le(data: bytes, mut position: int) -> u64 fails Error:
+    try need(data, position, 8)
+    const value = __read_u64_le(data, position)
+    position += 8
+    return value
+
+
+# Read one two's-complement octet.
+public func get_i8(data: bytes, mut position: int) -> i8 fails Error:
+    try need(data, position, 1)
+    const value = __read_i8_le(data, position)
+    position += 1
+    return value
+
+
+# Read two little-endian two's-complement octets.
+public func get_i16_le(data: bytes, mut position: int) -> i16 fails Error:
+    try need(data, position, 2)
+    const value = __read_i16_le(data, position)
+    position += 2
+    return value
+
+
+# Read four little-endian two's-complement octets.
+public func get_i32_le(data: bytes, mut position: int) -> i32 fails Error:
+    try need(data, position, 4)
+    const value = __read_i32_le(data, position)
+    position += 4
+    return value
+
+
+# Read eight little-endian two's-complement octets.
+public func get_i64_le(data: bytes, mut position: int) -> i64 fails Error:
+    try need(data, position, 8)
+    const value = __read_i64_le(data, position)
+    position += 8
+    return value
+
+
+func get_uvarint_long(data: bytes, mut position: int) -> u64 fails Error:
+    mut result = 0u64
+    mut shift = 0
+    mut at = position
+    while True:
+        if at >= len(data):
+            fail Error.Truncated
+        const octet = u64(__read_u8_le(data, at))
+        at += 1
+        if shift == 63 and octet > 1u64:
+            fail Error.Overlong
+        result = bit_or(result, shift_left(bit_and(octet, 127u64), u64(shift)))
+        if octet < 128u64:
+            position = at
+            return result
+        shift += 7
+        if shift > 63:
+            fail Error.Overlong
+    return result
+
+
+# Read an unsigned LEB128 varint. Fails `Truncated` when the input ends inside it and `Overlong` when it needs more
+# than ten octets or more than 64 bits. Values of up to three octets (below 2^21) are read straight-line, which
+# the compiler can place in line; longer ones take the loop.
+public func get_uvarint(data: bytes, mut position: int) -> u64 fails Error:
+    const total = len(data)
+    if 0 <= position < total:
+        const first = u64(__read_u8_le(data, position))
+        if first < 128u64:
+            position += 1
+            return first
+        if position + 1 < total:
+            const second = u64(__read_u8_le(data, position + 1))
+            if second < 128u64:
+                position += 2
+                return bit_or(bit_and(first, 127u64), shift_left(second, 7u64))
+            if position + 2 < total:
+                const third = u64(__read_u8_le(data, position + 2))
+                if third < 128u64:
+                    position += 3
+                    return bit_or(bit_or(bit_and(first, 127u64), shift_left(bit_and(second, 127u64), 7u64)), shift_left(third, 14u64))
+    return try get_uvarint_long(data, mut position)
+
+
+# Read a zigzag signed varint written by `put_varint`.
+public func get_varint(data: bytes, mut position: int) -> i64 fails Error:
+    const folded = try get_uvarint(data, mut position)
+    const magnitude = i64(shift_right(folded, 1u64))
+    if bit_and(folded, 1u64) == 0u64:
+        return magnitude
+    return bit_not(magnitude)
+
+
+# Read the count that precedes a length-prefixed byte string or text, and check that many octets remain after it.
+# `position` ends just past the prefix, so the payload is `data[position:position + count]` and the caller steps
+# over it with `position += count`. This reads a variable-length field without copying it.
+public func get_length(data: bytes, mut position: int) -> int fails Error:
+    const start = position
+    const count = try get_uvarint(data, mut position)
+    if count > u64(len(data) - position):
+        position = start
+        fail Error.Truncated
+    return int(count)
+
+
+# Read a length-prefixed byte string as an independent copy.
+public func get_bytes(data: bytes, mut position: int) -> bytes fails Error:
+    const count = try get_length(data, mut position)
+    const from = position
+    position += count
+    return copy(data[from:position])
+
+
+# Read length-prefixed text as an independent copy; fails `Text` when the octets are not valid UTF-8.
+public func get_text(data: bytes, mut position: int) -> str fails Error:
+    const start = position
+    const count = try get_length(data, mut position)
+    match strings.decode(data[position:position + count]):
+        case Ok(text):
+            position += count
+            return copy(text)
+        case Err(_):
+            position = start
+            fail Error.Text
+
+
+# How many octets of `data` lie at and after `position`.
+public func remaining(data: bytes, position: int) -> int:
+    return len(data) - position
+
+
+# Whether `position` is at or past the end of `data`.
+public func at_end(data: bytes, position: int) -> bool:
+    return position >= len(data)

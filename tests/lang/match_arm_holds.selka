@@ -1,0 +1,181 @@
+# A `match` on a named element holds the element only while the arm's payload bindings are live (C3). An arm that
+# binds nothing, or that reads its bindings before a change to the scrutinee's owner, may change the owner. A read of
+# a binding after the change is refused (see src/core/field_borrow_test.zig).
+record Runtime:
+    slots: Slot[]
+    top: int
+
+
+enum Slot:
+    empty
+    full(value: int)
+    pair(items: int[], count: int)
+
+
+func bump(mut rt: Runtime):
+    rt.top += 1
+
+
+func bind_nothing(mut rt: Runtime) -> int:
+    match rt.slots[0]:
+        case full(value=_):
+            bump(mut rt)
+            return rt.top
+        case empty:
+            return 0
+        case pair(items=_, count=_):
+            return 0
+
+
+func read_before_change(mut rt: Runtime) -> int:
+    match rt.slots[0]:
+        case pair(items=xs, count=k):
+            const n = len(xs) + k
+            bump(mut rt)
+            return n + rt.top
+        case full(value=_):
+            return 0
+        case empty:
+            return 0
+
+
+public func test_arm_without_bindings_changes_its_scrutinee_owner() -> bool:
+    mut rt = Runtime(slots=[Slot.full(value=4)], top=0)
+    assert bind_nothing(mut rt) == 1
+    assert rt.top == 1
+    return True
+
+
+public func test_binding_read_before_the_change_is_accepted() -> bool:
+    mut rt = Runtime(slots=[Slot.pair(items=[4, 5], count=7)], top=0)
+    assert read_before_change(mut rt) == 10
+    assert rt.top == 1
+    return True
+
+
+# A payload of numbers is copied when it is bound, so its arm may write a field beside the matched place, the matched
+# place, or the list or record that holds it, while the binding is live (FR80, FR93). A payload that holds text, bytes, a
+# list, a dictionary or a resource keeps the place held (src/core/single_owner_test.zig, "FR80", "FR93").
+enum Key:
+    num(v: int)
+    other
+
+
+record Table:
+    key: Key
+    keys: Key[]
+    ints: dict[int, int]
+    seen: int[]
+
+
+func index_element(mut t: Table, at: int):
+    match t.keys[at]:
+        case num(v=n):
+            t.ints[n] = at
+            append(mut t.seen, n)
+        case other:
+            pass
+
+
+func index_field(mut t: Table, at: int):
+    match t.key:
+        case num(v=n):
+            t.ints[n] = at
+        case other:
+            pass
+
+
+public func test_numbers_payload_arm_writes_beside_a_matched_element() -> bool:
+    mut t = Table(key=Key.other, keys=[Key.other, Key.num(v=3)], ints={}, seen=[])
+    index_element(mut t, 0)
+    index_element(mut t, 1)
+    assert t.ints[3] == 1
+    assert t.seen == [3]
+    return True
+
+
+public func test_numbers_payload_arm_writes_beside_a_matched_field() -> bool:
+    mut t = Table(key=Key.num(v=5), keys=[], ints={}, seen=[])
+    index_field(mut t, 7)
+    assert t.ints[5] == 7
+    assert len(t.ints) == 1
+    return True
+
+
+func take_key(mut t: Table, at: int) -> int:
+    match t.keys[at]:
+        case num(v=n):
+            t.keys[at] = Key.other
+            t.ints[n] = at
+            return n
+        case other:
+            return 0 - 1
+
+
+func clear_keys(mut t: Table) -> int:
+    match t.keys[0]:
+        case num(v=n):
+            t = Table(key=Key.other, keys=[], ints={}, seen=[n])
+            return n
+        case other:
+            return 0 - 1
+
+
+enum Mark:
+    pos(x: int, y: int)
+    off
+
+
+record Board:
+    marks: Mark[]
+    total: int
+
+
+func sweep(mut b: Board) -> int:
+    mut sum = 0
+    for i in range(len(b.marks)):
+        match b.marks[i]:
+            case pos(x=x, y=y):
+                b.marks[i] = Mark.off
+                b.total += x
+                sum += x * 10 + y
+            case off:
+                pass
+    return sum
+
+
+public func test_numbers_payload_arm_replaces_the_matched_element() -> bool:
+    mut t = Table(key=Key.other, keys=[Key.other, Key.num(v=3)], ints={}, seen=[])
+    assert take_key(mut t, 1) == 3
+    assert take_key(mut t, 1) == 0 - 1
+    assert take_key(mut t, 0) == 0 - 1
+    assert t.ints[3] == 1
+    assert len(t.keys) == 2
+    return True
+
+
+public func test_numbers_payload_arm_replaces_the_record_that_holds_it() -> bool:
+    mut t = Table(key=Key.other, keys=[Key.num(v=4)], ints={}, seen=[])
+    assert clear_keys(mut t) == 4
+    assert len(t.keys) == 0
+    assert t.seen == [4]
+    return True
+
+
+public func test_two_number_payload_arm_replaces_each_element_of_a_loop() -> bool:
+    mut b = Board(marks=[Mark.pos(x=1, y=2), Mark.off, Mark.pos(x=3, y=4)], total=0)
+    assert sweep(mut b) == 12 + 34
+    assert b.total == 4
+    assert sweep(mut b) == 0
+    return True
+
+
+func main() -> int:
+    assert test_arm_without_bindings_changes_its_scrutinee_owner()
+    assert test_binding_read_before_the_change_is_accepted()
+    assert test_numbers_payload_arm_writes_beside_a_matched_element()
+    assert test_numbers_payload_arm_writes_beside_a_matched_field()
+    assert test_numbers_payload_arm_replaces_the_matched_element()
+    assert test_numbers_payload_arm_replaces_the_record_that_holds_it()
+    assert test_two_number_payload_arm_replaces_each_element_of_a_loop()
+    return 0

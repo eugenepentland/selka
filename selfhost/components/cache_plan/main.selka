@@ -1,0 +1,29 @@
+import codec
+import codec_v2
+import graph
+import incremental
+
+func main_exchange(fs: Filesystem, path: str) -> bytes fails str:
+    mut data = b""
+    with try fs.open(path, "rb") as file:
+        data = file.read(33554433)
+    if len(data) >= 8 and data[:8] == b"SLKCP002":
+        mut request_v2 = try codec_v2.decode(data)
+        mut result_v2 = try incremental.build(request_v2.input)
+        return try codec_v2.encode(request_v2, result_v2)
+    mut request = try codec.decode(data)
+    mut reached = try graph.build(request.digests, request.adjacency, request.batches)
+    return try codec.encode(request, reached)
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 2 or args[0] != "--request":
+        print(err, "cache-plan: expected --request FILE")
+        return 2
+    match main_exchange(fs, args[1]):
+        case Ok(reply):
+            write(out, reply)
+            return 0
+        case Err(message):
+            print(err, "cache-plan:", message)
+            return 2

@@ -1,0 +1,361 @@
+import dicts
+import json
+import sets
+import strings
+
+# FX6: a dictionary reached through a borrowed result (a `from` function, the payload of an option such a function
+# returns, a union payload behind an accessor) iterated with `dicts.items`. Each `myl_core_dict_ordinal` lookup of the
+# entry pair read the dictionary through its own `borrow` overlay, so the ownership pass did not see one entry, built
+# the `DictItem` as an owning record and destroyed each key at the end of its iteration: the dictionary was left
+# holding freed keys (garbage text, then `free(): invalid size`). Literal keys are immortal and hid it, so every key and
+# value here is built at run time.
+record Item:
+    name: str
+    size: int
+
+
+record Holder:
+    fields: dict[str, int]
+    texts: dict[str, str]
+    blobs: dict[bytes, bytes]
+    rows: dict[str, Item]
+    lists: dict[str, str[]]
+    numbered: dict[int, str]
+    names: set[str]
+    words: str[]
+
+
+record Outer:
+    inner: Holder
+
+
+enum Tree:
+    leaf(value: int)
+    branch(value: dict[str, Tree])
+
+
+func key(n: int) -> str:
+    return "key-" + str(n)
+
+
+func blob(n: int) -> bytes:
+    return strings.encode(("blob-" + str(n)))
+
+
+func holder(count: int) -> Holder:
+    mut fields: dict[str, int] = {}
+    mut texts: dict[str, str] = {}
+    mut blobs: dict[bytes, bytes] = {}
+    mut rows: dict[str, Item] = {}
+    mut lists: dict[str, str[]] = {}
+    mut numbered: dict[int, str] = {}
+    mut names: set[str] = set()
+    mut words: str[] = []
+    mut n = 0
+    while n < count:
+        fields[key(n)] = n
+        texts[key(n)] = "text-" + str(n)
+        blobs[blob(n)] = blob(n + 100)
+        rows[key(n)] = Item(name="item-" + str(n), size=n)
+        lists[key(n)] = ["a-" + str(n), "b-" + str(n)]
+        numbered[n] = "number-" + str(n)
+        sets.add(mut names, key(n))
+        append(mut words, key(n))
+        n += 1
+    return Holder(fields=own fields, texts=own texts, blobs=own blobs, rows=own rows, lists=own lists, numbered=own numbered, names=own names, words=own words)
+
+
+func fields_of(value: Holder) -> dict[str, int] from value:
+    return value.fields
+
+
+func texts_of(value: Holder) -> dict[str, str] from value:
+    return value.texts
+
+
+func blobs_of(value: Holder) -> dict[bytes, bytes] from value:
+    return value.blobs
+
+
+func rows_of(value: Holder) -> dict[str, Item] from value:
+    return value.rows
+
+
+func lists_of(value: Holder) -> dict[str, str[]] from value:
+    return value.lists
+
+
+func numbered_of(value: Holder) -> dict[int, str] from value:
+    return value.numbered
+
+
+func names_of(value: Holder) -> set[str] from value:
+    return value.names
+
+
+func words_of(value: Holder) -> str[] from value:
+    return value.words
+
+
+func maybe_fields(value: Holder, present: bool) -> dict[str, int]? from value:
+    if present:
+        return Some(value.fields)
+    return None
+
+
+func inner_fields(value: Outer) -> dict[str, int] from value:
+    return value.inner.fields
+
+
+func pick[T: copy + storable](value: dict[str, T]) -> dict[str, T] from value:
+    return value
+
+
+func tree(count: int) -> Tree:
+    mut children: dict[str, Tree] = {}
+    mut n = 0
+    while n < count:
+        children[key(n)] = Tree.leaf(value=n)
+        n += 1
+    return Tree.branch(value=own children)
+
+
+func children_of(value: Tree) -> dict[str, Tree]? from value:
+    match value:
+        case branch(value=children):
+            return Some(children)
+        case leaf(..):
+            return None
+
+
+func joined(parts: str[]) -> str:
+    mut out = ""
+    for part in parts:
+        out = out + part + ";"
+    return out
+
+
+func item_keys_of_result(value: Holder) -> str:
+    mut out: str[] = []
+    for entry in dicts.items(fields_of(value)):
+        append(mut out, copy(entry.key))
+    return joined(out)
+
+
+public func test_items_of_a_from_result_keep_heap_keys() -> bool:
+    const h = holder(3)
+    const first = item_keys_of_result(h)
+    const second = item_keys_of_result(h)
+    return first == "key-0;key-1;key-2;" and second == first and len(h.fields) == 3
+
+
+public func test_items_of_a_bound_from_result_read_keys_and_values() -> bool:
+    const h = holder(3)
+    const fields = fields_of(h)
+    mut total = 0
+    mut out: str[] = []
+    for entry in dicts.items(fields):
+        append(mut out, copy(entry.key))
+        total += entry.value
+    return joined(out) == "key-0;key-1;key-2;" and total == 3
+
+
+public func test_destructured_items_of_a_from_result() -> bool:
+    const h = holder(3)
+    mut out: str[] = []
+    for k, v in dicts.items(texts_of(h)):
+        append(mut out, k + "=" + v)
+    return joined(out) == "key-0=text-0;key-1=text-1;key-2=text-2;"
+
+
+public func test_items_of_an_optional_from_result() -> bool:
+    const h = holder(3)
+    mut out: str[] = []
+    match maybe_fields(h, True):
+        case Some(fields):
+            for entry in dicts.items(fields):
+                append(mut out, copy(entry.key))
+        case None:
+            append(mut out, "none")
+    match maybe_fields(h, False):
+        case Some(fields):
+            append(mut out, "some")
+        case None:
+            append(mut out, "none")
+    return joined(out) == "key-0;key-1;key-2;none;"
+
+
+public func test_items_of_a_union_payload_behind_an_accessor() -> bool:
+    const t = tree(3)
+    mut out: str[] = []
+    match children_of(t):
+        case Some(children):
+            for entry in dicts.items(children):
+                append(mut out, copy(entry.key))
+        case None:
+            pass
+    return joined(out) == "key-0;key-1;key-2;"
+
+
+public func test_items_of_a_nested_field_through_a_from_result() -> bool:
+    const outer = Outer(inner=holder(2))
+    mut out: str[] = []
+    for entry in dicts.items(inner_fields(outer)):
+        append(mut out, copy(entry.key))
+    return joined(out) == "key-0;key-1;"
+
+
+public func test_items_through_a_generic_from_result() -> bool:
+    const h = holder(2)
+    mut out: str[] = []
+    for entry in dicts.items(pick(h.texts)):
+        append(mut out, entry.key + ":" + entry.value)
+    for entry in dicts.items(pick(h.rows)):
+        append(mut out, entry.key + ":" + entry.value.name)
+    return joined(out) == "key-0:text-0;key-1:text-1;key-0:item-0;key-1:item-1;"
+
+
+public func test_items_with_bytes_record_and_list_entries_through_from_results() -> bool:
+    const h = holder(2)
+    mut sizes = 0
+    for entry in dicts.items(blobs_of(h)):
+        sizes += len(entry.key) + len(entry.value)
+    mut names: str[] = []
+    for entry in dicts.items(rows_of(h)):
+        append(mut names, entry.key + "/" + entry.value.name)
+    mut parts: str[] = []
+    for entry in dicts.items(lists_of(h)):
+        append(mut parts, entry.key + "/" + joined(entry.value))
+    mut numbers: str[] = []
+    for entry in dicts.items(numbered_of(h)):
+        append(mut numbers, str(entry.key) + "/" + entry.value)
+    return sizes == 6 + 6 + 8 + 8 and joined(names) == "key-0/item-0;key-1/item-1;" and joined(parts) == "key-0/a-0;b-0;;key-1/a-1;b-1;;" and joined(numbers) == "0/number-0;1/number-1;"
+
+
+public func test_keys_values_and_direct_iteration_of_from_results() -> bool:
+    const h = holder(2)
+    mut out: str[] = []
+    for k in dicts.keys(texts_of(h)):
+        append(mut out, copy(k))
+    for v in dicts.values(texts_of(h)):
+        append(mut out, copy(v))
+    for k in texts_of(h):
+        append(mut out, copy(k))
+    for name in names_of(h):
+        append(mut out, copy(name))
+    for word in words_of(h):
+        append(mut out, copy(word))
+    return joined(out) == "key-0;key-1;text-0;text-1;key-0;key-1;key-0;key-1;key-0;key-1;"
+
+
+public func test_list_of_items_of_a_from_result_is_independent() -> bool:
+    const h = holder(2)
+    const entries = list(dicts.items(texts_of(h)))
+    mut out: str[] = []
+    for entry in entries:
+        append(mut out, entry.key + "=" + entry.value)
+    return joined(out) == "key-0=text-0;key-1=text-1;" and len(h.texts) == 2
+
+
+public func test_items_of_a_parsed_json_object_through_as_dict() -> bool:
+    mut out: str[] = []
+    match json.loads('{"alpha": 1, "beta": [2], "gamma": {"delta": 3}}'):
+        case Ok(doc):
+            match json.as_dict(doc):
+                case Some(fields):
+                    for entry in dicts.items(fields):
+                        append(mut out, copy(entry.key))
+                        match json.as_dict(entry.value):
+                            case Some(inner):
+                                for nested in dicts.items(inner):
+                                    append(mut out, copy(nested.key))
+                            case None:
+                                pass
+                case None:
+                    pass
+        case Err(_):
+            append(mut out, "error")
+    return joined(out) == "alpha;beta;gamma;delta;"
+
+
+func keys_or_fail(value: json.Json) -> str fails str:
+    match json.as_dict(value):
+        case Some(fields):
+            mut out: str[] = []
+            for entry in dicts.items(fields):
+                append(mut out, copy(entry.key))
+            return joined(out)
+        case None:
+            fail "not an object"
+
+
+public func test_items_of_a_lent_dictionary_in_a_fails_function() -> bool:
+    match json.loads('{"one": 1, "two": 2}'):
+        case Ok(doc):
+            match keys_or_fail(doc):
+                case Ok(text):
+                    return text == "one;two;"
+                case Err(_):
+                    return False
+        case Err(_):
+            return False
+
+
+public func test_items_of_a_from_result_in_an_inner_block_and_a_match_mut_arm() -> bool:
+    mut h = holder(2)
+    mut maybe: Holder? = Some(holder(2))
+    mut out: str[] = []
+    mut width = 0
+    if len(h.words) == 2:
+        for entry in dicts.items(fields_of(h)):
+            if entry.value >= 0:
+                append(mut out, copy(entry.key))
+    match mut maybe:
+        case Some(inner):
+            inner.fields[key(9)] = 9
+        case None:
+            pass
+    match maybe:
+        case Some(inner):
+            for entry in dicts.items(fields_of(inner)):
+                width += len(entry.key) + entry.value
+        case None:
+            pass
+    return joined(out) == "key-0;key-1;" and width == 5 + 5 + 5 + 9 + 1
+
+
+public func test_items_of_owned_and_moved_dictionaries_keep_their_keys() -> bool:
+    mut built: dict[str, str] = {}
+    built[key(1)] = "one-" + str(1)
+    mut other: dict[str, str] = {}
+    other[key(2)] = "two-" + str(2)
+    dicts.update(mut built, other)
+    _ = dicts.setdefault(mut built, key(3), "three-" + str(3))
+    mut moved = own built
+    mut out: str[] = []
+    for entry in dicts.items(moved):
+        append(mut out, entry.key + "=" + entry.value)
+    mut ks = list(dicts.keys(moved))
+    for k in own ks:
+        append(mut out, own k)
+    return joined(out) == "key-1=one-1;key-2=two-2;key-3=three-3;key-1;key-2;key-3;"
+
+
+func value_or(mapping: dict[str, str], wanted: str) -> str:
+    return copy(dicts.get(mapping, wanted, "missing"))
+
+
+public func test_lookups_through_a_from_result_and_a_parameter_read_the_same_entries() -> bool:
+    const h = holder(3)
+    const hit = dicts.get(texts_of(h), key(1), "missing")
+    const miss = dicts.get(texts_of(h), key(9), "missing")
+    mut found = ""
+    match dicts.find(texts_of(h), key(2)):
+        case Some(text):
+            found = copy(text)
+        case None:
+            found = "none"
+    mut out: str[] = []
+    for entry in dicts.items(texts_of(h)):
+        append(mut out, value_or(texts_of(h), entry.key))
+    return hit == "text-1" and miss == "missing" and found == "text-2" and joined(out) == "text-0;text-1;text-2;"

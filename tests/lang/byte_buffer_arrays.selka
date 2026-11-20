@@ -1,0 +1,112 @@
+import byte_builder
+
+# The shape `read_resource[network.Read[N]]` returns: a fixed octet array and how much of it is data.
+record Chunk:
+    bytes: FixedArray[u8, 48]
+    length: u64
+
+
+# Octet `i` holds `i * 5 % 251`, so a copied range can be told from any other by its content.
+func ramp() -> FixedArray[u8, 48]:
+    mut values: FixedArray[u8, 48] = FixedArray[u8, 48]([0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8])
+    mut index = 0
+    while index < 48:
+        values = replace(values, index, u8(index * 5 % 251))
+        index += 1
+    return values
+
+
+# A four-octet array lives in registers, so it takes the spill path rather than the address path.
+func tiny() -> FixedArray[u8, 4]:
+    return FixedArray[u8, 4]([200u8, 201u8, 202u8, 203u8])
+
+
+func empty_buffer() -> byte_buffer:
+    mut nothing: int[] = []
+    return byte_buffer(nothing)
+
+
+# Whether `buffer[at:]` holds `ramp()[first:last]`.
+func holds_ramp(buffer: byte_buffer, at: int, first: int, last: int) -> bool:
+    mut index = first
+    while index < last:
+        if buffer[at + index - first] != index * 5 % 251:
+            return False
+        index += 1
+    return True
+
+
+# `append_array(array, start, end)` copies `array[start:end]` of a fixed octet array into the
+# buffer, accepts an empty range, and refuses a reversed or too-long range without writing.
+# spec: BYTE-BUFFER-APPEND-ARRAY-1
+public func test_append_array_copies_a_range_of_a_large_array() -> bool:
+    mut buffer = empty_buffer()
+    mut source = ramp()
+    if not buffer.append_array(source, 0, 10):
+        return False
+    if not buffer.append_array(source, 40, 48):
+        return False
+    if len(buffer) != 18 or not holds_ramp(buffer, 0, 0, 10) or not holds_ramp(buffer, 10, 40, 48):
+        return False
+    if not buffer.append_array(source, 7, 7):
+        return False
+    if buffer.append_array(source, 5, 4) or buffer.append_array(source, 0, 49) or buffer.append_array(source, 47, 100):
+        return False
+    if len(buffer) != 18:
+        return False
+    if not buffer.append_array(source, 0, 48):
+        return False
+    return len(buffer) == 66 and holds_ramp(buffer, 18, 0, 48)
+
+
+# A register-sized array answers the same range rules as one held in memory.
+# spec-case: BYTE-BUFFER-APPEND-ARRAY-1
+public func test_append_array_of_a_small_array_matches_a_large_one() -> bool:
+    mut buffer = empty_buffer()
+    mut source = tiny()
+    if not buffer.append_array(source, 1, 3):
+        return False
+    if buffer.append_array(source, 3, 2) or buffer.append_array(source, 0, 5):
+        return False
+    if not buffer.append_array(source, 4, 4) or not buffer.append_array(source, 0, 4):
+        return False
+    return bytes(buffer) == b"\xc9\xca\xc8\xc9\xca\xcb"
+
+
+# The appended octets are copied: a snapshot taken before the append and the source array both keep
+# their content, and the buffer keeps growing past the capacity it started with.
+# spec-case: BYTE-BUFFER-APPEND-ARRAY-1
+public func test_append_array_leaves_snapshots_and_the_source_unchanged() -> bool:
+    mut buffer = empty_buffer()
+    mut source = ramp()
+    _ = buffer.append_array(source, 0, 3)
+    mut before = bytes(buffer)
+    mut round = 0
+    while round < 40:
+        if not buffer.append_array(source, 0, 48):
+            return False
+        round += 1
+    if len(before) != 3 or before[2] != 10:
+        return False
+    if len(buffer) != 3 + 40 * 48 or source[47] != 235:
+        return False
+    return holds_ramp(buffer, 3 + 39 * 48, 0, 48)
+
+
+# The standard library wraps the method for any array length: `append_array(builder, array,
+# count)` takes the first `count` octets of a chunk and `append_array_range` any range.
+# spec-case: BYTE-BUFFER-APPEND-ARRAY-1
+public func test_byte_builder_appends_the_filled_part_of_a_chunk() -> bool:
+    mut out = byte_builder.create()
+    mut chunk = Chunk(bytes=ramp(), length=6u64)
+    if not byte_builder.append_array(mut out, chunk.bytes, int(chunk.length)):
+        return False
+    if not byte_builder.append_array_range(mut out, chunk.bytes, 44, 48):
+        return False
+    mut small = tiny()
+    if not byte_builder.append_array(mut out, small, 2) or not byte_builder.append_array_range(mut out, small, 2, 4):
+        return False
+    if byte_builder.append_array(mut out, chunk.bytes, 49) or byte_builder.append_array_range(mut out, small, 3, 1):
+        return False
+    mut text = byte_builder.finish(out)
+    return len(text) == 6 + 4 + 4 and text[5] == 25 and text[6] == 220 and text[13] == 203

@@ -1,0 +1,12 @@
+import collide
+import helpers
+import measure
+import report
+import rounding
+import shapes
+
+
+func main(out: Stream) -> int:
+    print(out, shapes.shapes_sum([1, 2, 3]), shapes.total([4]), report.summary(), collide.count([1, 2]), helpers.max(1, 2))
+    print(out, rounding.total(1.0), rounding.trunc(5.0), measure.cut())
+    return 0

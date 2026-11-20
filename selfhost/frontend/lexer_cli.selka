@@ -1,0 +1,23 @@
+# `lexer_cli FILE`: lex one file and write the `tokens-v1` document `selka dump-tokens FILE` writes.
+# A lexical failure writes its diagnostic to standard error and exits 1, as the Zig command does. The
+# syntax parity script (selfhost/tests/syntax_parity.py --lexer) runs this program over the corpus.
+import diagnostic_text
+import lexer
+import tokens_json
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(args) != 1:
+        print(err, "usage: lexer_cli FILE")
+        return 2
+    match fs.read_file(args[0]):
+        case Err(reason):
+            print(err, f"lexer_cli: cannot read {copy(args[0])}: {reason}")
+            return 2
+        case Ok(data):
+            match lexer.lex(data):
+                case Ok(tokens):
+                    write(out, tokens_json.render(args[0], data, tokens))
+                    return 0
+                case Err(failure):
+                    write(err, diagnostic_text.render(args[0], data, failure))
+                    return 1

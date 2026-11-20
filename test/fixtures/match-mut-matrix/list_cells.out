@@ -1,0 +1,304 @@
+== compare element
+True
+3
+== compare element_field
+True
+3
+== compare field
+True
+3
+== compare local
+True
+3
+== compare mut_param
+True
+3
+== compare nested
+True
+3
+== compare option
+True
+3
+== compare two_fields
+True
+3
+== copy element
+3
+3
+== copy element_field
+3
+3
+== copy field
+3
+3
+== copy local
+3
+3
+== copy mut_param
+3
+3
+== copy nested
+3
+3
+== copy option
+3
+3
+== copy two_fields
+3
+3
+== hole element
+<[3, 1, 2]>
+3
+== hole element_field
+<[3, 1, 2]>
+3
+== hole field
+<[3, 1, 2]>
+3
+== hole local
+<[3, 1, 2]>
+3
+== hole mut_param
+<[3, 1, 2]>
+3
+== hole nested
+<[3, 1, 2]>
+3
+== hole option
+<[3, 1, 2]>
+3
+== hole two_fields
+<[3, 1, 2]>
+3
+== index element
+3
+3
+== index element_field
+3
+3
+== index field
+3
+3
+== index local
+3
+3
+== index mut_param
+3
+3
+== index nested
+3
+3
+== index option
+3
+3
+== index two_fields
+3
+3
+== iterate element
+3
+1
+2
+3
+== iterate element_field
+3
+1
+2
+3
+== iterate field
+3
+1
+2
+3
+== iterate local
+3
+1
+2
+3
+== iterate mut_param
+3
+1
+2
+3
+== iterate nested
+3
+1
+2
+3
+== iterate option
+3
+1
+2
+3
+== iterate two_fields
+3
+1
+2
+3
+== len element
+3
+3
+== len element_field
+3
+3
+== len field
+3
+3
+== len local
+3
+3
+== len mut_param
+3
+3
+== len nested
+3
+3
+== len option
+3
+3
+== len two_fields
+3
+3
+== lib0 element
+True
+3
+== lib0 element_field
+True
+3
+== lib0 field
+True
+3
+== lib0 local
+True
+3
+== lib0 mut_param
+True
+3
+== lib0 nested
+True
+3
+== lib0 option
+True
+3
+== lib0 two_fields
+True
+3
+== mutparam element
+4
+4
+== mutparam element_field
+4
+4
+== mutparam field
+4
+4
+== mutparam local
+4
+4
+== mutparam mut_param
+4
+4
+== mutparam nested
+4
+4
+== mutparam option
+4
+4
+== mutparam two_fields
+4
+4
+== param element
+3
+3
+== param element_field
+3
+3
+== param field
+3
+3
+== param local
+3
+3
+== param mut_param
+3
+3
+== param nested
+3
+3
+== param option
+3
+3
+== param two_fields
+3
+3
+== print element
+[3, 1, 2]
+3
+== print element_field
+[3, 1, 2]
+3
+== print field
+[3, 1, 2]
+3
+== print local
+[3, 1, 2]
+3
+== print mut_param
+[3, 1, 2]
+3
+== print nested
+[3, 1, 2]
+3
+== print option
+[3, 1, 2]
+3
+== print two_fields
+[3, 1, 2]
+3
+== slice element
+[3]
+3
+== slice element_field
+[3]
+3
+== slice field
+[3]
+3
+== slice local
+[3]
+3
+== slice mut_param
+[3]
+3
+== slice nested
+[3]
+3
+== slice option
+[3]
+3
+== slice two_fields
+[3]
+3
+== str element
+[3, 1, 2]
+3
+== str element_field
+[3, 1, 2]
+3
+== str field
+[3, 1, 2]
+3
+== str local
+[3, 1, 2]
+3
+== str mut_param
+[3, 1, 2]
+3
+== str nested
+[3, 1, 2]
+3
+== str option
+[3, 1, 2]
+3
+== str two_fields
+[3, 1, 2]
+3

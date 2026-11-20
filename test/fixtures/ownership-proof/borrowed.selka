@@ -1,0 +1,33 @@
+# Borrowed parameters, a view returned under its `from`, owned results and calls.
+func part(text: str) -> str from text:
+    return text[1:4]
+
+
+func total(items: int[]) -> int:
+    mut sum = 0
+    for v in items:
+        sum += v
+    return sum
+
+
+func make(n: int) -> int[]:
+    mut xs: int[] = []
+    for i in range(n):
+        append(mut xs, i)
+    return xs
+
+
+func three() -> int[]:
+    return [1, 2, 3]
+
+
+func eat(own xs: int[]) -> int:
+    return len(xs)
+
+
+func main(out: Stream) -> int:
+    const xs = make(4)
+    const t = part("abcde")
+    const n = eat(three())
+    print(out, total(xs), len(t), n)
+    return 0

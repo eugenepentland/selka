@@ -1,0 +1,77 @@
+# The `tokens-v1` document of a token stream, byte for byte as `selka dump-tokens` writes it:
+# the version, the path, the count and one record per token with its kind, byte span, line and column.
+import byte_builder
+import lexer
+import token_kinds
+
+# Append `text` as the inside of a JSON string, escaping as std.json does.
+func append_escaped(mut out: byte_builder.Builder, text: str):
+    for index in range(len(text)):
+        const b = text[index]
+        if b == 34:
+            byte_builder.append_text(mut out, '\\"')
+        elif b == 92:
+            byte_builder.append_text(mut out, "\\\\")
+        elif b == 10:
+            byte_builder.append_text(mut out, "\\n")
+        elif b == 13:
+            byte_builder.append_text(mut out, "\\r")
+        elif b == 9:
+            byte_builder.append_text(mut out, "\\t")
+        elif b == 8:
+            byte_builder.append_text(mut out, "\\b")
+        elif b == 12:
+            byte_builder.append_text(mut out, "\\f")
+        elif b < 32:
+            byte_builder.append_text(mut out, "\\u00")
+            _ = byte_builder.append_byte(mut out, hex_digit(b // 16))
+            _ = byte_builder.append_byte(mut out, hex_digit(b % 16))
+        else:
+            _ = byte_builder.append_byte(mut out, b)
+
+
+func hex_digit(value: int) -> int:
+    if value < 10:
+        return 48 + value
+    return 87 + value
+
+
+# One token record. `line` and `column` count from 1 and `column` counts bytes.
+func append_token(mut out: byte_builder.Builder, kind: token_kinds.Kind, start: int, end: int, line: int, column: int):
+    byte_builder.append_text(mut out, '{"kind":"')
+    byte_builder.append_text(mut out, token_kinds.kind_name(kind))
+    byte_builder.append_text(mut out, '","start":')
+    byte_builder.append_int(mut out, start)
+    byte_builder.append_text(mut out, ',"end":')
+    byte_builder.append_int(mut out, end)
+    byte_builder.append_text(mut out, ',"line":')
+    byte_builder.append_int(mut out, line)
+    byte_builder.append_text(mut out, ',"column":')
+    byte_builder.append_int(mut out, column)
+    byte_builder.append_text(mut out, "}")
+
+
+# The document for `tokens` lexed from `src`, which was read from `path`.
+public func render(path: str, src: bytes, tokens: lexer.Tokens) -> bytes:
+    mut out = byte_builder.create()
+    const count = len(tokens.kind)
+    byte_builder.append_text(mut out, '{"version":"tokens-v1","path":"')
+    append_escaped(mut out, path)
+    byte_builder.append_text(mut out, '","count":')
+    byte_builder.append_int(mut out, count)
+    byte_builder.append_text(mut out, ',"tokens":[')
+    mut line = 1
+    mut line_start = 0
+    mut cursor = 0
+    for index in range(count):
+        const start = tokens.start[index]
+        while cursor < start:
+            if src[cursor] == 10:
+                line += 1
+                line_start = cursor + 1
+            cursor += 1
+        if index > 0:
+            byte_builder.append_text(mut out, ",")
+        append_token(mut out, tokens.kind[index], start, tokens.end[index], line, start - line_start + 1)
+    byte_builder.append_text(mut out, "]}")
+    return byte_builder.finish(out)

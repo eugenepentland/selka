@@ -1,0 +1,12 @@
+# In a `match mut` arm: the payload is lent to `head`, then written through `grow` while the loan is live.
+import lib
+
+func main() -> int:
+    mut slots: lib.Slot[] = [lib.Slot.full(names=["a"])]
+    match mut slots[0]:
+        case full(names=names):
+            const h = lib.head(names)
+            lib.grow(mut names, "b")
+            return len(h)
+        case empty:
+            return 0

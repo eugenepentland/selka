@@ -1,0 +1,153 @@
+import buffers
+import incremental
+
+public record Request:
+    identity: bytes
+    input: incremental.Input
+
+
+record Reader:
+    at: int
+
+
+func word(data: bytes, mut reader: Reader) -> int fails str:
+    if len(data) - reader.at < 4:
+        fail "truncated incremental word"
+    mut at = reader.at
+    reader.at += 4
+    return data[at] + data[at + 1] * 256 + data[at + 2] * 65536 + data[at + 3] * 16777216
+
+
+func row(data: bytes, mut reader: Reader, nodes: int, maximum: int) -> int[] fails str:
+    mut count = try word(data, mut reader)
+    if count > maximum or count > (len(data) - reader.at) // 4:
+        fail "incremental row count exceeds limit"
+    mut values: int[] = []
+    for item in range(count):
+        mut node = try word(data, mut reader)
+        if node >= nodes:
+            fail "invalid incremental node index"
+        append(mut values, node)
+    return values
+
+
+public func decode(data: bytes) -> Request fails str:
+    if len(data) < 124 or len(data) > 33554432:
+        fail "invalid incremental request frame size"
+    if data[:8] != b"SLKCP002":
+        fail "invalid component magic"
+    mut envelope = Reader(at=8)
+    mut protocol = try word(data, mut envelope)
+    mut schema = try word(data, mut envelope)
+    mut kind = try word(data, mut envelope)
+    if protocol != 2 or schema != 2 or kind != 0:
+        fail "unsupported incremental protocol schema or kind"
+    mut payload_size = try word(data, mut envelope)
+    if payload_size != len(data) - 64:
+        fail "invalid request payload length"
+    mut reader = Reader(at=64)
+    for policy in range(3):
+        mut value = try word(data, mut reader)
+        if value != 0:
+            fail "unsupported computation retention or admission contract"
+    mut topology = copy(data[76:108])
+    reader.at = 108
+    mut nodes = try word(data, mut reader)
+    mut tests = try word(data, mut reader)
+    mut changed_count = try word(data, mut reader)
+    mut prior_present = try word(data, mut reader)
+    if nodes > 100000 or tests > 100000 or changed_count > nodes or prior_present > 1:
+        fail "incremental table count exceeds limit"
+    mut digests: bytes[] = []
+    mut adjacency: int[][] = []
+    mut edges = 0
+    for node in range(nodes):
+        if len(data) - reader.at < 32:
+            fail "truncated function digest"
+        append(mut digests, copy((data[reader.at:reader.at + 32])))
+        reader.at += 32
+        mut targets = try row(data, mut reader, nodes, 1000000 - edges)
+        edges += len(targets)
+        append(mut adjacency, own targets)
+    mut roots: int[][] = []
+    mut candidates: bool[] = []
+    mut root_total = 0
+    for test in range(tests):
+        mut candidate = try word(data, mut reader)
+        if candidate > 1:
+            fail "invalid candidate flag"
+        append(mut candidates, candidate == 1)
+        mut values = try row(data, mut reader, nodes, 1000000 - root_total)
+        root_total += len(values)
+        append(mut roots, own values)
+    if changed_count > (len(data) - reader.at) // 4:
+        fail "truncated changed function table"
+    mut changed: int[] = []
+    for item in range(changed_count):
+        mut node = try word(data, mut reader)
+        if node >= nodes:
+            fail "invalid changed function index"
+        append(mut changed, node)
+    mut prior = incremental.Indexes(topology=b"", groups=[], reverse=[])
+    if prior_present == 1:
+        if len(data) - reader.at < 32 + nodes * 4:
+            fail "truncated retained graph indexes"
+        prior.topology = copy((data[reader.at:reader.at + 32]))
+        reader.at += 32
+        for node in range(nodes):
+            mut group = try word(data, mut reader)
+            append(mut prior.groups, group)
+        mut retained_edges = 0
+        for node in range(nodes):
+            mut values = try row(data, mut reader, nodes, 1000000 - retained_edges)
+            retained_edges += len(values)
+            append(mut prior.reverse, own values)
+    if reader.at != len(data):
+        fail "trailing request bytes"
+    return Request(identity=copy((data[24:64])), input=incremental.Input(graph=incremental.Graph(digests=own digests, adjacency=own adjacency, topology=own topology), roots=own roots, candidates=own candidates, changed=own changed, prior=own prior))
+
+
+func put(mut buffer: byte_buffer, value: int, octets: int):
+    mut rest = value
+    for octet in range(octets):
+        _ = buffers.append_byte(mut buffer, rest % 256)
+        rest = rest // 256
+
+
+func put_row(mut buffer: byte_buffer, values: int[]):
+    put(mut buffer, len(values), 4)
+    for node in values:
+        put(mut buffer, node, 4)
+
+
+public func encode(request: Request, result: incremental.Result) -> bytes fails str:
+    mut payload_size = 64 + len(result.indexes.groups) * 8 + len(result.batches) * 8
+    for values in result.indexes.reverse:
+        payload_size += len(values) * 4
+    for values in result.batches:
+        payload_size += len(values) * 4
+        if payload_size > 67108736:
+            fail "response frame exceeds limit"
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    _ = buffers.reserve(mut buffer, payload_size + 64)
+    _ = buffers.append_range(mut buffer, b"SLKCP002", 0, 8)
+    for value in [2, 2, 1, payload_size]:
+        put(mut buffer, value, 4)
+    _ = buffers.append_range(mut buffer, request.identity, 0, 40)
+    mut work = result.work
+    for count in [work.index_nodes, work.index_edges, work.affected_nodes, work.closure_nodes, work.closure_edges, work.reused_tests, work.planned_tests]:
+        put(mut buffer, count, 8)
+    put(mut buffer, len(result.indexes.groups), 4)
+    put(mut buffer, len(result.batches), 4)
+    for group in result.indexes.groups:
+        put(mut buffer, group, 4)
+    for values in result.indexes.reverse:
+        put_row(mut buffer, values)
+    for batch in range(len(result.batches)):
+        mut flag = 0
+        if result.reused[batch]:
+            flag = 1
+        put(mut buffer, flag, 4)
+        put_row(mut buffer, result.batches[batch])
+    return bytes(buffer)

@@ -1,0 +1,4 @@
+if a: # comment after the colon
+    b
+else: # again
+    c

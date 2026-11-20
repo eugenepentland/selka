@@ -1,0 +1,28 @@
+public record Id:
+    value: u64
+
+
+public func make_id(n: u64) -> Id:
+    return Id(value=n)
+
+
+record Other:
+    value: u64
+
+
+func make_other(n: u64) -> Other:
+    return Other(value=n)
+
+
+func same[T: equality](a: T, b: T) -> bool:
+    return a == b
+
+
+func different[T: equality](a: T, b: T) -> bool:
+    return a != b
+
+
+public func program() -> i64:
+    if same[Id](make_id(1u64), make_id(1u64)) and different[Other](make_other(1u64), make_other(2u64)):
+        return 1
+    return 0

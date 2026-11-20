@@ -1,0 +1,4 @@
+public func program() -> i64:
+    mut x = 5
+    x -= 2
+    return x

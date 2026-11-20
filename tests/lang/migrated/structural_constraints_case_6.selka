@@ -1,0 +1,26 @@
+record Worker:
+    value: int
+
+
+func make() -> Worker:
+    return Worker(value=42)
+
+
+func apply(worker: Worker, callback: func(Worker) -> int) -> int:
+    return callback(worker)
+
+
+func get[P: copy](worker: P, callback: func(P) -> int, named apply_operation: func(P, func(P) -> int) -> int) -> int:
+    return apply_operation(worker, callback)
+
+
+func forward[Q: copy](worker: Q, callback: func(Q) -> int, named apply_operation: func(Q, func(Q) -> int) -> int) -> int:
+    return get(worker, callback, apply_operation=apply_operation)
+
+
+func read_worker(worker: Worker) -> int:
+    return worker.value
+
+
+public func program() -> int:
+    return forward(make(), read_worker, apply_operation=apply)

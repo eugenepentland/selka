@@ -1,0 +1,12 @@
+# Sets of integers: add, membership, size.
+import sets
+
+func main() -> int:
+    mut odd: set[int] = set()
+    for i in range(100):
+        sets.add(mut odd, i * i % 37)
+    mut hits = 0
+    for k in range(40):
+        if k in odd:
+            hits += k
+    return (hits + len(odd)) % 256

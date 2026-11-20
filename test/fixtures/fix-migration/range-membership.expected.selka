@@ -1,0 +1,20 @@
+# SP3-F-11: `x in range(a, b)` tests a bound with a loop source. `selka fix` writes the comparison it means when the needle
+# and every bound is a name or a number and there is no step.
+func inside(x: int, hi: int) -> bool:
+    return 0 <= x < hi
+
+
+func between(x: int, lo: int, hi: int) -> bool:
+    if (x < lo or hi <= x):
+        return False
+    return True
+
+
+func below(x: int) -> bool:
+    return 0 <= x < 10
+
+
+func main() -> int:
+    if inside(3, 5) and between(4, 2, 6) and below(9) and not below(10):
+        return 7
+    return 1

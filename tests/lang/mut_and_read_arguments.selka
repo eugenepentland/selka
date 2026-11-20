@@ -1,0 +1,167 @@
+# A call may pass a record `mut` and, in another argument, read the same record into a value of its own (F-24): the
+# arguments are evaluated before the call, and a value that borrows nothing from the record cannot see the callee's
+# change. An argument that lends a part of the record still needs `copy(...)`.
+import mut_and_read_arguments_support as support
+import strings
+import testing
+
+record Inner:
+    name: str
+
+
+record Work:
+    lines: str[]
+    targets: str[]
+    inner: Inner
+
+
+enum Slot:
+    busy(work: Work)
+    idle
+
+
+func target(work: Work) -> str:
+    return copy(work.targets[len(work.targets) - 1])
+
+
+func emit(mut work: Work, statement: str):
+    append(mut work.lines, copy(statement))
+
+
+func rename(mut inner: Inner, name: str):
+    inner.name = copy(name)
+
+
+func fresh() -> Work:
+    return Work(lines=[], targets=["out"], inner=Inner(name="n"))
+
+
+func describe[T](value: T, work: Work) -> str:
+    return target(work) + "/" + str(len(work.lines))
+
+
+func emit_all(mut work: Work, count: int) -> int fails str:
+    for i in range(count):
+        emit(mut work, target(work) + str(i))
+        if len(work.lines) > 2:
+            fail "too many: " + work.lines[len(work.lines) - 1]
+    return len(work.lines)
+
+
+public func test_a_mut_record_and_a_text_built_from_it_go_to_one_call() -> bool:
+    mut work = fresh()
+    emit(mut work, "strings.append(mut " + target(work) + ", 'x')")
+    emit(mut work, f"{target(work)}!")
+    emit(mut work, copy(work.targets[0]))
+    emit(mut work, strings.upper(work.targets[0]))
+    return work.lines == ["strings.append(mut out, 'x')", "out!", "out", "OUT"]
+
+
+public func test_a_mut_field_path_and_a_read_of_its_record_go_to_one_call() -> bool:
+    mut work = fresh()
+    rename(mut work.inner, work.inner.name + "-" + target(work))
+    return work.inner.name == "n-out"
+
+
+public func test_a_mut_record_and_a_generic_read_and_another_module_go_to_one_call() -> bool:
+    mut work = fresh()
+    emit(mut work, describe(1, work))
+    mut log = support.Log(lines=[], prefix="p")
+    support.write(mut log, support.label(log) + "!")
+    support.write(mut log, support.label(log))
+    assert log.lines == ["p0!", "p1"]
+    return work.lines == ["out/0"]
+
+
+public func test_a_match_mut_arm_passes_a_local_record_mut_beside_a_read_of_it() -> bool:
+    mut slot = Slot.busy(work=fresh())
+    mut work = fresh()
+    match mut slot:
+        case busy(work=held):
+            emit(mut work, target(work) + target(held))
+            append(mut held.lines, "seen")
+        case idle:
+            pass
+    return work.lines == ["outout"]
+
+
+public func test_a_fallible_function_passes_a_record_mut_beside_a_read_of_it() -> bool:
+    mut work = fresh()
+    match emit_all(mut work, 2):
+        case Ok(count):
+            assert count == 2
+        case Err(_):
+            return False
+    match emit_all(mut work, 3):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "too many: out0"
+
+
+func pick_a(a: Work, b: Work) -> str from a:
+    return a.targets[0]
+
+
+func pick_b(a: Work, b: Work) -> str from b:
+    return b.targets[0]
+
+
+func both(mut a: Work, mut b: Work, statement: str) -> int:
+    append(mut b.lines, "b")
+    append(mut a.lines, copy(statement))
+    return len(statement)
+
+
+func three(mut a: Work, mut b: Work, mut c: Work, statement: str) -> int:
+    append(mut c.lines, copy(statement))
+    return len(statement)
+
+
+func both_inner(mut x: Inner, mut y: Inner, name: str):
+    y.name = "y"
+    x.name = copy(name)
+
+
+func fresh_of[T](value: T, work: Work) -> str:
+    return "g" + target(work)
+
+
+public func test_two_and_three_mut_records_beside_a_value_built_from_each() -> bool:
+    mut a = fresh()
+    mut b = fresh()
+    mut c = fresh()
+    assert both(mut a, mut b, pick_a(a, b) + pick_b(a, b)) == 6
+    assert three(mut a, mut b, mut c, pick_b(a, b) + "!") == 4
+    assert both(mut a, mut b, strings.upper(pick_b(a, b))) == 3
+    assert both(mut a, mut b, copy(b.targets[0])) == 3
+    assert both(mut a, mut b, fresh_of(1, b)) == 4
+    assert both(mut a, mut b, support.label(support.Log(lines=[], prefix=target(b)))) == 4
+    rename(mut a.inner, a.inner.name + b.inner.name)
+    both_inner(mut a.inner, mut b.inner, b.inner.name + a.inner.name)
+    return a.lines == ["outout", "OUT", "out", "gout", "out0"] and c.lines == ["out!"] and a.inner.name == "nnn" and b.inner.name == "y"
+
+
+func keep(mut work: Work, own statement: str):
+    append(mut work.lines, own statement)
+
+
+func keep_all(mut work: Work, own lines: str[]):
+    work.lines = own lines
+
+
+func keep_inner(mut inner: Inner, own name: Inner):
+    inner.name = own name.name
+
+
+# A value of its own made from the record goes to an `own` parameter beside `mut` of it too (FR67): the read ends when the
+# value is made, and the callee owns a value that shares nothing with the record. `own work.lines` still moves a part.
+public func test_a_mut_record_and_a_value_built_from_it_go_to_an_own_parameter() -> bool:
+    mut work = fresh()
+    keep(mut work, copy(work.targets[0]))
+    keep(mut work, "a" + target(work))
+    keep(mut work, f"{target(work)}:{len(work.lines)}")
+    keep(mut work, strings.upper(work.targets[0]))
+    keep_all(mut work, [copy(work.lines[0]), work.lines[1] + "!"])
+    keep_inner(mut work.inner, Inner(name=work.inner.name + "2"))
+    return work.lines == ["out", "aout!"] and work.inner.name == "n2"

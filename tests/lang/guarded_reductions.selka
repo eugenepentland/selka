@@ -1,0 +1,218 @@
+# A reduction whose step has one bound from a guard and the other from the type
+# (`if value <= 100: total += value`): the fact pass bounds the accumulator by the
+# trip count (2^47 for a list) times the step, which leaves the type on one side.
+# The fact validator (F3, F4) must accept what the pass states, in every loop shape
+# that adds, subtracts, skips (`continue`) or leaves early (`break`).
+func guarded_high(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value <= 100:
+            total += value
+    return total
+
+
+func guarded_low(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value >= -100:
+            total += value
+    return total
+
+
+func guarded_both(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value <= 100:
+            if value >= -100:
+                total += value
+    return total
+
+
+func skip_high(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value > 100:
+            continue
+        total += value
+    return total
+
+
+func skip_low(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value < -100:
+            continue
+        total += value
+    return total
+
+
+func stop_high(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value > 100:
+            break
+        total += value
+    return total
+
+
+func stop_low(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value < -100:
+            break
+        total += value
+    return total
+
+
+func take_away_high(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value <= 100:
+            total -= value
+    return total
+
+
+func take_away_low(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value >= -100:
+            total -= value
+    return total
+
+
+func skip_then_take_away(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value > 100:
+            continue
+        total -= value
+    return total
+
+
+func two_accumulators(values: int[]) -> int:
+    mut gained = 0
+    mut lost = 0
+    for value in values:
+        if value > 100:
+            continue
+        gained += value
+        lost -= value
+    return gained * 1000 + lost
+
+
+func clamped_step(values: int[]) -> int:
+    mut total = 0
+    for value in values:
+        if value > 100:
+            total += 100
+        else:
+            total += value
+    return total
+
+
+func while_skip(values: int[]) -> int:
+    mut total = 0
+    mut at = 0
+    while at < len(values):
+        const value = values[at]
+        at += 1
+        if value > 100:
+            continue
+        total += value
+    return total
+
+
+func while_stop(values: int[]) -> int:
+    mut total = 0
+    mut at = 0
+    while at < len(values):
+        const value = values[at]
+        at += 1
+        if value < -100:
+            break
+        total += value
+    return total
+
+
+func nested_skip(rows: int[][]) -> int:
+    mut total = 0
+    for row in rows:
+        for value in row:
+            if value > 100:
+                continue
+            total += value
+    return total
+
+
+func nested_per_row(rows: int[][]) -> int:
+    mut total = 0
+    for row in rows:
+        mut part = 0
+        for value in row:
+            if value < -100:
+                continue
+            part += value
+        total += part
+    return total
+
+
+func counted_skip(limit: int, step: int) -> int:
+    mut total = 0
+    for at in range(limit):
+        if step > 100:
+            continue
+        total += step
+    return total
+
+
+func data() -> int[]:
+    return [1, 2, 500, -7, 100, 101, -100, -101, 30]
+
+
+public func test_a_guard_on_the_high_side_keeps_the_sum_of_the_rest() -> bool:
+    return guarded_high(data()) == -75 and guarded_high([100, 100, 100]) == 300 and guarded_high([]) == 0
+
+
+public func test_a_guard_on_the_low_side_keeps_the_sum_of_the_rest() -> bool:
+    return guarded_low(data()) == 627 and guarded_low([-100, -100]) == -200 and guarded_low([-101]) == 0
+
+
+public func test_a_guard_on_both_sides_keeps_the_middle() -> bool:
+    return guarded_both(data()) == 26 and guarded_both([100, -100, 101, -101]) == 0
+
+
+public func test_continue_past_a_value_leaves_the_sum_of_the_others() -> bool:
+    return skip_high(data()) == -75 and skip_low(data()) == 627 and skip_high([7, 101, 8]) == 15
+
+
+public func test_break_at_a_value_ends_the_sum() -> bool:
+    return stop_high(data()) == 3 and stop_low(data()) == 597 and stop_high([101, 5]) == 0
+
+
+public func test_subtraction_under_a_guard_is_the_negated_sum() -> bool:
+    return take_away_high(data()) == 75 and take_away_low(data()) == -627 and skip_then_take_away(data()) == 75
+
+
+public func test_two_accumulators_move_together_under_one_guard() -> bool:
+    return two_accumulators(data()) == -74925 and two_accumulators([100, 100]) == 199800
+
+
+public func test_a_conditional_step_clamps_each_value() -> bool:
+    return clamped_step(data()) == 125 and clamped_step([500, 500]) == 200
+
+
+public func test_while_loops_skip_and_stop_like_for_loops() -> bool:
+    return while_skip(data()) == -75 and while_stop(data()) == 597 and while_skip([]) == 0
+
+
+public func test_nested_loops_keep_the_inner_guard() -> bool:
+    return nested_skip([[1, 2], [500, -7], [100]]) == 96 and nested_per_row([[1, 2], [-500, -7], [100]]) == 96
+
+
+public func test_a_counted_loop_adds_a_guarded_parameter() -> bool:
+    return counted_skip(10, 100) == 1000 and counted_skip(10, 101) == 0 and counted_skip(10, -100) == -1000
+
+
+public func test_the_sum_stays_usable_after_the_loop() -> bool:
+    const total = guarded_high(data())
+    return total + 9223372036854775000 > 0 and total - 9223372036854775000 < 0

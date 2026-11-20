@@ -1,0 +1,246 @@
+//! Error return traces (`ERROR-TRACE-1` .. `ERROR-TRACE-4`): which sites an
+//! `Err` records on its way out of `main`, and how the entry reports them.
+const std = @import("std");
+const t = std.testing;
+const language = @import("compiler.zig");
+const native = @import("native_execute.zig");
+
+/// Build one guest program named `trace.selka` and run it once natively.
+fn run(source: []const u8) !native.Run {
+    var compilation = try language.Compilation.init(t.allocator, "trace.selka", source);
+    defer compilation.deinit();
+    return native.run(&compilation);
+}
+
+/// How many times `needle` occurs in `text`.
+fn occurrences(text: []const u8, needle: []const u8) usize {
+    return std.mem.count(u8, text, needle);
+}
+
+// spec: ERROR-TRACE-1
+test "an Err records its construction, each try that passes it on and the case try converts it to" {
+    const outcome = try run(
+        \\enum AppError:
+        \\    Config(value: str)
+        \\    Usage(value: int)
+        \\
+        \\func parse_port(text: str) -> int fails str:
+        \\    if strings.char_count(text) == 0:
+        \\        fail "empty port"
+        \\    return strings.char_count(text)
+        \\
+        \\func read_config(text: str) -> int fails str:
+        \\    mut port = try parse_port(text)
+        \\    return port + 1
+        \\
+        \\func load(text: str) -> int fails AppError:
+        \\    const parsed = try read_config(text)
+        \\    return parsed
+        \\
+        \\func main() -> Result[int, AppError]:
+        \\    mut port = try load("")
+        \\    return Ok(port)
+    );
+    try t.expect(!outcome.trapped());
+    try t.expectEqual(@as(u8, 1), outcome.status);
+    try t.expectEqualStrings(
+        \\error: AppError.Config(value='empty port')
+        \\  trace.selka:7:9    parse_port   Err(...) created
+        \\  trace.selka:11:16  read_config  try propagated
+        \\  trace.selka:15:20  load         try converted to AppError.Config
+        \\  trace.selka:19:16  main         try propagated
+        \\
+    , outcome.stderr);
+}
+
+// spec-case: ERROR-TRACE-1
+test "returned Err traces retain variable call and branch returns while the original expression reports retirement" {
+    const original =
+        // migrate-embedded: skip original R2 diagnostic, syntax-recognition or exact-output fixture; see L01 r2-preservation classification
+        \\func check(value: int) -> Result[int, int]:
+        \\    mut failed: Result[int, int] = Err(value)
+        \\    return failed
+        \\
+        \\func pass_on(result: Result[int, int]) -> Result[int, int]:
+        \\    return result
+        \\
+        \\func choose(value: int) -> Result[int, int]:
+        \\    return if (value > 10) then (Ok(value)) else (pass_on(check(value)))
+        \\
+        \\func main() -> Result[int, int]:
+        \\    const parsed = try choose(4)
+        \\    return Ok(parsed)
+    ;
+    var retired = try language.Compilation.init(t.allocator, "original-trace.selka", original);
+    defer retired.deinit();
+    try t.expectError(error.SourceError, retired.check());
+    try t.expectEqualStrings("E_CONDITIONAL_EXPRESSION_REMOVED", retired.diagnostics.items[0].code);
+    const modern =
+        \\func check(value: int) -> int fails int:
+        \\    mut failed: Result[int, int] = Err(value)
+        \\    return try failed
+        \\
+        \\func pass_on(result: Result[int, int]) -> int fails int:
+        \\    return try result
+        \\
+        \\func choose(value: int) -> int fails int:
+        \\    if value > 10:
+        \\        return value
+        \\    return try pass_on(check(value))
+        \\
+        \\func main() -> Result[int, int]:
+        \\    const parsed = try choose(4)
+        \\    return Ok(parsed)
+    ;
+    const outcome = try run(modern);
+    try t.expect(!outcome.trapped());
+    try t.expectEqual(@as(u8, 4), outcome.status);
+    try t.expectEqualStrings(
+        \\error: 4
+        \\  trace.selka:2:36   check    Err(...) created
+        \\  trace.selka:3:12   check    try propagated
+        \\  trace.selka:6:12   pass_on  try propagated
+        \\  trace.selka:11:12  choose   try propagated
+        \\  trace.selka:14:20  main     try propagated
+        \\
+    , outcome.stderr);
+}
+
+// spec-case: ERROR-TRACE-1
+test "a handled Err appends nothing and the next Err starts a fresh trace" {
+    const outcome = try run(
+        \\func fail(code: int) -> int fails int:
+        \\    fail code
+        \\
+        \\func forward(code: int) -> int fails int:
+        \\    const parsed = try fail(code)
+        \\    return parsed
+        \\
+        \\func main() -> Result[int, int]:
+        \\    mut recovered = 0
+        \\    _ = forward(1)
+        \\    match forward(2):
+        \\        case Ok(value):
+        \\            recovered += value
+        \\        case Err(code):
+        \\            recovered += code
+        \\    return Err(recovered + 5)
+    );
+    try t.expect(!outcome.trapped());
+    try t.expectEqual(@as(u8, 7), outcome.status);
+    try t.expectEqualStrings(
+        \\error: 7
+        \\  trace.selka:16:12  main  Err(...) created
+        \\
+    , outcome.stderr);
+}
+
+// spec-case: ERROR-TRACE-1
+test "a runtime operation that answers Err starts the trace at its call" {
+    const outcome = try run(
+        \\func load(fs: Filesystem) -> str fails str:
+        \\    const parsed = try fs.read_text("/nonexistent/error-trace-probe")
+        \\    return parsed
+        \\
+        \\func main(fs: Filesystem) -> Result[int, str]:
+        \\    mut text = try load(fs)
+        \\    return Ok(strings.char_count(text))
+    );
+    try t.expect(!outcome.trapped());
+    try t.expectEqual(@as(u8, 1), outcome.status);
+    try t.expect(std.mem.startsWith(u8, outcome.stderr, "error: "));
+    try t.expect(std.mem.indexOf(u8, outcome.stderr, "trace.selka:2:24  load  Err produced by the runtime\n") != null);
+    try t.expect(std.mem.indexOf(u8, outcome.stderr, "trace.selka:2:20  load  try propagated\n") != null);
+    try t.expect(std.mem.endsWith(u8, outcome.stderr, "trace.selka:6:16  main  try propagated\n"));
+}
+
+// spec: ERROR-TRACE-2
+test "main's Err is reported as error: VALUE and its trace, and keeps its exit status" {
+    const status = try run(
+        \\func main() -> Result[Unit, int]:
+        \\    return Err(3)
+    );
+    try t.expect(!status.trapped());
+    try t.expectEqual(@as(u8, 3), status.status);
+    try t.expectEqualStrings("error: 3\n  trace.selka:2:12  main  Err(...) created\n", status.stderr);
+    const message = try run(
+        \\func main() -> Result[int, str]:
+        \\    return Err("no input")
+    );
+    try t.expect(!message.trapped());
+    try t.expectEqual(@as(u8, 1), message.status);
+    try t.expectEqualStrings("error: no input\n  trace.selka:2:12  main  Err(...) created\n", message.stderr);
+    const fine = try run(
+        \\func main() -> Result[int, str]:
+        \\    return Ok(6)
+    );
+    try t.expect(!fine.trapped());
+    try t.expectEqual(@as(u8, 6), fine.status);
+    try t.expectEqualStrings("", fine.stderr);
+}
+
+// spec-case: ERROR-TRACE-2
+test "a return on the Err's own line folds into it, and a broken contract is still a trap" {
+    const folded = try run(
+        \\@ensures(result < 1000)
+        \\func parse(value: int) -> int fails str:
+        \\    if value > 100:
+        \\        fail "too big"
+        \\    return value
+        \\
+        \\func main() -> Result[int, str]:
+        \\    const parsed = try parse(200)
+        \\    return Ok(parsed)
+    );
+    try t.expect(!folded.trapped());
+    try t.expectEqualStrings("error: too big\n  trace.selka:4:9   parse  Err(...) created\n  trace.selka:8:20  main   try propagated\n", folded.stderr);
+    const broken = try run(
+        \\@ensures(result < 1000)
+        \\func huge(value: int) -> int fails str:
+        \\    return value * 1000
+        \\
+        \\func main() -> Result[int, str]:
+        \\    _ = huge(1)
+        \\    const parsed = try huge(5)
+        \\    return Ok(parsed)
+    );
+    try t.expect(broken.trapped());
+    try t.expectEqualStrings("R_ENSURES", broken.trap.code);
+    try t.expect(std.mem.indexOf(u8, broken.stderr, "error: ") == null);
+}
+
+// spec: RESULT-MAIN-2
+test "main may fail with any printable error, which exits 1" {
+    const outcome = try run(
+        \\enum Problem:
+        \\    Missing(value: str)
+        \\    BadDigit(value: int)
+        \\
+        \\func main() -> Result[Unit, Problem]:
+        \\    return Err(Problem.BadDigit(value=3))
+    );
+    try t.expect(!outcome.trapped());
+    try t.expectEqual(@as(u8, 1), outcome.status);
+    try t.expectEqualStrings("error: Problem.BadDigit(value=3)\n  trace.selka:6:12  main  Err(...) created\n", outcome.stderr);
+}
+
+// spec: ERROR-TRACE-4
+test "a trace longer than the ring keeps the origin and the last 32 sites and counts the rest" {
+    const outcome = try run(
+        \\func descend(depth: int) -> int fails int:
+        \\    if depth == 0:
+        \\        fail 9
+        \\    const parsed = try descend(depth - 1)
+        \\    return parsed + 1
+        \\
+        \\func main() -> Result[int, int]:
+        \\    const parsed = try descend(40)
+        \\    return Ok(parsed)
+    );
+    try t.expect(!outcome.trapped());
+    try t.expectEqual(@as(u8, 9), outcome.status);
+    // 40 `try` in `descend` and one in `main` append 41 sites; the ring keeps 32.
+    try t.expect(std.mem.startsWith(u8, outcome.stderr, "error: 9\n  trace.selka:3:9   descend  Err(...) created\n  ... 9 more entries dropped ...\n"));
+    try t.expectEqual(@as(usize, 31), occurrences(outcome.stderr, "descend  try propagated\n"));
+    try t.expect(std.mem.endsWith(u8, outcome.stderr, "  trace.selka:8:20  main     try propagated\n"));
+}

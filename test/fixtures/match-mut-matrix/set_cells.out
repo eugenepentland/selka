@@ -1,0 +1,240 @@
+== compare element
+True
+1
+== compare element_field
+True
+1
+== compare field
+True
+1
+== compare local
+True
+1
+== compare mut_param
+True
+1
+== compare nested
+True
+1
+== compare option
+True
+1
+== compare two_fields
+True
+1
+== contains element
+True
+1
+== contains element_field
+True
+1
+== contains field
+True
+1
+== contains local
+True
+1
+== contains mut_param
+True
+1
+== contains nested
+True
+1
+== contains option
+True
+1
+== contains two_fields
+True
+1
+== copy element
+1
+1
+== copy element_field
+1
+1
+== copy field
+1
+1
+== copy local
+1
+1
+== copy mut_param
+1
+1
+== copy nested
+1
+1
+== copy option
+1
+1
+== copy two_fields
+1
+1
+== hole element
+<{3}>
+1
+== hole element_field
+<{3}>
+1
+== hole field
+<{3}>
+1
+== hole local
+<{3}>
+1
+== hole mut_param
+<{3}>
+1
+== hole nested
+<{3}>
+1
+== hole option
+<{3}>
+1
+== hole two_fields
+<{3}>
+1
+== iterate element
+3
+1
+== iterate element_field
+3
+1
+== iterate field
+3
+1
+== iterate local
+3
+1
+== iterate mut_param
+3
+1
+== iterate nested
+3
+1
+== iterate option
+3
+1
+== iterate two_fields
+3
+1
+== len element
+1
+1
+== len element_field
+1
+1
+== len field
+1
+1
+== len local
+1
+1
+== len mut_param
+1
+1
+== len nested
+1
+1
+== len option
+1
+1
+== len two_fields
+1
+1
+== mutparam element
+2
+2
+== mutparam element_field
+2
+2
+== mutparam field
+2
+2
+== mutparam local
+2
+2
+== mutparam mut_param
+2
+2
+== mutparam nested
+2
+2
+== mutparam option
+2
+2
+== mutparam two_fields
+2
+2
+== param element
+1
+1
+== param element_field
+1
+1
+== param field
+1
+1
+== param local
+1
+1
+== param mut_param
+1
+1
+== param nested
+1
+1
+== param option
+1
+1
+== param two_fields
+1
+1
+== print element
+{3}
+1
+== print element_field
+{3}
+1
+== print field
+{3}
+1
+== print local
+{3}
+1
+== print mut_param
+{3}
+1
+== print nested
+{3}
+1
+== print option
+{3}
+1
+== print two_fields
+{3}
+1
+== str element
+{3}
+1
+== str element_field
+{3}
+1
+== str field
+{3}
+1
+== str local
+{3}
+1
+== str mut_param
+{3}
+1
+== str nested
+{3}
+1
+== str option
+{3}
+1
+== str two_fields
+{3}
+1

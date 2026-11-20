@@ -1,0 +1,8 @@
+.{
+    .name = .selka,
+    .version = "0.1.0",
+    .fingerprint = 0x89d9bbd51b51fef7,
+    .minimum_zig_version = "0.17.1",
+    .dependencies = .{},
+    .paths = .{ "selfhost", "build_env.zig", "build_identity.zig", "build_test_inputs.zig", "build_verification.zig", "build_coverage.zig", "tools", "scripts", "build.zig", "build.zig.zon", ".zigversion", "src", "tests", "test", "SPEC.md", "examples", "docs", "README.md" },
+}

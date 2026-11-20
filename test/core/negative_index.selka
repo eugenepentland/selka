@@ -1,0 +1,21 @@
+func parse_index(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[]) -> int:
+    mut index = parse_index(args[1])
+    mut xs = [10, 20]
+    mut fixed: FixedArray[int, 2] = FixedArray[int, 2]([30, 40])
+    if args[0] == "list-read":
+        return xs[index]
+    if args[0] == "list-write":
+        xs[index] = 9
+        return xs[0]
+    if args[0] == "array-read":
+        return fixed[index]
+    fixed[index] = 9
+    return fixed[0]

@@ -1,0 +1,12 @@
+import catalog
+
+"""Reads the catalog without owning the model."""
+
+
+public func read() -> int:
+    """Read the catalog's currently stored amount.
+
+    >>> read()
+    4
+    """
+    return catalog.value()

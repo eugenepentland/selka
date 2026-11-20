@@ -1,0 +1,24 @@
+func locate(text: str, needle: str) -> int:
+    mut found = 0
+    if text.find(needle) != -1:
+        found += 1
+    if text.find(needle) == -1:
+        found += 10
+    if text.find(needle) >= 0:
+        found += 100
+    if text.find(needle) < 0:
+        found += 1000
+    if text.find(needle) == 2:
+        found += 10000
+    if -1 == text.find(needle):
+        found += 100000
+    return found
+
+
+func edges(text: str, needle: str) -> int:
+    return text.index(needle) * 10 + text.rindex(needle)
+
+
+func main(out: Stream) -> int:
+    out.print(locate("abcb", "b"), locate("xyz", "q"), edges("abcb", "b"))
+    return 0

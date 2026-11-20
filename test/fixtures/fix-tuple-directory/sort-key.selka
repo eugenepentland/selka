@@ -1,0 +1,18 @@
+# migrate-embedded: skip intentional tuple migration before-source exercised by test/fix_wave1_tuple_test.zig
+import strings
+
+record Item:
+    rank: int
+    text: str
+
+
+func key(value: Item) -> tuple[int, str]:
+    assert strings.starts_with(value.text, "")
+    return value.rank, value.text
+
+
+func main(out: Stream) -> int:
+    const values = sorted([Item(rank=2, text="b"), Item(rank=1, text="a")], key=key)
+    assert values[0].rank == 1 and values[1].rank == 2
+    print(out, values[0].text)
+    return 0

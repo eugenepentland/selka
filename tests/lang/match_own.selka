@@ -1,0 +1,221 @@
+# `match own name:` (2A). The marker consumes a named owner, an owned local or an `own` parameter, as matching a fresh call
+# result does: each payload binding owns its value, so it may be moved, stored or returned without a copy, and
+# `own payload.field` takes one field and drops the rest of the payload. An arm that does not use its payload drops it. A
+# borrowed or `mut` parameter, a borrowed local, a field or element place and a use after the match are refused
+# (src/core/match_own_test.zig).
+record Account:
+    name: str
+    holds: int[]
+
+
+enum Slot:
+    empty
+    account(value: Account)
+    pair(left: str[], right: str[])
+
+
+func make(n: int) -> Slot:
+    if n == 0:
+        return Slot.empty
+    return Slot.account(value=Account(name="a" + str(n), holds=[n, n + 1]))
+
+
+func holds_of(own s: Slot) -> int[]:
+    match own s:
+        case account(value=payload):
+            return own payload.holds
+        case empty | pair(..):
+            return []
+
+
+func keep(own s: Slot, mut out: Account[]) -> int:
+    match own s:
+        case account(value=payload):
+            append(mut out, own payload)
+            return 1
+        case empty | pair(..):
+            return 0
+
+
+func first_names(own xs: str[]?) -> str[]:
+    match own xs:
+        case Some(v):
+            return v
+        case None:
+            return []
+
+
+func sides(own s: Slot) -> str[]:
+    match own s:
+        case pair(left, right):
+            mut out = own left
+            for name in right:
+                append(mut out, copy(name))
+            return out
+        case account(..) | empty:
+            return []
+
+
+func sum_local(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        const s = make(i)
+        match own s:
+            case account(value=payload):
+                const h = own payload.holds
+                total = total + h[0] + h[1]
+            case empty | pair(..):
+                total = total + 100
+    return total
+
+
+func refill() -> int:
+    mut s = make(3)
+    match own s:
+        case account(value=payload):
+            s = Slot.account(value=own payload)
+        case empty | pair(..):
+            s = Slot.empty
+    match s:
+        case account(value=p):
+            return len(p.name) + p.holds[1]
+        case empty | pair(..):
+            return 0
+
+
+func unused_payload() -> int:
+    const s = make(5)
+    match own s:
+        case account(..):
+            return 7
+        case empty | pair(..):
+            return 0
+
+
+# A consuming loop takes a payload binding of `match own` as it takes an owned local (FX8, friction F-39): each element
+# moves into the loop name, so it is stored without a copy.
+func listed(own names: str[]) -> str[]?:
+    return Some(own names)
+
+
+func names_from_local(n: int) -> str[]:
+    mut out: str[] = []
+    const listing = listed(["a" + str(n), "b"])
+    match own listing:
+        case Some(found):
+            for name in own found:
+                append(mut out, own name)
+        case None:
+            pass
+    return out
+
+
+func names_from_mut_local() -> int:
+    mut kept = 0
+    mut listing = listed(["x", "y", "z"])
+    match own listing:
+        case Some(found):
+            for name in own found:
+                kept += len(name)
+        case None:
+            pass
+    listing = None
+    return kept
+
+
+func sides_consumed(own s: Slot) -> str[]:
+    match own s:
+        case pair(left, right):
+            mut out = own left
+            for name in own right:
+                append(mut out, own name)
+            return out
+        case account(..) | empty:
+            return []
+
+
+func left_of_call() -> int:
+    mut total = 0
+    match Slot.pair(left=["p", "q"], right=[]):
+        case pair(left, right):
+            for name in own left:
+                total += len(name)
+            total += len(right)
+        case account(..) | empty:
+            total = -1
+    return total
+
+
+func nested_names(own outer: Slot?) -> int:
+    mut total = 0
+    match own outer:
+        case Some(inner):
+            match own inner:
+                case pair(left, right):
+                    for name in own right:
+                        total += len(name)
+                    total += len(left)
+                case account(..) | empty:
+                    total = -1
+        case None:
+            total = -2
+    return total
+
+
+func name_or_empty(own r: Account?) -> str:
+    match own r:
+        case Some(account):
+            return own account.name
+        case None:
+            return ""
+
+
+public func test_a_field_moves_out_of_a_consumed_own_parameter() -> bool:
+    const h = holds_of(make(4))
+    return len(h) == 2 and h[0] == 4 and h[1] == 5 and len(holds_of(make(0))) == 0
+
+
+public func test_a_consumed_payload_is_stored_without_a_copy() -> bool:
+    mut kept: Account[] = []
+    const n = keep(make(2), mut kept) + keep(make(0), mut kept)
+    return n == 1 and len(kept) == 1 and kept[0].name == "a2" and kept[0].holds[1] == 3
+
+
+public func test_an_option_payload_is_returned_from_a_consumed_option() -> bool:
+    const names = first_names(Some(["x", "y"]))
+    return len(names) == 2 and names[1] == "y" and len(first_names(None)) == 0
+
+
+public func test_fielded_payload_bindings_own_their_fields() -> bool:
+    const all = sides(Slot.pair(left=["l"], right=["r1", "r2"]))
+    return len(all) == 3 and all[0] == "l" and all[2] == "r2" and len(sides(make(1))) == 0
+
+
+public func test_a_local_consumed_in_a_loop_body_drops_each_payload() -> bool:
+    return sum_local(4) == 3 + 5 + 7 + 100
+
+
+public func test_a_consumed_mut_local_can_be_assigned_again() -> bool:
+    return refill() == 6
+
+
+public func test_an_arm_that_ignores_its_payload_drops_it() -> bool:
+    return unused_payload() == 7
+
+
+public func test_a_field_moves_out_of_a_consumed_option_payload() -> bool:
+    return name_or_empty(Some(Account(name="kept", holds=[]))) == "kept" and name_or_empty(None) == ""
+
+
+public func test_a_consuming_loop_takes_the_payload_of_a_consumed_local() -> bool:
+    const names = names_from_local(7)
+    return len(names) == 2 and names[0] == "a7" and names[1] == "b" and names_from_mut_local() == 3
+
+
+public func test_a_consuming_loop_takes_a_fielded_payload_of_a_consumed_parameter_or_call_result() -> bool:
+    const all = sides_consumed(Slot.pair(left=["l"], right=["r1", "r2"]))
+    return len(all) == 3 and all[2] == "r2" and len(sides_consumed(Slot.empty)) == 0 and left_of_call() == 2
+
+
+public func test_a_consuming_loop_takes_a_payload_of_a_nested_consuming_match() -> bool:
+    return nested_names(Some(Slot.pair(left=["l"], right=["ab", "c"]))) == 4 and nested_names(None) == -2

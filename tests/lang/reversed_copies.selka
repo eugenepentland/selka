@@ -1,0 +1,42 @@
+import lists
+
+record Row:
+    items: str[]
+
+
+public func test_reversed_text_elements_survive_source_changes() -> bool:
+    mut values = ["first-" + str(1), "last-" + str(2)]
+    const backward = reversed(values)
+    const source_kept = values[0] == "first-1" and values[1] == "last-2"
+    values[1] = "changed"
+    lists.clear(mut values)
+    return source_kept and backward == ["last-2", "first-1"]
+
+
+public func test_reversed_bytes_elements_survive_source_destruction() -> bool:
+    mut values = [b"first", b"last"]
+    const backward = reversed(values)
+    values[1] = b"changed"
+    lists.clear(mut values)
+    return backward == [b"last", b"first"]
+
+
+public func test_reversed_nested_lists_have_independent_children() -> bool:
+    mut values = [[1, 2], [3, 4]]
+    const backward = reversed(values)
+    values[1][0] = 9
+    lists.clear(mut values)
+    return backward == [[3, 4], [1, 2]]
+
+
+public func test_reversed_records_copy_managed_fields() -> bool:
+    mut values = [Row(items=["first"]), Row(items=["last"])]
+    const backward = reversed(values)
+    values[1].items[0] = "changed"
+    lists.clear(mut values)
+    return backward[0].items[0] == "last" and backward[1].items[0] == "first"
+
+
+public func test_reversed_empty_managed_and_scalar_sequences() -> bool:
+    const empty: str[] = []
+    return len(reversed(empty)) == 0 and reversed([1, 2, 3]) == [3, 2, 1] and reversed("abc") == ["c", "b", "a"]

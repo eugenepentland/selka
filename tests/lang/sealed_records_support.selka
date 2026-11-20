@@ -1,0 +1,100 @@
+# The module that declares the sealed records `sealed_records.selka` uses from outside. Only this module and its test file
+# `sealed_records_support_test.selka` build these records or write their fields.
+# Text that is already escaped for HTML (the site's `Markup`, friction F-17): `escape` and `join` are the only ways to get one.
+@sealed
+public record Markup:
+    html: str
+
+
+# A count that is never negative: `count` checks it, and no other module can build one that skipped the check.
+@invariant(self.value >= 0, "a count is never negative")
+@sealed
+public record Count:
+    value: int = 0
+    label: str = ""
+
+
+# A key of one table: only `key` makes one.
+@sealed
+public record Key:
+    n: int
+
+
+# A write that must be committed or abandoned: only `begin` makes one, and only `commit` and `abandon` end one.
+@sealed
+@linear
+public record Staged:
+    target: str
+    chunks: str[] = []
+
+
+# A pair of a tag and a value of any type, built only by `tagged`.
+@sealed
+public record Tagged[T: copy + storable]:
+    tag: int
+    value: T
+
+
+# A record of this module that holds a sealed one, with the sealed module's own default.
+public record Holder:
+    count: Count = Count(label="held")
+    n: int = 0
+
+
+func escape_char(c: str) -> str:
+    match c:
+        case "<":
+            return "&lt;"
+        case ">":
+            return "&gt;"
+        case "&":
+            return "&amp;"
+        case _:
+            return copy(c)
+
+
+public func escape(text: str) -> Markup:
+    mut out = ""
+    for i in range(len(text)):
+        out += escape_char(text[i:i + 1])
+    return Markup(html=own out)
+
+
+public func join(a: Markup, b: Markup) -> Markup:
+    return Markup(html=a.html + b.html)
+
+
+public func count(value: int, label: str) -> Count fails str:
+    if value < 0:
+        fail "negative"
+    return Count(value=value, label=copy(label))
+
+
+public func bumped(c: Count) -> Count:
+    return replace(copy(c), value=c.value + 1)
+
+
+public func key(n: int) -> Key:
+    return Key(n=n)
+
+
+public func begin(target: str) -> Staged:
+    return Staged(target=copy(target))
+
+
+public func write(mut s: Staged, text: str):
+    append(mut s.chunks, copy(text))
+
+
+public func commit(own s: Staged) -> int:
+    const chunks = own s.chunks
+    return len(chunks)
+
+
+public func abandon(own s: Staged) -> int:
+    const target = own s.target
+    return len(target)
+
+
+public func tagged[T: copy + storable](tag: int, value: T) -> Tagged[T]:
+    return Tagged[T](tag=tag, value=copy(value))

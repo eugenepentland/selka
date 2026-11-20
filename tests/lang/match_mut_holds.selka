@@ -1,0 +1,94 @@
+# What a `match mut` arm may still do with the matched value's owner while its hold is live, for a union of scalar
+# payloads (FX9). Since 13 November a write that replaces the matched place, or a container of it, before the arm's last
+# use of a payload binding is refused for every payload type (src/match_mut_test.zig pins the refusals). These tests pin
+# what stays accepted: a write in an arm that binds nothing, a write after the last use of the binding, a read of the
+# owner during the hold, a write to a field beside the matched place, and writes through the binding.
+enum Sh:
+    empty
+    rad(value: int)
+
+
+record Holder:
+    tag: int
+    shape: Sh
+
+
+record Wrap:
+    name: int
+    holder: Holder
+
+
+func value_of(s: Sh) -> int:
+    match s:
+        case rad(value=v):
+            return v
+        case empty:
+            return -1
+
+
+func bump(mut n: int):
+    n = n + 1
+
+
+public func test_a_write_in_an_arm_that_binds_nothing() -> bool:
+    mut s = Sh.empty
+    match mut s:
+        case rad(value=v):
+            v = v + 1
+        case empty:
+            s = Sh.rad(value=4)
+    return value_of(s) == 4
+
+
+public func test_a_write_after_the_last_use_of_the_binding() -> bool:
+    mut s = Sh.rad(value=1)
+    match mut s:
+        case rad(value=v):
+            v = v + 8
+            s = Sh.rad(value=value_of(s) * 2)
+        case empty:
+            return False
+    return value_of(s) == 18
+
+
+public func test_a_read_of_the_owner_during_the_hold() -> bool:
+    mut h = Holder(tag=3, shape=Sh.rad(value=1))
+    match mut h.shape:
+        case rad(value=v):
+            const before = value_of(h.shape)
+            v = v + h.tag + before
+        case empty:
+            return False
+    return value_of(h.shape) == 5
+
+
+public func test_writes_to_fields_beside_the_matched_place() -> bool:
+    mut h = Holder(tag=1, shape=Sh.rad(value=1))
+    match mut h.shape:
+        case rad(value=v):
+            h.tag = 9
+            bump(mut h.tag)
+            v = v + 1
+        case empty:
+            return False
+    mut w = Wrap(name=1, holder=Holder(tag=1, shape=Sh.rad(value=1)))
+    match mut w.holder.shape:
+        case rad(value=v):
+            w.name = 3
+            w.holder.tag = 4
+            v = v + w.name
+        case empty:
+            return False
+    return h.tag == 10 and value_of(h.shape) == 2 and w.holder.tag == 4 and value_of(w.holder.shape) == 4
+
+
+public func test_writes_through_the_binding() -> bool:
+    mut h = Holder(tag=1, shape=Sh.rad(value=1))
+    match mut h.shape:
+        case rad(value=v):
+            v = 7
+            bump(mut v)
+            v += 2
+        case empty:
+            return False
+    return value_of(h.shape) == 10

@@ -1,0 +1,79 @@
+# W13 slice 2: every spelling W13 retires that `selka fix` rewrites with certainty, written as a program before the
+# change. `method-forms.expected.selka` is the same program after `selka fix`; both print the same lines. The spellings
+# that keep a warning with no edit are in `method-forms-uncertain.selka`.
+import buffers
+import math
+import strings
+
+# The text methods with function homes in `strings` and `hashes`; `strings` is imported already, `hashes` is not.
+func text_forms(out: Stream, s: str) -> Unit:
+    print(out, s.strip(" "), s.lstrip(" "), s.rstrip(" "), "7".zfill(3))
+    print(out, s.split(), ", ".join(["a", "b"]), len(s.encode()))
+    print(out, s.count(","), s.count(",", 3), s.count(",", 3, 6))
+    print(out, s.index(",", 1), s.index(",", 1, 9), s.rindex(",", 1), s.rindex(",", 1, 9))
+    print(out, s.startswith("a", 2), s.startswith("a", 2, 5), s.endswith("c", 0), s.endswith("c ", 0, 9))
+    print(out, len(s.sha256()), len(s.blake3()))
+    print(out, s.find(",", 1) == -1, s.find(",", 1, 9) != -1, s.rfind(",", 1) >= 0, s.rfind(",", 1, 9) < 0)
+    print(out, "12".parse_int(), "1.5".parse_float(), "2.5".parse_f32())
+
+
+# The byte methods with homes in `bytes`, `strings`, `hex` and `hashes`.
+func byte_forms(out: Stream, b: bytes) -> Unit:
+    const line = b" x y "
+    const words = line.split()
+    print(out, len(words), b.strip(b" "), b.lstrip(b" "), b.rstrip(b" "))
+    print(out, b.find(b",", 1), b.find(b",", 1, 4), b.rfind(b",", 1), b.rfind(b",", 1, 4))
+    print(out, b.count(b",", 1), b.count(b",", 1, 4), b.startswith(b"x", 1), b.startswith(b"x", 1, 4))
+    print(out, b.endswith(b" ", 0), b.endswith(b"y", 0, 4), b.index(b","), b.index(b",", 1), b.index(b",", 1, 4))
+    print(out, b.rindex(b","), b.rindex(b",", 1), b.rindex(b",", 1, 4))
+    print(out, b"12".parse_int(), b"1.5".parse_float(), b.scalar_count(), b.to_list(), b.find_any(b",y", 0))
+    print(out, b.decode(), b.hex(), len(b.sha256()), len(b.blake3()))
+
+
+# A byte_buffer reads through the `bytes` functions too, the reads retired on `bytes` included.
+func buffer_forms(out: Stream) -> Unit:
+    const empty: int[] = []
+    mut buf = byte_buffer(empty)
+    buffers.append(mut buf, b" k,v ")
+    print(out, buf.find(b","), buf.count(b","), buf.startswith(b" "), buf.endswith(b" "))
+    print(out, bytes(buf.strip()), bytes(buf.lstrip()), bytes(buf.rstrip()), len(buf.split(b",")))
+    print(out, buf.parse_int_range(0, 1), buf.parse_float_range(0, 1), buf.scalar_count_range(0, 3))
+    print(out, buf.decode(), buf.hex())
+
+
+# The set's four writes, and two rewrites on one line.
+func collection_forms(out: Stream) -> Unit:
+    mut seen: set[int] = {1, 2, 3}
+    seen.remove(2)
+    seen.update({7, 8})
+    const popped = seen.pop()
+    print(out, len(seen), popped >= 1)
+    seen.clear()
+    const both = "a-b".count("-") + "c-d-e".count("-")
+    print(out, len(seen), both)
+
+
+# The duplicates that are not methods: the bare `unwrap_or`, `math`'s twins of the prelude, the `strings` parses and
+# the bare file functions. The float twins' inputs round away from zero, where the two forms print alike.
+func duplicates(out: Stream, fs: Filesystem, maybe: int?) -> Unit:
+    const a = 4
+    const b = 9
+    print(out, unwrap_or(maybe, 3), unwrap_or(maybe, a) + 1, math.min(a, b), math.max(a, b), math.sqrt(16.0))
+    print(out, strings.to_int("41"), strings.to_float("0.5"))
+    print(out, math.round(2.6), math.floor(2.6), math.ceil(2.2), math.trunc(0.0 - 2.7))
+    print(out, exists(fs, "no-such-file"), is_ok(read_text(fs, "no-such-file")))
+
+
+func is_ok(result: Result[str, str]) -> bool:
+    if result is Ok(_):
+        return True
+    return False
+
+
+func main(out: Stream, fs: Filesystem) -> int:
+    text_forms(out, " a,b,c ")
+    byte_forms(out, b"x,y ")
+    buffer_forms(out)
+    collection_forms(out)
+    duplicates(out, fs, None)
+    return 0

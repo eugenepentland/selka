@@ -1,0 +1,107 @@
+# Preserve former negative positions at each access, including after receiver resizing.
+import dicts
+import lists
+
+func former_position(length: int, index: int) -> int:
+    if index < 0:
+        return length + index
+    return index
+
+
+record Label:
+    text: bytes
+    number: int
+
+
+record Row:
+    label: Label
+    other: int
+
+
+record HeldRow:
+    view: int[]
+    number: int
+
+
+func selected(rows: Row[], at: int, mut output: int[]) -> int:
+    mut number = rows[former_position(len(rows), at)].label.number
+    append(mut output, number)
+    return number
+
+
+func total(rows: Row[]) -> int:
+    mut i = 0
+    mut answer = 0
+    while i < len(rows):
+        const row = rows[i]
+        answer += row.label.number
+        i += 1
+    return answer
+
+
+func replace(mut rows: Row[]) -> int:
+    rows[0] = Row(label=Label(text=b"new", number=9), other=11)
+    return 0
+
+
+func callback(mut rows: Row[]) -> int:
+    const receiver_snapshot = copy(rows)
+    return receiver_snapshot[replace(mut rows)].label.number
+
+
+func materialize(rows: Row[], at: int, mut output: int[]) -> Row:
+    mut row = copy(rows[former_position(len(rows), at)])
+    append(mut output, row.other)
+    return row
+
+
+func held(rows: HeldRow[], mut output: int[]) -> int:
+    mut number = rows[0].number
+    append(mut output, number)
+    return number
+
+
+public func test_nested_fields_keep_bounds_and_copy_the_scalar() -> bool:
+    mut rows = [Row(label=Label(text=b"a" + bytes([49]), number=3), other=7), Row(label=Label(text=b"b" + bytes([50]), number=5), other=11)]
+    mut output: int[] = []
+    mut first = selected(rows, 0, mut output)
+    mut last = selected(rows, -1, mut output)
+    rows[0] = Row(label=Label(text=b"changed", number=99), other=101)
+    return first == 3 and last == 5 and output == [3, 5]
+
+
+public func test_readonly_length_loop_keeps_managed_local_bits_borrowed() -> bool:
+    mut rows = [Row(label=Label(text=b"a" + bytes([49]), number=3), other=7), Row(label=Label(text=b"b" + bytes([50]), number=5), other=11)]
+    return total(rows) == 8 and total([]) == 0 and rows[0].label.text == b"a1"
+
+
+public func test_callback_keeps_the_receiver_snapshot() -> bool:
+    mut rows = [Row(label=Label(text=b"old" + bytes([49]), number=3), other=7)]
+    mut value = callback(mut rows)
+    return value == 3 and rows[0].label.number == 9
+
+
+public func test_escaped_record_keeps_ordinary_ownership() -> bool:
+    mut rows = [Row(label=Label(text=b"old" + bytes([49]), number=3), other=7)]
+    mut output: int[] = []
+    mut row = materialize(rows, 0, mut output)
+    lists.clear(mut rows)
+    return row.label.text == b"old1" and row.label.number == 3 and output == [7]
+
+
+public func test_snapshot_sibling_stays_independent() -> bool:
+    mut mapping = {1: 7}
+    mut rows = [HeldRow(view=list(dicts.values(mapping)), number=3)]
+    mut output: int[] = []
+    mut value = held(rows, mut output)
+    mapping[1] = 9
+    return value == 3 and output == [3] and list(rows[0].view) == [7]
+
+
+func main(out: Stream) -> int:
+    print(out, test_nested_fields_keep_bounds_and_copy_the_scalar())
+    print(out, test_readonly_length_loop_keeps_managed_local_bits_borrowed())
+    print(out, test_callback_keeps_the_receiver_snapshot())
+    print(out, test_escaped_record_keeps_ordinary_ownership())
+    print(out, test_snapshot_sibling_stays_independent())
+    return 0

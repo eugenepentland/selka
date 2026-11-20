@@ -1,0 +1,123 @@
+# Rule C (plan §4b, lane C-c): every copy in a built program is written. Each shape of the
+# hidden-copy census (experiments/language-wave2-20261019/hidden-copies/README.md) appears here in
+# its repaired form, where `copy(...)` writes the copy, and in its free form, where no copy is
+# made. The release pass with --verify-facts refuses any copy site that no `copy(...)` wrote, so
+# these programs check that no hidden copy comes back: a result that changed or a refused build
+# shows as a failed test.
+import sets
+import strings
+
+# C1 repaired: an owned text local takes a written copy of a slice, then a new value is made.
+func owned_text(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        mut cur = copy(data[i % 4:i % 4 + 2])
+        cur = cur + "x"
+        total += len(cur)
+    return total
+
+
+# C1 free: a slice is only read, so no copy is made and the text is the source's own octets.
+func read_only_slice(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        const piece = data[i % 4:i % 4 + 2]
+        total += len(piece)
+    return total
+
+
+# C2 repaired: a bytes slice returned from a function that is not a view return.
+func head_bytes(source: bytes) -> bytes:
+    return copy(source[0:4])
+
+
+# C2 free: a bytes slice read in place by its caller.
+func bytes_total(source: bytes) -> int:
+    const first = source[1:3]
+    return len(first)
+
+
+# C3 repaired: a str function whose one path is a view and whose other path is new text.
+func line_at(text: str, n: int) -> str:
+    if n < 0:
+        return "none"
+    return copy(text[0:n])
+
+
+# C3 free: a pure view return of str is free for the caller.
+func head_view(text: str) -> str from text:
+    return text[0:2]
+
+
+# C5 free: a view return keeps its view when the caller only reads it.
+func view_length(n: int) -> int:
+    const data = "abcdefghijkl"
+    mut total = 0
+    for i in range(n):
+        total += len(head_view(data))
+    return total
+
+
+# C6 repaired: a library function that stores its element takes a written copy.
+func seen_pieces(text: str) -> int:
+    mut seen: set[str] = set()
+    for i in range(3):
+        sets.add(mut seen, copy(text[i:i + 2]))
+    return len(seen)
+
+
+# C7 free: a stripped text is a view, so the call copies nothing.
+func stripped_length(n: int) -> int:
+    mut total = 0
+    for i in range(n):
+        total += len(strings.strip("  abc  "))
+    return total
+
+
+# A new value is not a copy: concatenation and a sorted list are written by their operations.
+func new_values(n: int) -> int:
+    mut total = 0
+    const xs = [3, 1, 2]
+    for i in range(n):
+        const joined = "a" + "b"
+        const ordered = sorted(xs)
+        total += len(joined) + ordered[0]
+    return total
+
+
+public func test_owned_text_slice_copy_is_written() -> bool:
+    return owned_text(4) == 12
+
+
+public func test_read_only_slice_is_a_view() -> bool:
+    return read_only_slice(4) == 8
+
+
+public func test_bytes_slice_return_is_written() -> bool:
+    return len(head_bytes(b"abcdefgh")) == 4
+
+
+public func test_bytes_slice_read_in_place() -> bool:
+    return bytes_total(b"abcdef") == 2
+
+
+public func test_view_branch_copy_is_written() -> bool:
+    return line_at("abcdef", 3) == "abc" and line_at("abcdef", -1) == "none"
+
+
+public func test_pure_view_return_keeps_its_view() -> bool:
+    return head_view("abcdef") == "ab" and view_length(3) == 6
+
+
+public func test_stored_piece_copy_is_written() -> bool:
+    return seen_pieces("abcdef") == 3
+
+
+public func test_stripped_text_is_a_view() -> bool:
+    return stripped_length(3) == 3 * 3
+
+
+public func test_new_values_are_not_hidden_copies() -> bool:
+    return new_values(2) == 6

@@ -1,0 +1,44 @@
+# Three docstring examples are refused. The own marker in `greet` goes into the
+# docstring where it was found. The two retired conditional expressions have a
+# repair that the docstring cannot take verbatim: `declared` would replace one
+# line by several, and `displayed` would edit the line the runner wraps the display
+# in. `selka fix` leaves those two examples as written and reports them.
+public func greet(name: bytes) -> bytes fails str:
+    """Greet by name, failing on an empty one.
+
+    >>> mut greeting = b""
+    >>> match greet(b"ada"):
+    ...     case Ok(text):
+    ...         greeting = own text
+    ...     case Err(_):
+    ...         greeting = b"failed"
+    >>> greeting
+    b'hello ada'
+    """
+    if len(name) == 0:
+        fail "empty"
+    return b"hello " + name
+
+
+public func declared() -> int:
+    """Name a choice.
+
+    >>> const chosen = 1 if True else 2
+    >>> chosen
+    1
+    """
+    return 1
+
+
+public func displayed() -> int:
+    """Show a choice.
+
+    >>> 3 if True else 4
+    3
+    """
+    return 3
+
+
+func main(out: Stream) -> int:
+    print(out, declared() + displayed())
+    return 0

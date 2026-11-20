@@ -1,0 +1,35 @@
+func render(value: i64) -> str:
+    if value == 0:
+        return "0"
+    mut out = ""
+    mut rest = value
+    while rest > 0:
+        out = chr(48 + rest % 10) + out
+        rest = rest // 10
+    return out
+
+
+public func digit_counts(n: i64) -> i64[]:
+    mut counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    mut rest = n
+    if rest < 0:
+        rest = -rest
+    if rest == 0:
+        counts[0] = 1
+    while rest > 0:
+        mut digit = rest % 10
+        counts[digit] = counts[digit] + 1
+        rest = rest // 10
+    return counts
+
+
+public func headline(n: i64) -> str:
+    mut rest = n
+    if rest < 0:
+        rest = -rest
+    mut total = 0
+    mut reach = rest
+    while reach > 0:
+        total = total + reach % 10
+        reach = reach // 10
+    return "n=" + render(rest) + " sum=" + render(total)

@@ -1,0 +1,56 @@
+import filesystem
+import strings
+
+func fresh(mut events: int, prefix: str) -> str:
+    events += 1
+    return prefix + str(events)
+
+
+func optional(mut events: int, present: bool) -> str?:
+    events += 1
+    if present:
+        return Some("option-" + str(events))
+    return None
+
+
+# spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1
+# spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+func scoped(fs: Filesystem, fail : bool, mut events: int) -> int fails str:
+    mut total = 0
+    for i in range(8):
+        with fs.read_only() as readonly:
+            with try readonly.open("data", "r") as file:
+                const text = file.read()
+                total += strings.char_count(min(fresh(mut events, "z"), fresh(mut events, "a")))
+                total += strings.char_count(max(fresh(mut events, "b"), fresh(mut events, "c")))
+                total += strings.char_count(optional(mut events, i % 2 == 0).unwrap_or(fresh(mut events, "fallback-")))
+                assert text == "payload"
+                if i < 2:
+                    continue
+                if fail:
+                    fail "scope-" + str(total)
+                break
+    return total
+
+
+func main(out: Stream) -> int:
+    mut fs = filesystem.memory()
+    _ = fs.write_text("data", "payload")
+    mut events = 0
+    match scoped(fs, False, mut events):
+        case Ok(total):
+            print(out, total, events)
+        case Err(message):
+            print(out, message)
+            return 1
+    match scoped(fs, True, mut events):
+        case Ok(total):
+            print(out, total)
+            return 2
+        case Err(message):
+            print(out, message, events)
+    with fs.open("data", "r") as file:
+        print(out, file.read())
+    fs = filesystem.memory()
+    print(out, fs.exists("data"))
+    return 0

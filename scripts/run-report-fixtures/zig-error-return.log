@@ -1,0 +1,40 @@
+test-units
++- verification action unit member 0 99 pass, 3351 skip, 1 fail (3451 total)
+test: test wall 15.60s; slowest over 50ms:
+test:   2.41s  advice_messages_test.test.a try in a call's argument is accepted in each kind of call and statement (TRYARG)
+test:   1.92s  io_paths_test.test.a file lock excludes a second lock until its scope ends, and try_lock_file reports the holder
+test:   1.31s  semantic_cache_test.test.shared budget holds after an oversized-single-entry session without changing acceptance
+test:   1.28s  io_read_link_test.test.Stat.owner, Stat.group and Stat.links are the user, the group and the link count the kernel keeps for a real entry
+test:   1.13s  lint_test.test.lint names no local for a match scrutinee, a bind-or-else or a try, and still names a vague local the author wrote
+test:   1.08s  external_capabilities_test.test.every grant an entry point names is materialized before its body runs
+test:   0.63s  native_execute.test.native execution reports entry results, guest output and located traps
+test:   0.58s  semantic_cache_test.test.copyEntry parser trailing span proof reuses matched body after another body changes
+test:   0.45s  contracts_test.test.contracts: old captures an entry value once and rejects a shared one
+test:   0.44s  semantic_cache_test.test.copyEntry restores exact default source proofs outside declaration region
+test: FAIL — 1 failed of 100
+test: RESULT {"passed":99,"failed":1,"skipped":0}
+error: 'advice_messages_test.test.a try in a call's argument is accepted in each kind of call and statement (TRYARG)' failed:
+       /home/u/ai/canopy/mylang-checkbuild/src/parser.zig:1435:36: 0x19b4aa4 in parse (root_test.zig)
+               if (self.cursor.recovered) return error.SourceError;
+                                          ^
+       /home/u/ai/canopy/mylang-checkbuild/src/compiler.zig:230:23: 0x30a4c47 in parseCached (root_test.zig)
+               self.syntax = try p.parse();
+                             ^
+       /home/u/ai/canopy/mylang-checkbuild/src/compiler.zig:214:9: 0x3095836 in parse (root_test.zig)
+               return self.parseCached(null);
+               ^
+       /home/u/ai/canopy/mylang-checkbuild/src/compiler.zig:365:9: 0x2357762 in checkWithCache (root_test.zig)
+               try self.parse();
+               ^
+       /home/u/ai/canopy/mylang-checkbuild/src/compiler.zig:332:9: 0x2357496 in check (root_test.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/u/ai/canopy/mylang-checkbuild/src/advice_messages_test.zig:81:5: 0x4227c87 in expectAccepted (root_test.zig)
+           try c.check();
+           ^
+       /home/u/ai/canopy/mylang-checkbuild/src/advice_messages_test.zig:86:5: 0x4227ea5 in test.a try in a call's argument is accepted in each kind of call and statement (TRYARG) (root_test.zig)
+           try expectAccepted(half ++
+           ^
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 0 --root-id src/root_...
+
+Build Summary: 17/19 steps succeeded (1 failed); 99/3451 tests passed (3351 skipped, 1 failed)

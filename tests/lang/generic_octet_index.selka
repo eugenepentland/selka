@@ -1,0 +1,20 @@
+# A generic body reads an octet of a `str` or `bytes` value as an `int`, the same
+# as a non-generic body does. Before this was fixed, the generic checker typed the
+# read as the collection itself, so comparing it with an integer was E_GENERIC_TYPE.
+func octet_summary[S: copy](value: S, text: str, data: bytes) -> int:
+    _ = value
+    mut total = 0
+    for i in range(len(text)):
+        if text[i] == 97:
+            total += 1
+    if data[0] == 71:
+        total += 10
+    return total + text[0] + data[1]
+
+
+public func test_generic_str_and_bytes_indexing_reads_octets_as_int() -> bool:
+    return octet_summary(0, "aba", b"Gab") == 206
+
+
+public func test_generic_octet_index_compares_with_integer_literals() -> bool:
+    return octet_summary(0, "x", b"Gx") == 10 + 120 + 120

@@ -1,0 +1,280 @@
+//! Retention runs through the installed native command, including an empty PATH.
+const std = @import("std");
+const testing = std.testing;
+/// The `selka` executable under test, which `zig build` names at run time (TEST-PATHS-1).
+fn compilerPath() []const u8 {
+    return @import("test_paths").corePath();
+}
+const key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+const Fixture = struct {
+    temp: testing.TmpDir,
+    arena: std.heap.ArenaAllocator,
+
+    fn init() !Fixture {
+        var temp = testing.tmpDir(.{});
+        errdefer temp.cleanup();
+        try temp.dir.createDirPath(testing.io, "shared/compiler-artifacts-v2/syntax");
+        try temp.dir.createDirPath(testing.io, "shared/native-tests-v3/receipts");
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/.retention.lock", .data = "" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v3/.retention.lock", .data = "" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/format", .data = "selka-compiler-artifact-store-v2\n" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v3/format", .data = "selka-native-test-store-v3\n" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob", .data = "disposable artifact" });
+        return .{ .temp = temp, .arena = std.heap.ArenaAllocator.init(testing.allocator) };
+    }
+
+    fn deinit(self: *Fixture) void {
+        self.arena.deinit();
+        self.temp.cleanup();
+    }
+
+    fn run(self: *Fixture, command: []const u8, kind: []const u8, flags: []const []const u8) !std.process.RunResult {
+        const a = self.arena.allocator();
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), a);
+        const root = try self.temp.dir.realPathFileAlloc(testing.io, "shared", a);
+        var environment = try std.process.Environ.createMap(testing.environ, a);
+        try environment.put("PATH", "");
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ compiler, "cache", command, "--shared-cache-dir", root, "--kind", kind });
+        try argv.appendSlice(a, flags);
+        return std.process.run(a, testing.io, .{ .argv = argv.items, .environ_map = &environment });
+    }
+
+    fn exists(self: *Fixture, path: []const u8) bool {
+        self.temp.dir.access(testing.io, path, .{}) catch return false;
+        return true;
+    }
+};
+
+fn contains(text: []const u8, needle: []const u8) bool {
+    return std.mem.indexOf(u8, text, needle) != null;
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI preview is immutable and zero budgets collect with empty PATH" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const preview = try fixture.run("gc", "compiler", &.{ "--max-bytes", "0", "--max-entries", "0" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, preview.term);
+    try testing.expect(contains(preview.stdout, "\"dry_run\":true"));
+    try testing.expect(contains(preview.stdout, "\"scanned\":{\"entries\":1"));
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+    const lock_bytes = try fixture.temp.dir.readFileAlloc(testing.io, "shared/compiler-artifacts-v2/.retention.lock", fixture.arena.allocator(), .limited(16));
+    try testing.expectEqualStrings("", lock_bytes);
+    const applied = try fixture.run("gc", "compiler", &.{ "--max-bytes", "0", "--max-entries", "0", "--apply" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, applied.term);
+    try testing.expect(contains(applied.stdout, "\"removed\":{\"entries\":1"));
+    try testing.expect(!fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/format"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI covers the shared stage store: it needs the namespace a build creates, persists a cap, previews and collects" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const missing = try fixture.run("gc", "stages", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+    try testing.expect(contains(missing.stderr, "holds no shared stage namespace"));
+    try fixture.temp.dir.createDirPath(testing.io, "shared/stage-artifacts-v1");
+    const configured = try fixture.run("configure", "stages", &.{ "--max-bytes", "4096" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, configured.term);
+    try testing.expect(contains(configured.stdout, "\"max_bytes\":4096"));
+    try testing.expect(fixture.exists("shared/stage-artifacts-v1/policy"));
+    const preview = try fixture.run("gc", "stages", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, preview.term);
+    try testing.expect(contains(preview.stdout, "\"dry_run\":true"));
+    try testing.expect(contains(preview.stdout, "\"max_bytes\":4096"));
+    const applied = try fixture.run("gc", "stages", &.{ "--apply", "--max-bytes", "8192" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, applied.term);
+    try testing.expect(contains(applied.stdout, "\"dry_run\":false"));
+    try testing.expect(contains(applied.stdout, "\"max_bytes\":8192"));
+    const refused = try fixture.run("gc", "stages", &.{ "--max-entries", "1" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI config persists and legacy namespace refuses without mutation" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const configured = try fixture.run("configure", "tests", &.{ "--max-bytes", "7", "--max-entries", "2", "--interval-seconds", "0" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, configured.term);
+    try testing.expect(contains(configured.stdout, "\"configured\":true"));
+    const observed = try fixture.run("configure", "tests", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, observed.term);
+    try testing.expect(contains(observed.stdout, "\"max_bytes\":7"));
+    try testing.expect(contains(observed.stdout, "\"max_entries\":2"));
+    try fixture.temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/format", .data = "selka-compiler-artifact-store-v1\n" });
+    const refused = try fixture.run("gc", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+    try testing.expect(contains(refused.stderr, "initialized, valid v2"));
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/.retention.lock"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI invalid limits and missing namespaces are explicit refusals" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const invalid = try fixture.run("gc", "compiler", &.{ "--max-bytes", "-1" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
+    try testing.expect(contains(invalid.stderr, "usage: selka cache"));
+    try fixture.temp.dir.deleteTree(testing.io, "shared/native-tests-v3");
+    const missing = try fixture.run("gc", "tests", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
+    try testing.expect(!fixture.exists("shared/native-tests-v3"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI runs beside an active lease, takes only what needs no exclusive lease, and does not change policy" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const lease = try fixture.temp.dir.createFile(testing.io, "shared/compiler-artifacts-v2/.retention.lock", .{ .truncate = false });
+    defer lease.close(testing.io);
+    try lease.lock(testing.io, .shared);
+    // A builder holds the store: the collection runs beside it (F31) and evicts the immutable syntax record, as `leased` says.
+    const busy = try fixture.run("gc", "compiler", &.{ "--max-bytes", "0", "--apply" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, busy.term);
+    try testing.expect(contains(busy.stdout, "\"skipped_active\":false"));
+    try testing.expect(contains(busy.stdout, "\"leased\":true"));
+    try testing.expect(!fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+    // A policy change and a preview still need the store to themselves.
+    const configure = try fixture.run("configure", "compiler", &.{ "--max-bytes", "0" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, configure.term);
+    try testing.expect(contains(configure.stdout, "\"configured\":false"));
+    try testing.expect(contains(configure.stdout, "\"skipped_active\":true"));
+    const preview = try fixture.run("gc", "compiler", &.{});
+    try testing.expect(contains(preview.stdout, "\"skipped_active\":true"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI observes terminated process lease release without a delay" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const a = fixture.arena.allocator();
+    const lock = try fixture.temp.dir.realPathFileAlloc(testing.io, "shared/compiler-artifacts-v2/.retention.lock", a);
+    var child = try std.process.spawn(testing.io, .{
+        .argv = &.{ "flock", "--no-fork", "--shared", lock, "sh", "-c", "printf R; read token" },
+        .expand_arg0 = .expand,
+        .stdin = .pipe,
+        .stdout = .pipe,
+    });
+    defer child.kill(testing.io);
+    var ready: [1]u8 = undefined;
+    try testing.expectEqual(@as(usize, 1), try child.stdout.?.readStreaming(testing.io, &.{&ready}));
+    try testing.expectEqual(@as(u8, 'R'), ready[0]);
+    // The preview needs the store to itself: a held lease skips it, and the end of the holder is seen at once.
+    const busy = try fixture.run("gc", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, busy.term);
+    try testing.expect(contains(busy.stdout, "\"skipped_active\":true"));
+    child.kill(testing.io);
+    const released = try fixture.run("gc", "compiler", &.{ "--max-bytes", "0", "--apply" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, released.term);
+    try testing.expect(contains(released.stdout, "\"skipped_active\":false"));
+    try testing.expect(contains(released.stdout, "\"leased\":false"));
+    try testing.expect(contains(released.stdout, "\"removed\":{\"entries\":1"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI refuses preview without a lock without creating one" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    try fixture.temp.dir.deleteFile(testing.io, "shared/compiler-artifacts-v2/.retention.lock");
+    const preview = try fixture.run("gc", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, preview.term);
+    try testing.expect(!fixture.exists("shared/compiler-artifacts-v2/.retention.lock"));
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+}
+
+fn checkFresh(fixture: *Fixture) !std.process.RunResult {
+    const a = fixture.arena.allocator();
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), a);
+    const root = try fixture.temp.dir.realPathFileAlloc(testing.io, ".", a);
+    const source = try std.fs.path.join(a, &.{ root, "program.selka" });
+    const cache = try std.fs.path.join(a, &.{ root, "private" });
+    const shared = try std.fs.path.join(a, &.{ root, "shared" });
+    var environment = try std.process.Environ.createMap(testing.environ, a);
+    try environment.put("SELKA_COMPILER_SHARED_CACHE", shared);
+    try environment.put("PATH", "");
+    return std.process.run(a, testing.io, .{ .argv = &.{ compiler, "check", source, try std.fmt.allocPrint(a, "--cache-dir={s}", .{cache}) }, .environ_map = &environment });
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI compiler eviction safely refills artifacts from source" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    try fixture.temp.dir.writeFile(testing.io, .{ .sub_path = "program.selka", .data = "func main() -> int:\n    return 42\n" });
+    const first = try checkFresh(&fixture);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
+    const collected = try fixture.run("gc", "compiler", &.{ "--max-bytes", "0", "--apply" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, collected.term);
+    try testing.expect(contains(collected.stdout, "\"retained\":{\"entries\":0"));
+    try fixture.temp.dir.deleteTree(testing.io, "private");
+    const refilled = try checkFresh(&fixture);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, refilled.term);
+    try testing.expectEqualStrings(first.stdout, refilled.stdout);
+    const inventory = try fixture.run("gc", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, inventory.term);
+    try testing.expect(!contains(inventory.stdout, "\"scanned\":{\"entries\":0"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI policy interval controls collection on real compiler store open" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    try fixture.temp.dir.writeFile(testing.io, .{ .sub_path = "program.selka", .data = "func main() -> int:\n    return 42\n" });
+    const warm = try checkFresh(&fixture);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, warm.term);
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/retention-last"));
+    const throttled = try fixture.run("configure", "compiler", &.{ "--max-bytes", "0", "--interval-seconds", "9223372036854775807" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, throttled.term);
+    try fixture.temp.dir.deleteTree(testing.io, "private");
+    const no_sweep = try checkFresh(&fixture);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, no_sweep.term);
+    try testing.expect(fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+    const every_open = try fixture.run("configure", "compiler", &.{ "--interval-seconds", "0" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, every_open.term);
+    try fixture.temp.dir.deleteTree(testing.io, "private");
+    const swept = try checkFresh(&fixture);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, swept.term);
+    try testing.expect(!fixture.exists("shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob"));
+}
+
+// spec-case: NATIVE-CACHE-RETENTION-1
+test "native retention CLI initializes a namespace that lost its marker only when asked and refuses a wrong marker or foreign files" {
+    var fixture = try Fixture.init();
+    defer fixture.deinit();
+    const marker = "shared/compiler-artifacts-v2/format";
+    const blob = "shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob";
+    try fixture.temp.dir.deleteFile(testing.io, marker);
+    const refused = try fixture.run("gc", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, refused.term);
+    try testing.expect(contains(refused.stderr, "has no format marker but holds this cache's directories"));
+    try testing.expect(contains(refused.stderr, "selka cache init --shared-cache-dir"));
+    try testing.expect(!fixture.exists(marker));
+    const initialized = try fixture.run("init", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, initialized.term);
+    try testing.expect(contains(initialized.stdout, "\"condition\":\"unmarked\""));
+    try testing.expect(contains(initialized.stdout, "\"initialized\":true"));
+    try testing.expectEqualStrings("selka-compiler-artifact-store-v2\n", try fixture.temp.dir.readFileAlloc(testing.io, marker, fixture.arena.allocator(), .limited(128)));
+    try testing.expect(fixture.exists(blob));
+    const preview = try fixture.run("gc", "compiler", &.{ "--max-bytes", "0" });
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, preview.term);
+    try testing.expect(contains(preview.stdout, "\"scanned\":{\"entries\":1"));
+    try testing.expect(fixture.exists(blob));
+    const again = try fixture.run("init", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, again.term);
+    try testing.expect(contains(again.stdout, "\"initialized\":false"));
+    try fixture.temp.dir.writeFile(testing.io, .{ .sub_path = marker, .data = "selka-compiler-artifact-store-v1\n" });
+    const wrong = try fixture.run("init", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, wrong.term);
+    try testing.expect(contains(wrong.stderr, "cannot initialize"));
+    try testing.expect(contains(wrong.stderr, "is not this cache's v2 marker"));
+    try testing.expectEqualStrings("selka-compiler-artifact-store-v1\n", try fixture.temp.dir.readFileAlloc(testing.io, marker, fixture.arena.allocator(), .limited(128)));
+    try fixture.temp.dir.deleteFile(testing.io, marker);
+    try fixture.temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/notes.txt", .data = "not this cache's" });
+    const foreign = try fixture.run("init", "compiler", &.{});
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, foreign.term);
+    try testing.expect(contains(foreign.stderr, "holds files that are not this cache's"));
+    try testing.expect(!fixture.exists(marker));
+}

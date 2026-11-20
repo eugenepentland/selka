@@ -1,0 +1,11 @@
+# D9 RC bounded-proof checkpoint — 2026-09-26
+
+Frozen integration `39f75f3f` passes all four required gates with the Debug compiler: main 94/94 steps and 2,209 executed tests; QBE 51/51 steps and 437 tests; native build 29/29 steps; formatting 2/2. The 22,442 exclusions in the main log are shard exclusions. Compiler SHA-256: `a57ea3b5e2fd86630ba9711e81e2b0d1a83de22088c7f33dd48b1efa69d3646a`. Compressed logs and structured results are in `evidence/d9-rc-bounded-*`.
+
+This joins held-pointer ABI v2 and live-view lowering, bounded stored-type cycle admission, GC contract-payload compatibility, bounded physical-borrow certification and its cache dependencies, scalar-input cleanup removal, guarded dead temporary cleanup, unique argument admission failure cleanup, LLVM self-callback declarations, arena memo hashing, and provider scratch cleanup before traps. Arenas remain. The live-view recursive-type restriction is a new conservative language restriction, documented in the acyclicity report.
+
+This gate is not WP-4 acceptance. GC remains the default. A separate actual RC QBE language sweep executes all 713 assertions uncached, with 705 passing and eight failures: text/range-key and sorting paths exposed by earlier temporary cleanup. The three compiler OutOfMemory dropouts from the preceding checkpoint are fixed. The failures are retained in the sweep evidence; physical ownership/liveness correction is underway, together with exposed live-view mapping mutation. Copied live-view codec repair `6997b4ff` is ready but not part of this checkpoint.
+
+The superseded `9192db49` exploratory corpus built all 58 binaries. Eight output checks passed, then both full-size matrix cases exceeded their 600-second budgets. Its driver and in-flight nbody process were stopped by exact owned PIDs after the scalar/temporary fixes became available. That partial manifest and stop reason are retained; it establishes no performance acceptance.
+
+A fresh 43-program-per-backend comparison is underway on this checkpoint. Initial exact-workload binary-tree instruction ratios are far outside the required limit; runtime and compiler hot paths require substantial work. No RC default transition or concurrency design completion is claimed. Main and the pending devspeed branch remain unchanged.

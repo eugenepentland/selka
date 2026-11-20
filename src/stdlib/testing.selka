@@ -1,0 +1,114 @@
+# Work a test can count: executed blocks and managed allocations, read from the
+# test runner's own accounting (see `docs/tooling/guest-tests.md#how-work-grows`).
+#
+# A growth test states a class instead of a time. The counters belong to the
+# running trial, so two sizes of the same workload compare against each other and
+# against the modes the gate builds; nothing here claims a duration.
+import math
+
+# The two counts one measured run took.
+record Measure:
+    steps: int
+    allocations: int
+
+
+# The executed blocks of this trial so far: a runtime read the compiler supplies, which
+# `testing.steps` wraps (reserved to this module).
+builtin func __test_blocks() -> int
+
+
+# The managed blocks this trial has allocated so far, counting only while `on` is
+# true: a runtime read the compiler supplies, which `testing.allocations` wraps
+# (reserved to this module).
+builtin func __test_allocations(on: bool) -> int
+
+
+# One count's growth from `small` to `large`: zero at both sizes is one, and a
+# count that starts at zero grows without bound.
+func count_ratio(small: int, large: int) -> float:
+    if small == 0:
+        if large == 0:
+            return 1.0
+        return math.infinity()
+    return float(large) / float(small)
+
+
+# The blocks and allocations `work(n)` took, measured in one run.
+func measure(work: func(int) -> int, n: int) -> Measure:
+    mut before_steps = __test_blocks()
+    mut before_allocations = __test_allocations(True)
+    _ = work(n)
+    mut after_allocations = __test_allocations(False)
+    mut after_steps = __test_blocks()
+    return Measure(steps=after_steps - before_steps, allocations=after_allocations - before_allocations)
+
+
+# Either count grows past `limit`; the failure names the counter, both values and
+# the ratio.
+func within(name: str, small_size: int, large_size: int, small: int, large: int, limit: float) -> bool:
+    const grown = count_ratio(small, large)
+    assert grown <= limit, f"testing.linear: {name} grew {grown}× from {small} at n={small_size} to {large} at n={large_size}; the limit is {limit}×"
+    return True
+
+
+# Either count grows past 1.5× plus two counts of slack; the failure names the
+# counter, both values and the ratio.
+func stays(name: str, small_size: int, large_size: int, small: int, large: int, limit: float) -> bool:
+    const grown = count_ratio(small, large)
+    assert float(large) <= limit * float(small) + 2.0, f"testing.constant: {name} grew {grown}× from {small} at n={small_size} to {large} at n={large_size}; the limit is {limit}× plus 2 counts"
+    return True
+
+
+# The blocks `work(n)` executed, the count the test step ceiling charges.
+public func steps(work: func(int) -> int, n: int) -> int:
+    const measured = measure(work, n)
+    return measured.steps
+
+
+# The managed blocks `work(n)` allocated, counting only while the workload ran.
+public func allocations(work: func(int) -> int, n: int) -> int:
+    const measured = measure(work, n)
+    return measured.allocations
+
+
+# The managed blocks a workload that writes to `out` allocated, for a workload
+# that needs a stream to print what it builds.
+public func allocations_writing(work: func(Stream, int) -> int, out: Stream, n: int) -> int:
+    mut before = __test_allocations(True)
+    _ = work(out, n)
+    mut after = __test_allocations(False)
+    return after - before
+
+
+# The larger of the two counts' growth ratios from `small` to `large`, without
+# judging it; a workload whose growth is a step's is about the size ratio.
+public func growth(work: func(int) -> int, small: int, large: int) -> float:
+    const at_small = measure(work, small)
+    const at_large = measure(work, large)
+    const step_growth = count_ratio(at_small.steps, at_large.steps)
+    const allocation_growth = count_ratio(at_small.allocations, at_large.allocations)
+    if step_growth > allocation_growth:
+        return step_growth
+    return allocation_growth
+
+
+# Whether both counts grow by at most 1.5× the step from `small` to `large`, so an
+# `n log n` workload (about 4.8× at 1,000 → 4,000) passes and a quadratic one
+# (16×) fails. A count that is zero at both sizes passes.
+public func linear(work: func(int) -> int, small: int, large: int) -> bool:
+    const at_small = measure(work, small)
+    const at_large = measure(work, large)
+    const limit = 1.5 * (float(large) / float(small))
+    _ = within("steps", small, large, at_small.steps, at_large.steps, limit)
+    _ = within("allocations", small, large, at_small.allocations, at_large.allocations, limit)
+    return True
+
+
+# Whether both counts stay within 1.5× of the small size's count plus two counts
+# of slack, so a workload whose work does not depend on `n` passes.
+public func constant(work: func(int) -> int, small: int, large: int) -> bool:
+    const at_small = measure(work, small)
+    const at_large = measure(work, large)
+    _ = stays("steps", small, large, at_small.steps, at_large.steps, 1.5)
+    _ = stays("allocations", small, large, at_small.allocations, at_large.allocations, 1.5)
+    return True

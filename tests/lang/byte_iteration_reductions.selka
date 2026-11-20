@@ -1,0 +1,40 @@
+import buffers
+
+func reduce(raw: bytes, mask: int, seed: int) -> int:
+    mut total = seed
+    for value in raw:
+        total += bit_xor(value, mask)
+    return total
+
+
+func indexed(raw: bytes, mask: int, seed: int) -> int:
+    mut total = seed
+    for index in range(len(raw)):
+        total += bit_xor(raw[index], mask)
+    return total
+
+
+public func test_byte_iteration_lengths_views_and_unbounded_masks() -> bool:
+    mut masks = [0, 1, 127, 255, -1, 256, 1000003]
+    for length in [0, 1, 15, 16, 17, 31, 32, 1024, 1041]:
+        mut gather_result: int[] = []
+        for i in range(0, length + 17):
+            const gather_value: int = (i * 37 + 11) % 256
+            append(mut gather_result, gather_value)
+        mut source = bytes(gather_result)
+        mut raw = copy(source[7:7 + length])
+        for mask in masks:
+            if reduce(raw, mask, 13) != indexed(raw, mask, 13):
+                return False
+    return reduce(b"", 255, -9223372036854775808) == -9223372036854775808
+
+
+public func test_byte_iteration_keeps_immutable_snapshot_storage() -> bool:
+    mut empty: int[] = []
+    mut builder = byte_buffer(empty)
+    for i in range(64):
+        _ = buffers.append_byte(mut builder, i)
+    mut raw = bytes(builder)
+    for i in range(32):
+        _ = buffers.append_byte(mut builder, 255)
+    return len(raw) == 64 and reduce(raw, 17, 0) == indexed(raw, 17, 0) and len(builder) == 96

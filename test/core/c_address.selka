@@ -1,0 +1,45 @@
+# Calls through an address (MCU-NOC3, docs/c-ffi.md "Calls through an address"): C hands back function pointers, as an
+# `extern type` handle and as a `u64`, and `@address` extern funcs call them. `weigh` takes eight `i64`, so two of them
+# go on the stack, and answers an `i64`; `mix` takes narrow scalars; `count_byte` takes a lent `str` and a `mut`
+# out-parameter. Built with `--link test/core/c_address.c`.
+extern type Function
+
+
+extern func ffi_weigh_handle(host: Host) -> Function
+
+
+extern func ffi_weigh_address(host: Host) -> u64
+
+
+extern func ffi_mix_address(host: Host) -> u64
+
+
+extern func ffi_count_handle(host: Host) -> Function
+
+
+@address
+extern func weigh_through(host: Host, target: Function, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64
+
+
+@address
+extern func weigh_at(host: Host, target: u64, a: i64, b: i64, c: i64, d: i64, e: i64, f: i64, g: i64, h: i64) -> i64
+
+
+@address
+extern func mix_at(host: Host, target: u64, a: i32, b: i64, c: u8, d: i16, flag: bool, e: i32, f: i32, g: i32) -> i32
+
+
+@address
+extern func count_through(host: Host, target: Function, text: str, byte: u8, mut count: i64) -> bool
+
+
+func main(host: Host, out: Stream) -> int:
+    const handle = ffi_weigh_handle(host)
+    const address = ffi_weigh_address(host)
+    print(out, weigh_through(host, handle, 1, 2, 3, 4, 5, 6, 7, 8))
+    print(out, weigh_at(host, address, -1, -2, -3, -4, -5, -6, -7, 3))
+    print(out, mix_at(host, ffi_mix_address(host), i32(1), 2, u8(3), i16(-4), True, i32(50), i32(6), i32(7)))
+    mut count = 0
+    const found = count_through(host, ffi_count_handle(host), "a banana", u8(97), mut count)
+    print(out, f"{found} {count}")
+    return 0

@@ -1,0 +1,140 @@
+# A `mut` local whose every assignment reads a place holds a borrow (4f), as a `const` of a place does (B9): the
+# "conditional default" `mut x = a.f` then `if ...: x = b.f` needs no copy. Its loans are the union of every
+# assignment's roots, held to its last use, so a change of any of them while it is live is refused, and so are a change,
+# a move or a store of the local itself and a borrow of an owner a loop makes again in each iteration
+# (src/core/borrowed_mut_test.zig).
+record Port:
+    name: bytes
+    net: bytes
+    pins: int[]
+
+
+record Block:
+    ports: Port[]
+    title: bytes
+
+
+func port(name: bytes, net: bytes) -> Port:
+    return Port(name=copy(name), net=copy(net), pins=[len(name), len(net)])
+
+
+func block() -> Block:
+    return Block(ports=[port(b"vcc", b""), port(b"gnd", b"GND_A"), port(b"io", b"")], title=b"top")
+
+
+func port_net(p: Port) -> bytes from p:
+    mut net = p.name
+    if len(p.net) > 0:
+        net = p.net
+    return net
+
+
+func net_lengths(b: Block) -> int:
+    mut total = 0
+    for p in b.ports:
+        mut chosen = p.name
+        if len(p.net) > 0:
+            chosen = p.net
+        total = total + len(chosen)
+    return total
+
+
+func longest(b: Block) -> int:
+    mut best = b.title
+    for p in b.ports:
+        if len(p.name) > len(best):
+            best = p.name
+    return len(best)
+
+
+func pins_of(b: Block, i: int) -> int:
+    mut pins = b.ports[0].pins
+    if i > 0:
+        pins = b.ports[i].pins
+    return pins[0] * 10 + pins[1]
+
+
+func declared_later(p: Port, net: bool) -> int:
+    mut text: bytes
+    if net:
+        text = p.net
+    else:
+        text = p.name
+    return len(text)
+
+
+func local_owner() -> int:
+    const p = port(b"clk", b"CLK_IN")
+    mut text = p.name
+    if len(p.net) > 0:
+        text = p.net
+    const alias = text
+    return len(alias) + len(p.pins)
+
+
+func arm_owner(t: Port, make: bool) -> int:
+    mut text = t.name
+    if make:
+        const p = port(b"long name", b"")
+        text = p.name
+        return len(text)
+    return len(text)
+
+
+func change_after_last_use() -> int:
+    mut p = port(b"a", b"bb")
+    mut text = p.name
+    if len(p.net) > 0:
+        text = p.net
+    const n = len(text)
+    p.name = b"changed"
+    return n + len(p.name)
+
+
+public func test_a_conditional_default_borrows_either_place() -> bool:
+    return port_net(port(b"vcc", b"")) == b"vcc" and port_net(port(b"gnd", b"GND_A")) == b"GND_A"
+
+
+public func test_a_borrow_chosen_in_each_iteration_of_a_loop() -> bool:
+    return net_lengths(block()) == 3 + 5 + 2
+
+
+public func test_a_borrow_carried_around_a_loop() -> bool:
+    return longest(block()) == 3
+
+
+public func test_a_list_borrowed_from_one_of_two_elements() -> bool:
+    return pins_of(block(), 1) == 35 and pins_of(block(), 0) == 30
+
+
+public func test_a_mut_local_declared_before_its_branches() -> bool:
+    const p = port(b"ab", b"cde")
+    return declared_later(p, True) == 3 and declared_later(p, False) == 2
+
+
+public func test_a_borrow_of_a_local_owner_and_an_alias_of_it() -> bool:
+    return local_owner() == 6 + 2
+
+
+public func test_a_borrow_of_an_owner_made_in_an_arm() -> bool:
+    const t = port(b"t", b"")
+    return arm_owner(t, True) == 9 and arm_owner(t, False) == 1
+
+
+public func test_the_owner_may_change_after_the_last_use() -> bool:
+    return change_after_last_use() == 2 + 7
+
+
+func widest(ports: Port[]) -> int:
+    mut low = ports[0]
+    mut high = ports[0]
+    for i in range(1, len(ports)):
+        if len(ports[i].name) < len(low.name):
+            low = ports[i]
+        if len(ports[i].name) > len(high.name):
+            high = ports[i]
+    return len(high.name) - len(low.name)
+
+
+public func test_a_running_minimum_and_maximum_borrow_elements() -> bool:
+    return widest(block().ports) == 1

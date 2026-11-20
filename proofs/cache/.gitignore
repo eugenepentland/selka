@@ -1,0 +1,3 @@
+# Lake build output; never committed.
+.lake/
+build/

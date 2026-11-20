@@ -1,0 +1,5 @@
+func read(clock: clock_cap) -> int:
+    return 0
+
+func main() -> int:
+    return 42

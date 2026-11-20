@@ -1,0 +1,288 @@
+# Build programs: what a project's `build.selka` needs to run its procedures (its checks, image builds and runs) when
+# `selka do STEP` starts it. `locate` reads where the compiler, its Zig and the project's root are from the environment
+# `selka do` sets; `run` prints a command, runs it and fails with its last lines unless it exits 0, within a time limit
+# when asked; `run_steps` runs named steps in order and `summary` prints one line a step; `check_argv` and its neighbours
+# build the compiler's own command lines in one tested place. The files a build walks, copies and makes are
+# `filesystem.walk`, `filesystem.copy_file`, `filesystem.mkdir_all` and `path.relative`. Every function takes the
+# capabilities it uses as parameters, so a test hands it a scripted Process, an in-memory Filesystem and
+# `streams.memory()`.
+import path
+import process
+import strings
+import time
+
+# The variable `selka do` sets to the path of the compiler that started the build program.
+public const COMPILER_VARIABLE: str = "SELKA"
+
+
+# The variable `selka do` sets to the Zig that compiler uses (a path, or a name on PATH).
+public const ZIG_VARIABLE: str = "SELKA_ZIG"
+
+
+# The variable `selka do` sets to the project's root: the folder of the `build.selka` it found.
+public const ROOT_VARIABLE: str = "SELKA_PROJECT_ROOT"
+
+
+# How many lines of a failed command's output `run` shows.
+public const TAIL_LINES: int = 12
+
+
+# How long a command past its time limit is given to end after `SIGTERM`, before `SIGKILL`.
+public const GRACE_MILLIS: int = 2000
+
+
+# Where a build program's tools are: the compiler, the Zig it uses, and the project's root.
+public record Tools:
+    compiler: str
+    zig: str
+    root: str
+
+
+# The value of the variable `name`, or a failure that says how to start a build program.
+func required(env: Environment, name: str) -> str fails str:
+    const value = env.get(name) else:
+        fail f"{name} is not set: start this build program with `selka do STEP`, which sets it"
+    return copy(value)
+
+
+# The compiler, Zig and root that `selka do` set. A program started another way (`selka run build.selka`) has none of them,
+# and this fails naming the first that is missing.
+public func locate(env: Environment) -> Tools fails str:
+    const compiler = try required(env, COMPILER_VARIABLE)
+    const zig = try required(env, ZIG_VARIABLE)
+    const root = try required(env, ROOT_VARIABLE)
+    return Tools(compiler=own compiler, zig=own zig, root=own root)
+
+
+# A program to run as a build runs one: its argument list, the folder it runs in (`""` keeps the caller's), a time limit
+# in milliseconds (0 waits as long as it takes) and the file its output goes to under a limit (a limit needs one), and a
+# root that the printed line leaves off its paths (`""` shows them whole).
+public record Command:
+    argv: str[]
+    directory: str = ""
+    limit_millis: int = 0
+    log: str = ""
+    root: str = ""
+
+
+# How a command ended: its exit status (a program a signal ended counts 128 plus the signal, as a shell says), what it
+# wrote (under a time limit, all of it in `stdout`, in the order written), and whether it ran past its limit and was
+# stopped.
+public record Ran:
+    code: int
+    stdout: str
+    stderr: str
+    timed_out: bool
+
+
+# The line a person would type for `command`: its arguments joined by spaces, with `cd FOLDER && ` first when it runs in
+# another folder. With a `root`, the folder is shown from the root and every argument that is a path below the root is
+# shown from the folder the command runs in (`path.relative`), so the line can be typed from the root as it stands.
+public func shown(command: Command) -> str:
+    if len(command.root) == 0:
+        if len(command.directory) > 0:
+            return "cd " + command.directory + " && " + strings.join(command.argv, " ")
+        return strings.join(command.argv, " ")
+    mut here = copy(command.root)
+    if len(command.directory) > 0:
+        here = copy(command.directory)
+    mut words: str[] = []
+    for argument in command.argv:
+        if argument == command.root or strings.starts_with(argument, command.root + "/"):
+            append(mut words, path.relative(here, argument))
+        else:
+            append(mut words, copy(argument))
+    const line = strings.join(words, " ")
+    if path.normalize(here) == path.normalize(command.root):
+        return line
+    return "cd " + path.relative(command.root, here) + " && " + line
+
+
+# Octets as text, or a note that they are not.
+func text_of(data: bytes) -> str:
+    const text = strings.decode(data) else Err(_):
+        return "(output that is not text)"
+    return text
+
+
+# The status a shell reports for `output`.
+func status_of(output: process.Output) -> int:
+    if output.exited:
+        return output.code
+    return 128 + output.code
+
+
+# Print `$ ` and the command's line to `out`, run the command and answer how it ended, whatever its status. It fails only
+# when the program cannot start, or a time limit's log cannot be read, with the line and the reason.
+public func execute(proc: Process, fs: Filesystem, out: Stream, command: Command) -> Ran fails str:
+    const line = shown(command)
+    print(out, "$", line)
+    mut request = process.command(copy(command.argv))
+    request.directory = copy(command.directory)
+    if command.limit_millis <= 0:
+        const output = process.run(proc, request) else Err(error):
+            fail f"cannot run {line}: " + process.message(error)
+        return Ran(code=status_of(output), stdout=text_of(output.stdout), stderr=text_of(output.stderr), timed_out=False)
+    if len(command.log) == 0:
+        fail f"cannot run {line}: a time limit needs `log`, the file the command's output goes to"
+    const ended = process.run_within(proc, request, command.limit_millis, command.log, GRACE_MILLIS) else Err(error):
+        fail f"cannot run {line}: " + process.message(error)
+    mut logged = ""
+    if fs.exists(command.log):
+        const data = fs.read_file(command.log) else Err(message):
+            fail f"cannot read the output of {line} in {command.log}: {message}"
+        logged = text_of(data)
+    match ended:
+        case Some(output):
+            return Ran(code=status_of(output), stdout=text_of(output.stdout) + logged, stderr=text_of(output.stderr), timed_out=False)
+        case None:
+            return Ran(code=128 + process.SIGTERM, stdout=own logged, stderr="", timed_out=True)
+
+
+# `execute`, then a failure with `failure_text` unless the command exited with 0 within its limit. The answer keeps what it
+# wrote, for a step that reads it.
+public func run(proc: Process, fs: Filesystem, out: Stream, command: Command) -> Ran fails str:
+    const ran = try execute(proc, fs, out, command)
+    if ran.timed_out or ran.code != 0:
+        fail failure_text(command, ran)
+    return ran
+
+
+# The last `count` lines of `text`, a trailing blank line left out.
+public func tail(text: str, count: int) -> str:
+    mut lines = strings.lines(strings.rstrip(text))
+    if len(lines) > count:
+        lines = copy(lines[len(lines) - count:])
+    return strings.join(lines, "\n")
+
+
+# The last line of `text` that has anything on it, stripped, or an empty text: a test runner's count, a tool's verdict.
+public func last_line(text: str) -> str:
+    const lines = strings.lines(strings.rstrip(text))
+    if len(lines) == 0:
+        return ""
+    return copy(strings.strip(lines[len(lines) - 1]))
+
+
+# Why `command` failed, for the person at the terminal: `FAILED:` and its line, its status or its time limit, and the last
+# `TAIL_LINES` lines of each stream it wrote to.
+public func failure_text(command: Command, ran: Ran) -> str:
+    mut parts: str[] = [f"FAILED: {shown(command)}"]
+    if ran.timed_out:
+        append(mut parts, f"  stopped after its time limit of {command.limit_millis / 1000:.1f} s")
+    else:
+        append(mut parts, f"  exit status {ran.code}")
+    if len(strings.strip(ran.stdout)) > 0:
+        append(mut parts, "  stdout, last lines:")
+        append(mut parts, indented(tail(ran.stdout, TAIL_LINES)))
+    if len(strings.strip(ran.stderr)) > 0:
+        append(mut parts, "  stderr, last lines:")
+        append(mut parts, indented(tail(ran.stderr, TAIL_LINES)))
+    return strings.join(parts, "\n")
+
+
+# Each line of `text` after `    | `.
+func indented(text: str) -> str:
+    mut lines: str[] = []
+    for line in strings.lines(text):
+        append(mut lines, "    | " + line)
+    return strings.join(lines, "\n")
+
+
+# How a step ended.
+public enum State:
+    Done
+    Failed
+    Skipped
+
+
+# One step of `run_steps`: its name, how it ended, how long it took in nanoseconds, and a failed step's message.
+public record Outcome:
+    name: str
+    state: State
+    nanoseconds: int
+    message: str
+
+
+# Run the steps `names` in order, each as `step(context, name)`, and time each with `clock`. The first step that fails
+# stops the run, and the steps after it are `Skipped`. `context` carries what the steps share (a record of tools and
+# capabilities: a function cannot capture), so `all` is a list of names and not code. Print the answer with `summary`.
+public func run_steps[C: copy + storable](context: C, names: str[], step: func(C, str) -> Unit fails str, clock: Clock) -> Outcome[]:
+    mut outcomes: Outcome[] = []
+    mut stopped = False
+    for name in names:
+        if stopped:
+            append(mut outcomes, Outcome(name=copy(name), state=State.Skipped, nanoseconds=0, message=""))
+            continue
+        const began = time.monotonic(clock)
+        match step(context, name):
+            case Ok(_):
+                append(mut outcomes, Outcome(name=copy(name), state=State.Done, nanoseconds=time.monotonic(clock) - began, message=""))
+            case Err(message):
+                stopped = True
+                append(mut outcomes, Outcome(name=copy(name), state=State.Failed, nanoseconds=time.monotonic(clock) - began, message=own message))
+    return outcomes
+
+
+# The summary line of one step: `ok      check             6.8 s`, `FAILED  images            1.2 s` or `skipped verify`.
+public func summary_line(outcome: Outcome) -> str:
+    match outcome.state:
+        case Done:
+            return f"{'ok':<8}{outcome.name:<16}{outcome.nanoseconds / 1000000000:>7.1f} s"
+        case Failed:
+            return f"{'FAILED':<8}{outcome.name:<16}{outcome.nanoseconds / 1000000000:>7.1f} s"
+        case Skipped:
+            return f"{'skipped':<8}{outcome.name}"
+
+
+# Print the summary line of every step to `out`, then the failed step's message when one failed; answer whether every
+# step was done.
+public func summary(out: Stream, outcomes: Outcome[]) -> bool:
+    mut failure = ""
+    for outcome in outcomes:
+        print(out, summary_line(outcome))
+        if outcome.state == State.Failed:
+            failure = copy(outcome.message)
+    if len(failure) > 0:
+        print(out, failure)
+        return False
+    return True
+
+
+# `argv` with `options` after it.
+func with_options(own argv: str[], options: str[]) -> str[]:
+    mut all_of = own argv
+    for option in options:
+        append(mut all_of, copy(option))
+    return all_of
+
+
+# `selka check TARGET OPTIONS...`.
+public func check_argv(tools: Tools, target: str, options: str[]) -> str[]:
+    return with_options([copy(tools.compiler), "check", copy(target)], options)
+
+
+# `selka test TARGET OPTIONS...`: a test file, a folder of tests or a package.
+public func tests_argv(tools: Tools, target: str, options: str[]) -> str[]:
+    return with_options([copy(tools.compiler), "test", copy(target)], options)
+
+
+# `selka fmt FILE --check`: exits 1 and names the file when its format differs.
+public func fmt_check_argv(tools: Tools, file: str) -> str[]:
+    return [copy(tools.compiler), "fmt", copy(file), "--check"]
+
+
+# `selka build SOURCE -o OUTPUT OPTIONS...`.
+public func build_argv(tools: Tools, source: str, output: str, options: str[]) -> str[]:
+    return with_options([copy(tools.compiler), "build", copy(source), "-o", copy(output)], options)
+
+
+# `selka packages lock MANIFEST --output LOCK`: the lock of a package manifest.
+public func packages_lock_argv(tools: Tools, manifest: str, output: str) -> str[]:
+    return [copy(tools.compiler), "packages", "lock", copy(manifest), "--output", copy(output)]
+
+
+# `selka packages build ENTRY --lock LOCK --command COMMAND -- OPTIONS...`: `COMMAND` (`build`, `test`, `run`) with the
+# locked packages, the options passed to it.
+public func packages_build_argv(tools: Tools, entry: str, lock: str, command: str, options: str[]) -> str[]:
+    return with_options([copy(tools.compiler), "packages", "build", copy(entry), "--lock", copy(lock), "--command", copy(command), "--"], options)

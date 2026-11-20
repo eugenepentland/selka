@@ -1,0 +1,4 @@
+x: int = 1
+d = {a: b}
+if a: b
+lambda_like(a:b)

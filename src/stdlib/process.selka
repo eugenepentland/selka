@@ -1,0 +1,1068 @@
+# Running programs: `process.run(proc, request)` starts one program, waits for it, and answers its exit status or
+# the signal that ended it with the octets it wrote to standard output and standard error. `proc` is the `Process`
+# capability a `main(proc: Process)` entry point is granted (`selka run` grants it unless `--restrict`; under
+# `--restrict` it needs `--allow-process`). There is no shell: the program and its arguments are a list.
+# A test's `proc: Process` parameter, and `process.scripted(rules)`, are scripted Processes: they start nothing and
+# answer from a list of rules, logging every request (see `Rule`, `expect` and `calls`).
+import binary
+import byte_builder
+import lists
+import strings
+
+# What to run and how.
+#   argv         the program, then its arguments; the program is a path, or a name searched on PATH
+#   directory    the working directory of the child; "" keeps the caller's
+#   input        octets written to the child's standard input, which is then closed
+#   environment  None gives the child the caller's environment; Some(["NAME=VALUE", ...]) gives it exactly those
+#   limit        the most octets kept from each of standard output and standard error; the rest is read and dropped
+public record Request:
+    argv: str[]
+    directory: str
+    input: bytes
+    environment: str[]?
+    limit: int
+
+
+# What the program did. `exited` says how it ended: True, `code` is its exit status; False, a signal ended it and
+# `code` is the signal number. `truncated` says that one of the two output streams was cut at the limit.
+public record Output:
+    exited: bool
+    code: int
+    stdout: bytes
+    stderr: bytes
+    truncated: bool
+
+
+# Why a program could not run: `NotFound` when there is no such program, `Failed` for anything else (the system
+# refused to start it, a stand-in `Process`, or a request the runtime could not read).
+public enum Error:
+    NotFound(program: str)
+    Failed(message: str)
+
+
+# A readable reason for an `Error`.
+public func message(error: Error) -> str:
+    match error:
+        case NotFound(program):
+            return "no program " + repr(program) + " was found"
+        case Failed(message=text):
+            return copy(text)
+
+
+# The default most octets kept from each output stream: one mebibyte.
+public const DEFAULT_LIMIT: int = 1048576
+
+
+# A request to run `argv` in the caller's directory and environment with no input, keeping up to `DEFAULT_LIMIT`
+# octets of each output stream.
+public func command(own argv: str[]) -> Request:
+    return Request(argv=own argv, directory="", input=b"", environment=None, limit=DEFAULT_LIMIT)
+
+
+func put_request(mut builder: byte_builder.Builder, request: Request):
+    binary.put_uvarint(mut builder, u64(len(request.argv)))
+    for argument in request.argv:
+        binary.put_text(mut builder, argument)
+    binary.put_text(mut builder, request.directory)
+    binary.put_bytes(mut builder, request.input)
+    match request.environment:
+        case Some(entries):
+            binary.put_u8(mut builder, 1u8)
+            binary.put_uvarint(mut builder, u64(len(entries)))
+            for entry in entries:
+                binary.put_text(mut builder, entry)
+        case None:
+            binary.put_u8(mut builder, 0u8)
+
+
+func encode(request: Request) -> bytes:
+    mut builder = byte_builder.create()
+    put_request(mut builder, request)
+    return byte_builder.finish(builder)
+
+
+# The text of a start failure's `errno`.
+func start_failure(program: str, code: int) -> Error:
+    if code == 2:
+        return Error.NotFound(program=copy(program))
+    if code == 13:
+        return Error.Failed(message="cannot run " + repr(program) + ": permission denied")
+    if code == 8:
+        return Error.Failed(message="cannot run " + repr(program) + ": not an executable program")
+    if code == 20:
+        return Error.Failed(message="cannot run " + repr(program) + ": a parent of the path is not a directory")
+    if code == 7:
+        return Error.Failed(message="cannot run " + repr(program) + ": the argument list is too long")
+    return Error.Failed(message="cannot run " + repr(program) + ": the system refused to start it (errno " + str(code) + ")")
+
+
+func damaged() -> Error:
+    return Error.Failed(message="the runtime's process answer is damaged")
+
+
+func decode(answer: bytes, program: str) -> Output fails Error:
+    mut at = 0
+    match binary.get_u8(answer, mut at):
+        case Err(_):
+            fail damaged()
+        case Ok(outcome):
+            match binary.get_varint(answer, mut at):
+                case Err(_):
+                    fail damaged()
+                case Ok(code):
+                    if outcome == 2u8:
+                        fail start_failure(program, code)
+                    match binary.get_bytes(answer, mut at):
+                        case Err(_):
+                            fail damaged()
+                        case Ok(out):
+                            match binary.get_bytes(answer, mut at):
+                                case Err(_):
+                                    fail damaged()
+                                case Ok(err):
+                                    match binary.get_u8(answer, mut at):
+                                        case Err(_):
+                                            fail damaged()
+                                        case Ok(flags):
+                                            return Output(exited=outcome == 0u8, code=code, stdout=own out, stderr=own err, truncated=flags != 0u8)
+
+
+# Run the program of `request` to completion. Needs the `Process` capability, and starts the program with the
+# caller's own authority: `--restrict` does not contain a program it starts. On a scripted `Process` (a test's
+# `proc` parameter or `process.scripted(...)`) nothing starts: the request is logged and the first rule that covers
+# it answers, or the call fails `Failed("scripted Process has no rule for [argv]")`.
+public func run(proc: Process, request: Request) -> Output fails Error:
+    if len(request.argv) == 0:
+        fail Error.Failed(message="a process request needs a program to run")
+    if request.limit < 0:
+        fail Error.Failed(message="a process request needs a limit of zero or more octets")
+    match process_control(proc, b"", SCRIPT):
+        case Ok(script):
+            return try answer_from(proc, request, script)
+        case Err(_):
+            pass
+    match run_process(proc, encode(request), request.limit):
+        case Ok(answer):
+            return try decode(answer, request.argv[0])
+        case Err(text):
+            fail Error.Failed(message=own text)
+
+
+# ---- started programs ----------------------------------------------------------------------------------------------
+# A program `start` began, until `wait` or `stop` ends it: its process number `pid`, and how it ended once a wait has seen
+# it end (`ended`, None while nobody has). Only this module makes one (`@sealed`), and `@linear` makes every one end
+# exactly once on every path: a Child cannot be copied, dropped, kept in a list or given to two waits. A plain
+# parameter of a Child is refused, so a function that only reads one takes it `mut`. A program that ends without its
+# Child ending (a trap, `--timeout`, a signal from outside) takes its started programs with it: the system kills each
+# one still running (`PR_SET_PDEATHSIG`). A scripted Process starts nothing: its Child has `pid` `SCRIPTED_PID` and has
+# already ended with the `Output` of the rule that answered.
+@sealed
+@linear
+public record Child:
+    pid: int
+    ended: Output?
+
+
+# The process number of a scripted Process's Child: no program has it.
+public const SCRIPTED_PID: int = 0
+
+
+# The signals `signal` sends most often (it takes any number from 1 to 64).
+# SIGHUP (1): hang-up: the controlling terminal went away, or reread the configuration.
+public const SIGHUP: int = 1
+
+
+# SIGINT (2): interrupt, as Ctrl-C sends it.
+public const SIGINT: int = 2
+
+
+# SIGQUIT (3): quit with a core dump.
+public const SIGQUIT: int = 3
+
+
+# SIGKILL (9): kill: a program cannot catch or ignore it.
+public const SIGKILL: int = 9
+
+
+# SIGUSR1 (10): the first signal a program defines for itself.
+public const SIGUSR1: int = 10
+
+
+# SIGUSR2 (12): the second signal a program defines for itself.
+public const SIGUSR2: int = 12
+
+
+# SIGTERM (15): terminate: the polite request to end, which a program may handle.
+public const SIGTERM: int = 15
+
+
+# SIGCONT (18): continue a stopped program.
+public const SIGCONT: int = 18
+
+
+# SIGSTOP (19): stop (pause) a program until SIGCONT; it cannot be caught.
+public const SIGSTOP: int = 19
+
+
+func put_path(mut builder: byte_builder.Builder, path: str?):
+    match path:
+        case Some(text):
+            binary.put_u8(mut builder, 1u8)
+            binary.put_text(mut builder, text)
+        case None:
+            binary.put_u8(mut builder, 0u8)
+
+
+func put_pair(first: int, second: int) -> bytes:
+    mut builder = byte_builder.create()
+    binary.put_varint(mut builder, first)
+    binary.put_varint(mut builder, second)
+    return byte_builder.finish(builder)
+
+
+# The process number in the runtime's answer to a start: u8 0 and the number, u8 2 and the errno of a program that did not
+# start, or u8 3, the errno and the path of an output file that could not be opened.
+func started_pid(answer: bytes, program: str) -> int fails Error:
+    mut at = 0
+    const outcome = binary.get_u8(answer, mut at) else Err(_):
+        fail damaged()
+    const code = binary.get_varint(answer, mut at) else Err(_):
+        fail damaged()
+    if outcome == 0u8:
+        return code
+    if outcome == 2u8:
+        fail start_failure(program, code)
+    const path = binary.get_text(answer, mut at) else Err(_):
+        fail damaged()
+    fail Error.Failed(message="cannot open " + repr(path) + " for the program's output (errno " + str(code) + ")")
+
+
+# The Child of the runtime's answer to a start.
+func started(answer: bytes, program: str) -> Child fails Error:
+    const number = try started_pid(answer, program)
+    return Child(pid=number, ended=None)
+
+
+# Start the program of `request` and return at once, with its standard output written to the file `stdout_path` and its
+# standard error to `stderr_path` (each emptied first; the same path for both keeps their order, as `>LOG 2>&1` does), or
+# to /dev/null for None. Its standard input is /dev/null, so `request.input` must be empty, and `request.limit` is not
+# used. A path is opened by this program with the `Process` capability's authority, relative to this program's working
+# directory, not to `request.directory`. The program starts as `run` starts one (the same environment, directory,
+# signals, descriptors and address space) and is killed if this program ends before its Child does. A missing program
+# fails `NotFound`, like `run`. On a scripted Process nothing starts: the request is logged and answered as `run` answers
+# it, and the Child has already ended with the rule's `Output`; no file is written. `start_to` also lets the program write
+# to this program's own standard output or standard error.
+public func start(proc: Process, request: Request, stdout_path: str?, stderr_path: str?) -> Child fails Error:
+    mut outputs = byte_builder.create()
+    put_path(mut outputs, stdout_path)
+    put_path(mut outputs, stderr_path)
+    return try launch(proc, request, byte_builder.finish(outputs))
+
+
+# Where one of a started program's two output streams goes: nowhere (`Discard`, /dev/null), into a file (`File`, emptied
+# when the program starts), or straight to this program's own standard output (as the stdout destination) or standard
+# error (as the stderr destination), which is what a shell does by default (`Caller`).
+public enum Destination:
+    Discard
+    File(path: str)
+    Caller
+
+
+func put_destination(mut builder: byte_builder.Builder, destination: Destination):
+    match destination:
+        case Discard:
+            binary.put_u8(mut builder, 0u8)
+        case File(path):
+            binary.put_u8(mut builder, 1u8)
+            binary.put_text(mut builder, path)
+        case Caller:
+            binary.put_u8(mut builder, 2u8)
+
+
+# `start` with a `Destination` for each of the program's two output streams. `Caller` lets the program write to this
+# program's own standard output (for `stdout`) or standard error (for `stderr`) while it runs, so the output of a compiler
+# or `git` it starts shows live, in the order the program writes it, as it would from a shell. What this program has
+# printed so far is flushed first, so it comes before the program's output; what this program prints while the program
+# runs goes out as this program's own output always does (when its buffer fills, at `flush(out)`, or at its end), so call
+# `flush(out)` before a line that must not wait behind the child's. The destinations give the program no authority this
+# program lacks: it can write to both streams itself, so `--restrict` changes nothing here, and `--allow-process` is still
+# needed to start anything. `Caller` is this program's descriptors 1 and 2, whatever a `Stream` value it holds is. On a
+# scripted Process (every test's) nothing starts, so there is nothing to let through. Everything else is as `start`.
+public func start_to(proc: Process, request: Request, stdout: Destination, stderr: Destination) -> Child fails Error:
+    mut outputs = byte_builder.create()
+    put_destination(mut outputs, stdout)
+    put_destination(mut outputs, stderr)
+    return try launch(proc, request, byte_builder.finish(outputs))
+
+
+# What `start` and `start_to` share: the checks, the scripted answer, and the runtime's start with the packed
+# destinations `outputs` after the request.
+func launch(proc: Process, request: Request, outputs: bytes) -> Child fails Error:
+    if len(request.argv) == 0:
+        fail Error.Failed(message="a process request needs a program to run")
+    if len(request.input) != 0:
+        fail Error.Failed(message="process.start gives the program no standard input: leave request.input empty")
+    match process_control(proc, b"", SCRIPT):
+        case Ok(script):
+            const output = try answer_from(proc, request, script)
+            return Child(pid=SCRIPTED_PID, ended=Some(own output))
+        case Err(_):
+            pass
+    mut builder = byte_builder.create()
+    put_request(mut builder, request)
+    byte_builder.append(mut builder, outputs)
+    match process_control(proc, byte_builder.finish(builder), START):
+        case Ok(answer):
+            return try started(answer, request.argv[0])
+        case Err(text):
+            fail Error.Failed(message=own text)
+
+
+# The process number of `child`, as the system and `kill(1)` know it (`SCRIPTED_PID` for a scripted Process's Child).
+public func pid(mut child: Child) -> int:
+    return child.pid
+
+
+# Send signal `number` (1 to 64; `SIGTERM`, `SIGKILL` and the other constants name the usual ones) to `child`. Once a
+# wait has seen the program end, a signal does nothing and succeeds: the number may belong to another process by then,
+# and nothing is sent to it. A number outside 1 to 64 fails `Failed`.
+public func signal(proc: Process, mut child: Child, number: int) -> Unit fails Error:
+    if number < 1 or number > 64:
+        fail Error.Failed(message="a signal number is 1 to 64, not " + str(number))
+    match child.ended:
+        case Some(_):
+            return ()
+        case None:
+            pass
+    match process_control(proc, put_pair(child.pid, number), SIGNAL):
+        case Ok(_):
+            return ()
+        case Err(text):
+            fail Error.Failed(message=own text)
+
+
+# How a started program ended, from the runtime's answer to a wait: u8 0 (still running), u8 1 and its exit status, or
+# u8 2 and the signal that ended it. Its output went to files, so the `Output` carries none.
+func waited(answer: bytes) -> Output? fails Error:
+    mut at = 0
+    const outcome = binary.get_u8(answer, mut at) else Err(_):
+        fail damaged()
+    const code = binary.get_varint(answer, mut at) else Err(_):
+        fail damaged()
+    if outcome == 0u8:
+        return None
+    return Some(Output(exited=outcome == 1u8, code=code, stdout=b"", stderr=b"", truncated=False))
+
+
+# Wait up to `millis` milliseconds for the started program `number` to end; a negative limit waits as long as it takes.
+func await_pid(proc: Process, number: int, millis: int) -> Output? fails Error:
+    match process_control(proc, put_pair(number, millis), AWAIT):
+        case Ok(answer):
+            return try waited(answer)
+        case Err(text):
+            fail Error.Failed(message=own text)
+
+
+# Wait up to `millis` milliseconds for `child` to end: Some with how it ended (`exited` and `code` as `run` answers them,
+# with no output), or None when it is still running after the limit. A limit of 0 asks without waiting; a negative one
+# fails `Failed` (`wait` waits without a limit). Once it has answered Some it answers the same at once. The Child still
+# has to end, by `wait` or `stop`, which then answer the same `Output` at once too.
+public func wait_within(proc: Process, mut child: Child, millis: int) -> Output? fails Error:
+    if millis < 0:
+        fail Error.Failed(message="process.wait_within needs a limit of zero or more milliseconds; process.wait has none")
+    match child.ended:
+        case Some(found):
+            return Some(copy(found))
+        case None:
+            pass
+    const answer = try await_pid(proc, child.pid, millis)
+    match answer:
+        case Some(found):
+            child.ended = Some(copy(found))
+            return Some(copy(found))
+        case None:
+            return None
+
+
+# Wait for `child` to end, however long it takes, and end the Child: how the program ended (`exited` and `code` as `run`
+# answers them, with no output).
+public func wait(proc: Process, own child: Child) -> Output fails Error:
+    const number = child.pid
+    const seen = own child.ended
+    match seen:
+        case Some(found):
+            return copy(found)
+        case None:
+            pass
+    const answer = try await_pid(proc, number, -1)
+    match answer:
+        case Some(found):
+            return copy(found)
+        case None:
+            fail damaged()
+
+
+# End `child` and its program: send it `SIGTERM`, give it `grace_millis` milliseconds to end (a negative grace is 0), then
+# `SIGKILL` it and wait for it. Answers how it ended: a program that handled `SIGTERM` may have exited with a status. A
+# child a wait has already seen end is not signalled; its `Output` is answered at once.
+public func stop(proc: Process, own child: Child, grace_millis: int) -> Output fails Error:
+    const number = child.pid
+    const seen = own child.ended
+    match seen:
+        case Some(found):
+            return copy(found)
+        case None:
+            pass
+    match process_control(proc, put_pair(number, SIGTERM), SIGNAL):
+        case Ok(_):
+            pass
+        case Err(text):
+            fail Error.Failed(message=own text)
+    mut grace = grace_millis
+    if grace < 0:
+        grace = 0
+    const early = try await_pid(proc, number, grace)
+    match early:
+        case Some(found):
+            return copy(found)
+        case None:
+            pass
+    match process_control(proc, put_pair(number, SIGKILL), SIGNAL):
+        case Ok(_):
+            pass
+        case Err(text):
+            fail Error.Failed(message=own text)
+    const late = try await_pid(proc, number, -1)
+    match late:
+        case Some(found):
+            return copy(found)
+        case None:
+            fail damaged()
+
+
+# Run the program of `request` for at most `millis` milliseconds (zero or more), its standard output and standard error
+# both written to the file `log_path` in the order it wrote them (as `>LOG 2>&1`; the file is emptied first). Some with how
+# it ended (`exited` and `code` as `run` answers them, with no output: read the file) when it ended within the limit; None
+# when the limit passed first, after `stop` ended it (`SIGTERM`, `grace_millis`, then `SIGKILL`). As with `start`,
+# `request.input` must be empty, `request.limit` is not used and `log_path` is relative to this program's working
+# directory. On a scripted Process nothing starts and no file is written: the rule's `Output`, output and all, answers.
+public func run_within(proc: Process, request: Request, millis: int, log_path: str, grace_millis: int) -> Output? fails Error:
+    if millis < 0:
+        fail Error.Failed(message="process.run_within needs a limit of zero or more milliseconds; process.run has none")
+    mut child = try start(proc, request, Some(copy(log_path)), Some(copy(log_path)))
+    match wait_within(proc, mut child, millis):
+        case Ok(seen):
+            if seen is None:
+                _ = try stop(proc, own child, grace_millis)
+                return None
+            return Some(try wait(proc, own child))
+        case Err(error):
+            _ = stop(proc, own child, grace_millis)
+            fail error
+
+
+# ---- groups of started programs ------------------------------------------------------------------------------------
+# One program of a group: the key the group gave it, its process number and, on a scripted Process, how it ended (it
+# starts nothing, so every program of a scripted group has already ended). The group's own bookkeeping: only this module
+# makes one (`@sealed`), and a caller reads a program through its key.
+@sealed
+public record Member:
+    key: int
+    pid: int
+    ended: Output?
+
+
+# Any number of started programs held by one owner: `group_start` starts a program into it and answers a key, the waits
+# answer the key of the program that ended, and `group_close` ends what is still running. Only `group` makes one
+# (`@sealed`), and `@linear` makes every one end exactly once on every path, as it does a Child; a Child cannot be kept in
+# a list, but a group can hold as many programs as the system lets this program start. Each program of a group is the
+# leader of a process group of its own, so a signal, a stop and a close reach what it started too. The group counts a
+# program until a wait has answered it: one that has ended and not yet been waited for still counts, and is not lost.
+# A program that ends without its group ending (a trap, `--timeout`, a signal from outside) takes the programs it started
+# with it as a Child does (`PR_SET_PDEATHSIG`: the system kills each one still running, but not what it started in turn).
+@sealed
+@linear
+public record Group:
+    members: Member[]
+    next_key: int
+
+
+# How a program of a group ended, and the key `group_start` answered for it. `output` is as a `Child`'s wait answers it:
+# `exited` and `code`, with no output (it went where `group_start` was told to put it).
+public record Finished:
+    key: int
+    output: Output
+
+
+# A group with no program in it. It needs no capability: starting into it does.
+public func group() -> Group:
+    return Group(members=[], next_key=0)
+
+
+# What `group_start` and `group_start_to` share: the checks, the scripted answer, and the runtime's start (in a process
+# group of its own) with the packed destinations `outputs` after the request. Answers the new program's key.
+func group_launch(proc: Process, mut programs: Group, request: Request, outputs: bytes) -> int fails Error:
+    if len(request.argv) == 0:
+        fail Error.Failed(message="a process request needs a program to run")
+    if len(request.input) != 0:
+        fail Error.Failed(message="process.group_start gives the program no standard input: leave request.input empty")
+    const key = programs.next_key
+    match process_control(proc, b"", SCRIPT):
+        case Ok(script):
+            const output = try answer_from(proc, request, script)
+            append(mut programs.members, Member(key=key, pid=SCRIPTED_PID, ended=Some(own output)))
+            programs.next_key = key + 1
+            return key
+        case Err(_):
+            pass
+    mut builder = byte_builder.create()
+    put_request(mut builder, request)
+    byte_builder.append(mut builder, outputs)
+    match process_control(proc, byte_builder.finish(builder), START_GROUPED):
+        case Ok(answer):
+            const number = try started_pid(answer, request.argv[0])
+            append(mut programs.members, Member(key=key, pid=number, ended=None))
+            programs.next_key = key + 1
+            return key
+        case Err(text):
+            fail Error.Failed(message=own text)
+
+
+# Start the program of `request` into `group` and return at once with its key: 0 for the first program, then 1, 2 and so on,
+# never one twice in a group. It starts as `start` starts one (standard input /dev/null, its output in the files
+# `stdout_path` and `stderr_path` or in /dev/null for None, the same environment, directory, signals and address space; a
+# missing program fails `NotFound`), and is the leader of a process group of its own, so it does not hear the Ctrl-C of
+# the terminal the caller does: a caller that wants it to hear a stop reads a `Stop` and stops the group. Needs the
+# `Process` capability, with the grant `start` needs under `--restrict`. A start that fails leaves the group as it was.
+# On a scripted Process nothing starts: the request is logged and answered as `run` answers it, and the program has already
+# ended with the rule's `Output`.
+public func group_start(proc: Process, mut programs: Group, request: Request, stdout_path: str?, stderr_path: str?) -> int fails Error:
+    mut outputs = byte_builder.create()
+    put_path(mut outputs, stdout_path)
+    put_path(mut outputs, stderr_path)
+    return try group_launch(proc, mut programs, request, byte_builder.finish(outputs))
+
+
+# `group_start` with a `Destination` for each output stream, as `start_to` is to `start`.
+public func group_start_to(proc: Process, mut programs: Group, request: Request, stdout: Destination, stderr: Destination) -> int fails Error:
+    mut outputs = byte_builder.create()
+    put_destination(mut outputs, stdout)
+    put_destination(mut outputs, stderr)
+    return try group_launch(proc, mut programs, request, byte_builder.finish(outputs))
+
+
+# How many programs the group holds: those started and not yet answered by a wait, whether they run or have ended.
+public func group_size(mut programs: Group) -> int:
+    return len(programs.members)
+
+
+# The position of the program with `key` among the group's, or -1 when the group does not hold it (a wait has answered it).
+func member_index(mut programs: Group, key: int) -> int:
+    for index in range(len(programs.members)):
+        if programs.members[index].key == key:
+            return index
+    return -1
+
+
+# The process number of the program with `key`, as the system and `kill(1)` know it (`SCRIPTED_PID` on a scripted Process),
+# or None when the group has no such program: a wait has answered it, or the key is not one it gave.
+public func group_pid(mut programs: Group, key: int) -> int?:
+    const index = member_index(mut programs, key)
+    if index < 0:
+        return None
+    return Some(programs.members[index].pid)
+
+
+func put_pids(first: int, pids: int[]) -> bytes:
+    mut builder = byte_builder.create()
+    binary.put_varint(mut builder, first)
+    binary.put_uvarint(mut builder, u64(len(pids)))
+    for number in pids:
+        binary.put_varint(mut builder, number)
+    return byte_builder.finish(builder)
+
+
+# The process numbers of the programs of `group` that are running or ended unseen (not a scripted program's).
+func group_pids(mut programs: Group) -> int[]:
+    mut pids: int[] = []
+    for index in range(len(programs.members)):
+        const ended = copy(programs.members[index].ended)
+        if ended is None:
+            append(mut pids, programs.members[index].pid)
+    return pids
+
+
+# Send signal `number` (1 to 64; `SIGTERM`, `SIGKILL` and the other constants name the usual ones) to the program with `key`
+# and to everything in its process group. A program a wait has already answered is not signalled: the number may belong to
+# another process by then, and nothing is sent to it, and the call succeeds. A key the group never gave, or a number outside
+# 1 to 64, fails `Failed`.
+public func group_signal(proc: Process, mut programs: Group, key: int, number: int) -> Unit fails Error:
+    if number < 1 or number > 64:
+        fail Error.Failed(message="a signal number is 1 to 64, not " + str(number))
+    const index = member_index(mut programs, key)
+    if index < 0:
+        if key >= 0 and key < programs.next_key:
+            return ()
+        fail Error.Failed(message="the group has no program with key " + str(key))
+    const ended = copy(programs.members[index].ended)
+    if ended is not None:
+        return ()
+    match process_control(proc, put_pair(programs.members[index].pid, number), SIGNAL_GROUP):
+        case Ok(_):
+            return ()
+        case Err(text):
+            fail Error.Failed(message=own text)
+
+
+# `group_signal` to every program the group holds: a signal to all of them and what they started, none of them waited for.
+public func group_signal_all(proc: Process, mut programs: Group, number: int) -> Unit fails Error:
+    if number < 1 or number > 64:
+        fail Error.Failed(message="a signal number is 1 to 64, not " + str(number))
+    for target in group_pids(mut programs):
+        match process_control(proc, put_pair(target, number), SIGNAL_GROUP):
+            case Ok(_):
+                pass
+            case Err(text):
+                fail Error.Failed(message=own text)
+    return ()
+
+
+# How the program the runtime answers ended: u8 1 and its exit status, or u8 2 and the signal that ended it.
+func ended_by(answer: bytes, mut at: int) -> Output fails Error:
+    const outcome = binary.get_u8(answer, mut at) else Err(_):
+        fail damaged()
+    const code = binary.get_varint(answer, mut at) else Err(_):
+        fail damaged()
+    return Output(exited=outcome == 1u8, code=code, stdout=b"", stderr=b"", truncated=False)
+
+
+# One look at the group: a program that has already ended (a scripted Process's) answers first; else wait up to `millis`
+# milliseconds (negative: as long as it takes) for the first of the running programs to end. The program answered leaves
+# the group.
+func group_step(proc: Process, mut programs: Group, millis: int) -> Finished? fails Error:
+    if len(programs.members) == 0:
+        fail Error.Failed(message="the group has no program to wait for")
+    for index in range(len(programs.members)):
+        const ended = copy(programs.members[index].ended)
+        match ended:
+            case Some(found):
+                const key = programs.members[index].key
+                _ = lists.pop_at(mut programs.members, index)
+                return Some(Finished(key=key, output=copy(found)))
+            case None:
+                pass
+    match process_control(proc, put_pids(millis, group_pids(mut programs)), AWAIT_ANY):
+        case Err(text):
+            fail Error.Failed(message=own text)
+        case Ok(answer):
+            mut at = 0
+            const seen = binary.get_u8(answer, mut at) else Err(_):
+                fail damaged()
+            if seen == 0u8:
+                return None
+            const position = binary.get_varint(answer, mut at) else Err(_):
+                fail damaged()
+            if position < 0 or position >= len(programs.members):
+                fail damaged()
+            const output = try ended_by(answer, mut at)
+            const key = programs.members[position].key
+            _ = lists.pop_at(mut programs.members, position)
+            return Some(Finished(key=key, output=own output))
+
+
+# Wait up to `millis` milliseconds for the first program of the group to end: Some with its key and how it ended, or None
+# when none has ended by then. A limit of 0 asks without waiting; a negative one fails `Failed` (`group_wait_any` has none).
+# The program answered leaves the group, and the call is the one that reaps it, so a program that ended while nobody was
+# waiting is not lost: the next wait answers it. When several have ended, the one started first answers first. The wait
+# sleeps until a program ends (the runtime polls every program's pidfd), it does not poll in a loop. An empty group fails
+# `Failed`, since no program could end.
+public func group_wait_any_within(proc: Process, mut programs: Group, millis: int) -> Finished? fails Error:
+    if millis < 0:
+        fail Error.Failed(message="process.group_wait_any_within needs a limit of zero or more milliseconds; process.group_wait_any has none")
+    return try group_step(proc, mut programs, millis)
+
+
+# Wait for the first program of the group to end, however long it takes, as `group_wait_any_within` does.
+public func group_wait_any(proc: Process, mut programs: Group) -> Finished fails Error:
+    const found = try group_step(proc, mut programs, -1)
+    match found:
+        case Some(one):
+            return copy(one)
+        case None:
+            fail damaged()
+
+
+# End every program of the group and everything they started: `SIGTERM` to each program's process group, `grace_millis`
+# milliseconds (a negative grace is 0) for them to end, then `SIGKILL` to every process group (those of programs that ended
+# in the grace too, so nothing that ignored `SIGTERM` stays behind), and a wait for each. Answers how each program ended, in
+# the order they were started, a program that handled `SIGTERM` possibly with a status; the programs leave the group, which
+# stays open to start others into. Programs a wait has answered are not signalled.
+public func group_stop(proc: Process, mut programs: Group, grace_millis: int) -> Finished[] fails Error:
+    mut stopped: Output[] = []
+    const pids = group_pids(mut programs)
+    if len(pids) > 0:
+        match process_control(proc, put_pids(grace_millis, pids), STOP_GROUP):
+            case Err(text):
+                fail Error.Failed(message=own text)
+            case Ok(answer):
+                mut at = 0
+                for _ in range(len(pids)):
+                    const output = try ended_by(answer, mut at)
+                    append(mut stopped, own output)
+    mut finished: Finished[] = []
+    mut next = 0
+    for index in range(len(programs.members)):
+        const ended = copy(programs.members[index].ended)
+        match ended:
+            case Some(found):
+                append(mut finished, Finished(key=programs.members[index].key, output=copy(found)))
+            case None:
+                append(mut finished, Finished(key=programs.members[index].key, output=copy(stopped[next])))
+                next = next + 1
+    programs.members = []
+    return finished
+
+
+# The members of a group, ending the group (the one place a closed group's owner is consumed).
+func dismantle(own programs: Group) -> Member[]:
+    return own programs.members
+
+
+# Close the group: stop every program still in it as `group_stop` does (`SIGTERM`, `grace_millis` milliseconds, `SIGKILL`)
+# and end the group. The safe choice, and what a program that ends with a Child live does to it: nothing a group started is
+# left running. Answers how each of them ended, in the order they were started, those a wait had not yet answered; ignore
+# the answer with `_ =`. `on fail: _ = process.group_close(proc, own jobs, 2000)` after `group()` ends the group on every
+# failure exit that follows.
+public func group_close(proc: Process, own programs: Group, grace_millis: int) -> Finished[] fails Error:
+    const finished = group_stop(proc, mut programs, grace_millis) else Err(error):
+        _ = dismantle(own programs)
+        fail error
+    _ = dismantle(own programs)
+    return finished
+
+
+# ---- scripted Process ----------------------------------------------------------------------------------------------
+# The operations of the runtime's `process_control` call: 0 to 5 the scripted Process and the program's path, 6 to 8
+# the started programs of a real Process, 9 to 12 the programs of a group.
+const SCRIPT: int = 0
+
+
+const SET_SCRIPT: int = 1
+
+
+const CALLS: int = 2
+
+
+const LOG: int = 3
+
+
+const EXECUTABLE: int = 4
+
+
+const EXPECT: int = 5
+
+
+const START: int = 6
+
+
+const SIGNAL: int = 7
+
+
+const AWAIT: int = 8
+
+
+const START_GROUPED: int = 9
+
+
+const SIGNAL_GROUP: int = 10
+
+
+const AWAIT_ANY: int = 11
+
+
+const STOP_GROUP: int = 12
+
+
+# What a scripted Process answers to a request a rule covers: a program that ran (`Exit`), one that is not there
+# (`Missing`, which `process.run` fails as `Error.NotFound` naming the requested program), or one the system would not
+# start (`Refused`, which fails as `Error.Failed` with the message). Those are the three ways `process.run` can end.
+public enum Reply:
+    Exit(output: Output)
+    Missing
+    Refused(message: str)
+
+
+# One line of a script. A request is covered when its program (`argv[0]`) is exactly `program` and, when `args` is
+# `Some(prefix)`, the arguments after the program begin with `prefix` (`None` covers any arguments). `times` bounds how
+# many requests the rule answers: `None` without limit, `Some(n)` for the first n, after which it covers nothing and the
+# next rule in order may answer (`Some(0)` covers nothing from the start). The first covering rule, in the order of the
+# script, answers.
+public record Rule:
+    program: str
+    reply: Reply
+    args: str[]? = None
+    times: int? = None
+
+
+# The path a scripted Process reports as the running program (`executable_path`).
+public const SCRIPTED_EXECUTABLE_PATH: str = "/scripted/program"
+
+
+# The `Output` of a program that exited with `code` after writing `stdout` and `stderr`.
+public func exited(code: int, stdout: bytes, stderr: bytes) -> Output:
+    return Output(exited=True, code=code, stdout=copy(stdout), stderr=copy(stderr), truncated=False)
+
+
+func put_reply(mut builder: byte_builder.Builder, reply: Reply):
+    match reply:
+        case Exit(output=found):
+            binary.put_u8(mut builder, 0u8)
+            if found.exited:
+                binary.put_u8(mut builder, 1u8)
+            else:
+                binary.put_u8(mut builder, 0u8)
+            binary.put_varint(mut builder, found.code)
+            binary.put_bytes(mut builder, found.stdout)
+            binary.put_bytes(mut builder, found.stderr)
+            if found.truncated:
+                binary.put_u8(mut builder, 1u8)
+            else:
+                binary.put_u8(mut builder, 0u8)
+        case Missing:
+            binary.put_u8(mut builder, 1u8)
+        case Refused(message=text):
+            binary.put_u8(mut builder, 2u8)
+            binary.put_text(mut builder, text)
+
+
+# One rule in the script's octets; `spend` takes one use off a bounded rule, the one that has just answered.
+func put_rule(mut builder: byte_builder.Builder, rule: Rule, spend: bool):
+    binary.put_text(mut builder, rule.program)
+    match rule.args:
+        case Some(prefix):
+            binary.put_u8(mut builder, 1u8)
+            binary.put_uvarint(mut builder, u64(len(prefix)))
+            for item in prefix:
+                binary.put_text(mut builder, item)
+        case None:
+            binary.put_u8(mut builder, 0u8)
+    put_reply(mut builder, rule.reply)
+    match rule.times:
+        case Some(left):
+            binary.put_u8(mut builder, 1u8)
+            if spend:
+                binary.put_varint(mut builder, left - 1)
+            else:
+                binary.put_varint(mut builder, left)
+        case None:
+            binary.put_u8(mut builder, 0u8)
+
+
+func get_texts(data: bytes, mut at: int) -> str[] fails binary.Error:
+    const count = try binary.get_length(data, mut at)
+    mut items: str[] = []
+    for _ in range(count):
+        const item = try binary.get_text(data, mut at)
+        append(mut items, own item)
+    return items
+
+
+func get_reply(data: bytes, mut at: int) -> Reply fails binary.Error:
+    const tag = try binary.get_u8(data, mut at)
+    if tag == 0u8:
+        const ended = try binary.get_u8(data, mut at)
+        const code = try binary.get_varint(data, mut at)
+        const out = try binary.get_bytes(data, mut at)
+        const err = try binary.get_bytes(data, mut at)
+        const flags = try binary.get_u8(data, mut at)
+        return Reply.Exit(output=Output(exited=ended != 0u8, code=code, stdout=own out, stderr=own err, truncated=flags != 0u8))
+    if tag == 1u8:
+        return Reply.Missing
+    const reason = try binary.get_text(data, mut at)
+    return Reply.Refused(message=own reason)
+
+
+func get_rule(data: bytes, mut at: int) -> Rule fails binary.Error:
+    const program = try binary.get_text(data, mut at)
+    const has_args = try binary.get_u8(data, mut at)
+    mut args: str[]? = None
+    if has_args == 1u8:
+        const prefix = try get_texts(data, mut at)
+        args = Some(own prefix)
+    const reply = try get_reply(data, mut at)
+    const has_times = try binary.get_u8(data, mut at)
+    mut times: int? = None
+    if has_times == 1u8:
+        const left = try binary.get_varint(data, mut at)
+        times = Some(left)
+    return Rule(program=own program, reply=own reply, args=own args, times=times)
+
+
+func get_rules(data: bytes) -> Rule[] fails binary.Error:
+    mut at = 0
+    mut rules: Rule[] = []
+    while not binary.at_end(data, at):
+        const rule = try get_rule(data, mut at)
+        append(mut rules, own rule)
+    return rules
+
+
+func get_request(data: bytes, mut at: int) -> Request fails binary.Error:
+    const argv = try get_texts(data, mut at)
+    const directory = try binary.get_text(data, mut at)
+    const input = try binary.get_bytes(data, mut at)
+    const mode = try binary.get_u8(data, mut at)
+    mut environment: str[]? = None
+    if mode == 1u8:
+        const entries = try get_texts(data, mut at)
+        environment = Some(own entries)
+    const limit = try binary.get_varint(data, mut at)
+    return Request(argv=own argv, directory=own directory, input=own input, environment=own environment, limit=limit)
+
+
+# Whether `rule` still has uses left and covers a request for `argv`.
+func covers(rule: Rule, argv: str[]) -> bool:
+    if rule.program != argv[0]:
+        return False
+    match rule.times:
+        case Some(left):
+            if left <= 0:
+                return False
+        case None:
+            pass
+    match rule.args:
+        case Some(prefix):
+            if len(prefix) > len(argv) - 1:
+                return False
+            for index in range(len(prefix)):
+                if prefix[index] != argv[index + 1]:
+                    return False
+            return True
+        case None:
+            return True
+
+
+# The request with its output limit, as the log keeps it.
+func put_call(request: Request) -> bytes:
+    mut builder = byte_builder.create()
+    put_request(mut builder, request)
+    binary.put_varint(mut builder, request.limit)
+    return byte_builder.finish(builder)
+
+
+# Answer `request` from the script `script` of a scripted Process: log it, find the first rule that covers it, spend one
+# use of that rule and answer as the rule says.
+func answer_from(proc: Process, request: Request, script: bytes) -> Output fails Error:
+    _ = process_control(proc, put_call(request), LOG)
+    match get_rules(script):
+        case Err(_):
+            fail damaged()
+        case Ok(rules):
+            mut chosen = -1
+            for index in range(len(rules)):
+                if chosen < 0 and covers(rules[index], request.argv):
+                    chosen = index
+            if chosen < 0:
+                fail Error.Failed(message="scripted Process has no rule for " + f"{request.argv}")
+            mut builder = byte_builder.create()
+            for index in range(len(rules)):
+                put_rule(mut builder, rules[index], index == chosen)
+            _ = process_control(proc, byte_builder.finish(builder), SET_SCRIPT)
+            match rules[chosen].reply:
+                case Exit(output=found):
+                    return Output(exited=found.exited, code=found.code, stdout=copy(found.stdout), stderr=copy(found.stderr), truncated=found.truncated)
+                case Missing:
+                    fail Error.NotFound(program=copy(request.argv[0]))
+                case Refused(message=text):
+                    fail Error.Failed(message=copy(text))
+
+
+# Whether `proc` is a scripted Process: a test's `proc` parameter or one made by `scripted`.
+func has_script(proc: Process) -> bool:
+    match process_control(proc, b"", SCRIPT):
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+func put_rules(rules: Rule[]) -> bytes:
+    mut builder = byte_builder.create()
+    for rule in rules:
+        put_rule(mut builder, rule, False)
+    return byte_builder.finish(builder)
+
+
+# A Process that starts nothing and answers `process.run` from `rules`, in order: the first rule that covers a request
+# answers it, and a request no rule covers fails `Failed("scripted Process has no rule for [argv]")`. Every request is
+# kept for `calls`, answered or not. Building one needs no capability and is not an effect, and a test that uses it is
+# as deterministic and as cacheable as any other.
+public func scripted(own rules: Rule[]) -> Process:
+    return __stand_in[Process](put_rules(rules))
+
+
+# Add `rule` after the rules `proc` already has. `proc` must be a scripted Process (a test's `proc` parameter starts
+# with an empty script); on a real Process this traps.
+public func expect(proc: Process, rule: Rule) -> Unit:
+    assert has_script(proc), "process.expect needs a Process made by process.scripted, or a test's proc parameter"
+    mut builder = byte_builder.create()
+    put_rule(mut builder, rule, False)
+    _ = process_control(proc, byte_builder.finish(builder), EXPECT)
+    return ()
+
+
+# The requests `proc` has been asked to run, oldest first, answered or not, with the `limit` each carried. `proc` must be
+# a scripted Process; on a real Process this traps.
+public func calls(proc: Process) -> Request[]:
+    assert has_script(proc), "process.calls needs a Process made by process.scripted, or a test's proc parameter"
+    mut found: Request[] = []
+    match process_control(proc, b"", CALLS):
+        case Err(_):
+            pass
+        case Ok(log):
+            mut at = 0
+            while not binary.at_end(log, at):
+                match get_request(log, mut at):
+                    case Ok(request):
+                        append(mut found, own request)
+                    case Err(_):
+                        break
+    return found
+
+
+# The absolute path of the running program (`/proc/self/exe`), as a program that spawns itself needs it. A scripted
+# Process answers `SCRIPTED_EXECUTABLE_PATH`, whatever program runs the test.
+public func executable_path(proc: Process) -> str fails str:
+    if has_script(proc):
+        return SCRIPTED_EXECUTABLE_PATH
+    match process_control(proc, b"", EXECUTABLE):
+        case Ok(path):
+            match strings.decode(path):
+                case Ok(text):
+                    return copy(text)
+                case Err(_):
+                    fail "the running program's path is not valid UTF-8"
+        case Err(text):
+            fail copy(text)
+
+
+# Whether a stop has been heard on `notice` (FR5b). On the `Stop` that `main` declares it turns true when the program is
+# sent SIGTERM (`systemctl stop`, `kill`, `process.stop`) or SIGINT (Ctrl-C), or calls `request_stop` on it; it never
+# turns false again. Reading it ends the stop's pending state: until then `network.wait` and `time.sleep` on the real
+# clock return at once, and from then on they wait as long as they ask, so a goodbye can wait for its clients. After the
+# first stop, a second SIGTERM or SIGINT ends the program by the signal's default action.
+public func stop_requested(notice: Stop) -> bool:
+    return stop_control(notice, 0)
+
+
+# A stand-in `Stop` for tests: no signal reaches it, and it is not requested until `request_stop` is called on it or on
+# a copy. Building one needs no capability. A test function that declares a `Stop` parameter is handed one.
+public func simulated_stop() -> Stop:
+    return __stand_in[Stop](0)
+
+
+# Deliver a stop to `notice`, as a test does to see its program's goodbye: every copy then answers `stop_requested` with
+# True. On the real `Stop` it is the program asking itself to stop: the loop on `stop_requested` ends and the waits wake
+# as they do for SIGTERM, but it is not a signal, so the next SIGTERM is the first stop's, not a second one.
+public func request_stop(notice: Stop):
+    _ = stop_control(notice, 1)

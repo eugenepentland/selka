@@ -1,0 +1,50 @@
+# The `simd` lane operations over more than float-4: `f32` with eight lanes, `int` with two, and
+# `u8` with sixteen. Each operation takes its lane type and count from its operands or the
+# expected type, and every expected value below is exact.
+import simd
+
+public func test_f32_eight_lanes_splat_and_fold() -> bool:
+    const v: Simd[f32, 8] = simd.splat(2.5)
+    return simd.sum(v) == 20.0f32 and simd.max(v) == 2.5f32 and simd.min(v) == 2.5f32
+
+
+public func test_f32_eight_lanes_load_store_select_and_fma() -> bool:
+    const values: f32[] = [1.0f32, 2.0f32, 3.0f32, 4.0f32, 5.0f32, 6.0f32, 7.0f32, 8.0f32]
+    const window: Simd[f32, 8] = simd.load(values, 0)
+    mut written: f32[] = [0.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32]
+    simd.store(mut written, 0, window)
+    const zero: Simd[f32, 8] = simd.splat(0.0f32)
+    const two: Simd[f32, 8] = simd.splat(2.0f32)
+    const doubled = simd.fma(window, two, zero)
+    const limit: Simd[f32, 8] = simd.splat(4.5f32)
+    const mask: Simd[bool, 8] = window > limit
+    const kept = simd.select(mask, window, zero)
+    return written[7] == 8.0f32 and doubled[7] == 16.0f32 and simd.sum(kept) == 26.0f32 and simd.min(window) == 1.0f32
+
+
+public func test_int_two_lanes_splat_fold_and_select() -> bool:
+    const v: Simd[int, 2] = simd.splat(7)
+    const a = Simd[int, 2]([3, -4])
+    const b = Simd[int, 2]([5, 6])
+    const mask = Simd[bool, 2]([True, False])
+    const picked = simd.select(mask, a, b)
+    return v[1] == 7 and simd.sum(a) == -1 and simd.min(a) == -4 and simd.max(b) == 6 and simd.sum(picked) == 9
+
+
+public func test_int_two_lanes_load_and_store_through_a_list() -> bool:
+    const xs: int[] = [1, 2, 3, 4]
+    const window: Simd[int, 2] = simd.load(xs, 1)
+    mut ys: int[] = [0, 0, 0, 0]
+    simd.store(mut ys, 2, window)
+    return window[0] == 2 and window[1] == 3 and ys[2] == 2 and ys[3] == 3
+
+
+public func test_u8_sixteen_lanes_splat_fold_store_and_wrap() -> bool:
+    const v: Simd[u8, 16] = simd.splat(200)
+    const hundred: Simd[u8, 16] = simd.splat(100)
+    const wrapped = wrapping_add(v, hundred)
+    mut out: u8[] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    simd.store(mut out, 0, v)
+    const top: u8 = simd.max(v)
+    const bottom: u8 = simd.min(v)
+    return top == 200 and bottom == 200 and wrapped[15] == 44 and out[0] == 200 and out[15] == 200

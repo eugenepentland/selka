@@ -1,0 +1,114 @@
+import record_constructor_defaults_support as rails
+
+# A record field may default to an enum case or a record value, so adding such a field keeps every existing constructor
+# valid. Each construction that omits the field builds its own value.
+enum Colour:
+    red
+    green
+    custom(shade: int)
+
+
+record Pixel:
+    x: int
+    colour: Colour = Colour.green
+    edge: Colour = Colour.custom(shade=3)
+
+
+record Origin:
+    x: int = 0
+    y: int = 0
+
+
+record Marker:
+    at: Origin = Origin()
+    shifted: Origin = Origin(x=4, y=-2)
+    tags: str[] = []
+
+
+record Layer:
+    name: str
+    marker: Marker = Marker()
+    inner: Marker = Marker(shifted=Origin(x=1))
+
+
+record Slot[T]:
+    value: T
+    colour: Colour = Colour.red
+    at: Origin = Origin(y=9)
+
+
+func shade_of(colour: Colour) -> int:
+    match colour:
+        case custom(shade):
+            return shade
+        case _:
+            return 0
+
+
+public func test_enum_case_default_fills_an_omitted_field() -> bool:
+    const pixel = Pixel(x=1)
+    assert pixel.colour == Colour.green
+    assert shade_of(pixel.edge) == 3
+    const chosen = Pixel(x=2, colour=Colour.red)
+    assert chosen.colour == Colour.red
+    assert shade_of(chosen.edge) == 3
+    return True
+
+
+public func test_record_default_fills_an_omitted_field() -> bool:
+    const marker = Marker()
+    assert marker.at.x == 0 and marker.at.y == 0
+    assert marker.shifted.x == 4 and marker.shifted.y == -2
+    const named = Marker(at=Origin(x=5))
+    assert named.at.x == 5 and named.shifted.x == 4
+    return True
+
+
+public func test_nested_record_default_reaches_every_level() -> bool:
+    const layer = Layer(name="top")
+    assert layer.marker.shifted.x == 4
+    assert layer.inner.shifted.x == 1 and layer.inner.shifted.y == 0
+    assert len(layer.inner.tags) == 0
+    return True
+
+
+public func test_record_default_holding_a_list_is_fresh_per_construction() -> bool:
+    mut first = Marker()
+    mut second = Marker()
+    append(mut first.tags, "a")
+    append(mut first.tags, "b")
+    assert len(first.tags) == 2
+    assert len(second.tags) == 0
+    append(mut second.tags, "c")
+    assert len(first.tags) == 2 and len(second.tags) == 1
+    mut layer_a = Layer(name="a")
+    mut layer_b = Layer(name="b")
+    append(mut layer_a.marker.tags, "x")
+    assert len(layer_a.marker.tags) == 1
+    assert len(layer_b.marker.tags) == 0 and len(layer_a.inner.tags) == 0
+    return True
+
+
+public func test_generic_record_defaults() -> bool:
+    const small = Slot[int](value=3)
+    assert small.colour == Colour.red and small.at.y == 9
+    const text = Slot[str](value="s", colour=Colour.green)
+    assert text.colour == Colour.green and text.at.y == 9
+    return True
+
+
+public func test_defaults_resolve_in_the_declaring_module() -> bool:
+    mut rail = rails.Rail(net="GND")
+    assert rail.kind == rails.Kind.ground
+    assert rail.turn.angle == 0 and not rail.turn.flip
+    assert rail.far.angle == 90 and rail.far.flip
+    match rail.mark:
+        case tagged(code):
+            assert code == 7
+        case _:
+            return False
+    append(mut rail.spec.names, "n")
+    const other = rails.Rail(net="V", kind=rails.Kind.supply)
+    assert other.kind == rails.Kind.supply
+    assert len(rail.spec.names) == 1 and len(other.spec.names) == 0
+    return True

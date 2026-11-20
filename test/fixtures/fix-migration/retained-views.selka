@@ -1,0 +1,27 @@
+const RAW: bytes = b"xx42"
+
+
+@noalloc
+func parsed[T](raw: bytes, marker: T) -> int?:
+    return raw.view(2, 4).parse_int()
+
+
+func main(out: Stream) -> int:
+    match parsed[int](RAW, 0):
+        case Some(value):
+            print(out, value)
+        case None:
+            return 1
+    match RAW.view(2, 4).parse_int():
+        case Some(value):
+            print(out, value)
+        case None:
+            return 2
+    match b"xx42".view(2, 4).parse_int():
+        case Some(value):
+            print(out, value)
+        case None:
+            return 3
+    return 0
+# lint: allow-file match-else reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"
+# lint: allow-file match-is reason="this corpus pins its own migration; the flat forms have unwrapping-match.selka"

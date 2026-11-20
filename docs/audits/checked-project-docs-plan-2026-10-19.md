@@ -1,0 +1,910 @@
+# Checked project docs: the compiler writes the what, agents write the why (plan, 2026-10-19)
+
+Status: accepted, 19 October 2026. The user accepted R1 to R10 (§10), R3 to R10
+as recommended. Codex implements it; the launch instruction is in §11. Written
+against `main` at `e4482e7994`. Nothing in it is implemented. An adversarial review of the first draft found 13
+problems, and this revision folds in the fixes.
+
+The plan's structure follows
+[language wave 3](language-wave3-plan-2026-10-19.md). The idea came out of auditing
+the review document "Selka: how it works and why". Every example in it ran on 12
+October; a week later 11 of its 29 standalone examples no longer compiled, and its
+value-semantics example now teaches the opposite of what the compiler does.
+Hand-written docs rot. Generated and checked docs do not.
+
+## 1. Summary
+
+A guest project gets one document a person can read instead of the code:
+- what the project does;
+- what each module offers, and what each function can change, touch and fail with;
+- how it is called, shown by examples that run;
+- why it is the way it is, and what changed since the last release, and why.
+
+It splits into three layers by who can write them.
+
+| Layer | Written by | Lives in | Checked by the release gate |
+| --- | --- | --- | --- |
+| **What** | the compiler | `OVERVIEW.md`, generated and checked in | it matches the project byte for byte (`mylang overview --check`) |
+| **How it is called** | agents | `>>>` examples in docstrings | every public function has one, or a waiver with a reason, and every example passes |
+| **Why** | agents | module and declaration docstrings (the current design), and one file per decision under `decisions/` (each change) | every public-interface change since the last release is named by a pending decision with a real `Why:`, and every `module::name` reference resolves |
+
+New commands:
+- `mylang overview PROJECT --write | --check [--json]` writes or checks `OVERVIEW.md`.
+- `mylang release check PROJECT [--step NAME,…]` is the whole release gate: format,
+  check, lint, tests and examples, docs, decisions, overview. Exit 0 releasable,
+  3 refused. `--step decisions,overview` is the cheap subset for the per-change check.
+- `mylang release draft PROJECT --name SLUG` writes a decision skeleton that lists
+  every uncovered change.
+- `mylang release cut PROJECT --name NAME` records a release: it moves the baseline
+  and files the pending decisions under `NAME`.
+- `mylang release init PROJECT [--adopt-comments]` adopts the scheme in an existing
+  project.
+
+**Unchanged:**
+- `check`, `build` (including `--release`), `run` and `fmt`. The edit loop is not
+  slowed.
+- `mylang test` changes in one way only: it also runs docstring examples.
+- `api-diff` changes only by D1's fixes to its interface hash (§3).
+
+## 2. What a project looks like
+
+```text
+kicad-convert/
+  mylang.json            # optional "release" object (§4.6)
+  main.my                # entry; its module docstring is the project summary
+  footprint.my
+  footprint_test.my
+  OVERVIEW.md            # generated; never edited by hand
+  decisions/
+    unreleased/          # what is being done: pending decisions
+      pad-shapes-as-enum.md
+    0.1/                 # history, moved here by `release cut --name 0.1`
+      initial-design.md
+  release/
+    baseline.txt         # the public interface at the last cut
+    history.txt          # one line per cut
+```
+
+A module documents itself in its docstring, which follows its imports. A public
+function carries a runnable example:
+
+```mylang
+# doc: check
+import money
+
+"""Invoices and their totals.
+
+Totals round half up per line, because the tax office audits per-line rounding,
+not per-invoice rounding. `money::Cents` is the only currency type.
+"""
+
+public record Line:
+    """One priced line: a quantity of one catalog item."""
+    quantity: int
+    unit_cents: int
+
+@ensures(result >= 0)
+public func total(lines: Line[], named taxed: bool = True) -> int:
+    """The invoice total in cents, with 8% tax unless `taxed` is False.
+
+    >>> total([Line(quantity=2, unit_cents=50)])
+    108
+    >>> total([Line(quantity=2, unit_cents=50)], taxed=False)
+    100
+    """
+    mut sum = 0
+    for line in lines:
+        sum += line.quantity * line.unit_cents
+    if taxed:
+        return sum + sum * 8 // 100
+    return sum
+```
+
+A decision is a short Markdown file:
+
+```text
+# Pad shapes become an enum
+
+Date: 2026-10-21
+Changes: footprint::Pad, footprint::PadShape, footprint::parse_pad, footprint::shape_name
+Why: KiCad has six pad shapes and the string field accepted any text, so a typo
+("rect" for "rectangle") converted silently and produced a wrong footprint. An enum
+makes the converter reject an unknown shape at parse time, with the line number.
+Rejected: validating the string in parse_pad (the field still accepts bad values
+from other constructors).
+```
+
+The generated overview reads top-down. This is an abridged excerpt:
+
+```text
+# kicad-convert: overview
+
+<!-- generated by `mylang overview .`; do not edit -->
+
+Converts KiCad footprints and symbols to the netlisp JSON forms. ...
+
+## Contents
+main · footprint · sexpr · symbol · Changes since 0.1 · Releases
+
+## At a glance
+| Modules | 9 |
+| Public functions | 39 (37 with examples, 2 waived) |
+| Tests | 140, plus 41 examples |
+| Open holes | 0 |
+| Authority | Filesystem: main::run; Stream: main::run, report::print_summary |
+| Since release 0.1 | 2 added, 2 changed, 0 removed; 1 decision |
+
+## Module map
+main: command line; reads a file, prints JSON
+├─ footprint: footprint model and converter
+│  └─ sexpr: s-expression reader
+└─ symbol: symbol converter
+
+## Changes since 0.1
+| Declaration | Change | Decision |
+| footprint::PadShape | added | Pad shapes become an enum |
+| footprint::Pad | interface changed | Pad shapes become an enum |
+| footprint::parse_pad | interface changed | Pad shapes become an enum |
+| footprint::shape_name | added | Pad shapes become an enum |
+
+Pad shapes become an enum (2026-10-21). KiCad has six pad shapes and the string
+field accepted any text, so a typo converted silently ...
+
+## Modules
+### footprint (footprint.my)
+<module docstring>
+Imports: sexpr. Imported by: main. Private functions: 14.
+
+#### footprint::shape_name(shape: PadShape) -> str
+<docstring text>
+    >>> shape_name(PadShape.rectangle)
+    'rect'
+Writes: nothing. Authority: none. Contracts: none.
+Tested directly by: footprint_test::test_pad_shapes, footprint_test::test_round_trip
+Decisions: Pad shapes become an enum (unreleased)
+
+## Releases
+### 0.1 (4 decisions)
+- Initial design: the converter keeps KiCad's own field order so a diff against ...
+```
+
+`mylang release check .` prints one line per step and then the findings:
+
+```console
+$ mylang release check .
+release: format ok
+release: check ok
+release: lint ok
+release: tests ok (140 tests, 41 examples, 181 cached)
+release: docs FAILED (1 finding)
+release: decisions FAILED (1 finding)
+release: overview FAILED (stale)
+footprint.my:88:13: error[L_MISSING_EXAMPLE]: public function footprint::pad_area has no `>>>` example; add one, or waive it with a reason
+footprint.my:88:13: error[E_RELEASE_DECISION_MISSING]: footprint::pad_area was added since release 0.1 and no decision under decisions/unreleased/ names it; run `mylang release draft . --name SLUG`
+OVERVIEW.md:1:1: error[E_RELEASE_OVERVIEW_STALE]: OVERVIEW.md does not match the project; run `mylang overview . --write` and review its diff
+release check: not releasable (3 of 7 steps failed)
+$ echo $?
+3
+```
+
+## 3. Where we start
+
+Most of the "what" already exists. Three things the design needs do not, and the
+interface hash that decision coverage rests on has five defects.
+
+**What exists on `main`:**
+- **Interface files.** `mylang api --write | --check` writes one `.api` file per
+  module beside its source (`src/api_files.zig`, `src/interface_files.zig`). It is
+  built from the declaration index, without checking bodies. A file holds the module
+  docstring's first paragraph, and every public signature with:
+  - `named` and `mut` markers, defaults and `fails`;
+  - contracts;
+  - record fields and enum cases;
+  - constants.
+
+  `--check` exits 1 with a diff and a `--write` hint. This is the precedent for
+  `overview --check`.
+- **API diff.** `mylang api-diff --write=FILE | --against=FILE` (`src/api_diff.zig`)
+  writes an `api-diff-baseline-v1` file. Each row holds a declaration identity,
+  `module::name`, the kind, an interface hash and a body hash, for every
+  declaration, private ones included. It classifies changes as `additive`,
+  `breaking` (interface changed, or removed), `compatible` (body changed) and
+  `unchanged`.
+- **Navigation.** `mylang context` returns a per-function contract record (`mutates`,
+  `return_origin`) and the tests that reach a declaration. `mylang tests-for` answers
+  the same from the test-reachability index, falling back to the syntax call graph
+  when bodies do not check.
+- **Docstrings.**
+  - They are parsed into `ast.Program.docstrings` (`src/ast.zig:318-335`) for
+    functions, records, enums and unions. (The parser still records one on a
+    domain, but domains are removed.)
+  - A module docstring follows the imports (`docs/functions.md#docstrings`).
+  - Fields, enum cases and constants have none.
+  - `list-interfaces` prints a declaration docstring's first line. `.api` files carry
+    only the module docstring's first paragraph.
+  - Lint's `undocumented-export` requires a docstring on each export, at least 12
+    non-whitespace characters, that does not just restate the name. It reports under
+    the `agent` profile and blocks under `strict` and `safety`.
+- **Lint.** It has a rule registry (`src/lint.zig:257-402`) and three profiles. Its
+  waivers are a `# lint: allow RULE reason="..."` comment or `@allow("RULE",
+  reason="...")` on the line above a declaration. `--gate` exits 3. Findings are
+  `diagnostic-v1` with `L_` codes registered in `src/diagnostic_codes.zig`.
+- **Doctest.** `mylang doctest ROOT` (`src/doctest_command.zig`) runs `mylang`
+  fences in `README.md`, `SPEC.md` and `docs/**/*.md` under `ROOT`, each in its own
+  temporary directory. A block cannot import the project around it. A root with no
+  executable block fails.
+- **Test runner.** `mylang test` discovers cases per root and splits each case name at
+  the last `::` (`src/core/test_runner_discover.zig:57-60`). A directory run finds
+  test-bearing files by a text scan for `test_` (`src/core/test_runner_directory.zig`)
+  and does not skip `build/` or every hidden directory.
+- **Configuration.** `mylang.json` (`src/project_config.zig`) rejects unknown fields.
+  It has no name, version or release fields.
+
+**What is missing:**
+1. **Docstring examples are not on `main`.** Lever L2 built `>>>` examples on
+   21 September (`l2/docstring-examples`, `89d302dc37`), against the retired syntax,
+   and it was never merged. `src/docstring_examples.zig` there is a reference, not
+   code to merge.
+2. **There is no release concept.** No baseline is checked in, and no command records
+   a release.
+3. **Agents do not write docstrings.**
+   - The three pilot projects in `~/ai/canopy/selka-projects` have 22,174 lines,
+     240 public declarations (39 in kicad-convert, 64 in http-server, 137 in
+     markdown) and **zero** docstrings.
+   - They carry 1,525 `#` comment lines instead. 999 of them (two thirds) sit
+     directly above a top-level declaration.
+   - The standard library's convention is also a `#` comment above each export,
+     which `doc-coverage` enforces.
+
+**Interface-hash defects.** Reproduced on the pinned compiler `23c63cf50a`, whose
+front end equals `main`'s, with `api-diff --write` then `--against`:
+
+| Edit | Classified as | Should be |
+| --- | --- | --- |
+| `-> int fails str` to `-> int fails int` | `compatible (body changed)` | interface changed |
+| a record's docstring reworded | `breaking (interface changed)` | not an interface change |
+| an `@allow(...)` waiver added above a function | `breaking (interface changed)` | not an interface change |
+| the default of a record's last field changed | nothing | interface changed |
+| a private function made `public` | nothing | added to the public interface |
+
+The causes are in `src/incremental.zig`:
+- `baseFunctionSpan` stops before `signature.failure_type`, and starts at the first
+  attribute, so `@allow` falls inside it.
+- A type's span runs from its name to the end of its fields, so its docstring falls
+  inside, and `fieldsEnd` stops at the last field's type.
+- The identity carries no exported flag.
+
+The check cache is not affected: a dependent module is re-checked correctly after a
+`fails` edit. Decision coverage depends on this classification, so lane D1 fixes it
+first.
+
+**The docs describe more than the code does.** Four tooling guides say this:
+- `docs/tooling/interface-files.md:72-77`: `.api` files carry `@noalloc`, mutation
+  footprints, return origins and `*`.
+- `docs/tooling/agent-context.md:54`: the contract has checked effects.
+- `docs/tooling/module-interfaces.md`: the format is `module-interface-v5`.
+- `docs/tooling/lint.md`: `lint.warnings: "deny"` applies to `run`.
+
+The code does none of these. It is the same rot this plan exists to stop, and lane
+D0 fixes the text.
+
+## 4. Design
+
+### 4.1 The project
+
+Every new command takes `PROJECT`: a directory holding `mylang.json`, or an entry
+file, whose directory is then the root.
+
+- **Entries** are `release.entries` from `mylang.json`. The default is the entry
+  file named, or `main.my` in the root.
+- **Test roots** are every test-bearing file under the root, found as a directory run
+  finds them, plus every file with a `>>>` docstring example.
+- **Excluded:** `release.exclude`, `build/` and hidden directories.
+- **The module set** is the union of the import closures of the entries and the test
+  roots, minus `*_test.my` files and the standard library.
+
+The overview, the baseline, coverage and the docs rules all use this one set. D1
+builds it as a library function, and every lane calls that function.
+
+### 4.2 The overview
+
+`mylang overview PROJECT --write` renders `OVERVIEW.md` at the project root.
+`--check` compares it byte for byte and exits 1 with a unified diff, capped at 60
+lines, and the `--write` hint. `--json` prints an `overview-v1` object with the
+same content, for tools.
+
+**It is built from the declaration index and the syntax call graph,** never from a
+successful check, as `mylang api` is. So it renders the same on a project that does
+not check, and it is cheap. Holes are found syntactically, as a body that is
+`todo[T]()`.
+
+**Content, in order:**
+1. A title (the project directory's name) and a one-line generated-file notice.
+2. The project summary: the module docstring of the first entry, in full.
+3. **Contents:** a link to each module section, the changes and the releases.
+4. **At a glance:**
+   - modules;
+   - public functions, with the example and waiver counts;
+   - public types;
+   - tests and examples;
+   - open holes;
+   - the authority table in short;
+   - the change counts since the last release.
+5. **Module map:** the import tree from each entry. Each module appears once, with
+   its docstring's first sentence; a later occurrence says "see above".
+6. **Authority:** for each capability type, the public functions that take it as a
+   parameter. A reviewer reads here what can touch the world.
+7. **Changes since the last release:** one row per added, interface-changed or
+   removed public declaration, with the decision that names it. Then the title, date
+   and `Why:` paragraph of each pending decision.
+8. **Modules**, in map order. For each module:
+   - its docstring;
+   - its imports, its importers and the count of private functions;
+   - then each public declaration in source order, under a heading carrying the
+     qualified `module::name`, so anchors are unique.
+
+   A function shows:
+   - the signature exactly as `.api` spells it;
+   - the docstring with its examples;
+   - contracts;
+   - the `mut` parameters it writes and the capability parameters it holds;
+   - the tests that call it directly, sorted;
+   - its status: implemented, or a hole;
+   - every decision that names it, pending and archived.
+
+   A record shows a table of fields, with types and defaults, and its invariants. An
+   enum shows its cases and payload fields. A waived example shows the waiver's
+   reason.
+9. **Releases:** for each line of `release/history.txt`, newest first, the title and
+   the first sentence of `Why:` of each decision in it.
+
+**Rules:**
+- **Deterministic.** The output must be byte-identical across runs, cache
+  directories, checkouts at different paths, and Debug and ReleaseFast compilers. It
+  contains no absolute path, timestamp, compiler digest or host name. Lists are in
+  source order or sorted by `module::name`.
+- **Private declarations are counted, never shown.** The overview is the interface
+  view.
+- **Direct test callers only.** Transitive reach over a large suite is huge, and it
+  would make every body edit restale the file. A body edit to a non-test function
+  therefore never changes the overview.
+- **References.** Each `module::name` code span in rendered prose becomes a link to
+  that declaration's heading.
+
+### 4.3 Docstrings and examples
+
+**The carrier is the docstring (R3).**
+- Docstrings are already parsed, printed by `list-interfaces`, and checked by lint.
+- They are Python's convention.
+- `>>>` examples need a delimited string.
+
+Today's habit is `#` comments, so `release init --adopt-comments` moves them, on
+request:
+- The comment block above a module's imports becomes its module docstring, placed
+  after the imports.
+- The contiguous `#` block directly above a public declaration becomes its docstring.
+- `# lint:` lines and `#` lines inside bodies stay as they are.
+- A block is used at most once.
+
+It is opt-in, because a comment above a declaration is very likely, but not
+certainly, its documentation. The guides teach docstrings. The standard library keeps
+its `#` convention for now (§8).
+
+**Example grammar (R5)**, inside a function's docstring, after the docstring's
+indentation is removed:
+- A line starting `>>> ` begins an example. Lines starting `... ` continue it.
+- The lines after it, up to a blank line, the next `>>>` or the end of the docstring,
+  are its expected output. `<BLANKLINE>` stands for an empty line within it, as in
+  Python.
+- There is no elision.
+
+**Example semantics (R5).**
+- The expected output is everything the example writes to `out`, followed by its
+  value's display form when the example is a non-unit expression.
+- The display form is the one Python's doctest uses:
+  - `repr(value)` for `str` and `bytes` values, so `''` and `'1'` are visible and
+    distinct from `1`;
+  - the form `out.print(value)` prints for every other type (records, enums, options,
+    results and collections print their strings quoted).
+- A statement, such as `const`, `mut` or an assignment, or a unit expression, has no
+  value to display.
+- The examples of one docstring run in order, in one generated function in the
+  module's scope. Private helpers are visible, and a `const` from one example is
+  visible to the next.
+- An example may name `fs`, `net`, `clock`, `entropy`, `env` and `out`. Each is bound
+  to the deterministic stand-in a test parameter of that type receives
+  (`docs/tooling/guest-tests.md`).
+
+**How they run (D2).**
+- **Names.** Each docstring's examples form one case, displayed as
+  `module::function.example`. The suffix sits after the last `::`, so discovery's
+  split keeps the module name intact. `--filter` matches the displayed name.
+- **Injection.** The generated functions reach the program through the test runner's
+  provider overlay (`src/core/test_runner_directory.zig`), never by editing source.
+- **Isolation.** The module is checked first without its examples. Then each
+  docstring's generated function is checked on its own. One that does not check is
+  reported as a failed case, at the example's line, with the checker's diagnostic,
+  and dropped from the build. The module and its other cases still run.
+- **One owning root.** A module's examples run under exactly one root: the first root
+  in sorted path order whose closure contains the module. A module that no root
+  reaches gets a generated root. Examples never run twice.
+- **Discovery.** The directory scan recognises a `>>>` line in a docstring, so a
+  module with examples and no tests is found.
+- **Exclusions.** D2 adds the project's exclusions to directory runs, and skips
+  `build/` and hidden directories.
+- **Failures** name the docstring line:
+  `failed footprint::shape_name.example: footprint.my:41: expected 'rect', got 'rectangle'`.
+  A trap reports the example's line from the generated function's position table.
+- Receipts, budgets, `--affected` and the forked trials work as for any test.
+- **Census:** no `.my` file outside one unmerged branch's worktree has a `>>>` line
+  in a docstring, so running examples by default changes no existing program's
+  verdict.
+
+**What is required (R4).** Under `release check`:
+- every module in the module set has a module docstring;
+- every public function, record, enum and union has a docstring, under
+  `undocumented-export`'s existing rule;
+- every public function has at least one example.
+
+**Exempt:**
+- `main`, test functions and `*_test.my` modules;
+- public constants, which cannot carry a docstring. Today's `undocumented-export`
+  counts them as functions; D2 fixes that, with a test.
+
+An example can be waived with a reason, `# lint: allow missing-example reason="writes
+a socket; covered by http_test::test_serve"`.
+
+**Lint rules.** The new rules are `undocumented-module` (`L_UNDOCUMENTED_MODULE`) and
+`missing-example` (`L_MISSING_EXAMPLE`), so waivers, JSON and `mylang reference` work
+unchanged.
+- In a plain `mylang lint` they are off under `agent` and report under `strict` and
+  `safety`.
+- `release check` evaluates them as blocking, with `undocumented-export`, under every
+  profile. Its lint step runs every other rule with the project's profile, so no
+  finding appears twice.
+
+### 4.4 Decisions and the release baseline
+
+**A decision is one Markdown file (R7)** under `decisions/unreleased/` while pending,
+and under `decisions/NAME/` after `release cut --name NAME`. One file per decision
+means parallel lanes never edit the same file. The file name without `.md` is the
+decision's identity. The parser reads only these fields:
+
+| Field | Required | Rule |
+| --- | --- | --- |
+| `# Title` | yes | the first line; non-empty |
+| `Changes:` | yes | one or more `module::name`, comma separated; each resolves to a current public declaration or to one in the baseline (removed ones) |
+| `Why:` | yes | a paragraph of at least 30 non-whitespace characters, with no placeholder (`TODO`, `TBD`, `FIXME`, `<why>`) |
+| `Date:` | no | `YYYY-MM-DD` when present |
+| `Rejected:` | no | free text |
+
+Any other prose is allowed after the fields and is shown in the overview.
+**Only pending decisions are validated.** Archived ones are history: their names may
+no longer resolve once a later release removes a declaration, and they are rendered
+as written.
+
+**Coverage (R1).** `release check` compares the public interface of the module set
+with `release/baseline.txt`. Every declaration that was added, whose interface
+changed, or that was removed must be named in the `Changes:` line of at least one
+pending decision.
+- **Visibility counts.** A declaration made public is an addition; one made private
+  is a removal.
+- **Body-only changes need nothing.**
+- **A decision may name a declaration that did not change,** for example to explain a
+  behaviour change, and that is not a finding.
+
+**The baseline lives in the repository (R8).**
+- `release/baseline.txt` is an `api-diff-baseline-v1` file restricted to the module
+  set's public declarations, written by `release init` and `release cut`. The format
+  does not change. A visibility flip then shows up as an addition or a removal, and
+  nothing needs an extra column.
+- No git is needed, so the gate works the same in any checkout, archive or CI.
+
+**Commands:**
+- `release init PROJECT [--adopt-comments]` writes the first baseline, an empty
+  `decisions/unreleased/`, `release/history.txt` and `OVERVIEW.md`. It writes no
+  docstrings except under `--adopt-comments`, and it refuses a project that already
+  has a baseline. Before the first cut, the overview says "since init".
+- `release draft PROJECT --name SLUG [--date YYYY-MM-DD]` writes
+  `decisions/unreleased/SLUG.md`. It holds a placeholder title, a `Changes:` line
+  listing every currently uncovered declaration, and `Why: TODO`. The gate refuses it
+  until the placeholders are replaced. It never overwrites a file. The compiler reads
+  no wall clock, so the date comes only from `--date`.
+- `release cut PROJECT --name NAME` refuses without a baseline (run `init` first) and
+  unless `release check` is green. Then it:
+  1. writes the baseline from the current state;
+  2. moves `decisions/unreleased/*` to `decisions/NAME/`;
+  3. appends `NAME` and the decision count to `release/history.txt`;
+  4. rewrites `OVERVIEW.md` last, from the new state.
+
+  It refuses a `NAME` that already exists.
+- **A project with no baseline** fails the decisions step with
+  `E_RELEASE_NO_BASELINE` and the hint to run `release init`. A gate that passes
+  with a note would let a project skip the why forever.
+
+### 4.5 References in prose
+
+An inline code span whose whole text is `module::name` must resolve. Here `module`
+is a dotted module name and `name` is a declaration. This applies in docstrings,
+pending decision files, and the project's `README.md` and `docs/**/*.md`. A span
+resolves to a declaration in the module set or the standard library, or, in a
+`Changes:` line, to a baseline declaration. An unknown name is
+`E_RELEASE_REFERENCE_UNKNOWN`, at the span. Code spans of any other shape, and fenced
+blocks, are not references. `::` appears in no other Selka spelling, so false matches
+should be rare. D5 counts them on the pilots.
+
+**Markdown examples.** When the project has a `README.md` or `docs/`, their `mylang`
+fences run as `doctest` runs them today, each standing alone, and zero fences is a
+pass. Letting a fence import the project's own modules is a follow-on (§8), not part
+of this plan.
+
+### 4.6 `mylang release check` (R9)
+
+Steps, all run in this order. A step that cannot run because an earlier one failed
+is reported as skipped, never silently dropped. `--step` runs a named subset.
+
+| # | Step | Passes when |
+| --- | --- | --- |
+| 1 | format | `fmt --check` on every project `.my` file |
+| 2 | check | every entry and test root checks; no holes |
+| 3 | lint | `lint --gate` with the project's profile, minus the three doc rules |
+| 4 | tests | every test and example passes (`mylang test` over the project's roots, receipts reused) |
+| 5 | docs | the three doc rules, blocking (§4.3); references resolve (§4.5); Markdown examples pass |
+| 6 | decisions | a baseline exists; every pending decision parses with no placeholder; coverage (§4.4) |
+| 7 | overview | `overview --check`; `.api` files current when the project has any |
+
+**Exit status:**
+- 0: releasable.
+- 3: refused, for one or more findings. This matches `lint --gate`.
+- 2: usage or host error.
+
+A source error in step 2 is a finding of that step, so the exit status is still 3.
+
+**Codes.**
+- Waivable lint codes: `L_UNDOCUMENTED_MODULE`, `L_MISSING_EXAMPLE`, and the existing
+  `L_UNDOCUMENTED_EXPORT`.
+- Gate codes, never waivable: `E_RELEASE_NO_BASELINE`, `E_RELEASE_DECISION_MISSING`,
+  `E_RELEASE_DECISION_INVALID` (a missing field, a placeholder or a bad date),
+  `E_RELEASE_REFERENCE_UNKNOWN` and `E_RELEASE_OVERVIEW_STALE`.
+- Each one gets a row in `src/diagnostic_codes.zig`. D4 may rename them, and logs it.
+
+**Output:** one `release: STEP ok|FAILED (N findings)|skipped (REASON)` line per step,
+the findings as diagnostics, and a summary line. `--json` gives `release-check-v1`
+with the same steps and the findings as `diagnostic-v1` records. Every finding that
+has a certain repair names the command that makes it: `overview --write`,
+`release draft`, `release init`, `fmt`.
+
+**The per-change check.** `release check . --step decisions,overview` is fast: it
+needs no test run. The guide recommends that a project run it on every change it
+lands, so that the why is written when the change is made and the overview is
+current between releases. Without it, agents could put off every why until release
+day, and the record of what is being done would lag.
+
+### 4.7 Configuration
+
+An optional `release` object in `mylang.json`. Every field has a default, so a
+single-entry project needs none.
+
+```json
+{"version": 2,
+ "release": {
+   "entries": ["md2html.my", "site.my"],
+   "exclude": ["oracle/", "repros/", "results/"],
+   "overview": "OVERVIEW.md",
+   "decisions": "decisions",
+   "baseline": "release/baseline.txt"
+ }}
+```
+
+- `build/` and hidden directories are always excluded.
+- There is no switch to make examples optional. The escape hatch is a per-function
+  waiver with a reason, which the overview shows.
+- Unknown keys are refused, as everywhere in `mylang.json`.
+- The config bytes join the verdict caches' identity, as `lint` does.
+
+### 4.8 What stays untouched
+
+- `check`, `check-project`, `build` (including `--release`), `run`, `fmt`, `api`,
+  and `lint` without the new rules.
+- `api-diff` keeps its format and gains only D1's classification fixes.
+- No source that compiles today stops compiling.
+- The edit loop is not slowed. The new work runs only in `overview`, `release …`
+  and, for examples, `mylang test`.
+- The compiler stays deterministic and offline. No model runs inside it: agents
+  write the why, and the compiler checks it.
+
+## 5. Lanes
+
+One coordinator and five lanes. One Codex agent can run them in sequence. Run two at
+once only when build slots allow (§7).
+
+| Lane | Owns | Deliverable |
+| --- | --- | --- |
+| **D0 coordinator** | `src/project_config.zig` (the `release` object), CLI wiring in `src/main.zig` (help text, `CLI-HELP-1`), `src/features.json`, `src/user_docs.zig`, `docs/tooling/release-docs.md` (new guide, listed by `mylang docs`), the four guide corrections of §3 | integration and landing; the guide with runnable examples; `doc-coverage` entries for `overview`, `release check`, `draft`, `cut` and `init` |
+| **D1 foundations** (pure library code, no command) | `src/incremental.zig` (the declaration interface), `src/api_diff.zig`, new `src/release_project.zig`, new `src/release_decisions.zig` | the five hash fixes of §3, with a mutation walk; the project model of §4.1; the public-only baseline and its comparison; the decision parser and the coverage computation; tooling-root unit tests |
+| **D2 examples** | new `src/docstring_examples.zig` (pure grammar), the test runner's discovery and overlay (`src/core/test_runner_discover.zig`, `src/core/test_runner_directory.zig`, `src/tests_index.zig`), `src/lint.zig` (the two rules and the constants exemption), `docs/functions.md#docstrings`, `docs/tooling/guest-tests.md` | §4.3 in full; guest tests in `tests/lang/docstring_examples.my` |
+| **D3 overview** | new `src/overview*.zig`, fixtures under `test/fixtures/release-docs/` | `mylang overview --write/--check/--json` (§4.2), built on D1's project model, baseline comparison and decision parser; it uses D2's grammar module only to count examples |
+| **D4 release** | new `src/release_command.zig` and its parts, `src/diagnostic_codes.zig` (new rows) | `release check` with `--step`; references (§4.5); `release draft`, `cut` and `init` with `--adopt-comments`; CLI tests in `test/release_cli_test.zig` |
+| **D5 pilots** | `~/ai/canopy/selka-projects`, on a branch `release-docs` | §6 G6, and the reading sample for the user |
+
+**Order:**
+1. **D1 first.** Everything else reads its project model, baseline or decision
+   parser.
+2. **D2 and D3 in parallel.** D2 lands `src/docstring_examples.zig` first, because
+   D3 counts examples with it.
+3. **D4 after D2 and D3.** Its docs step needs D2's rules, and `cut` and `init` need
+   D3's writer.
+4. **D5 after D4,** on the matching selka-projects branch (§7).
+
+D0 runs throughout.
+
+**D5 in detail.** For kicad-convert, http-server and markdown:
+1. Run `release init --adopt-comments`.
+2. Have a lane agent write the module docstrings, the missing export docstrings and
+   the examples, and an `initial-design` decision whose `Why:` records the design as
+   it stands. For markdown, take it from its `DESIGN.md`.
+3. Run `release cut --name 0.1`.
+4. Make one real interface change per project, chosen from the ledger, end to end:
+   1. `release draft`;
+   2. write the why;
+   3. `release check --step decisions,overview` while working;
+   4. full `release check`;
+   5. `release cut --name 0.2`.
+5. Record:
+   - the time each step took;
+   - the overview's size in lines;
+   - every false positive of the reference rule;
+   - the friction, as ledger entries (`FR-NNN`) in `selka-projects/LEDGER.md`.
+
+## 6. Gates and done criteria
+
+| # | Criterion |
+| --- | --- |
+| G1 | **Determinism.** `overview --write` is byte-identical across two runs, two cache directories, two checkouts at different absolute paths, and a Debug and a ReleaseFast compiler. A test asserts it contains no absolute path, timestamp or compiler digest |
+| G2 | **Staleness.** A seeded walk over the fixture project edits each visible fact: signature, contract, docstring, example, a test's direct call to a public function, hole filled, decision added, module added or removed. `--check` fails after each edit. A body-only edit to a non-test function keeps it current |
+| G3 | **Coverage and the hash.** D1's walk changes every signature component (each parameter, marker and default, the return type, `fails`, type parameters and their requirements, contracts, visibility, every field and its default, every case and payload) and finds each one an interface change. It changes every non-interface part (body, docstring, `@allow` waiver, comments, layout) and finds none of them an interface change. The coverage cases each have a test: added, changed, removed (named by its baseline name), made public, made private, body-only (no entry needed), placeholder refused, unknown reference refused, an archived decision naming a removed declaration (not a finding), no baseline (`E_RELEASE_NO_BASELINE`) |
+| G4 | **Examples.** Each case has a test: pass; wrong output; `str` shown by `repr`; output written to `out` plus a value; `<BLANKLINE>`; trap at the example's line; an example that does not check fails alone while its module's other cases run; statement examples; capability stand-ins; private helper in scope; a module reached by two roots runs its examples once; a module with examples and no tests is found; receipts reused on a rerun; `--filter` by `.example`; the public-constant exemption. Guest tests live in `tests/lang` |
+| G5 | **Nothing else moves.** Every existing test passes under its old name. `check`, `build` and `run` output is unchanged on the corpus. Edit-loop latency (check plus two tests after a helper edit, warm) is within 5% of its median before the change, measured with the harness behind the 12 October latency table or the nearest current one; D0 records which |
+| G6 | **Pilots.** The three projects are green under `release check` with agent-written docs, with release 0.1 cut and one real change carried end to end to 0.2. Measure and report `release check` warm and cold, `--step decisions,overview` warm, and `overview --check` warm. Targets on markdown: release check warm 10 s or less; the per-change subset and the overview check 2 s or less each. A miss is reported with a profile and does not block landing |
+| G7 | **Complete verification**, formatting, `doctest .` and `doc-coverage .` pass on the final commit. The new guide prints under `mylang docs release-docs`, and its examples run |
+
+## 7. How it fits with the other work
+
+- **Wave 3** (Codex, starting now):
+  - **Files.** No lane file overlaps W1 to W5. Shared files take only added lines:
+    `src/features.json`, `src/diagnostic_codes.zig` (wave 3 registers its own new
+    codes there too), and the imports in `test/integration.zig` and
+    `src/root_test.zig`. When the integration branch merges `main`, D0 resolves
+    these as unions. This plan does not edit `CLAUDE.md`, or `build.zig` beyond
+    added lines for a test root.
+  - **selka-projects.** Wave 3's W6 migrates it on a branch `wave3` and leaves its
+    `main` alone. D5 matches the compiler it runs:
+    - when `docs-gate/integration` contains a wave 3 batch, cut `release-docs` from
+      the `wave3` branch at the same stage;
+    - otherwise, cut it from selka-projects' `main`.
+
+    Run every pilot command through `SELKA_COMPILER_PREFIX`, pointed at an install
+    of `docs-gate/integration`, because the pinned compiler in `COMPILER` rejects a
+    `release` key. Leave `COMPILER`, `main`, `markdown/api/baseline*.txt` and
+    `markdown/oracle/api_guard.py` alone. Log which branch was used.
+  - **Build slots.** At most four agents build the compiler on this machine. While
+    wave 3 runs, this plan uses one building agent at a time (R10).
+- **Self-hosting** (lanes A, C and D beside wave 3): no shared files. Do not touch its
+  denylist (§11).
+- **The §7.2 skeleton workflow.**
+  - The overview is the skeleton a human reviews: signatures, contracts, examples and
+    holes, with the bodies left out.
+  - Decisions are one file per change, so lanes do not collide.
+  - `OVERVIEW.md` is generated. On a merge conflict, take either side and run
+    `mylang overview . --write`. The guide says so.
+- **Wave 2** (methods on built-ins become functions) changes spellings inside
+  examples. Its plan must make its `mylang fix` migration rewrite `>>>` lines too.
+  This plan does not touch `fix`.
+
+## 8. Risks
+
+- **Filler "why".** The compiler can check that a reason exists, is current and names
+  the right declarations; it cannot check that the reason is good. Partial guards:
+  the length floor, the placeholder refusal and the optional `Rejected:`. The real
+  check is a person reading it. A reviewer agent at cut time is a possible follow-on.
+- **Long overviews.** markdown has 137 public declarations, so its overview may run
+  to 1,500 to 2,000 lines. The contents, the summary and the changes come first; the
+  module sections are reference material. D5 reports the sizes. If they are
+  unreadable, D0 logs a decision to fold test-only or helper-heavy modules.
+- **Docstring churn.** Every pilot project gains its documentation in one commit. That
+  is a one-time cost, and `--adopt-comments` keeps the existing text.
+- **The stdlib's `#` convention** now differs from the projects'. Moving the stdlib to
+  docstrings is a follow-on.
+- **Markdown examples cannot import the project.** A README example can show only
+  standalone code until the doctest mode that resolves project imports exists. That
+  is a follow-on.
+- **The name `release`** sits next to `build --release`, which means an optimized
+  build. The guide says `release check` builds nothing optimized. If agents confuse
+  the two in D5, rename the command before landing and log the decision.
+- **Fields and enum cases have no docstrings,** so their meaning shows only through
+  their names. That is a follow-on if the overview reads thin.
+
+## 9. Calendar (estimate)
+
+- D1: about a day (five hash fixes and their walk, the project model, the parser).
+- D2: about a day and a half.
+- D3: about a day, beside D2.
+- D4: about a day and a half.
+- D5: about a day of lane time, most of it agents writing docs.
+
+These are estimates, not measurements. The gates decide, not the calendar.
+
+## 10. Decisions (accepted 19 October)
+
+R1 and R2 were accepted first; R3 to R10 were accepted as recommended later the
+same day.
+
+1. **R1. What needs a "why" (accepted).** Public-interface changes since the last
+   release need a decision: added (including made public), interface changed,
+   removed (including made private). Body-only changes do not, because tests and
+   contracts cover them. The alternative, also requiring an entry when an example's
+   output changes, records behaviour changes too, at the cost of more entries.
+2. **R2. Where it is enforced (accepted).** A separate `mylang release check`.
+   `check`, `build` (including `--release`), `run` and `test` are not gated by docs.
+3. **R3. The carrier is the docstring,** not a `#` comment. `--adopt-comments`
+   migrates on request. The alternative, `#` comments above a declaration, is what
+   agents write today, but it has no delimiter for examples and is not what
+   `list-interfaces` and lint read.
+4. **R4. One example per public function,** waivable with a reason. Types and modules
+   need docstrings, not examples. Constants are exempt. The alternative, an example or
+   an `@ensures`, is weaker for a reader, because a contract says what holds and not
+   how the function is called.
+5. **R5. Example semantics, Python's doctest model:**
+   - the expected text is what the example writes to `out` plus its value's display
+     form;
+   - the display form is `repr` for `str` and `bytes`, and the printed form otherwise;
+   - `<BLANKLINE>` stands for an empty line, and there is no elision;
+   - one generated function per docstring, in module scope;
+   - six capability names bound to test stand-ins.
+
+   The alternative, an example as a `bool` expression that must be `True`, is simpler
+   to run but reads worse: `total(x) == 108` instead of `total(x)` and then `108`.
+6. **R6. One generated `OVERVIEW.md`, checked in, at the project root,** built from
+   declarations and direct test calls, with no compiler identity or dates in it. So
+   neither a compiler change nor a body edit makes it stale. The alternatives are one
+   file per module, which gives fewer merge conflicts and a worse read, or no
+   checked-in copy, which is never stale but leaves no reviewable diff.
+7. **R7. One Markdown file per decision.** Pending files live in
+   `decisions/unreleased/` and are moved to `decisions/NAME/` at a cut. `Title`,
+   `Changes` and `Why` are required. Only pending files are validated.
+8. **R8. The baseline is a public-only `api-diff-baseline-v1` file in the
+   repository** (`release/baseline.txt`), and no git is needed. The first baseline is
+   made by `release init`, and a project with none fails the gate.
+9. **R9. `release check` is the whole release gate:** format, check, lint, tests and
+   examples, docs, decisions, overview. Its `--step decisions,overview` subset is the
+   per-change check. The alternative checks docs alone and leaves projects to compose
+   the rest themselves.
+10. **R10. Scheduling.** Codex implements it, beside wave 3 with one building agent at
+    a time, with the pilots matched to wave 3's selka-projects branch (§7). The
+    alternative is to start after wave 3 has landed: no contention, but later.
+
+## 11. Operating rules and launch instruction for Codex
+
+The default is **decide, log, continue**. Write every decision to
+`experiments/checked-docs-20261019/DECISIONS.md`: the question, the options, the
+evidence, the choice, and whether it can be reversed. Commit at every step, with a
+progress section in `experiments/checked-docs-20261019/status.md`, so the run can be
+inspected without interrupting it. Investigate and fix a gate failure within the run,
+for up to about 6 to 8 h. Early measurements are checkpoints; only the final ones bind.
+
+**Hard stops.** Stop and ask only for:
+
+1. **A language change beyond R3 to R5.** For example:
+   - docstring placement rules;
+   - syntax other than `>>>`, `...` and `<BLANKLINE>` inside docstrings;
+   - a different example semantics;
+   - field or case docstrings.
+2. **Relaxing a gate on `main`, or any of G1 to G7,** or retiring or moving a
+   verification group. Measuring one better is allowed.
+3. **A broken premise.** For example:
+   - the overview cannot be made deterministic;
+   - examples cannot run through the overlay without a semantic change;
+   - api-diff cannot classify a signature component.
+4. **A failure that cannot be fixed within the bound.**
+5. **Anything outside this plan's branches:**
+   - pushes and `origin`;
+   - `claude/*`, `projects/*`, `wave3/*` and `selfhost/*` branches;
+   - Claude worktrees and another active run's tree;
+   - `../guardian-zig`.
+
+   The exception is selka-projects (D5). There, work only on a branch named
+   `release-docs`, cut as §7 says, and leave `COMPILER`, `main` and the `wave3`
+   branch alone.
+6. **Resources:** free space on `/` under 25 GB, or the machine swapping.
+
+**Forbidden files while the other runs are active:**
+- Wave 3's lane files: `core_text.c`, `build_text*.zig`, `emit_text.zig`,
+  `sema_operators.zig`, `sema_loops.zig`, `sema_expressions.zig`,
+  `collection_lower.zig`, `src/stdlib/*.my`, `ir.zig`, `verify_ir.zig`, `own.zig`,
+  `emit_*.zig`, `build_list*.zig`, `single_owner.zig`, `dictionary_views.zig`,
+  `src/fix_command.zig`.
+- The self-hosting run's files: `src/syntax_dump.zig`, `selfhost/`,
+  `bench/selfhost/`, `docs/bootstrap-v1.md`.
+- `CLAUDE.md` and `SPEC.md` (frozen). Put any proposed `CLAUDE.md` text in
+  `REPORT.md` instead.
+
+**Branches and authority.**
+- **Branches.** Integration happens on `docs-gate/integration`, in the worktree
+  `~/ai/canopy/mylang-docs-gate`, branched from `main`. Each lane gets its own
+  branch (`docs-gate/d1-foundations`, …) in its own worktree, which it claims with
+  `git worktree lock --reason`.
+- **Landing.** Two batches land on `main`:
+  1. D1, on its own, because its hash fixes are a fix;
+  2. D2 to D4 with D0's guide.
+
+  D5's results go into the final report. A batch is fast-forwarded to `main` when
+  it has passed `python3 scripts/verify_cache.py --zig "$ZIG" --profile complete`
+  and `main` has not moved since the batch's base. Do it only in the primary
+  checkout, with `git -C ~/ai/canopy/mylang merge --ff-only docs-gate/integration`,
+  after `git -C ~/ai/canopy/mylang status --porcelain` prints nothing. If `main` has
+  moved (wave 3 lands batches too), merge it into `docs-gate/integration`, verify
+  again, then fast-forward.
+
+**Machine rules from `CLAUDE.md`.**
+- **Environment:** every compiler tree runs `source ~/.config/mylang/dev-env.sh` first.
+- **Admission:** builds and focused tests go through `scripts/build-slot.sh build …`,
+  and timing (G5, G6) through `scripts/build-slot.sh timing …`.
+  `scripts/verify_cache.py` owns its own admission. While wave 3 runs, this plan uses
+  one building agent at a time.
+- **The lane check:** `python3 scripts/patch_gate.py --parallel` on the lane's branch.
+- **Paths:** caches, `TMPDIR` and install prefixes go under `~/.cache/`, never `/tmp`.
+- **Tests:** a behavioural change under `src/` ships with a test change in the same
+  diff (Guardian's `change-classification`). `SPEC.md` is frozen, so no new bullets
+  or `// spec:` tags are needed.
+  - Guest behaviour is tested in `tests/lang/*.my` where possible.
+  - CLI behaviour is tested in `test/release_cli_test.zig`, imported from
+    `test/integration.zig`.
+  - Fixtures go under `test/fixtures/release-docs/`, which the `cli` input list
+    already covers.
+  - Pure modules (`release_project`, `release_decisions`, `docstring_examples`) are
+    tested from the tooling unit root, listed in `build_test_inputs.zig`'s
+    `tooling_unit`.
+- **Guardian:** at most seven fields per struct and six parameters per function, a
+  `///` comment on every `pub` declaration, every new file reachable from a root in
+  `guardian.toml`, no wall clock (the `--date` flag exists for that reason), no
+  absolute paths.
+- **Evidence:** keep committed evidence under 10 MB. Large logs stay in `~/.cache`.
+- **Processes:** never kill a process this run did not start, and never use broad
+  `pkill` patterns.
+
+**Finish** with `experiments/checked-docs-20261019/REPORT.md`. It covers:
+- G1 to G7 with their evidence;
+- every new command, diagnostic code and lint rule, with its test;
+- D1's hash fixes and the walk that proves them;
+- the three pilots:
+  - their `release check` times, warm and cold, and the per-change subset's;
+  - their overview sizes in lines;
+  - the decisions written, and false positives of the reference rule;
+  - the friction, as ledger entries;
+  - which selka-projects branch each was cut from;
+- a path to markdown's `OVERVIEW.md` on the `release-docs` branch, for the user to
+  read as the sample;
+- the decisions logged, and any `CLAUDE.md` text proposed.
+
+```text
+You are implementing docs/audits/checked-project-docs-plan-2026-10-19.md on main
+in ~/ai/canopy/mylang: checked project docs, where the compiler generates the
+"what" (OVERVIEW.md), docstrings carry runnable >>> examples, and agents write the
+"why" (docstrings and one decision file per public-interface change), all enforced
+by a new `mylang release check`. Read the plan fully, then CLAUDE.md,
+docs/tooling/interface-files.md, docs/tooling/api-diff.md, docs/tooling/lint.md,
+docs/tooling/guest-tests.md and docs/functions.md#docstrings. Decide, log in
+experiments/checked-docs-20261019/DECISIONS.md, and continue; stop only for the
+hard stops in section 11. Create the worktree ~/ai/canopy/mylang-docs-gate on
+branch docs-gate/integration from main. Run the lanes in order: D1 (the five
+interface-hash fixes, the project model, the baseline and the decision parser),
+then D2 and D3, then D4, with D0 throughout. Land D1 on main as its own batch, then
+D2 to D4, each after a green complete verification, fast-forwarding only from the
+primary checkout as section 11 says. Language wave 3 is running at the same time:
+use one building agent at a time and never edit its files or the self-hosting
+run's (section 11). Run D5 in ~/ai/canopy/selka-projects on a branch release-docs
+cut as section 7 says, with SELKA_COMPILER_PREFIX pointed at a docs-gate install;
+leave COMPILER, main and wave3 alone. Never push. Do not touch ../guardian-zig,
+CLAUDE.md or SPEC.md. Commit at every step with a progress section in status.md.
+Finish with REPORT.md.
+```

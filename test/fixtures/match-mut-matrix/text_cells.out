@@ -1,0 +1,384 @@
+== compare element
+True
+3
+== compare element_field
+True
+3
+== compare field
+True
+3
+== compare local
+True
+3
+== compare mut_param
+True
+3
+== compare nested
+True
+3
+== compare option
+True
+3
+== compare two_fields
+True
+3
+== copy element
+3
+3
+== copy element_field
+3
+3
+== copy field
+3
+3
+== copy local
+3
+3
+== copy mut_param
+3
+3
+== copy nested
+3
+3
+== copy option
+3
+3
+== copy two_fields
+3
+3
+== hole element
+<xax>
+3
+== hole element_field
+<xax>
+3
+== hole field
+<xax>
+3
+== hole local
+<xax>
+3
+== hole mut_param
+<xax>
+3
+== hole nested
+<xax>
+3
+== hole option
+<xax>
+3
+== hole two_fields
+<xax>
+3
+== index element
+120
+3
+== index element_field
+120
+3
+== index field
+120
+3
+== index local
+120
+3
+== index mut_param
+120
+3
+== index nested
+120
+3
+== index option
+120
+3
+== index two_fields
+120
+3
+== len element
+3
+3
+== len element_field
+3
+3
+== len field
+3
+3
+== len local
+3
+3
+== len mut_param
+3
+3
+== len nested
+3
+3
+== len option
+3
+3
+== len two_fields
+3
+3
+== lib0 element
+XAX
+3
+== lib0 element_field
+XAX
+3
+== lib0 field
+XAX
+3
+== lib0 local
+XAX
+3
+== lib0 mut_param
+XAX
+3
+== lib0 nested
+XAX
+3
+== lib0 option
+XAX
+3
+== lib0 two_fields
+XAX
+3
+== lib1 element
+a
+3
+== lib1 element_field
+a
+3
+== lib1 field
+a
+3
+== lib1 local
+a
+3
+== lib1 mut_param
+a
+3
+== lib1 nested
+a
+3
+== lib1 option
+a
+3
+== lib1 two_fields
+a
+3
+== method0 element
+a
+3
+== method0 element_field
+a
+3
+== method0 field
+a
+3
+== method0 local
+a
+3
+== method0 mut_param
+a
+3
+== method0 nested
+a
+3
+== method0 option
+a
+3
+== method0 two_fields
+a
+3
+== method1 element
+['xax']
+3
+== method1 element_field
+['xax']
+3
+== method1 field
+['xax']
+3
+== method1 local
+['xax']
+3
+== method1 mut_param
+['xax']
+3
+== method1 nested
+['xax']
+3
+== method1 option
+['xax']
+3
+== method1 two_fields
+['xax']
+3
+== method2 element
+b'xax'
+3
+== method2 element_field
+b'xax'
+3
+== method2 field
+b'xax'
+3
+== method2 local
+b'xax'
+3
+== method2 mut_param
+b'xax'
+3
+== method2 nested
+b'xax'
+3
+== method2 option
+b'xax'
+3
+== method2 two_fields
+b'xax'
+3
+== method3 element
+00xax
+3
+== method3 element_field
+00xax
+3
+== method3 field
+00xax
+3
+== method3 local
+00xax
+3
+== method3 mut_param
+00xax
+3
+== method3 nested
+00xax
+3
+== method3 option
+00xax
+3
+== method3 two_fields
+00xax
+3
+== mutparam element
+4
+4
+== mutparam element_field
+4
+4
+== mutparam field
+4
+4
+== mutparam local
+4
+4
+== mutparam mut_param
+4
+4
+== mutparam nested
+4
+4
+== mutparam option
+4
+4
+== mutparam two_fields
+4
+4
+== param element
+3
+3
+== param element_field
+3
+3
+== param field
+3
+3
+== param local
+3
+3
+== param mut_param
+3
+3
+== param nested
+3
+3
+== param option
+3
+3
+== param two_fields
+3
+3
+== print element
+xax
+3
+== print element_field
+xax
+3
+== print field
+xax
+3
+== print local
+xax
+3
+== print mut_param
+xax
+3
+== print nested
+xax
+3
+== print option
+xax
+3
+== print two_fields
+xax
+3
+== slice element
+x
+3
+== slice element_field
+x
+3
+== slice field
+x
+3
+== slice local
+x
+3
+== slice mut_param
+x
+3
+== slice nested
+x
+3
+== slice option
+x
+3
+== slice two_fields
+x
+3
+== str element
+xax
+3
+== str element_field
+xax
+3
+== str field
+xax
+3
+== str local
+xax
+3
+== str mut_param
+xax
+3
+== str nested
+xax
+3
+== str option
+xax
+3
+== str two_fields
+xax
+3

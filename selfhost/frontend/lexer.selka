@@ -1,0 +1,620 @@
+# The Selka lexer: source bytes to the token stream `selka dump-tokens` prints.
+#
+# Two passes, as in src/lexer.zig and src/python_layout.zig: `tokenize` cuts the bytes into tokens
+# (names, keywords, punctuation), and `lower` turns the indentation into `indent` and `dedent` tokens.
+# Tokens are three flat tables (kind, start, end) over the source bytes; no token holds text. A source
+# that does not lex fails with the first diagnostic, which is also the only one the Zig lexer reports.
+import keywords
+import lists
+import strings
+import token_kinds
+
+# The token stream: entry `i` is `kind[i]` over the bytes `start[i]` up to `end[i]`.
+public record Tokens:
+    kind: token_kinds.Kind[]
+    start: int[]
+    end: int[]
+
+
+# A lexical diagnostic: the code, the span of the offending bytes and the message, and a note at one byte when
+# `note_start` is not -1 (the quote that ended a text inside a word, `explain_unterminated`).
+public record LexFailure:
+    code: str
+    start: int
+    end: int
+    message: str
+    note_start: int = -1
+    note_message: str = ""
+
+
+# The bytes the lexer tells apart. `ord` of a one-byte literal folds to its number, so no constant or arm is a
+# number a reader has to decode.
+const NEWLINE: int = ord("\n")
+
+
+const CARRIAGE_RETURN: int = ord("\r")
+
+
+const DOUBLE_QUOTE: int = ord('"')
+
+
+const SINGLE_QUOTE: int = ord("'")
+
+
+const UNDERSCORE: int = ord("_")
+
+
+const DOT: int = ord(".")
+
+
+const PLUS: int = ord("+")
+
+
+const MINUS: int = ord("-")
+
+
+const BACKSLASH: int = ord("\\")
+
+
+func is_alpha(b: int) -> bool:
+    return (ord("A") <= b <= ord("Z")) or (ord("a") <= b <= ord("z"))
+
+
+func is_word(b: int) -> bool:
+    return is_alpha(b) or (ord("0") <= b <= ord("9")) or b == UNDERSCORE
+
+
+# The ASCII whitespace the Zig lexer skips: space, tab, newline, vertical tab, form feed, carriage return.
+func is_space(b: int) -> bool:
+    return b == ord(" ") or (ord("\t") <= b <= CARRIAGE_RETURN)
+
+
+func byte_at(src: bytes, index: int) -> int:
+    if index < len(src):
+        return src[index]
+    return 0
+
+
+func push(mut tokens: Tokens, kind: token_kinds.Kind, start: int, end: int):
+    append(mut tokens.kind, kind)
+    append(mut tokens.start, start)
+    append(mut tokens.end, end)
+
+
+func empty_tokens() -> Tokens:
+    return Tokens(kind=[], start=[], end=[])
+
+
+# The token a pair of bytes spells, or `eof` when they spell none (`eof` is never punctuation).
+func pair_kind(ch: int, next: int) -> token_kinds.Kind:
+    if next == ord("="):
+        match ch:
+            case ord("+"):
+                return token_kinds.Kind.plus_equal
+            case ord("-"):
+                return token_kinds.Kind.minus_equal
+            case ord("*"):
+                return token_kinds.Kind.star_equal
+            case ord("/"):
+                return token_kinds.Kind.slash_equal
+            case ord("%"):
+                return token_kinds.Kind.percent_equal
+            case ord("="):
+                return token_kinds.Kind.eq_eq
+            case ord("!"):
+                return token_kinds.Kind.bang_eq
+            case ord("<"):
+                return token_kinds.Kind.le
+            case ord(">"):
+                return token_kinds.Kind.ge
+            case _:
+                return token_kinds.Kind.eof
+    if ch == ord("/") and next == ord("/"):
+        return token_kinds.Kind.slash_slash
+    if ch == MINUS and next == ord(">"):
+        return token_kinds.Kind.arrow
+    return token_kinds.Kind.eof
+
+
+# The token one byte spells, or `eof` when it spells none.
+func single_kind(ch: int) -> token_kinds.Kind:
+    match ch:
+        case ord("@"):
+            return token_kinds.Kind.at
+        case ord("("):
+            return token_kinds.Kind.lparen
+        case ord(")"):
+            return token_kinds.Kind.rparen
+        case ord("["):
+            return token_kinds.Kind.lbracket
+        case ord("]"):
+            return token_kinds.Kind.rbracket
+        case ord("{"):
+            return token_kinds.Kind.lbrace
+        case ord("}"):
+            return token_kinds.Kind.rbrace
+        case ord(";"):
+            return token_kinds.Kind.semicolon
+        case ord(":"):
+            return token_kinds.Kind.colon
+        case ord(","):
+            return token_kinds.Kind.comma
+        case ord("."):
+            return token_kinds.Kind.dot
+        case ord("+"):
+            return token_kinds.Kind.plus
+        case ord("*"):
+            return token_kinds.Kind.star
+        case ord("/"):
+            return token_kinds.Kind.slash
+        case ord("%"):
+            return token_kinds.Kind.percent
+        case ord("-"):
+            return token_kinds.Kind.minus
+        case ord("&"):
+            return token_kinds.Kind.ampersand
+        case ord("|"):
+            return token_kinds.Kind.pipe
+        case ord("^"):
+            return token_kinds.Kind.caret
+        case ord("="):
+            return token_kinds.Kind.equal
+        case ord("?"):
+            return token_kinds.Kind.question
+        case ord("<"):
+            return token_kinds.Kind.lt
+        case ord(">"):
+            return token_kinds.Kind.gt
+        case _:
+            return token_kinds.Kind.eof
+
+
+func is_digit(b: int) -> bool:
+    return ord("0") <= b <= ord("9")
+
+
+# The refusal of a one-quote literal that does not close on its line, named for what it is, as the Zig lexer names it
+# (`src/quote_in_word.zig`), and explained by `explain_unterminated` when a text before it on its line ended at a quote
+# inside a word.
+const UNTERMINATED_TEXT: str = "unterminated text: a text closes on its line with the quote that opened it; escape newlines with \\n"
+
+
+const UNTERMINATED_FORMAT: str = "unterminated format string: it closes on its line with the quote that opened it; escape newlines with \\n"
+
+
+const UNTERMINATED_BYTES: str = "unterminated byte literal; escape newlines with \\n"
+
+
+# One past the closing quote of the one-quote literal that opens at `start` (the quote byte). A literal
+# ends at its matching quote, may hold escaped bytes, and may not run over a newline; `message` names it when it does not.
+func quote_end(src: bytes, start: int, message: str) -> int fails LexFailure:
+    const quote = src[start]
+    const size = len(src)
+    mut i = start + 1
+    while i < size:
+        const c = src[i]
+        if c == quote:
+            return i + 1
+        if c == NEWLINE or c == CARRIAGE_RETURN:
+            break
+        if c == ord("\\"):
+            i += 1
+            if i == size or src[i] == NEWLINE or src[i] == CARRIAGE_RETURN:
+                break
+        i += 1
+    fail LexFailure(code="E_BYTE_LITERAL", start=start, end=min(i, size), message=copy(message))
+
+
+# Whether `b` is an ASCII letter or digit, the bytes the Zig lexer's word test reads (`std.ascii.isAlphanumeric`).
+func is_alnum(b: int) -> bool:
+    return is_alpha(b) or is_digit(b)
+
+
+# The closing quote of the literal token over `src[start:end]` when a name token starts right at `end` and the quote
+# stands after a letter or digit: the text ended inside a word. -1 for any other literal, a triple-quoted one included.
+# `src/quote_in_word.zig: closingInsideWord`.
+func closing_inside_word(src: bytes, start: int, end: int, next_start: int) -> int:
+    if end - start < 3:
+        return -1
+    # A `b` or `f` prefix sits before the quotes; `f"""` is a triple-quoted format string, never read as ending in a word.
+    mut quote_start = start
+    if src[start] == ord("b") or src[start] == ord("f"):
+        quote_start = start + 1
+    const first = src[quote_start]
+    if end - quote_start >= 6 and (first == DOUBLE_QUOTE or first == SINGLE_QUOTE) and src[quote_start + 1] == first and src[quote_start + 2] == first:
+        return -1
+    const closing = end - 1
+    if src[closing] != SINGLE_QUOTE and src[closing] != DOUBLE_QUOTE:
+        return -1
+    if not is_alnum(src[closing - 1]):
+        return -1
+    if next_start != end or not is_alpha(src[next_start]):
+        return -1
+    return closing
+
+
+# The first literal on the line of the quote at `quote` that ended inside a word at the same quote byte, or -1.
+# `src/quote_in_word.zig: earliestOnLine`.
+func earliest_on_line(src: bytes, tokens: Tokens, quote: int) -> int:
+    mut line_start = quote
+    while line_start > 0 and src[line_start - 1] != NEWLINE:
+        line_start -= 1
+    const count = len(tokens.kind)
+    mut first = count
+    while first > 0 and tokens.start[first - 1] >= line_start:
+        first -= 1
+    mut index = first
+    while index + 1 < count:
+        const kind = tokens.kind[index]
+        if (kind is bytes | format) and tokens.kind[index + 1] == token_kinds.Kind.ident:
+            const closing = closing_inside_word(src, tokens.start[index], tokens.end[index], tokens.start[index + 1])
+            if closing != -1 and src[closing] == src[quote]:
+                return closing
+        index += 1
+    return -1
+
+
+# Why a quote opens a text that never closes when the text before it ended at the quote `ended` inside a word, as
+# `src/quote_in_word.zig: reason` words it.
+func quote_reason(src: bytes, ended: int) -> str:
+    mut left = ended
+    while left > 0 and is_alnum(src[left - 1]):
+        left -= 1
+    mut right = ended + 1
+    while right < len(src) and is_alnum(src[right]):
+        right += 1
+    const lead = "this quote opens a text that never closes"
+    # The word is letters, digits and one quote byte, all ASCII, so it always decodes.
+    const word = strings.decode(src[left:right]) else Err(_):
+        return lead
+    if src[ended] == SINGLE_QUOTE:
+        return lead + ": the single-quoted text before it ended at the apostrophe in `" + word + "` (the note), so what followed was read as code; write that text in double quotes, or escape the apostrophe as \\'"
+    return lead + ": the double-quoted text before it ended at the quote in `" + word + '` (the note), so what followed was read as code; write that text in single quotes, or escape the quote as \\"'
+
+
+# The refusal of an unterminated one-quote literal, explained when a text before it on its line ended at a quote inside
+# a word (F-61; `src/quote_in_word.zig: explainUnterminated`): the code and the span stay, the message says why, and the
+# note is at the quote that ended the text. Any other failure is returned as it is.
+func explain_unterminated(src: bytes, tokens: Tokens, failure: LexFailure) -> LexFailure:
+    const named = failure.message == UNTERMINATED_TEXT or failure.message == UNTERMINATED_FORMAT or failure.message == UNTERMINATED_BYTES
+    if failure.code != "E_BYTE_LITERAL" or not named:
+        return copy(failure)
+    const ended = earliest_on_line(src, tokens, failure.start)
+    if ended == -1:
+        return copy(failure)
+    mut note = "the quote that ended the text"
+    if src[ended] == SINGLE_QUOTE:
+        note = "the apostrophe that ended the text"
+    return LexFailure(code=copy(failure.code), start=failure.start, end=failure.end, message=quote_reason(src, ended), note_start=ended, note_message=own note)
+
+
+# One past the closing three quotes of the triple-quoted literal that opens at `start`.
+func triple_end(src: bytes, start: int) -> int fails LexFailure:
+    const quote = src[start]
+    const size = len(src)
+    mut i = start + 3
+    while i < size:
+        if src[i] == ord("\\"):
+            i += 2
+            continue
+        if src[i] == quote and i + 2 < size and src[i + 1] == quote and src[i + 2] == quote:
+            return i + 3
+        i += 1
+    fail LexFailure(code="E_BYTE_LITERAL", start=start, end=size, message="unterminated triple-quoted literal; close it with three matching quotes")
+
+
+# Whether `start` opens a triple-quoted literal: three of the same quote byte, all before `limit`.
+func triple_start(src: bytes, start: int, limit: int) -> bool:
+    const quote = src[start]
+    if quote != DOUBLE_QUOTE and quote != SINGLE_QUOTE:
+        return False
+    if start + 2 >= limit:
+        return False
+    return src[start + 1] == quote and src[start + 2] == quote
+
+
+# The refusal of a triple-quoted format string that never closes: it names the line it opened on, because the literal
+# runs to the end of the file (`src/lexer.zig: formatEnd`).
+func unterminated_triple_format(src: bytes, start: int) -> LexFailure:
+    mut line = 1
+    for index in range(start):
+        if src[index] == NEWLINE:
+            line += 1
+    return LexFailure(code="E_BYTE_LITERAL", start=start + 1, end=len(src), message=f"unterminated triple-quoted format string: it opened on line {line} and has no closing three quotes of the same kind")
+
+
+# One past the format string whose `f` is at `start`: the one-line form ends at its second quote, and three quotes after
+# the `f` open a triple-quoted one (F-19), which ends at the first three unescaped quotes of that kind with no regard for
+# its holes (`src/lexer.zig: formatEnd`).
+func format_end(src: bytes, start: int, limit: int) -> int fails LexFailure:
+    if not triple_start(src, start + 1, limit):
+        return try quote_end(src, start + 1, UNTERMINATED_FORMAT)
+    const triple_close = triple_end(src, start + 1) else Err(_):
+        fail unterminated_triple_format(src, start)
+    return triple_close
+
+
+# One past a quoted literal that opens at `start`. A `b` prefix puts the quote one byte later and is never
+# triple quoted (the Zig lexer asks `tripleStart` of the prefix byte, which is no quote).
+func quoted_end(src: bytes, start: int, limit: int, byte_prefix: bool) -> int fails LexFailure:
+    if triple_start(src, start, limit):
+        return try triple_end(src, start)
+    if byte_prefix:
+        return try quote_end(src, start + 1, UNTERMINATED_BYTES)
+    return try quote_end(src, start, UNTERMINATED_TEXT)
+
+
+func is_prefix_letter(b: int) -> bool:
+    return b in b"xXoObB"
+
+
+# One past the run of letters, digits and underscores from `start`.
+func word_end(src: bytes, start: int) -> int:
+    mut at = start
+    while at < len(src) and is_word(src[at]):
+        at += 1
+    return at
+
+
+# One past the run of digits and underscores from `start`.
+func digits_end(src: bytes, start: int) -> int:
+    mut at = start
+    while at < len(src) and (is_digit(src[at]) or src[at] == UNDERSCORE):
+        at += 1
+    return at
+
+
+# Whether an exponent starts at `start`: `e` or `E`, an optional sign, a digit.
+func exponent_ahead(src: bytes, start: int) -> bool:
+    if start >= len(src) or (src[start] != ord("e") and src[start] != ord("E")):
+        return False
+    mut at = start + 1
+    if at < len(src) and (src[at] == PLUS or src[at] == MINUS):
+        at += 1
+    return at < len(src) and is_digit(src[at])
+
+
+# Whether the `.` at `dot` belongs to the number before it: `5.` and `5.e3` do, `5.name` keeps its dot.
+func dot_belongs(src: bytes, dot: int) -> bool:
+    const next = dot + 1
+    if next >= len(src):
+        return True
+    if is_digit(src[next]):
+        return True
+    if is_alpha(src[next]) or src[next] == UNDERSCORE:
+        return exponent_ahead(src, next)
+    return True
+
+
+# One past the numeric token that starts at `start`, a digit or a leading-dot float. Letters, digits and
+# underscores after the number stay in the token so a malformed spelling is diagnosed as one literal.
+func number_end(src: bytes, start: int) -> int:
+    if src[start] == ord("0") and start + 1 < len(src) and is_prefix_letter(src[start + 1]):
+        return word_end(src, start + 2)
+    mut at = digits_end(src, start)
+    if at < len(src) and src[at] == DOT and dot_belongs(src, at):
+        at = digits_end(src, at + 1)
+    if at < len(src) and (src[at] == ord("e") or src[at] == ord("E")):
+        at += 1
+        if at < len(src) and (src[at] == PLUS or src[at] == MINUS):
+            at += 1
+    return word_end(src, at)
+
+
+# Whether the last token is an operand that ends exactly at `start`, so a `.` there is member access
+# (`x.5`, `f().5`) and not the start of a `.5` float.
+# Whether the byte before `start` ends a name, a literal or a closing bracket, so a `!` there is written against an operand
+# (a Python `{x!r}` conversion) and is not a negation.
+func against_operand(src: bytes, start: int) -> bool:
+    if start == 0:
+        return False
+    const before = byte_at(src, start - 1)
+    return is_word(before) or before == ord(")") or before == ord("]") or before == ord("}") or before == DOUBLE_QUOTE or before == SINGLE_QUOTE
+
+
+func follows_operand(tokens: Tokens, start: int) -> bool:
+    const count = len(tokens.kind)
+    if count == 0:
+        return False
+    if tokens.end[count - 1] != start:
+        return False
+    const kind = tokens.kind[count - 1]
+    return kind is ident | integer | bytes | format | rparen | rbracket | rbrace | kw_true | kw_false | kw_none
+
+
+# Whether the backslash at `at` ends its line: only spaces, tabs and carriage returns follow it before a newline or the
+# end (`endsLine` in src/line_continuation.zig).
+func ends_line(src: bytes, at: int) -> bool:
+    mut index = at + 1
+    while index < len(src) and (src[index] == ord(" ") or src[index] == ord("\t") or src[index] == CARRIAGE_RETURN):
+        index += 1
+    return index == len(src) or src[index] == NEWLINE
+
+
+# Whether a token starts at or after `at`: a byte that is not whitespace, a comment, or another backslash that ends a line.
+func token_follows(src: bytes, at: int) -> bool:
+    mut index = at
+    while index < len(src):
+        const b = src[index]
+        if b == ord("#"):
+            while index < len(src) and src[index] != NEWLINE:
+                index += 1
+        elif is_space(b) or (b == BACKSLASH and ends_line(src, index)):
+            index += 1
+        else:
+            return True
+    return False
+
+
+# The failure for a backslash that ends a line, `refuseBackslash` in src/line_continuation.zig: inside brackets the line
+# goes on without it; elsewhere an expression continues only inside parentheses. The Zig lexer also gives the second
+# message when the file would not lex with every such backslash blanked; this lexer stops at the first failure.
+func backslash_failure(src: bytes, tokens: Tokens, at: int) -> LexFailure:
+    mut depth = 0
+    for kind in tokens.kind:
+        if kind is lparen | lbracket | lbrace:
+            depth += 1
+        elif kind is rparen | rbracket | rbrace:
+            if depth > 0:
+                depth -= 1
+    mut message = "a backslash does not continue a line: an expression continues on the next line only inside parentheses, so write `(a +` ... `b)` and no backslash"
+    if depth > 0 and token_follows(src, at + 1):
+        message = "a backslash does not continue a line, and inside brackets the line goes on without one: delete it"
+    return LexFailure(code="E_TOKEN", start=at, end=at + 1, message=own message)
+
+
+# Cut the source into tokens, with no indentation tokens yet. The last token is `eof`.
+public func tokenize(src: bytes) -> Tokens fails LexFailure:
+    mut tokens = empty_tokens()
+    const limit = len(src)
+    mut i = 0
+    while i < limit:
+        const start = i
+        const ch = src[i]
+        if is_space(ch):
+            i += 1
+            continue
+        if ch == ord("#"):
+            while i < limit and src[i] != NEWLINE:
+                i += 1
+            continue
+        const quoted = byte_at(src, i + 1) == DOUBLE_QUOTE or byte_at(src, i + 1) == SINGLE_QUOTE
+        if ch == ord("f") and quoted:
+            const format_close = format_end(src, start, limit) else Err(failure):
+                fail explain_unterminated(src, tokens, failure)
+            i = format_close
+            push(mut tokens, token_kinds.Kind.format, start, i)
+            continue
+        if ch == DOUBLE_QUOTE or ch == SINGLE_QUOTE or (ch == ord("b") and quoted):
+            const literal_end = quoted_end(src, start, limit, ch == ord("b")) else Err(failure):
+                fail explain_unterminated(src, tokens, failure)
+            i = literal_end
+            push(mut tokens, token_kinds.Kind.bytes, start, i)
+            continue
+        if is_alpha(ch) or ch == UNDERSCORE:
+            i += 1
+            while i < limit and is_word(src[i]):
+                i += 1
+            push(mut tokens, keywords.keyword_kind(src, start, i - start), start, i)
+            continue
+        if is_digit(ch) or (ch == DOT and byte_at(src, i + 1) >= ord("0") and byte_at(src, i + 1) <= ord("9") and not follows_operand(tokens, start)):
+            i = number_end(src, start)
+            push(mut tokens, token_kinds.Kind.integer, start, i)
+            continue
+        i += 1
+        const next = byte_at(src, i)
+        if ch == ord("=") and next == ord(">"):
+            fail LexFailure(code="E_REMOVED_SPELLING", start=start, end=start + 2, message="`=>` was removed and has no replacement")
+        if ch == ord("&") and next == ord("&"):
+            fail LexFailure(code="E_REMOVED_SPELLING", start=start, end=start + 2, message="`&&` is not an operator; write `and`")
+        if ch == ord("|") and next == ord("|"):
+            fail LexFailure(code="E_REMOVED_SPELLING", start=start, end=start + 2, message="`||` is not an operator; write `or`")
+        if ch == ord("!") and next != ord("=") and not against_operand(src, start):
+            fail LexFailure(code="E_REMOVED_SPELLING", start=start, end=i, message="`!` is not an operator; write `not`")
+        if ch == ord("/") and next == ord("/") and byte_at(src, i + 1) == ord("="):
+            i += 2
+            push(mut tokens, token_kinds.Kind.slash_slash_equal, start, i)
+            continue
+        const pair = pair_kind(ch, next)
+        if pair != token_kinds.Kind.eof:
+            i += 1
+            push(mut tokens, pair, start, i)
+            continue
+        const single = single_kind(ch)
+        if single == token_kinds.Kind.eof:
+            if ch == BACKSLASH and ends_line(src, start):
+                fail backslash_failure(src, tokens, start)
+            fail LexFailure(code="E_TOKEN", start=start, end=i, message="unexpected character in source")
+        push(mut tokens, single, start, i)
+    push(mut tokens, token_kinds.Kind.eof, i, i)
+    return tokens
+
+
+# The start of the line holding `offset`, searching back no further than `floor`, where the caller already
+# knows the answer for `floor`. Mirrors `LineCursor` in src/python_layout.zig: one pass over the bytes in all.
+func line_start_of(src: bytes, offset: int, floor: int, known: int) -> int:
+    mut index = offset
+    while index > floor:
+        if src[index - 1] == NEWLINE:
+            return index
+        index -= 1
+    return known
+
+
+# Whether a newline lies in `src[from:to]`.
+func has_newline(src: bytes, from: int, to: int) -> bool:
+    mut index = from
+    while index < to:
+        if src[index] == NEWLINE:
+            return True
+        index += 1
+    return False
+
+
+# Insert `indent` and `dedent` tokens: a `:` that ends a line opens a suite (it becomes `indent`), and the
+# dedent that leaves one is a zero-width `dedent` before the next token. Lines inside brackets do not count.
+public func lower(src: bytes, input: Tokens) -> Tokens fails LexFailure:
+    mut out = empty_tokens()
+    mut levels: int[] = [0]
+    mut delimiters = 0
+    mut previous_line = -1
+    mut pending = False
+    mut cursor = 0
+    mut line = 0
+    const count = len(input.kind)
+    for index in range(count):
+        const start = input.start[index]
+        const end = input.end[index]
+        mut kind_here = input.kind[index]
+        line = line_start_of(src, start, cursor, line)
+        cursor = start
+        if kind_here == token_kinds.Kind.eof or (previous_line != line and delimiters == 0):
+            mut indent = 0
+            if kind_here != token_kinds.Kind.eof:
+                mut at = line
+                while at < start:
+                    const ch = src[at]
+                    if ch == ord("\t"):
+                        fail LexFailure(code="E_INDENTATION", start=start, end=end, message="indentation uses spaces; tabs are not permitted")
+                    if ch != ord(" ") and ch != CARRIAGE_RETURN:
+                        break
+                    indent += 1
+                    at += 1
+            if pending:
+                if kind_here == token_kinds.Kind.eof or indent <= levels[len(levels) - 1]:
+                    fail LexFailure(code="E_INDENTATION", start=start, end=end, message="expected an indented block after ':'")
+                if len(levels) == 257:
+                    fail LexFailure(code="E_NESTING_LIMIT", start=start, end=end, message="indentation exceeds 256 levels")
+                append(mut levels, indent)
+                pending = False
+            else:
+                while indent < levels[len(levels) - 1]:
+                    _ = lists.pop(mut levels)
+                    push(mut out, token_kinds.Kind.dedent, start, start)
+                if indent != levels[len(levels) - 1]:
+                    fail LexFailure(code="E_INDENTATION", start=start, end=end, message="unexpected indentation or dedent does not match an enclosing block")
+        # The line this token ends on: a multi-line text ends where its closing quotes are, so a token after them on that
+        # line continues the statement instead of starting a line of its own (src/python_layout.zig).
+        line = line_start_of(src, end, cursor, line)
+        cursor = end
+        previous_line = line
+        mut next_line = False
+        if index + 1 < count:
+            const after = input.start[index + 1]
+            next_line = input.kind[index + 1] == token_kinds.Kind.eof or has_newline(src, start, after)
+        if kind_here == token_kinds.Kind.colon and delimiters == 0 and next_line:
+            kind_here = token_kinds.Kind.indent
+            pending = True
+        elif kind_here is lparen | lbracket | lbrace:
+            delimiters += 1
+        elif kind_here is rparen | rbracket | rbrace:
+            if delimiters > 0:
+                delimiters -= 1
+        push(mut out, kind_here, start, end)
+    return out
+
+
+# Lex a source: tokens with their indentation tokens, or the first lexical diagnostic.
+public func lex(src: bytes) -> Tokens fails LexFailure:
+    const raw = try tokenize(src)
+    return try lower(src, raw)

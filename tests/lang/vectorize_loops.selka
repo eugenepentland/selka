@@ -1,0 +1,24 @@
+# `@vectorize` above a `for` loop asks the release build's vectorizer for the loop. The loop
+# computes the same values in every build, so these tests pass in a debug run too.
+func residue_sum(n: int) -> int:
+    mut total = 0
+    @vectorize
+    for i in range(n):
+        total = total + i * 3 % 7
+    return total
+func sum_each(xs: int[]) -> int:
+    mut total = 0
+    @vectorize
+    for x in xs:
+        total = total + x
+    return total
+public func test_a_marked_loop_sums_its_elements() -> bool:
+    return residue_sum(10) == 30
+public func test_a_marked_loop_over_a_list_sums_each_element() -> bool:
+    return sum_each([1, 2, 3, 4]) == 10
+public func test_a_marked_loop_with_a_loop_carried_value_keeps_its_order() -> bool:
+    mut last = 0
+    @vectorize
+    for i in range(3):
+        last = last * 2 % 1000 + i
+    return last == 4

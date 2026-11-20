@@ -1,0 +1,77 @@
+# `filesystem.dir_at` on the in-memory filesystem and on the one a test receives: the folder is read as that filesystem reads
+# a path (its root is the working directory), and the handle is a `fs.dir` handle (docs/io.md, "A folder named at run
+# time"). The real filesystem, plain and restricted, is pinned by src/io_dir_at_escape_test.zig.
+import filesystem
+import strings
+
+func refusal(result: Result[Filesystem, str]) -> str:
+    match result:
+        case Ok(_):
+            return "narrowed"
+        case Err(message):
+            return copy(message)
+
+
+func said(result: Result[str, str]) -> str:
+    match result:
+        case Ok(text):
+            return copy(text)
+        case Err(message):
+            return copy(message)
+
+
+func layout() -> Filesystem:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("runs")
+    _ = fs.mkdir("runs/today")
+    _ = fs.write_text("runs/today/log.txt", "inside")
+    _ = fs.write_text("secret.txt", "outside")
+    _ = filesystem.symlink(fs, "runs", "shortcut")
+    return fs
+
+
+public func test_a_folder_named_at_run_time_is_written_and_read_inside_it() -> bool fails str:
+    const fs = layout()
+    const chosen = strings.join(["runs", "today"], "/")
+    const today = try filesystem.dir_at(fs, chosen)
+    _ = try today.write_text("new.txt", "made")
+    return said(fs.read_text("runs/today/new.txt")) == "made" and said(today.read_text("log.txt")) == "inside" and said(filesystem.cwd(today)) == ""
+
+
+public func test_every_way_out_of_the_folder_is_refused() -> bool fails str:
+    const fs = layout()
+    const today = try filesystem.dir_at(fs, "runs/today")
+    const narrowed = "denied: a Filesystem narrowed by fs.dir takes a path inside its folder, without '..', '.', an empty part or a leading '/'"
+    return said(today.read_text("../../secret.txt")) == "read '../../secret.txt': " + narrowed and not today.exists("../../secret.txt") and refusal(filesystem.dir_at(today, "..")) == "dir_at '..': " + narrowed and said(fs.read_text("secret.txt")) == "outside"
+
+
+public func test_the_spellings_of_one_folder_all_narrow_to_it() -> bool fails str:
+    const fs = layout()
+    for path in ["runs/today", "./runs/today/", "runs//today", "runs/today/../today"]:
+        const today = try filesystem.dir_at(fs, path)
+        if said(today.read_text("log.txt")) != "inside":
+            return False
+    const here = try filesystem.dir_at(fs, ".")
+    return said(here.read_text("secret.txt")) == "outside" and not here.exists("../secret.txt")
+
+
+public func test_what_dir_at_refuses_on_the_memory_filesystem() -> bool:
+    const fs = layout()
+    return refusal(filesystem.dir_at(fs, "")) == "dir_at '': the path is empty; '.' names the working directory" and refusal(filesystem.dir_at(fs, "shortcut")) == "dir_at 'shortcut': is a symbolic link the sandbox does not follow" and refusal(filesystem.dir_at(fs, "secret.txt")) == "dir_at 'secret.txt': is not a directory" and refusal(filesystem.dir_at(fs, "absent")) == "dir_at 'absent': no such file or directory" and refusal(filesystem.dir_at(fs, "/runs")) == "dir_at '/runs': denied: '/runs' is outside the granted directories" and refusal(filesystem.dir_at(fs, "../runs")) == "dir_at '../runs': denied: '../runs' is outside the granted directories"
+
+
+public func test_a_read_only_filesystem_narrowed_at_run_time_still_does_not_write() -> bool fails str:
+    const fs = layout()
+    const today = try filesystem.dir_at(fs.read_only(), "runs/today")
+    match today.write_text("log.txt", "changed"):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "write 'log.txt': denied: this Filesystem was narrowed by fs.read_only() and does not write" and said(fs.read_text("runs/today/log.txt")) == "inside"
+
+
+public func test_the_filesystem_a_test_receives_narrows_at_run_time(fs: Filesystem) -> bool fails str:
+    _ = try fs.mkdir("data")
+    const data = try filesystem.dir_at(fs, "data")
+    _ = try data.write_text("kept.txt", "here")
+    return said(fs.read_text("data/kept.txt")) == "here" and not data.exists("../data/kept.txt")

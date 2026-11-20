@@ -1,0 +1,29 @@
+record Item:
+    value: int
+    weight: int
+    tags: int[]
+
+
+func total(items: Item[]) -> int:
+    mut sum = 0
+    for i in range(len(items)):
+        mut item = items[i]
+        sum += item.value
+    return sum
+
+
+func bump(mut items: Item[], i: int):
+    items[i].value = items[i].value + 1
+
+
+func first(items: Item[]) -> Item:
+    mut head = copy(items[0])
+    head.weight = head.weight + 1
+    return head
+
+
+func main() -> int:
+    mut items = [Item(value=2, weight=1, tags=[]), Item(value=3, weight=1, tags=[])]
+    bump(mut items, 1)
+    const head = first(items)
+    return total(items) + head.value * 10

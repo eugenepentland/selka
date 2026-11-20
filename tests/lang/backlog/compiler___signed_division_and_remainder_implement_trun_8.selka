@@ -1,0 +1,6 @@
+public func test_signed_division_and_remainder_implement_trun_8() -> bool:
+    return 20 - divtrunc(6, 2) == 17
+
+
+func main() -> int:
+    return 0

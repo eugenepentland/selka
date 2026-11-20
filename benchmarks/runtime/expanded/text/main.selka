@@ -1,0 +1,345 @@
+import json
+import lists
+import strings
+
+extern func runtime_bench_now(host: Host) -> i64
+
+
+record Inputs:
+    raw: bytes
+    texts: str[]
+    other: str[]
+    numbers: int[]
+    fragments: str[]
+
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func repeated(text: str, count: int) -> str:
+    return strings.repeat(text, count)
+
+
+func score(text: str) -> int:
+    mut raw = strings.encode(text)
+    mut result = len(raw)
+    for value in raw:
+        result += value
+    return result
+
+
+func row_name(j: int) -> str:
+    const selection: str
+    if (j % 2 == 0):
+        selection = ('café,"item"')
+    else:
+        selection = ("naïve,item")
+    return selection + str(j)
+
+
+func inputs(kind: str, size: int, seed: int) -> Inputs:
+    mut raw = b""
+    mut texts: str[] = []
+    mut other: str[] = []
+    mut numbers: int[] = []
+    mut fragments: str[] = []
+    if kind == "bytes_scan":
+        mut gather_result: int[] = []
+        for j in range(0, size):
+            const gather_value: int = (seed + j * 37) % 256
+            append(mut gather_result, gather_value)
+        raw = bytes(gather_result)
+    elif kind == "string_equal":
+        texts = [repeated("a", size), repeated("é", size), repeated("a", size), "café" + str(seed)]
+        other = [repeated("a", size), repeated("é", size - 1) + "ê", "b" + repeated("a", size - 1), "café" + str(seed)]
+    elif kind == "string_search":
+        texts = [repeated("a", size) + ";café;needle;" + str(seed)]
+        other = ["a", "needle", "absentΩ", "é"]
+    elif kind == "string_split" or kind == "string_join":
+        mut options = ["", "alpha", "café", "x", "naïve"]
+        mut gather_result_next: str[] = []
+        for j in range(0, size):
+            const gather_value_next: str = copy(options[(seed + j) % 5])
+            append(mut gather_result_next, own gather_value_next)
+        fragments = own gather_result_next
+        texts = [strings.join(fragments, "|"), strings.join(fragments, "::")]
+    elif kind == "int_parse":
+        for j in range(size):
+            mut n = (seed + j * 137) % 1000003
+            mut mode = j % 6
+            mut text = str(n)
+            if mode == 1:
+                text = "-" + text
+            elif mode == 2:
+                text = "00" + text
+            elif mode == 3:
+                text += "x"
+            elif mode == 4:
+                text = "oops"
+            elif mode == 5:
+                text = ""
+            append(mut texts, own text)
+    elif kind == "int_format":
+        for j in range(size):
+            mut n = (seed + j * 137) % 1000003
+            const selection: int
+            if (j % 3 == 0):
+                selection = (0 - n)
+            else:
+                selection = (n)
+            append(mut numbers, selection)
+    elif kind == "word_count":
+        mut vocabulary = ["red", "blue", "café", "red", "green", "blue", "naïve", "red"]
+        mut separators = [" ", "\t", "\n", "  "]
+        mut chunks: str[] = []
+        for j in range(0, size):
+            append(mut chunks, vocabulary[(seed + j) % 8] + separators[j % 4])
+        mut document = strings.join(chunks, "")
+        texts = [document + "red", document + "blue"]
+    elif kind == "csv_aggregate":
+        mut regions = ["east", "west", "north"]
+        mut csv_chunks: str[] = []
+        for j in range(size):
+            const amount: str
+            if (j % 11 == 0):
+                amount = ("oops")
+            else:
+                amount = (str((seed + j * 19) % 100003))
+            mut quoted = '"' + strings.replace(row_name(j), '"', '""') + '"'
+            const csv_prefix = str(seed + j) + "," + quoted + "," + regions[(seed + j) % 3] + "," + amount + ","
+            mut active_flag = "0"
+            if (seed + j) % 3 != 0:
+                active_flag = "1"
+            append(mut csv_chunks, csv_prefix + active_flag + "\n")
+        texts = [strings.join(csv_chunks, "")]
+    elif kind == "json_transform":
+        mut rows: json.Json[] = []
+        for j in range(size):
+            mut fields: dict[str, json.Json] = {"id": json.integer(seed + j), "name": json.text(row_name(j)), "amount": json.integer((seed + j * 19) % 100003), "active": json.boolean((seed + j) % 3 != 0)}
+            append(mut rows, json.object(fields))
+        texts = [json.dumps(json.array(rows))]
+    return Inputs(raw=own raw, texts=own texts, other=own other, numbers=own numbers, fragments=own fragments)
+
+
+func word_job(text: str) -> int:
+    mut counts: dict[str, int] = {}
+    for word in strings.words(text):
+        if word in counts:
+            counts[copy(word)] = counts[word] + 1
+        else:
+            counts[copy(word)] = 1
+    mut result = 0
+    for word in counts:
+        result += score(word) * counts[word] * counts[word]
+    return result
+
+
+# Fixture CSV subset: quoted commas/doubled quotes; LF records; no embedded LF.
+func csv_rows(text: str) -> str[][]:
+    mut rows: str[][] = []
+    mut fields: str[] = []
+    mut field = ""
+    mut quoted = False
+    mut pending_quote = False
+    for ch in strings.chars(text):
+        if quoted:
+            if ch == '"':
+                if pending_quote:
+                    field += '"'
+                    pending_quote = False
+                else:
+                    pending_quote = True
+            elif pending_quote:
+                quoted = False
+                pending_quote = False
+                if ch == ",":
+                    append(mut fields, own field)
+                    field = ""
+                elif ch == "\n":
+                    append(mut fields, own field)
+                    append(mut rows, own fields)
+                    fields = []
+                    field = ""
+            else:
+                field += ch
+        elif ch == '"':
+            quoted = True
+        elif ch == ",":
+            append(mut fields, own field)
+            field = ""
+        elif ch == "\n":
+            append(mut fields, own field)
+            append(mut rows, own fields)
+            fields = []
+            field = ""
+        else:
+            field += ch
+    return rows
+
+
+func csv_job(text: str) -> int:
+    mut groups: dict[str, int] = {"east": 0, "west": 0, "north": 0}
+    mut accepted = 0
+    mut rejected = 0
+    mut names = 0
+    for row in csv_rows(text):
+        match parse_int(row[3]):
+            case Some(amount):
+                if row[4] == "1":
+                    groups[copy(row[2])] += amount
+                    accepted += 1
+                    names += score(row[1])
+            case None:
+                rejected += 1
+    return groups["east"] + groups["west"] * 2 + groups["north"] * 3 + accepted * 17 + rejected * 101 + names
+
+
+func json_integer(value: json.Json) -> int:
+    match json.as_int(value):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+
+func json_active(value: json.Json) -> bool:
+    match json.as_bool(value):
+        case Some(flag):
+            return flag
+        case None:
+            return False
+
+
+func json_job(text: str, bump: int) -> int:
+    mut output: json.Json[] = []
+    match json.loads(text):
+        case Ok(value):
+            match value:
+                case array(value=rows):
+                    for row in rows:
+                        match row:
+                            case object(value=fields):
+                                if json_active(fields["active"]):
+                                    mut result: dict[str, json.Json] = {"id": copy(fields["id"]), "name": copy(fields["name"]), "amount": json.integer(json_integer(fields["amount"]) + bump)}
+                                    append(mut output, json.object(result))
+                            case _:
+                                return 0
+                case _:
+                    return 0
+        case Err(_):
+            return 0
+    return score(json.dumps(json.array(output)))
+
+
+func bytes_job(raw: bytes, mask: int) -> int:
+    mut total = 0
+    for value in raw:
+        total += bit_xor(value, mask)
+    return total
+
+
+func split_job(text: str, separator: str) -> int:
+    mut parts = strings.split(text, separator)
+    mut result = len(parts) * 7
+    for part in parts:
+        result += score(part)
+    return result
+
+
+func parse_job(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 97
+
+
+func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+    mut checksum = 0
+    if kind == "bytes_scan":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = bytes_job(data.raw, cursor % 256)
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_equal":
+        for step in range(iterations):
+            mut cursor = seed + step
+            const value: int
+            if (data.texts[cursor % 4] == data.other[cursor % 4]):
+                value = (1)
+            else:
+                value = (0)
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_search":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = strings.char_find((data.texts[0]), data.other[cursor % 4]) + 1
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_split":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut split_separator = "::"
+            if cursor % 2 == 0:
+                split_separator = "|"
+            mut value = split_job(data.texts[cursor % 2], split_separator)
+            checksum = (checksum + value) % 1000000007
+    elif kind == "string_join":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut join_separator = "::"
+            if cursor % 2 == 0:
+                join_separator = "|"
+            mut value = score(strings.join(data.fragments, join_separator))
+            checksum = (checksum + value) % 1000000007
+    elif kind == "int_parse":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = parse_job(data.texts[cursor % len(data.texts)])
+            checksum = (checksum + value) % 1000000007
+    elif kind == "int_format":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = score(str(data.numbers[cursor % len(data.numbers)]))
+            checksum = (checksum + value) % 1000000007
+    elif kind == "word_count":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = word_job(data.texts[cursor % 2])
+            checksum = (checksum + value) % 1000000007
+    elif kind == "csv_aggregate":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = csv_job(data.texts[0])
+            checksum = (checksum + value) % 1000000007
+    elif kind == "json_transform":
+        for step in range(iterations):
+            mut cursor = seed + step
+            mut value = json_job(data.texts[0], cursor % 17)
+            checksum = (checksum + value) % 1000000007
+    return checksum
+
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    mut kind = copy(args[0])
+    mut cases = ["bytes_scan", "string_equal", "string_search", "string_split", "string_join", "int_parse", "int_format", "word_count", "csv_aggregate", "json_transform"]
+    if not lists.contains(cases, kind):
+        return 2
+    mut size = number(args[1])
+    mut iterations = number(args[2])
+    mut seed = number(args[3])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut data = inputs(kind, size, seed)
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
+    checksum = kernel(kind, data, iterations, seed)
+    mut elapsed = runtime_bench_now(host) - start
+    print(out, checksum, elapsed)
+    return 0

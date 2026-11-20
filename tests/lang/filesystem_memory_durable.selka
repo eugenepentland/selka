@@ -1,0 +1,816 @@
+# The durable family on the in-memory Filesystem a test receives: atomic writes, rename, stat, permissions, times, the
+# real-path calls, listings, bounded reads and locks answer from the filesystem's own entries, so the code a program ships
+# is the code its test runs. Everything is deterministic and needs no flag: inodes count up from 2 (the root is 1), a
+# new file is 0644 and a new directory 0755, and the logical clock starts at the test clock's epoch and moves one second
+# for each call that changes the filesystem. The real-directory behaviour is pinned in src/io_paths_test.zig.
+import filesystem
+
+const SECOND: int = 1000000000
+
+
+const EPOCH: int = 946684800000000000
+
+
+const READ_ONLY: str = "denied: this Filesystem was narrowed by fs.read_only() and does not write"
+
+
+const NARROWED: str = "denied: a Filesystem narrowed by fs.dir takes a path inside its folder, without '..', '.', an empty part or a leading '/'"
+
+
+const MISSING: str = "the path does not exist"
+
+
+const NO_FOLDER: str = "a folder on the way does not exist"
+
+
+# "ok" for a success, else the failure text.
+func note(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+# What is at the path: regular, directory, missing, or the failure text.
+func kind_of(fs: Filesystem, path: str) -> str:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            match info.kind:
+                case Regular:
+                    return "regular"
+                case Directory:
+                    return "directory"
+                case Symlink:
+                    return "symlink"
+                case Other:
+                    return "other"
+        case Err(error):
+            match error:
+                case Missing:
+                    return "missing"
+                case Failed(message=text):
+                    return "failed: " + text
+
+
+func size_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.size
+        case Err(_):
+            return -1
+
+
+func mode_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.mode
+        case Err(_):
+            return -1
+
+
+func time_of(fs: Filesystem, path: str) -> int:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.modified
+        case Err(_):
+            return -1
+
+
+func inode_of(fs: Filesystem, path: str) -> u64:
+    match filesystem.stat(fs, path):
+        case Ok(info):
+            return info.inode
+        case Err(_):
+            return 0u64
+
+
+func contents(fs: Filesystem, path: str) -> str:
+    match fs.read_text(path):
+        case Ok(text):
+            return copy(text)
+        case Err(message):
+            return "error: " + message
+
+
+public func test_atomic_write_publishes_a_new_file_readable_every_way() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.atomic_write_file("data", b"value")) != "ok":
+        return False
+    if kind_of(fs, "data") != "regular" or size_of(fs, "data") != 5 or mode_of(fs, "data") != 0o600:
+        return False
+    if contents(fs, "data") != "value" or not fs.exists("data"):
+        return False
+    match fs.read_regular_file("data", 64):
+        case Ok(data):
+            return data == b"value"
+        case Err(_):
+            return False
+
+
+public func test_atomic_write_replaces_a_file_whole_with_a_new_inode() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.atomic_write_file("data", b"first version")
+    const before = inode_of(fs, "data")
+    if note(fs.atomic_write_file("data", b"second")) != "ok":
+        return False
+    return contents(fs, "data") == "second" and size_of(fs, "data") == 6 and inode_of(fs, "data") != before
+
+
+public func test_atomic_write_file_mode_stores_the_mode_exactly() -> bool:
+    const fs = filesystem.memory()
+    if note(fs.atomic_write_file_mode("a", b"x", 0o666)) != "ok" or mode_of(fs, "a") != 0o666:
+        return False
+    if note(fs.atomic_write_file_mode("b", b"x", 0o4755)) != "ok" or mode_of(fs, "b") != 0o4755:
+        return False
+    if note(fs.atomic_write_file_mode("c", b"x", 0o10000)) != "atomic write 'c': the mode must be between 0 and 0o7777":
+        return False
+    return not fs.exists("c") and note(fs.atomic_write_file_mode("d", b"x", -1)) == "atomic write 'd': the mode must be between 0 and 0o7777"
+
+
+public func test_atomic_write_refusals_use_the_real_wording() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_text("file", "text")
+    if note(fs.atomic_write_file("no/such", b"a")) != "atomic write 'no/such': " + NO_FOLDER:
+        return False
+    if note(fs.atomic_write_file("dir", b"a")) != "atomic write 'dir': is a directory":
+        return False
+    if note(fs.atomic_write_file("file/inside", b"a")) != "atomic write 'file/inside': a parent of the path is not a directory":
+        return False
+    return note(fs.atomic_write_file("", b"a")) == "atomic write '': " + MISSING
+
+
+public func test_a_failed_write_says_why_in_the_words_of_the_real_filesystem() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.mkdir("closed")
+    _ = filesystem.chmod(fs, "closed", 0o555)
+    if note(fs.write_text("no/such/file.txt", "x")) != "write 'no/such/file.txt': " + NO_FOLDER:
+        return False
+    if note(fs.write_text("dir", "x")) != "write 'dir': is a directory":
+        return False
+    if note(fs.write_text("closed/new", "x")) != "write 'closed/new': permission denied":
+        return False
+    if note(fs.atomic_write_file("closed/new", b"x")) != "atomic write 'closed/new': permission denied":
+        return False
+    match fs.read_text("absent.txt"):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "read 'absent.txt': " + MISSING
+
+
+public func test_an_atomic_write_is_visible_to_the_ordinary_calls() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.atomic_write_file("d/one", b"1")
+    _ = fs.write_text("d/two", "22")
+    match fs.listdir("d"):
+        case Ok(names):
+            if names != ["one", "two"]:
+                return False
+        case Err(_):
+            return False
+    _ = fs.remove("d/one")
+    return not fs.exists("d/one") and contents(fs, "d/two") == "22"
+
+
+public func test_rename_moves_a_file_and_keeps_its_inode_and_time() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "payload")
+    const inode = inode_of(fs, "a")
+    const stamp = time_of(fs, "a")
+    if note(fs.rename_path("a", "b")) != "ok":
+        return False
+    if fs.exists("a") or kind_of(fs, "a") != "missing":
+        return False
+    return contents(fs, "b") == "payload" and inode_of(fs, "b") == inode and time_of(fs, "b") == stamp
+
+
+public func test_rename_replaces_a_file_destination_with_the_moved_inode() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "one")
+    _ = fs.write_text("b", "two")
+    const inode = inode_of(fs, "a")
+    if note(fs.rename_path("a", "b")) != "ok":
+        return False
+    return contents(fs, "b") == "one" and inode_of(fs, "b") == inode and not fs.exists("a")
+
+
+public func test_rename_moves_a_directory_with_its_contents() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("d/sub")
+    _ = fs.write_text("d/x", "x")
+    _ = fs.write_text("d/sub/y", "y")
+    const inode = inode_of(fs, "d")
+    if note(fs.rename_path("d", "e")) != "ok":
+        return False
+    if fs.exists("d") or fs.exists("d/x") or contents(fs, "e/x") != "x" or contents(fs, "e/sub/y") != "y":
+        return False
+    if inode_of(fs, "e") != inode or kind_of(fs, "e/sub") != "directory":
+        return False
+    match fs.list_directory("e", 10):
+        case Ok(names):
+            return names == ["sub", "x"]
+        case Err(_):
+            return False
+
+
+public func test_rename_replaces_an_empty_directory() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("from")
+    _ = fs.write_text("from/f", "f")
+    _ = fs.mkdir("to")
+    if note(fs.rename_path("from", "to")) != "ok":
+        return False
+    return contents(fs, "to/f") == "f" and not fs.exists("from")
+
+
+public func test_rename_refusals_name_both_paths() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("full")
+    _ = fs.write_text("full/f", "f")
+    _ = fs.write_text("file", "text")
+    if note(fs.rename_path("absent", "x")) != "rename 'absent' to 'x': " + MISSING:
+        return False
+    if note(fs.rename_path("d", "d/e")) != "rename 'd' to 'd/e': a directory cannot be moved into itself":
+        return False
+    if note(fs.rename_path("file", "d")) != "rename 'file' to 'd': is a directory":
+        return False
+    if note(fs.rename_path("d", "file")) != "rename 'd' to 'file': a parent of the path is not a directory":
+        return False
+    if note(fs.rename_path("d", "full")) != "rename 'd' to 'full': the directory is not empty":
+        return False
+    if note(fs.rename_path("file", "no/such")) != "rename 'file' to 'no/such': " + MISSING:
+        return False
+    return note(fs.rename_path("file", "file")) == "ok" and contents(fs, "file") == "text"
+
+
+public func test_stat_reports_kind_size_mode_and_the_missing_case() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "hello")
+    if kind_of(fs, "d/f") != "regular" or size_of(fs, "d/f") != 5 or mode_of(fs, "d/f") != 0o644:
+        return False
+    if kind_of(fs, "d") != "directory" or size_of(fs, "d") != 0 or mode_of(fs, "d") != 0o755:
+        return False
+    if kind_of(fs, "") != "directory" or mode_of(fs, "") != 0o755:
+        return False
+    if kind_of(fs, "nothing") != "missing" or kind_of(fs, "nothing/inside") != "missing":
+        return False
+    return kind_of(fs, "d/f/inside") == "failed: stat 'd/f/inside': a parent of the path is not a directory"
+
+
+public func test_inodes_count_up_from_the_root_and_are_the_same_in_every_filesystem() -> bool:
+    const first = filesystem.memory()
+    const second = filesystem.memory()
+    if inode_of(first, "") != 1u64:
+        return False
+    _ = first.write_text("a", "1")
+    _ = first.mkdir("b")
+    _ = first.write_text("c", "3")
+    _ = second.write_text("a", "1")
+    return inode_of(first, "a") == 2u64 and inode_of(first, "b") == 3u64 and inode_of(first, "c") == 4u64 and inode_of(second, "a") == 2u64
+
+
+public func test_stat_follow_describes_the_same_entry_as_stat() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "abc")
+    match filesystem.stat_follow(fs, "f"):
+        case Ok(followed):
+            if followed.size != 3 or followed.inode != inode_of(fs, "f") or followed.mode != 0o644 or followed.modified != time_of(fs, "f"):
+                return False
+        case Err(_):
+            return False
+    match filesystem.stat_follow(fs, "absent"):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Missing:
+                    return True
+                case Failed(message=_):
+                    return False
+
+
+public func test_the_clock_starts_at_the_epoch_and_moves_one_second_per_change() -> bool:
+    const fs = filesystem.memory()
+    if time_of(fs, "") != EPOCH:
+        return False
+    _ = fs.mkdir("d")
+    if time_of(fs, "d") != EPOCH + SECOND or time_of(fs, "") != EPOCH + SECOND:
+        return False
+    _ = fs.write_text("d/f", "x")
+    if time_of(fs, "d/f") != EPOCH + 2 * SECOND or time_of(fs, "d") != EPOCH + 2 * SECOND or time_of(fs, "") != EPOCH + SECOND:
+        return False
+    _ = fs.write_text("d/f", "yy")
+    if time_of(fs, "d/f") != EPOCH + 3 * SECOND or time_of(fs, "d") != EPOCH + 2 * SECOND:
+        return False
+    _ = fs.atomic_write_file("d/g", b"g")
+    if time_of(fs, "d/g") != EPOCH + 4 * SECOND or time_of(fs, "d") != EPOCH + 4 * SECOND:
+        return False
+    _ = fs.remove("d/g")
+    if time_of(fs, "d") != EPOCH + 5 * SECOND:
+        return False
+    _ = filesystem.touch(fs, "d/f")
+    return time_of(fs, "d/f") == EPOCH + 6 * SECOND
+
+
+public func test_set_modified_and_chmod_do_not_move_the_clock_and_failures_do_not_tick() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    if note(filesystem.set_modified(fs, "a", 12345)) != "ok" or time_of(fs, "a") != 12345:
+        return False
+    if note(filesystem.chmod(fs, "a", 0o600)) != "ok":
+        return False
+    _ = fs.atomic_write_file("no/such", b"x")
+    _ = fs.rename_path("absent", "x")
+    _ = fs.write_text("b", "b")
+    return time_of(fs, "b") == EPOCH + 2 * SECOND and time_of(fs, "a") == 12345
+
+
+public func test_a_rename_stamps_the_directories_it_leaves_and_enters_but_not_the_file() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("from")
+    _ = fs.mkdir("to")
+    _ = fs.write_text("from/f", "f")
+    const stamp = time_of(fs, "from/f")
+    _ = fs.rename_path("from/f", "to/f")
+    return time_of(fs, "to/f") == stamp and time_of(fs, "from") == EPOCH + 4 * SECOND and time_of(fs, "to") == EPOCH + 4 * SECOND
+
+
+func script(fs: Filesystem) -> Unit:
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "x")
+    _ = fs.atomic_write_file_mode("d/g", b"gg", 0o640)
+    _ = fs.rename_path("d/f", "d/h")
+
+
+public func test_two_filesystems_that_run_the_same_calls_read_the_same_words() -> bool:
+    const first = filesystem.memory()
+    const second = filesystem.memory()
+    script(first)
+    script(second)
+    for name in ["d", "d/g", "d/h"]:
+        if time_of(first, name) != time_of(second, name) or inode_of(first, name) != inode_of(second, name) or mode_of(first, name) != mode_of(second, name):
+            return False
+    return time_of(first, "d/g") == EPOCH + 3 * SECOND and inode_of(first, "d/g") == 4u64
+
+
+public func test_chmod_sets_the_permission_bits_of_files_and_directories() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "x")
+    const stamp = time_of(fs, "d/f")
+    if note(filesystem.chmod(fs, "d/f", 0o640)) != "ok" or mode_of(fs, "d/f") != 0o640:
+        return False
+    if note(filesystem.chmod(fs, "d", 0o700)) != "ok" or mode_of(fs, "d") != 0o700:
+        return False
+    if time_of(fs, "d/f") != stamp:
+        return False
+    if note(filesystem.chmod(fs, "d/f", 0o10000)) != "chmod 'd/f': the mode must be between 0 and 0o7777":
+        return False
+    if note(filesystem.chmod(fs, "d/f", -1)) != "chmod 'd/f': the mode must be between 0 and 0o7777":
+        return False
+    if note(filesystem.chmod(fs, "absent", 0o600)) != "chmod 'absent': " + MISSING:
+        return False
+    return mode_of(fs, "d/f") == 0o640
+
+
+public func test_touch_reads_the_clock_and_set_modified_writes_the_time() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("a", "a")
+    _ = fs.write_text("b", "b")
+    if note(filesystem.touch(fs, "a")) != "ok" or time_of(fs, "a") != EPOCH + 3 * SECOND:
+        return False
+    if time_of(fs, "a") <= time_of(fs, "b"):
+        return False
+    if note(filesystem.set_modified(fs, "b", 5 * SECOND)) != "ok" or time_of(fs, "b") != 5 * SECOND:
+        return False
+    if note(filesystem.touch(fs, "absent")) != "touch 'absent': " + MISSING:
+        return False
+    return note(filesystem.set_modified(fs, "absent", 1)) == "set modified 'absent': " + MISSING
+
+
+public func test_realpath_and_cwd_answer_the_normalized_path_relative_to_the_filesystem() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/f", "x")
+    match filesystem.realpath(fs, "d/f"):
+        case Ok(name):
+            if name != "d/f":
+                return False
+        case Err(_):
+            return False
+    match filesystem.realpath(fs, "."):
+        case Ok(name):
+            if name != "":
+                return False
+        case Err(_):
+            return False
+    match filesystem.cwd(fs):
+        case Ok(name):
+            if name != "":
+                return False
+        case Err(_):
+            return False
+    with fs.dir("d") as inner:
+        match filesystem.realpath(inner, "f"):
+            case Ok(name):
+                if name != "f":
+                    return False
+            case Err(_):
+                return False
+        match filesystem.cwd(inner):
+            case Ok(name):
+                return name == ""
+            case Err(_):
+                return False
+
+
+public func test_realpath_refuses_a_missing_path_and_dot_components() -> bool:
+    const fs = filesystem.memory()
+    match filesystem.realpath(fs, "x"):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "realpath 'x': " + MISSING:
+                return False
+    match filesystem.realpath(fs, "d/../x"):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "realpath 'd/../x': " + MISSING
+
+
+public func test_sync_directory_needs_a_directory() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("f", "x")
+    if note(fs.sync_directory("")) != "ok" or note(fs.sync_directory("d")) != "ok":
+        return False
+    if note(fs.sync_directory("f")) != "directory sync 'f': a parent of the path is not a directory":
+        return False
+    return note(fs.sync_directory("absent")) == "directory sync 'absent': " + MISSING
+
+
+# `f.sync()` on a test's filesystem answers Ok at every point of the log pattern (append, sync, sync the folder once), on a
+# handle that has written nothing and on one opened only to read, and it leaves the data as written.
+public func test_open_file_sync_answers_ok_on_the_memory_filesystem() -> bool:
+    const fs = filesystem.memory()
+    with fs.open("wal.log", "a") as f:
+        if note(f.sync()) != "ok":
+            return False
+        _ = f.write("one\n")
+        if note(f.sync()) != "ok":
+            return False
+        _ = f.write("two\n")
+        if note(f.sync()) != "ok":
+            return False
+    if note(fs.sync_directory("")) != "ok":
+        return False
+    with fs.open("wal.log", "r") as reader:
+        if note(reader.sync()) != "ok":
+            return False
+    return contents(fs, "wal.log") == "one\ntwo\n"
+
+
+public func test_read_regular_file_is_bounded_and_refuses_directories() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_file("f", b"12345")
+    match fs.read_regular_file("f", 5):
+        case Ok(data):
+            if data != b"12345":
+                return False
+        case Err(_):
+            return False
+    match fs.read_regular_file("f", 4):
+        case Ok(_):
+            return False
+        case Err(_):
+            pass
+    match fs.read_regular_file("d", 10):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "regular read 'd': permission denied":
+                return False
+    match fs.read_regular_file("absent", 10):
+        case Ok(_):
+            return False
+        case Err(message):
+            return message == "regular read 'absent': " + MISSING
+
+
+public func test_list_directory_is_sorted_complete_and_bounded() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("d/b", "b")
+    _ = fs.write_text("d/.hidden", "h")
+    _ = fs.mkdir("d/a")
+    match fs.list_directory("d", 3):
+        case Ok(names):
+            if names != [".hidden", "a", "b"]:
+                return False
+        case Err(_):
+            return False
+    match fs.list_directory("d", 2):
+        case Ok(_):
+            return False
+        case Err(_):
+            pass
+    match fs.list_directory("d/a", 0):
+        case Ok(names):
+            if len(names) != 0:
+                return False
+        case Err(_):
+            return False
+    match fs.list_directory("d/b", 4):
+        case Ok(_):
+            return False
+        case Err(message):
+            if message != "directory listing 'd/b': is not a directory":
+                return False
+    match fs.list_directory("", 4096):
+        case Ok(names):
+            return names == ["d"]
+        case Err(_):
+            return False
+
+
+func hold_and_probe(fs: Filesystem) -> str fails str:
+    with try fs.lock_file("store.lock") as lease:
+        match fs.try_lock_file("store.lock"):
+            case Ok(_):
+                return "second lock granted"
+            case Err(message):
+                if not filesystem.is_lock_busy(message):
+                    return "not busy: " + message
+                return copy(message)
+
+
+public func test_try_lock_file_fails_with_the_busy_text_while_a_lock_is_held() -> bool:
+    const fs = filesystem.memory()
+    match hold_and_probe(fs):
+        case Ok(text):
+            return text == "try lock file 'store.lock': the lock is held by another holder"
+        case Err(_):
+            return False
+
+
+func wait_while_held(fs: Filesystem) -> str fails str:
+    with try fs.try_lock_file("store.lock") as lease:
+        match fs.lock_file("store.lock"):
+            case Ok(_):
+                return "second lock granted"
+            case Err(message):
+                return copy(message)
+
+
+public func test_lock_file_on_a_held_path_fails_at_once_because_a_stand_in_cannot_wait() -> bool:
+    const fs = filesystem.memory()
+    match wait_while_held(fs):
+        case Ok(text):
+            return text == "lock file 'store.lock': the lock is held (a stand-in cannot wait)" and not filesystem.is_lock_busy(text)
+        case Err(_):
+            return False
+
+
+func lock_twice(fs: Filesystem) -> str fails str:
+    with try fs.lock_directory("d") as lease:
+        match fs.lock_directory("d"):
+            case Ok(_):
+                return "second lock granted"
+            case Err(message):
+                if not filesystem.is_lock_busy(message):
+                    return "not busy: " + message
+                return copy(message)
+
+
+public func test_a_second_lock_directory_on_a_held_path_is_busy() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    match lock_twice(fs):
+        case Ok(text):
+            return text == "directory lock 'd': the lock is held by another holder"
+        case Err(_):
+            return False
+
+
+func take_and_return(fs: Filesystem) -> int fails str:
+    with try fs.try_lock_file("a.lock") as lease:
+        return 1
+
+
+func take_and_fail(fs: Filesystem) -> int fails str:
+    with try fs.try_lock_file("a.lock") as lease:
+        fail "the work failed"
+
+
+func take_and_fall_through(fs: Filesystem) -> int fails str:
+    mut seen = 0
+    with try fs.try_lock_file("a.lock") as lease:
+        seen = 1
+    with try fs.try_lock_file("a.lock") as again:
+        seen += 1
+    return seen
+
+
+func take_directory_and_return(fs: Filesystem) -> int fails str:
+    with try fs.lock_directory("") as lease:
+        return 1
+
+
+public func test_a_lock_is_released_when_its_scope_returns() -> bool:
+    const fs = filesystem.memory()
+    return take_and_return(fs) == Ok(1) and take_and_return(fs) == Ok(1) and take_and_return(fs) == Ok(1)
+
+
+public func test_a_lock_is_released_when_its_scope_fails() -> bool:
+    const fs = filesystem.memory()
+    if take_and_fail(fs) != Err("the work failed"):
+        return False
+    return take_and_fail(fs) == Err("the work failed") and take_and_return(fs) == Ok(1)
+
+
+public func test_a_lock_is_released_when_its_scope_falls_through() -> bool:
+    const fs = filesystem.memory()
+    return take_and_fall_through(fs) == Ok(2) and take_and_return(fs) == Ok(1)
+
+
+public func test_the_root_directory_lock_is_released_on_every_exit() -> bool:
+    const fs = filesystem.memory()
+    return take_directory_and_return(fs) == Ok(1) and take_directory_and_return(fs) == Ok(1)
+
+
+func nested(fs: Filesystem) -> int fails str:
+    with try fs.try_lock_file("a.lock") as first:
+        with try fs.try_lock_file("b.lock") as second:
+            with try fs.lock_directory("") as root:
+                return 3
+
+
+public func test_locks_on_different_paths_are_independent_and_nest() -> bool:
+    const fs = filesystem.memory()
+    return nested(fs) == Ok(3) and nested(fs) == Ok(3)
+
+
+func create_by_locking(fs: Filesystem) -> int fails str:
+    with try fs.lock_file("new.lock") as lease:
+        return 1
+
+
+public func test_a_file_lock_creates_a_missing_file_with_mode_0600() -> bool:
+    const fs = filesystem.memory()
+    if create_by_locking(fs) != Ok(1):
+        return False
+    if kind_of(fs, "new.lock") != "regular" or size_of(fs, "new.lock") != 0 or mode_of(fs, "new.lock") != 0o600:
+        return False
+    return create_by_locking(fs) == Ok(1)
+
+
+func lock_refusal(fs: Filesystem, path: str, directory: bool) -> str:
+    if directory:
+        match fs.lock_directory(path):
+            case Ok(_):
+                return "granted"
+            case Err(message):
+                return copy(message)
+    match fs.try_lock_file(path):
+        case Ok(_):
+            return "granted"
+        case Err(message):
+            return copy(message)
+
+
+public func test_lock_refusals_use_the_real_wording() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("f", "x")
+    if lock_refusal(fs, "no/x.lock", False) != "try lock file 'no/x.lock': " + MISSING:
+        return False
+    if lock_refusal(fs, "d", False) != "try lock file 'd': is a directory":
+        return False
+    if lock_refusal(fs, "absent", True) != "directory lock 'absent': " + MISSING:
+        return False
+    return lock_refusal(fs, "f", True) == "directory lock 'f': a parent of the path is not a directory"
+
+
+func through_alias(fs: Filesystem) -> str fails str:
+    with fs.dir("d") as inner:
+        with try inner.try_lock_file("x.lock") as lease:
+            match fs.try_lock_file("d/x.lock"):
+                case Ok(_):
+                    return "granted"
+                case Err(message):
+                    return copy(message)
+
+
+public func test_a_lock_taken_through_a_narrowed_filesystem_excludes_the_full_path() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    match through_alias(fs):
+        case Ok(text):
+            return text == "try lock file 'd/x.lock': the lock is held by another holder"
+        case Err(_):
+            return False
+
+
+func write_while_locked(fs: Filesystem) -> str fails str:
+    with try fs.try_lock_file("data") as lease:
+        _ = try fs.atomic_write_file("data", b"replaced")
+        return contents(fs, "data")
+
+
+public func test_a_lock_is_advisory_and_does_not_stop_writes() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("data", "original")
+    return write_while_locked(fs) == Ok("replaced")
+
+
+public func test_a_read_only_filesystem_stats_and_reads_but_refuses_every_change() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.write_text("f", "x")
+    with fs.read_only() as reader:
+        if kind_of(reader, "f") != "regular" or kind_of(reader, "absent") != "missing":
+            return False
+        match reader.read_regular_file("f", 4):
+            case Ok(data):
+                if data != b"x":
+                    return False
+            case Err(_):
+                return False
+        if note(reader.atomic_write_file("g", b"x")) != "atomic write 'g': " + READ_ONLY:
+            return False
+        if note(reader.atomic_write_file_mode("g", b"x", 0o600)) != "atomic write 'g': " + READ_ONLY:
+            return False
+        if note(reader.rename_path("f", "g")) != "rename 'f' to 'g': " + READ_ONLY:
+            return False
+        if note(filesystem.chmod(reader, "f", 0o600)) != "chmod 'f': " + READ_ONLY:
+            return False
+        if note(filesystem.touch(reader, "f")) != "touch 'f': " + READ_ONLY:
+            return False
+        if note(filesystem.set_modified(reader, "f", 1)) != "set modified 'f': " + READ_ONLY:
+            return False
+        if note(reader.sync_directory("d")) != "directory sync 'd': " + READ_ONLY:
+            return False
+        if lock_refusal(reader, "f", False) != "try lock file 'f': " + READ_ONLY:
+            return False
+        return lock_refusal(reader, "d", True) == "directory lock 'd': " + READ_ONLY and contents(fs, "f") == "x"
+
+
+public func test_a_narrowed_filesystem_scopes_every_durable_call() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("d")
+    _ = fs.mkdir("other")
+    with fs.dir("d") as inner:
+        if note(inner.atomic_write_file("a", b"1")) != "ok" or contents(fs, "d/a") != "1":
+            return False
+        if note(inner.rename_path("a", "b")) != "ok" or not fs.exists("d/b") or fs.exists("d/a"):
+            return False
+        if kind_of(inner, "b") != "regular" or kind_of(inner, "") != "directory" or kind_of(inner, "../other") != "failed: stat '../other': " + NARROWED:
+            return False
+        if note(inner.rename_path("b", "../other/b")) != "rename 'b' to '../other/b': " + NARROWED:
+            return False
+        match inner.list_directory("", 10):
+            case Ok(names):
+                return names == ["b"]
+            case Err(_):
+                return False
+
+
+# A path is read as the system reads it (docs/io.md, "How a path is read"): `.`, `//`, a trailing slash and `..` inside the
+# filesystem mean what they mean, and an absolute path or a `..` past the root is outside the filesystem.
+public func test_dot_components_mean_what_they_mean_and_absolute_paths_are_outside() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("f", "x")
+    _ = fs.mkdir("d")
+    if kind_of(fs, ".") != "directory" or kind_of(fs, "./f") != "regular" or kind_of(fs, "d//../f") != "regular" or kind_of(fs, "d/") != "directory":
+        return False
+    if kind_of(fs, "/f") != "failed: stat '/f': denied: '/f' is outside the granted directories":
+        return False
+    if kind_of(fs, "../f") != "failed: stat '../f': denied: '../f' is outside the granted directories":
+        return False
+    if kind_of(fs, "a/./f") != "missing" or kind_of(fs, "f/") != "failed: stat 'f/': a parent of the path is not a directory":
+        return False
+    if note(fs.atomic_write_file("a/../b", b"x")) != "atomic write 'a/../b': " + NO_FOLDER:
+        return False
+    if note(fs.atomic_write_file("d/../b", b"x")) != "ok" or contents(fs, "b") != "x":
+        return False
+    return note(fs.rename_path("f", "./g")) == "ok" and fs.exists("g")
+
+
+public func test_a_file_that_replaced_another_keeps_the_old_one_for_an_open_handle() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_text("data", "old contents")
+    match fs.open("data", "r"):
+        case Err(_):
+            return False
+        case Ok(handle):
+            _ = fs.atomic_write_file("data", b"new")
+            return handle.read() == "old contents" and contents(fs, "data") == "new"

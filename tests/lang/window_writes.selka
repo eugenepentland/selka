@@ -1,0 +1,104 @@
+# A window of a `bytes` is written to a stream or an open file in place: `write(out, data[a:b])` and `f.write(data[a:b])`
+# hand the runtime a view of the owner's octets, so the slice makes no copy (the stream's own buffer holds the octets
+# after the write, as it does for any write). A slice of a `byte_buffer` is a new buffer, and the tests count that for
+# comparison.
+import buffers
+import filesystem
+import streams
+import testing
+
+const CHUNK: bytes = b"abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789.abcdefghijklmnopqrstuvwxyz\n"
+
+
+func put_window(out: Stream, data: bytes, count: int) -> int:
+    for i in range(count):
+        write(out, data[i % 4:i % 4 + 60])
+    return count
+
+
+func put_buffer_window(out: Stream, data: byte_buffer, count: int) -> int:
+    for i in range(count):
+        write(out, data[i % 4:i % 4 + 60])
+    return count
+
+
+func stream_windows(out: Stream, count: int) -> int:
+    return put_window(out, CHUNK, count)
+
+
+func stream_buffer_windows(out: Stream, count: int) -> int:
+    mut data = buffers.empty()
+    buffers.append(mut data, CHUNK)
+    return put_buffer_window(out, data, count)
+
+
+# The owner is built by the program, not a literal: building it is the one allocation, whatever `count` is.
+func stream_windows_of_built(out: Stream, count: int) -> int:
+    const built = CHUNK + CHUNK
+    return put_window(out, built, count)
+
+
+func file_windows(count: int) -> int:
+    mut fs = filesystem.memory()
+    mut total = 0
+    with fs.open("windows.bin", "wb") as f:
+        for i in range(count):
+            total += f.write(CHUNK[i % 4:i % 4 + 60])
+    return total
+
+
+func file_whole(count: int) -> int:
+    mut fs = filesystem.memory()
+    mut total = 0
+    with fs.open("whole.bin", "wb") as f:
+        for _ in range(count):
+            total += f.write(CHUNK)
+    return total
+
+
+# spec: STREAM-WINDOW-WRITE-1
+public func test_a_window_written_to_a_stream_allocates_nothing() -> bool:
+    const sink = streams.memory()
+    return testing.allocations_writing(stream_windows, sink, 1000) == 0
+
+
+# spec-case: STREAM-WINDOW-WRITE-1
+public func test_a_window_of_a_built_owner_allocates_the_owner_once() -> bool:
+    const sink = streams.memory()
+    const once = testing.allocations_writing(stream_windows_of_built, sink, 10)
+    return once > 0 and once == testing.allocations_writing(stream_windows_of_built, sink, 1000)
+
+
+# spec-case: STREAM-WINDOW-WRITE-1
+public func test_a_window_of_a_byte_buffer_is_a_new_buffer_for_each_write() -> bool:
+    const sink = streams.memory()
+    return testing.allocations_writing(stream_buffer_windows, sink, 1000) >= 1000
+
+
+# spec-case: STREAM-WINDOW-WRITE-1
+public func test_the_stream_receives_exactly_the_window() -> bool:
+    const sink = streams.memory()
+    write(sink, CHUNK[3:10])
+    write(sink, CHUNK[0:0])
+    write(sink, CHUNK[90:200])
+    write(sink, CHUNK[5:2])
+    return streams.text(sink) == "defghij" + "qrstuvwxyz\n"
+
+
+# spec-case: STREAM-WINDOW-WRITE-1
+public func test_a_window_written_to_a_file_costs_what_a_whole_write_costs() -> bool:
+    return testing.allocations(file_windows, 1000) == testing.allocations(file_whole, 1000)
+
+
+# spec-case: STREAM-WINDOW-WRITE-1
+public func test_a_file_receives_exactly_the_window() -> bool:
+    mut fs = filesystem.memory()
+    mut written = 0
+    with fs.open("pieces.bin", "wb") as f:
+        written += f.write(CHUNK[0:5])
+        written += f.write(CHUNK[26:30])
+        written += f.write(CHUNK[7:7])
+    mut stored = b""
+    with fs.open("pieces.bin", "rb") as g:
+        stored = g.read()
+    return written == 9 and stored == b"abcde0123"

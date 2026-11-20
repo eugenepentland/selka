@@ -1,0 +1,28 @@
+# Records: construction, field writes through `mut`, a record in a record.
+record Point:
+    x: int
+    y: int
+
+
+record Segment:
+    start: Point
+    stop: Point
+
+
+func shift(mut p: Point, by: int) -> Unit:
+    p.x += by
+    p.y -= by
+
+
+func length2(s: Segment) -> int:
+    const dx = s.stop.x - s.start.x
+    const dy = s.stop.y - s.start.y
+    return dx * dx + dy * dy
+
+
+func main() -> int:
+    mut p = Point(x=3, y=4)
+    for i in range(10):
+        shift(mut p, i)
+    const s = Segment(start=Point(x=1, y=2), stop=p)
+    return length2(s) % 251

@@ -1,0 +1,140 @@
+# Two writes through one `match mut` binding in one arm (FX17, 15 November 2026). The payload binding names the place it
+# matched, so a second write sees the first, as on a plain `mut` local. Before FX17 a write whose receiver is the binding
+# itself (`lists.exchange(mut items, 1, v)`, `lists.pop`, `dicts.pop`) after a finished write through a receiver temporary
+# staged from it (`items[0] = v`, `append`, `exchange(mut items[0], v)`, `take(mut items[0])`) passed the check and
+# stopped the build (`E_CORE_UNSUPPORTED`, Z3), and so did any write of a managed field of an element (`items[0].text = v`).
+# The pair grid's 426 cells are in `test/fixtures/match-mut-pairs`; the shapes below are the ones a program writes.
+import dicts
+import lists
+import sets
+import strings
+
+record Rec:
+    text: str = ""
+
+
+record Holder:
+    rows: Rec[]
+    count: int = 0
+
+
+enum Slot:
+    Recs(recs: Rec[])
+    Words(words: str[])
+    Table(table: dict[str, int])
+    Members(members: set[int])
+    Held(holder: Holder)
+    Pair(left: str[], right: str[])
+    Empty
+
+
+func assign_then_exchange(mut slot: Slot) -> str:
+    match mut slot:
+        case Recs(recs):
+            recs[0] = Rec(text="assigned")
+            const other = lists.exchange(mut recs, 1, Rec(text="second"))
+            return other.text + "|" + recs[0].text + "|" + recs[1].text
+        case _:
+            return "other"
+
+
+func builtin_then_pop(mut slot: Slot) -> str:
+    match mut slot:
+        case Words(words):
+            const first = exchange(mut words[0], "x")
+            const taken = take(mut words[1])
+            const last = lists.pop(mut words)
+            append(mut words, "tail")
+            return first + taken + last + "|" + strings.join(words, ",")
+        case _:
+            return "other"
+
+
+func field_writes(mut slot: Slot) -> str:
+    match mut slot:
+        case Recs(recs):
+            recs[0].text = "f0"
+            recs[1].text = "f1"
+            append(mut recs, Rec(text="f2"))
+            return recs[0].text + recs[1].text + recs[2].text
+        case _:
+            return "other"
+
+
+func table_and_members(mut table_slot: Slot, mut member_slot: Slot) -> str:
+    mut seen = ""
+    match mut table_slot:
+        case Table(table):
+            table["n"] = 1
+            dicts.add(mut table, "a", 5)
+            seen = str(dicts.pop(mut table, "b")) + str(table)
+        case _:
+            seen = "other"
+    match mut member_slot:
+        case Members(members):
+            sets.add(mut members, 4)
+            sets.discard(mut members, 1)
+            seen = seen + str(members)
+        case _:
+            seen = seen + "other"
+    return seen
+
+
+func holder_writes(mut slot: Slot) -> str:
+    match mut slot:
+        case Held(holder):
+            holder.rows[0].text = "h0"
+            const old = lists.exchange(mut holder.rows, 1, Rec(text="h1"))
+            holder.count = 2
+            return old.text + str(holder)
+        case _:
+            return "other"
+
+
+func two_fields(mut slot: Slot) -> str:
+    match mut slot:
+        case Pair(left, right):
+            left[0] = "l0"
+            append(mut right, "r1")
+            const popped = lists.pop(mut left)
+            right[0] = "r0"
+            return popped + str(left) + str(right)
+        case _:
+            return "other"
+
+
+public func test_assignment_then_exchange_through_the_binding() -> bool:
+    mut slot = Slot.Recs(recs=[Rec(text="r0"), Rec(text="r1")])
+    assert assign_then_exchange(mut slot) == "r1|assigned|second"
+    return f"{slot}" == "Slot.Recs(recs=[Rec(text='assigned'), Rec(text='second')])"
+
+
+public func test_builtin_exchange_and_take_then_pop_and_append() -> bool:
+    mut slot = Slot.Words(words=["a", "b", "c"])
+    assert builtin_then_pop(mut slot) == "abc|x,,tail"
+    return f"{slot}" == "Slot.Words(words=['x', '', 'tail'])"
+
+
+public func test_field_writes_of_elements_then_append() -> bool:
+    mut slot = Slot.Recs(recs=[Rec(text="a"), Rec(text="b")])
+    assert field_writes(mut slot) == "f0f1f2"
+    return f"{slot}" == "Slot.Recs(recs=[Rec(text='f0'), Rec(text='f1'), Rec(text='f2')])"
+
+
+public func test_dictionary_and_set_writes_in_one_arm() -> bool:
+    mut table = Slot.Table(table={"a": 1, "b": 2})
+    mut members = Slot.Members(members={1, 2})
+    assert table_and_members(mut table, mut members) == "2{'a': 6, 'n': 1}{2, 4}"
+    return f"{table}" == "Slot.Table(table={'a': 6, 'n': 1})"
+
+
+public func test_writes_through_a_record_payload() -> bool:
+    mut slot = Slot.Held(holder=Holder(rows=[Rec(text="a"), Rec(text="b")]))
+    assert holder_writes(mut slot) == "bHolder(rows=[Rec(text='h0'), Rec(text='h1')], count=2)"
+    return f"{slot}" == "Slot.Held(holder=Holder(rows=[Rec(text='h0'), Rec(text='h1')], count=2))"
+
+
+public func test_writes_through_two_bindings_of_one_case() -> bool:
+    mut slot = Slot.Pair(left=["a", "b"], right=["c"])
+    assert two_fields(mut slot) == "b['l0']['r0', 'r1']"
+    return f"{slot}" == "Slot.Pair(left=['l0'], right=['r0', 'r1'])"

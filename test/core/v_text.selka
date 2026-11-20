@@ -1,0 +1,46 @@
+import strings
+
+record Labelled:
+    name: str
+    next: Labelled?
+
+
+func label(count: int, items: int[]) -> str:
+    return f"total {count} of {len(items)} items"
+
+
+func chain(count: int) -> Labelled:
+    mut head = Labelled(name="end", next=None)
+    for index in range(count):
+        head = Labelled(name="n" + str(index), next=Some(own head))
+    return head
+
+
+func length(item: Labelled) -> int:
+    mut total = 1
+    mut current = copy(item.next)
+    while current is not None:
+        if strings.char_count(current.name) > 0:
+            total = total + 1
+        current = copy(current.next)
+    return total
+
+
+func words(n: int) -> str[]:
+    mut out: str[] = []
+    for i in range(n):
+        append(mut out, "w" + str(i * i))
+    return out
+
+
+func main(out: Stream) -> int:
+    print(out, label(7, [1, 2, 3]), f"{1 + 1}", f"{True} {()}", f"a-x{'b'}")
+    print(out, str(-9223372036854775807), str(18446744073709551615u64), str(i8(-5)), str(u8(200)), str(False))
+    print(out, "hé" + "llo", strings.char_count("hé" + "llo"), "" + "", "a" + "" == "a")
+    print(out, strings.join(words(4), ", "), strings.join(words(1), "-"), strings.join(words(0), "-") == "", strings.join(words(3), ""))
+    mut total = 0
+    for count in range(30):
+        total = total + length(chain(count))
+    mut labelled = chain(5)
+    print(out, total, labelled.name, length(labelled))
+    return 0

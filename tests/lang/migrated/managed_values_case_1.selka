@@ -1,0 +1,12 @@
+import dicts
+
+public func program() -> i64:
+    mut scores: dict[str, i64] = {b"x": 1}
+    mut alias = own scores
+    alias[b"x"] = 40
+    scores = own alias
+    mut names = list(dicts.keys(scores))
+    mut key: str = b"x"
+    if names[0] == key:
+        return dicts.get(scores, b"x", 0) + dicts.get(scores, b"missing", 2)
+    return 0

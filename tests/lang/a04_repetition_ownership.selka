@@ -1,0 +1,135 @@
+import byte_builder
+import strings
+
+func repeat_text(value: str, count: int) -> str:
+    return strings.repeat(value, count)
+
+
+func repeat_bytes(value: bytes, count: int) -> bytes:
+    return byte_builder.repeat(value, count)
+
+
+func mark_text(mut log: int[], tag: int) -> str:
+    append(mut log, tag)
+    return "é"
+
+
+func mark_count(mut log: int[], tag: int) -> int:
+    append(mut log, tag)
+    return 3
+
+
+record RepeatHolder:
+    values: int[]
+
+
+func repeat_list(values: str[], count: int) -> str[]:
+    return repeat_sequence_next_next_next_next(values, count)
+
+
+func repeat_in_place(mut values: int[], count: int):
+    const repeated_source = copy(values)
+    mut repeated_count = int(count)
+    if len(repeated_source) == 0:
+        repeated_count = 0
+    values = []
+    for _ in range(repeated_count):
+        for repeated_element in repeated_source:
+            append(mut values, copy(repeated_element))
+
+
+# spec-case: PY-REPEAT-1
+public func test_repetition_borrows_and_builds_independent_storage() -> bool:
+    mut text = "a" + "é"
+    const repeated = repeat_text(text, 3)
+    const raw = strings.encode(text)
+    const repeated_raw = repeat_bytes(raw, 2)
+    if text != "aé" or raw != b"a\xc3\xa9":
+        return False
+    text = "replacement"
+    return repeated == "aéaéaé" and repeated_raw == b"a\xc3\xa9a\xc3\xa9"
+
+
+# spec-case: PY-REPEAT-1
+public func test_repetition_bounds_and_argument_order() -> bool:
+    mut log: int[] = []
+    const left = repeat_sequence(mark_count(mut log, 1), mark_text(mut log, 2))
+    const right = strings.repeat(mark_text(mut log, 3), mark_count(mut log, 4))
+    const huge: u64 = 18446744073709551615
+    const empty_bytes: bytes = b""
+    return left == "ééé" and right == "ééé" and log == [1, 2, 3, 4] and repeat_text("a", -2) == "" and repeat_bytes(b"a", 0) == b"" and repeat_sequence_next("", huge) == "" and repeat_sequence_next_next(huge, empty_bytes) == b""
+
+
+# spec-case: PY-REPEAT-1
+public func test_repeated_managed_elements_and_mutable_writeback() -> bool:
+    mut values = ["a" + "b", "c" + "d"]
+    const repeated = repeat_list(values, 3)
+    values = ["replacement"]
+    mut numbers = [1, 2]
+    repeat_in_place(mut numbers, 2)
+    mut holder = RepeatHolder(values=[7])
+    repeat_in_place(mut holder.values, 2)
+    const empty: str[] = []
+    const huge: u64 = 18446744073709551615
+    return repeated == ["ab", "cd", "ab", "cd", "ab", "cd"] and numbers == [1, 2, 1, 2] and holder.values == [7, 7] and len(repeat_sequence_next_next_next(empty, huge)) == 0 and len(repeat_list(values, -1)) == 0
+
+
+func main() -> int:
+    assert test_repetition_borrows_and_builds_independent_storage()
+    assert test_repetition_bounds_and_argument_order()
+    assert test_repeated_managed_elements_and_mutable_writeback()
+    return 0
+
+
+func repeat_sequence_next_next_next_next[RepeatType: copy + storable](repeat_source: RepeatType[], repeat_times: int) -> RepeatType[]:
+    mut repeat_output: RepeatType[] = []
+    if len(repeat_source) == 0:
+        return repeat_output
+    for _ in range(repeat_times):
+        for repeat_element in repeat_source:
+            # lint: allow copy-in-loop reason="the repetition test copies each element into the output on every repeat; the source keeps its elements"
+            append(mut repeat_output, copy(repeat_element))
+    return repeat_output
+
+
+func repeat_sequence(repeat_times: int, repeat_source: str) -> str:
+    return strings.repeat(repeat_source, repeat_times)
+
+
+func repeat_sequence_next(repeat_source: str, repeat_times: u64) -> str:
+    if repeat_times == 0u64 or strings.char_count(repeat_source) == 0:
+        return ""
+    mut repeat_output = copy(repeat_source)
+    mut repeat_copies = 1u64
+    while repeat_copies <= repeat_times - repeat_copies:
+        repeat_output = repeat_output + repeat_output
+        repeat_copies *= 2u64
+    if repeat_copies < repeat_times:
+        repeat_output = repeat_output + strings.char_slice(repeat_output, None, strings.char_count(repeat_source) * int(repeat_times - repeat_copies))
+    return repeat_output
+
+
+func repeat_sequence_next_next(repeat_times: u64, repeat_source: bytes) -> bytes:
+    if repeat_times == 0u64 or len(repeat_source) == 0:
+        return b""
+    mut repeat_output = copy(repeat_source)
+    mut repeat_copies = 1u64
+    while repeat_copies <= repeat_times - repeat_copies:
+        repeat_output = repeat_output + repeat_output
+        repeat_copies *= 2u64
+    if repeat_copies < repeat_times:
+        repeat_output = repeat_output + repeat_output[:len(repeat_source) * int(repeat_times - repeat_copies)]
+    return repeat_output
+
+
+func repeat_sequence_next_next_next[RepeatType: copy + storable](repeat_source: RepeatType[], repeat_times: u64) -> RepeatType[]:
+    mut repeat_output: RepeatType[] = []
+    if len(repeat_source) == 0:
+        return repeat_output
+    mut repeat_index = 0u64
+    while repeat_index < repeat_times:
+        for repeat_element in repeat_source:
+            # lint: allow copy-in-loop reason="the repetition test copies each element into the output on every repeat; the source keeps its elements"
+            append(mut repeat_output, copy(repeat_element))
+        repeat_index += 1u64
+    return repeat_output

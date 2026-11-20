@@ -1,0 +1,183 @@
+# `csv.parse_fields` tells an empty field from a quoted empty one, and the guide's account of what `csv.parse` accepts
+# (docs/standard-library.md, "csv") is each of these cases: quotes inside quoted fields, a line break inside a field, LF,
+# CRLF and bare CR endings, a last line without an ending, an empty line, a quote in an unquoted field, a byte-order mark,
+# and the line and column each refusal names. Every case runs through `parse` and through `parse_fields`, which must agree.
+import csv
+import strings
+
+func bom() -> str:
+    match strings.decode(b"\xef\xbb\xbf"):
+        case Ok(text):
+            return text
+        case Err(_):
+            return ""
+
+
+# The rows `parse` reads, or one row holding the refusal's message.
+func rows_of(text: str) -> str[][]:
+    match csv.parse(text):
+        case Ok(rows):
+            return rows
+        case Err(error):
+            return [["refused: " + csv.message(error)]]
+
+
+# The rows `parse_fields` reads as texts, or one row holding the refusal's message.
+func texts_of(text: str) -> str[][]:
+    mut out: str[][] = []
+    match csv.parse_fields(text):
+        case Ok(rows):
+            for row in rows:
+                mut texts: str[] = []
+                for field in row:
+                    append(mut texts, copy(field.text))
+                append(mut out, own texts)
+        case Err(error):
+            append(mut out, ["refused: " + csv.message(error)])
+    return out
+
+
+# One string per row: "1" for a field written in quotes, "0" for one that was not.
+func flags_of(text: str) -> str[]:
+    mut out: str[] = []
+    match csv.parse_fields(text):
+        case Ok(rows):
+            for row in rows:
+                mut line = ""
+                for field in row:
+                    if field.quoted:
+                        line += "1"
+                    else:
+                        line += "0"
+                append(mut out, own line)
+        case Err(error):
+            append(mut out, "refused: " + csv.message(error))
+    return out
+
+
+# `parse` and `parse_fields` read the document to these rows.
+func reads(text: str, wanted: str[][]) -> bool:
+    return rows_of(text) == wanted and texts_of(text) == wanted
+
+
+# `parse` and `parse_fields` both refuse the document with this message.
+func refuses(text: str, message: str) -> bool:
+    return rows_of(text) == [["refused: " + message]] and texts_of(text) == [["refused: " + message]]
+
+
+public func test_an_empty_field_and_a_quoted_empty_field_read_alike_but_are_told_apart() -> bool:
+    const same = reads("a,,b", [["a", "", "b"]]) and reads('a,"",b', [["a", "", "b"]])
+    return same and flags_of("a,,b") == ["000"] and flags_of('a,"",b') == ["010"]
+
+
+public func test_parse_fields_marks_each_quoted_field() -> bool:
+    const text = '"a",b,"",,"c,d"\n'
+    return reads(text, [["a", "b", "", "", "c,d"]]) and flags_of(text) == ["10101"]
+
+
+public func test_a_lone_quoted_empty_field_is_a_row_and_a_blank_line_is_an_empty_row() -> bool:
+    const lone = reads('""\n', [[""]]) and flags_of('""\n') == ["1"]
+    const blank = reads("\n", [[]]) and flags_of("\n") == [""]
+    return lone and blank and reads("", []) and len(flags_of("")) == 0
+
+
+public func test_a_trailing_comma_is_an_empty_unquoted_field() -> bool:
+    const comma = reads("a,", [["a", ""]]) and reads("a,\n", [["a", ""]]) and reads(",a", [["", "a"]])
+    return comma and flags_of("a,") == ["00"] and flags_of(",,") == ["000"]
+
+
+public func test_spaces_around_a_field_belong_to_it() -> bool:
+    return reads("a, b ,c", [["a", " b ", "c"]]) and flags_of("a, b ,c") == ["000"]
+
+
+public func test_a_doubled_quote_inside_a_quoted_field_is_one_quote() -> bool:
+    const one = reads('"a""b"', [['a"b']]) and reads('""""', [['"']])
+    return one and flags_of('"a""b"') == ["1"] and flags_of('""""') == ["1"]
+
+
+public func test_a_quote_that_is_never_closed_is_refused_at_the_end_of_the_document() -> bool:
+    const tail = refuses('"""', "unterminated quoted field at line 1, column 4")
+    const bare = refuses('"', "unterminated quoted field at line 1, column 2")
+    const text = refuses('"abc', "unterminated quoted field at line 1, column 5")
+    const lines = refuses('x\n"abc\ndef', "unterminated quoted field at line 3, column 4")
+    return tail and bare and text and lines and refuses('a,"b,c\n', "unterminated quoted field at line 2, column 1")
+
+
+public func test_text_after_a_closing_quote_is_refused() -> bool:
+    const text = refuses('"a"b', "unexpected character after a field at line 1, column 4")
+    const space = refuses('"a" ,b', "unexpected character after a field at line 1, column 4")
+    const second = refuses('x\n"a"b', "unexpected character after a field at line 2, column 4")
+    return text and space and second
+
+
+public func test_a_quote_inside_an_unquoted_field_is_refused() -> bool:
+    const first = refuses('a"b', "quote inside an unquoted field at line 1, column 2")
+    const later = refuses('x,a"b', "quote inside an unquoted field at line 1, column 4")
+    const lines = refuses('x\ny,a"b', "quote inside an unquoted field at line 2, column 4")
+    const middle = refuses('ab"c"', "quote inside an unquoted field at line 1, column 3")
+    return first and later and lines and middle and refuses(' "a"', "quote inside an unquoted field at line 1, column 2")
+
+
+public func test_a_line_break_inside_a_quoted_field_is_kept_as_written() -> bool:
+    const lf = reads('"a\nb",c\n', [["a\nb", "c"]]) and flags_of('"a\nb",c\n') == ["10"]
+    const crlf = reads('"a\r\nb",c\r\n', [["a\r\nb", "c"]])
+    return lf and crlf and reads('"a\rb"', [["a\rb"]])
+
+
+public func test_a_line_break_inside_a_quoted_field_counts_in_the_line_of_a_later_refusal() -> bool:
+    return refuses('"a\nb",c"d', "quote inside an unquoted field at line 2, column 5")
+
+
+public func test_lf_crlf_and_a_bare_cr_each_end_a_row() -> bool:
+    const lf = reads("a,b\nc,d\n", [["a", "b"], ["c", "d"]])
+    const crlf = reads("a,b\r\nc,d\r\n", [["a", "b"], ["c", "d"]])
+    const cr = reads("a,b\rc,d\r", [["a", "b"], ["c", "d"]])
+    return lf and crlf and cr and reads("a\nb\r\nc\rd", [["a"], ["b"], ["c"], ["d"]])
+
+
+public func test_a_last_line_without_an_ending_is_a_row_and_a_final_ending_adds_none() -> bool:
+    const open = reads("a,b\nc,d", [["a", "b"], ["c", "d"]])
+    return open and reads("a,b\nc,d\n", [["a", "b"], ["c", "d"]]) and reads("a,b\nc,d\r\n", [["a", "b"], ["c", "d"]])
+
+
+public func test_an_empty_line_is_an_empty_row_wherever_it_stands() -> bool:
+    const middle = reads("a\n\nb\n", [["a"], [], ["b"]]) and reads("a\r\n\r\nb\r\n", [["a"], [], ["b"]])
+    const ends = reads("\na\n", [[], ["a"]]) and reads("a,b\nc,d\n\n", [["a", "b"], ["c", "d"], []])
+    return middle and ends and reads("\r\n", [[]]) and reads("\r", [[]]) and reads("\n\n", [[], []])
+
+
+public func test_a_byte_order_mark_is_not_removed_and_stays_in_the_first_field() -> bool:
+    const mark = bom()
+    const plain = reads(mark + "a,b\n", [[mark + "a", "b"]])
+    return plain and len(mark) == 3 and reads(mark, [[copy(mark)]]) and flags_of(mark + "a,b\n") == ["00"]
+
+
+public func test_a_byte_order_mark_before_a_quote_is_a_quote_in_an_unquoted_field() -> bool:
+    return refuses(bom() + '"a",b\n', "quote inside an unquoted field at line 1, column 4")
+
+
+public func test_a_caller_can_drop_the_byte_order_mark_before_parsing() -> bool:
+    const text = bom() + '"a",b\n'
+    const dropped = text[3:]
+    return strings.starts_with(text, bom()) and reads(dropped, [["a", "b"]]) and flags_of(dropped) == ["10"]
+
+
+public func test_a_column_counts_bytes_and_a_bare_cr_does_not_start_a_line() -> bool:
+    const bytes = refuses('λ"x', "quote inside an unquoted field at line 1, column 3")
+    return bytes and refuses('a\rb"c', "quote inside an unquoted field at line 1, column 4")
+
+
+public func test_non_ascii_text_is_kept() -> bool:
+    return reads("λ,é\n", [["λ", "é"]]) and flags_of('"λ",é\n') == ["10"]
+
+
+func table_reads(text: str, header: str[], rows: str[][]) -> bool:
+    match csv.parse_table(text):
+        case Ok(table):
+            return table.header == header and table.rows == rows
+        case Err(_):
+            return False
+
+
+public func test_parse_table_still_reads_a_header_and_quoted_rows() -> bool:
+    return table_reads('name,note\nada,"x,""y"""\n,""\n', ["name", "note"], [["ada", 'x,"y"'], ["", ""]])

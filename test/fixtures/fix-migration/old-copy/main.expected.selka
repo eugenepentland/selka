@@ -1,0 +1,64 @@
+# W4: before 12 November 2026, `old(x)` of a managed place copied it at every call with no `copy(` written.
+# `selka fix` writes each capture `old(copy(x))`; scalars, `old(len(x))` and written copies stay as they are.
+record Bag:
+    items: int[]
+    label: str
+
+@ensures(len(items) == len(old(copy(items))) + 1)
+func grow(mut items: int[], x: int):
+    append(mut items, x)
+
+@ensures(len(bag.items) == len(old(copy(bag)).items) + 1)
+func add(mut bag: Bag, x: int):
+    append(mut bag.items, x)
+
+@ensures(len(bag.items) >= len(old(copy(bag.items))))
+func keep(mut bag: Bag, x: int):
+    if x > 0:
+        append(mut bag.items, x)
+
+@ensures(len(text) == len(old(copy(text))) + 1)
+func bang(mut text: str):
+    text += "!"
+
+@ensures(old(copy(best)) is None or best is not None)
+func settle(mut best: str?, s: str):
+    if best is None:
+        best = Some(copy(s))
+
+@ensures(len(values) == len(old(copy(values))) + 1)
+func push[T](mut values: T[], own value: T):
+    append(mut values, own value)
+
+@ensures(len(items) == len(old(copy(items))) + 1)
+func checked_grow(mut items: int[], x: int) -> int fails str:
+    if x < 0:
+        fail "negative"
+    append(mut items, x)
+    return len(items)
+
+@ensures(len(items) == old(len(items)) + 1 and n == old(n) + 1 and len(old(copy(items))) + 1 == len(items))
+func counted(mut items: int[], mut n: int):
+    append(mut items, n)
+    n += 1
+
+func main(out: Stream) -> int:
+    mut xs = [1, 2]
+    grow(mut xs, 3)
+    mut bag = Bag(items=[], label="b")
+    add(mut bag, 1)
+    keep(mut bag, 2)
+    mut text = "hi"
+    bang(mut text)
+    mut best: str? = None
+    settle(mut best, "x")
+    mut names = ["a"]
+    push(mut names, "b")
+    mut n = 0
+    counted(mut xs, mut n)
+    match checked_grow(mut xs, 5):
+        case Ok(count):
+            print(out, len(xs), len(bag.items), text, best is not None, len(names), n, count)
+        case Err(e):
+            print(out, e)
+    return 0

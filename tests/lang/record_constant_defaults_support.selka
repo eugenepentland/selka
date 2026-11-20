@@ -1,0 +1,53 @@
+# The declaring module of record_constant_defaults.selka: records whose fields default to a bytes literal, a module constant,
+# NaN or infinity. The importer sees none of the private constants, and declares names of its own, so each default is read
+# where it was written.
+const CAP: int = 40
+
+
+const SHAPE: bytes = b"rect"
+
+
+const LABEL: str = "auto"
+
+
+const HALF: float = 0.5
+
+
+const ENABLED: bool = True
+
+
+public const UNSET: float = 0.0 / 0.0
+
+
+public const TOP: float = 1.0 / 0.0
+
+
+public const WIDTH: int = 12
+
+
+public record Geometry:
+    # A required field may follow defaulted ones: a record is built by field name.
+    shape: bytes = b"round"
+    named: bytes = SHAPE
+    label: str = LABEL
+    cap: int = CAP
+    below: int = -CAP
+    width: int = WIDTH
+    ratio: float = HALF
+    on: bool = ENABLED
+    unset: float = UNSET
+    top: float = TOP
+    bottom: float = -TOP
+    id: int
+
+
+public record Wrapper[T]:
+    value: T
+    tag: bytes = b"wrapped"
+    cap: int = CAP
+
+
+public record Layer:
+    base: Geometry = Geometry(id=7)
+    named: Geometry = Geometry(id=8, shape=b"square")
+    note: bytes = b"layer"

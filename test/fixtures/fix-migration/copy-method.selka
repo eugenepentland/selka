@@ -1,0 +1,10 @@
+func duplicate(values: int[]) -> int[]:
+    return values.copy()
+
+
+func main() -> int:
+    mut xs = [1, 2]
+    mut ys = xs.copy()
+    mut pairs = [[3], [4]]
+    mut first = pairs[0].copy()
+    return len(ys) + len(first) + len(duplicate(xs))

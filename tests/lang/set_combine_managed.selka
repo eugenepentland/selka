@@ -1,0 +1,85 @@
+# `sets.intersection`, `sets.difference` and `sets.symmetric_difference` of two sets whose elements are managed (text or a
+# record that holds text; a list cannot be a set element): the result holds its own copy of each kept element, so the
+# operands stay usable and the result can be stored and returned (W3, step 2). Before, every such call was refused with `E_SINGLE_OWNER_OVERLAP`.
+import sets
+
+record Tag:
+    name: str
+    weight: int
+
+
+func words(items: str[]) -> set[str]:
+    mut out: set[str] = set()
+    for item in items:
+        sets.include(mut out, item)
+    return out
+
+
+func tags(names: str[]) -> set[Tag]:
+    mut out: set[Tag] = set()
+    for name in names:
+        sets.add(mut out, Tag(name=copy(name), weight=len(name)))
+    return out
+
+
+func listed(values: set[str]) -> str[]:
+    mut out: str[] = []
+    for value in values:
+        append(mut out, copy(value))
+    return out
+
+
+public func test_intersection_of_text_sets() -> bool:
+    const left = words(["a", "b", "c"])
+    const right = words(["c", "b", "z"])
+    const both = sets.intersection(left, right)
+    return listed(both) == ["b", "c"] and len(left) == 3 and len(right) == 3
+
+
+public func test_difference_of_text_sets() -> bool:
+    const left = words(["a", "b", "c"])
+    const right = words(["b"])
+    return listed(sets.difference(left, right)) == ["a", "c"]
+
+
+public func test_symmetric_difference_of_text_sets() -> bool:
+    const left = words(["a", "b"])
+    const right = words(["b", "c"])
+    return listed(sets.symmetric_difference(left, right)) == ["a", "c"]
+
+
+public func test_record_elements_combine() -> bool:
+    const left = tags(["red", "green", "blue"])
+    const right = tags(["green", "black"])
+    const both = sets.intersection(left, right)
+    const only = sets.difference(left, right)
+    const either = sets.symmetric_difference(left, right)
+    return len(both) == 1 and Tag(name="green", weight=5) in both and len(only) == 2 and len(either) == 3
+
+
+public func test_an_empty_operand() -> bool:
+    const left = words(["a", "b"])
+    const none: set[str] = set()
+    return len(sets.intersection(left, none)) == 0 and len(sets.difference(left, none)) == 2 and len(sets.symmetric_difference(none, left)) == 2
+
+
+public func test_the_same_set_on_both_sides() -> bool:
+    const all = words(["a", "b", "c"])
+    return len(sets.intersection(all, all)) == 3 and len(sets.difference(all, all)) == 0 and len(sets.symmetric_difference(all, all)) == 0
+
+
+record Held:
+    kept: set[str]
+
+
+func kept_names(left: set[str], right: set[str]) -> set[str]:
+    return sets.intersection(left, right)
+
+
+public func test_the_result_is_stored_and_returned() -> bool:
+    const left = words(["x", "y"])
+    const right = words(["y"])
+    const holder = Held(kept=kept_names(left, right))
+    mut later = sets.difference(left, right)
+    sets.add(mut later, "w")
+    return listed(holder.kept) == ["y"] and listed(later) == ["x", "w"] and "y" in left

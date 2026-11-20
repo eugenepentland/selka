@@ -1,0 +1,24 @@
+# A real register on QEMU's mps2-an385 board (MCU-B1D): its UART0 (CMSDK APB UART) at 0x40004000 has a data register
+# (+0), a state register (+4, bit 0: the transmit buffer is full), a control register (+8, bit 0: transmit enable) and a
+# baud divider (+16, at least 16). `main` enables the transmitter, writes a line through the data register and answers
+# what it reads back from the control register and the divider: 1 + 16.
+# bare-platform: qemu
+# bare-status: 17
+# bare-serial: Selka writes a register\n
+import bytes
+import registers
+
+func send(reg: Registers, octet: u8):
+    mut waits = 0
+    while bit_and(registers.read32(reg, 0x40004004), 1) != 0:
+        waits += 1
+    registers.write32(reg, 0x40004000, u32(octet))
+
+
+func main(reg: Registers) -> int:
+    registers.write32(reg, 0x40004010, 16)
+    registers.write32(reg, 0x40004008, 1)
+    const line = b"Selka writes a register\n"
+    for i in range(len(line)):
+        send(reg, bytes.read_u8(line, i))
+    return int(registers.read32(reg, 0x40004008)) + int(registers.read32(reg, 0x40004010))

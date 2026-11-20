@@ -1,0 +1,168 @@
+== compare element
+True
+3
+== compare element_field
+True
+3
+== compare field
+True
+3
+== compare local
+True
+3
+== compare mut_param
+True
+3
+== compare nested
+True
+3
+== compare option
+True
+3
+== compare two_fields
+True
+3
+== copy element
+3
+3
+== copy element_field
+3
+3
+== copy field
+3
+3
+== copy local
+3
+3
+== copy mut_param
+3
+3
+== copy nested
+3
+3
+== copy option
+3
+3
+== copy two_fields
+3
+3
+== hole element
+<Pair(n=1, s='xy')>
+3
+== hole element_field
+<Pair(n=1, s='xy')>
+3
+== hole field
+<Pair(n=1, s='xy')>
+3
+== hole local
+<Pair(n=1, s='xy')>
+3
+== hole mut_param
+<Pair(n=1, s='xy')>
+3
+== hole nested
+<Pair(n=1, s='xy')>
+3
+== hole option
+<Pair(n=1, s='xy')>
+3
+== hole two_fields
+<Pair(n=1, s='xy')>
+3
+== mutparam element
+4
+4
+== mutparam element_field
+4
+4
+== mutparam field
+4
+4
+== mutparam local
+4
+4
+== mutparam mut_param
+4
+4
+== mutparam nested
+4
+4
+== mutparam option
+4
+4
+== mutparam two_fields
+4
+4
+== param element
+3
+3
+== param element_field
+3
+3
+== param field
+3
+3
+== param local
+3
+3
+== param mut_param
+3
+3
+== param nested
+3
+3
+== param option
+3
+3
+== param two_fields
+3
+3
+== print element
+Pair(n=1, s='xy')
+3
+== print element_field
+Pair(n=1, s='xy')
+3
+== print field
+Pair(n=1, s='xy')
+3
+== print local
+Pair(n=1, s='xy')
+3
+== print mut_param
+Pair(n=1, s='xy')
+3
+== print nested
+Pair(n=1, s='xy')
+3
+== print option
+Pair(n=1, s='xy')
+3
+== print two_fields
+Pair(n=1, s='xy')
+3
+== str element
+Pair(n=1, s='xy')
+3
+== str element_field
+Pair(n=1, s='xy')
+3
+== str field
+Pair(n=1, s='xy')
+3
+== str local
+Pair(n=1, s='xy')
+3
+== str mut_param
+Pair(n=1, s='xy')
+3
+== str nested
+Pair(n=1, s='xy')
+3
+== str option
+Pair(n=1, s='xy')
+3
+== str two_fields
+Pair(n=1, s='xy')
+3

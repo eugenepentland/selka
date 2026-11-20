@@ -1,0 +1,237 @@
+ownership-certificate-v2
+class call Call
+class cmp Pure
+class dict_entry_value Project
+class dict_find Inspect
+class dict_new Fresh
+class dict_remove Update
+class drop Drop
+class iconst Constant
+class list_get Project
+class list_new Fresh
+class list_pop Update
+class list_set Update
+class record_get Project
+class record_new Fresh
+class record_set Update
+function bad_pending_at_ret result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state owned parents - slot f1
+term ret -
+end
+function bad_take_twice result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state owned parents - slot f1
+inst %2 record_get Project reads %0 consumes - state owned parents - slot f1
+term unreachable
+end
+function bad_store_not_pending result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 record_get Project reads %0 consumes - state owned parents - slot f1
+inst %3 record_set Update reads - consumes %0,%1 state owned parents - slot f2
+term unreachable
+end
+function bad_drop_pending result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state owned parents - slot f1
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function bad_released_none_not_pending result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_new Fresh reads - consumes - state owned parents -
+inst %2 list_set Update reads %9 consumes %0,%1 state owned parents - slot e#0 released -
+term unreachable
+end
+function bad_released_old_pending result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+inst %2 list_set Update reads %9 consumes %0,%1 state owned parents - slot e#0 released old
+term unreachable
+end
+function bad_list_pop result scalar from - unchecked -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_pop Update reads - consumes %0 state owned parents - slot e#0
+term unreachable
+end
+function bad_dict_remove_value result scalar from - unchecked -
+inst %7 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 dict_new Fresh reads - consumes - state owned parents -
+inst %1 dict_entry_value Project reads %0,%7 consumes - state owned parents - slot v%7
+inst %2 dict_remove Update reads %7 consumes %0 state owned parents - released key,value
+term unreachable
+end
+function bad_phi_pending result scalar from - unchecked -
+block b0 preds -
+inst %0 record_new Fresh reads - consumes - state owned parents -
+inst %1 record_get Project reads %0 consumes - state owned parents - slot f1
+term jump b1
+block b1 preds b0
+phi %2 owned parents - edges b0:%0
+term unreachable
+end
+function bad_emptied_consumed result scalar from - unchecked -
+callee 0 call runtime take scalar -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 call Call reads - consumes %0 state emptied parents - slots f1 from - callee 0
+inst %2 record_get Project reads %1 consumes - state owned parents - slot f1
+inst - drop Drop reads - consumes %1 state none parents -
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function bad_emptied_taken_twice result scalar from - unchecked -
+callee 0 call runtime take scalar -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 call Call reads - consumes %0 state emptied parents - slots f1 from - callee 0
+inst %2 record_get Project reads %1 consumes - state owned parents - slot f1
+inst %3 record_get Project reads %1 consumes - state owned parents - slot f1
+inst - drop Drop reads - consumes %2 state none parents -
+inst - drop Drop reads - consumes %3 state none parents -
+term ret -
+end
+function bad_emptied_never_taken result scalar from - unchecked -
+callee 0 call runtime take scalar -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 call Call reads - consumes %0 state emptied parents - slots f1,f2 from - callee 0
+inst %2 record_get Project reads %1 consumes - state owned parents - slot f1
+inst - drop Drop reads - consumes %2 state none parents -
+term ret -
+end
+function bad_guards_differ result scalar from - unchecked -
+inst %8 iconst Constant reads - consumes - state scalar parents - imm 0
+inst %13 iconst Constant reads - consumes - state scalar parents - imm 7
+block b0 preds -
+inst %1 dict_new Fresh reads - consumes - state owned parents -
+inst %7 dict_find Inspect reads %1 consumes - state scalar parents -
+inst %9 cmp Pure reads %7,%8 consumes - state scalar parents - imm 5
+inst %10 cmp Pure reads %7,%8 consumes - state scalar parents - imm 4
+inst %12 cmp Pure reads %7,%13 consumes - state scalar parents - imm 3
+term branch %12 b1 b2
+block b1 preds b0
+term branch %9 b3 b4
+block b2 preds b0
+term branch %10 b6 b7
+block b3 preds b1
+inst %11 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %11 state none parents -
+term jump b5
+block b4 preds b1
+term jump b5
+block b5 preds b3,b4
+term jump b9
+block b6 preds b2
+inst %14 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %14 state none parents -
+term jump b8
+block b7 preds b2
+term jump b8
+block b8 preds b6,b7
+term jump b9
+block b9 preds b5,b8
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end
+function bad_guarded_constant result scalar from - unchecked -
+inst %8 iconst Constant reads - consumes - state scalar parents - imm 0
+inst %15 iconst Constant reads - consumes - state scalar parents - imm 1
+block b0 preds -
+inst %1 dict_new Fresh reads - consumes - state owned parents -
+inst %7 dict_find Inspect reads %1 consumes - state scalar parents -
+inst %9 cmp Pure reads %7,%8 consumes - state scalar parents - imm 5
+term branch %9 b1 b2
+block b1 preds b0
+inst %11 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %11 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+inst %16 cmp Pure reads %7,%15 consumes - state scalar parents - imm 5
+term branch %16 b4 b5
+block b4 preds b3
+inst %18 dict_remove Update reads %7 consumes %1 state owned parents - released key
+term jump b5
+block b5 preds b3,b4
+phi %19 owned parents - edges b3:%1,b4:%18
+inst - drop Drop reads - consumes %19 state none parents -
+term ret -
+end
+function bad_guarded_predicate result scalar from - unchecked -
+inst %8 iconst Constant reads - consumes - state scalar parents - imm 0
+inst %15 iconst Constant reads - consumes - state scalar parents - imm 0
+block b0 preds -
+inst %1 dict_new Fresh reads - consumes - state owned parents -
+inst %7 dict_find Inspect reads %1 consumes - state scalar parents -
+inst %9 cmp Pure reads %7,%8 consumes - state scalar parents - imm 5
+term branch %9 b1 b2
+block b1 preds b0
+inst %11 dict_entry_value Project reads %1,%7 consumes - state owned parents - slot v%7
+inst - drop Drop reads - consumes %11 state none parents -
+term jump b3
+block b2 preds b0
+term jump b3
+block b3 preds b1,b2
+inst %16 cmp Pure reads %7,%15 consumes - state scalar parents - imm 4
+term branch %16 b4 b5
+block b4 preds b3
+inst %18 dict_remove Update reads %7 consumes %1 state owned parents - released key
+term jump b5
+block b5 preds b3,b4
+phi %19 owned parents - edges b3:%1,b4:%18
+inst - drop Drop reads - consumes %19 state none parents -
+term ret -
+end
+function bad_dict_remove_taken_not_pending result scalar from - unchecked -
+inst %7 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 dict_new Fresh reads - consumes - state owned parents -
+inst %2 dict_remove Update reads %7 consumes %0 state owned parents - slot v%7 released key taken value
+term unreachable
+end
+function bad_dict_remove_releases_taken result scalar from - unchecked -
+inst %7 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 dict_new Fresh reads - consumes - state owned parents -
+inst %1 dict_entry_value Project reads %0,%7 consumes - state owned parents - slot v%7
+inst %2 dict_remove Update reads %7 consumes %0 state owned parents - slot v%7 released key,value taken -
+term unreachable
+end
+function bad_trap_meet_take_later_listed result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+term branch %9 b1 b2
+block b1 preds b0
+term jump b3
+block b2 preds b0
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+term jump b3
+block b3 preds b1,b2
+abandon b2 %1
+inst %2 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+term unreachable
+end
+function bad_j8 result scalar from - unchecked -
+inst %9 iconst Constant reads - consumes - state scalar parents -
+block b0 preds -
+inst %0 list_new Fresh reads - consumes - state owned parents -
+inst %1 list_get Project reads %0,%9 consumes - state owned parents - slot e#0
+inst - drop Drop reads - consumes %0 state none parents -
+inst - drop Drop reads - consumes %1 state none parents -
+term ret -
+end

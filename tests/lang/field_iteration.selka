@@ -1,0 +1,123 @@
+# Iterating one field of a record while another field changes, and a read element beside a mutable one. The iteration
+# borrows the field it reads (R7), so a sibling path may change; the field itself, a prefix of it and an element of it stay
+# borrowed. Distinct literal indices of one list are disjoint whether the other argument is mutable or read-only (M5).
+record Node:
+    kind: int
+    children: int[]
+
+
+record Tree:
+    nodes: Node[]
+    roots: int[]
+
+
+func add_child(mut node: Node, child: int):
+    append(mut node.children, child)
+
+
+func link(mut parent: Node, child: Node):
+    append(mut parent.children, child.kind)
+
+
+func link_both(mut parent: Node, mut child: Node):
+    append(mut parent.children, child.kind)
+    append(mut child.children, parent.kind)
+
+
+func fresh() -> Tree:
+    return Tree(nodes=[Node(kind=1, children=[]), Node(kind=2, children=[]), Node(kind=3, children=[])], roots=[0, 2])
+
+
+func total(tree: Tree) -> int:
+    mut sum = 0
+    for node in tree.nodes:
+        sum += len(node.children)
+    return sum
+
+
+public func test_iterating_a_field_while_appending_to_an_element_of_a_sibling() -> bool:
+    mut tree = fresh()
+    for root in tree.roots:
+        append(mut tree.nodes[root].children, 7)
+    return len(tree.nodes[0].children) == 1 and len(tree.nodes[1].children) == 0 and len(tree.nodes[2].children) == 1
+
+
+public func test_iterating_a_field_while_a_callee_mutates_an_element_of_a_sibling() -> bool:
+    mut tree = fresh()
+    for root in tree.roots:
+        add_child(mut tree.nodes[root], root)
+    return tree.nodes[0].children == [0] and tree.nodes[2].children == [2] and total(tree) == 2
+
+
+public func test_iterating_one_field_while_changing_another_field_whole() -> bool:
+    mut tree = fresh()
+    mut seen = 0
+    for node in tree.nodes:
+        append(mut tree.roots, node.kind)
+        seen += 1
+    return seen == 3 and tree.roots == [0, 2, 1, 2, 3]
+
+
+public func test_nested_loops_over_two_fields_change_a_third() -> bool:
+    mut tree = fresh()
+    for outer in tree.roots:
+        for inner in tree.roots:
+            append(mut tree.nodes[outer].children, inner)
+    return tree.nodes[0].children == [0, 2] and tree.nodes[2].children == [0, 2]
+
+
+public func test_iterating_a_field_of_a_mut_parameter() -> bool:
+    mut tree = fresh()
+    grow(mut tree)
+    return tree.nodes[0].children == [10] and tree.nodes[2].children == [10] and tree.nodes[1].children == []
+
+
+func grow(mut tree: Tree):
+    for root in tree.roots:
+        append(mut tree.nodes[root].children, 10)
+
+
+public func test_a_loop_reads_the_field_it_iterates() -> bool:
+    mut tree = fresh()
+    mut sum = 0
+    for root in tree.roots:
+        sum += len(tree.roots) + root
+        append(mut tree.nodes[root].children, sum)
+    return sum == 6 and tree.nodes[0].children == [2] and tree.nodes[2].children == [6]
+
+
+public func test_the_index_loop_still_works() -> bool:
+    mut tree = fresh()
+    for at in range(len(tree.roots)):
+        add_child(mut tree.nodes[tree.roots[at]], 1)
+    return total(tree) == 2
+
+
+public func test_a_read_element_beside_a_mutable_element_at_another_literal_index() -> bool:
+    mut tree = fresh()
+    link(mut tree.nodes[0], tree.nodes[1])
+    link(mut tree.nodes[2], tree.nodes[0])
+    return tree.nodes[0].children == [2] and tree.nodes[2].children == [1]
+
+
+public func test_a_read_element_before_the_mutable_one() -> bool:
+    mut tree = fresh()
+    link(mut tree.nodes[1], tree.nodes[2])
+    return tree.nodes[1].children == [3]
+
+
+public func test_two_mutable_elements_of_a_list_held_in_a_field() -> bool:
+    mut tree = fresh()
+    link_both(mut tree.nodes[0], mut tree.nodes[2])
+    return tree.nodes[0].children == [3] and tree.nodes[2].children == [1]
+
+
+public func test_a_read_list_element_beside_a_mutable_one_in_a_local_list() -> bool:
+    mut rows = [[1], [2], [3]]
+    extend_by_length(mut rows[0], rows[2])
+    extend_by_length(mut rows[2], rows[1])
+    return rows == [[1, 1], [2], [3, 1]]
+
+
+func extend_by_length(mut row: int[], other: int[]):
+    append(mut row, len(other))

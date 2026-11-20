@@ -1,0 +1,302 @@
+# The protobuf wire runtime: tags, wire types, varints, zigzag, fixed-width reads and writes.
+#
+# Reading functions take `data: bytes`, a `mut at: int` cursor and an `end: int` limit, and
+# they fail with an `Error` value; none of them traps on malformed input.  A failed read
+# leaves the cursor where it was.  Writing functions append to a `byte_builder.Builder`.
+import binary
+import byte_builder
+import bytes
+import strings
+
+# Wire types (the low three bits of a tag).
+public const VARINT: int = 0
+
+
+public const FIXED64: int = 1
+
+
+public const LEN: int = 2
+
+
+public const START_GROUP: int = 3
+
+
+public const END_GROUP: int = 4
+
+
+public const FIXED32: int = 5
+
+
+# Limits.  A message must be shorter than 2 GiB; nesting (messages and skipped groups) is
+# limited to RECURSION_LIMIT levels.
+public const SIZE_LIMIT: int = 2147483647
+
+
+public const RECURSION_LIMIT: int = 100
+
+
+public const MAX_FIELD_NUMBER: int = 536870911
+
+
+public enum Error:
+    truncated
+    overlong_varint
+    bad_wire_type(value: int)
+    bad_field_number(value: int)
+    bad_length
+    invalid_utf8(value: str)
+    unmatched_end_group
+    group_not_supported
+    recursion_limit
+    size_limit
+
+
+# A field's key: its number and its wire type.
+@invariant(self.number >= 1 and self.number <= 536870911, "a field number is 1 to 2^29 - 1")
+@invariant(self.wire_type >= 0 and self.wire_type <= 5, "a wire type is 0 to 5")
+public record Key:
+    number: int
+    wire_type: int
+
+
+# A short description of an error, for messages.
+public func message(error: Error) -> str:
+    match error:
+        case truncated:
+            return "truncated input"
+        case overlong_varint:
+            return "varint longer than 10 bytes or past 64 bits"
+        case bad_wire_type(value=n):
+            return f"bad wire type {n}"
+        case bad_field_number(value=n):
+            return f"bad field number {n}"
+        case bad_length:
+            return "length prefix past the end of the enclosing message"
+        case invalid_utf8(value=reason):
+            return f"invalid UTF-8 in a string field: {reason}"
+        case unmatched_end_group:
+            return "end-group tag with no start-group"
+        case group_not_supported:
+            return "group fields are not supported"
+        case recursion_limit:
+            return "recursion limit exceeded"
+        case size_limit:
+            return "message larger than the size limit"
+
+
+# ---- integer reinterpretation (the language has checked casts only) ----
+public func u64_as_i64(v: u64) -> i64:
+    if v < 9223372036854775808u64:
+        return i64(v)
+    return i64(v - 9223372036854775808u64) - 9223372036854775807 - 1
+
+
+@ensures(u64_as_i64(result) == x, "reinterpreting twice gives the value back")
+public func i64_as_u64(x: i64) -> u64:
+    if x >= 0:
+        return u64(x)
+    return u64(x + 9223372036854775807 + 1) + 9223372036854775808u64
+
+
+public func u32_as_i32(v: u32) -> i32:
+    if v < 2147483648u32:
+        return i32(v)
+    return i32(v - 2147483648u32) - 2147483647i32 - 1i32
+
+
+@ensures(u32_as_i32(result) == x, "reinterpreting twice gives the value back")
+public func i32_as_u32(x: i32) -> u32:
+    if x >= 0:
+        return u32(x)
+    return u32(x + 2147483647i32 + 1i32) + 2147483648u32
+
+
+# The low 32 bits of a varint, as the type a 32-bit field wants.
+public func low32(v: u64) -> u32:
+    return u32(bit_and(v, 4294967295u64))
+
+
+@ensures(unzigzag32(result) == x, "zigzag is a bijection")
+public func zigzag32(x: i32) -> u32:
+    return i32_as_u32(bit_xor(shift_left(x, 1i32), shift_right(x, 31i32)))
+
+
+public func unzigzag32(v: u32) -> i32:
+    return bit_xor(u32_as_i32(shift_right(v, 1u32)), -u32_as_i32(bit_and(v, 1u32)))
+
+
+@ensures(unzigzag64(result) == x, "zigzag is a bijection")
+public func zigzag64(x: i64) -> u64:
+    return i64_as_u64(bit_xor(shift_left(x, 1i64), shift_right(x, 63i64)))
+
+
+public func unzigzag64(v: u64) -> i64:
+    return bit_xor(u64_as_i64(shift_right(v, 1u64)), -u64_as_i64(bit_and(v, 1u64)))
+
+
+# ---- reading ----
+# Read one varint.  Fails with `truncated` when it runs past `end` and with
+# `overlong_varint` when it needs more than ten octets or sets bits past the 64th.
+@requires(at >= 0 and at <= end and end <= len(data), "the cursor and the limit lie inside data")
+@ensures(at > old(at) and at <= end, "a varint is at least one octet and ends inside the message")
+public func read_varint(data: bytes, mut at: int, end: int) -> u64 fails Error:
+    mut result: u64 = 0
+    mut shift: u64 = 0
+    mut pos = at
+    for i in range(10):
+        if pos >= end:
+            fail Error.truncated
+        const b = bytes.read_u8(data, pos)
+        pos += 1
+        if i == 9 and b > 1u8:
+            fail Error.overlong_varint
+        assert shift <= 63u64, "the shift stays inside the width"
+        result = bit_or(result, shift_left(u64(bit_and(b, 127u8)), shift))
+        if bit_and(b, 128u8) == 0u8:
+            at = pos
+            return result
+        shift += 7u64
+    fail Error.overlong_varint
+
+
+# Read a field key.  A key is a varint of at most five octets (`overlong_varint` otherwise).  Field number 0 and numbers above 2^29 - 1 are `bad_field_number`;
+# wire types 6 and 7 are `bad_wire_type`.
+@requires(at >= 0 and at <= end and end <= len(data), "the cursor and the limit lie inside data")
+@ensures(at > old(at) and at <= end, "a key is at least one octet and ends inside the message")
+public func read_key(data: bytes, mut at: int, end: int) -> Key fails Error:
+    mut pos = at
+    const raw = try read_varint(data, mut pos, end)
+    if pos - at > 5:
+        fail Error.overlong_varint
+    if raw > 4294967295u64:
+        fail Error.bad_field_number(value=int(raw // 8u64))
+    const number = int(shift_right(raw, 3u64))
+    const wire_type = int(bit_and(raw, 7u64))
+    if number < 1 or number > MAX_FIELD_NUMBER:
+        fail Error.bad_field_number(value=number)
+    if wire_type > 5:
+        fail Error.bad_wire_type(value=wire_type)
+    at = pos
+    return Key(number=number, wire_type=wire_type)
+
+
+@requires(at >= 0 and at <= end and end <= len(data), "the cursor and the limit lie inside data")
+@ensures(at == old(at) + 4, "a fixed32 is four octets")
+public func read_fixed32(data: bytes, mut at: int, end: int) -> u32 fails Error:
+    if at + 4 > end:
+        fail Error.truncated
+    const v = bytes.read_u32_le(data, at)
+    at += 4
+    return v
+
+
+@requires(at >= 0 and at <= end and end <= len(data), "the cursor and the limit lie inside data")
+@ensures(at == old(at) + 8, "a fixed64 is eight octets")
+public func read_fixed64(data: bytes, mut at: int, end: int) -> u64 fails Error:
+    if at + 8 > end:
+        fail Error.truncated
+    const v = bytes.read_u64_le(data, at)
+    at += 8
+    return v
+
+
+# Read a length prefix and check that the payload fits before `end`.  On success the cursor is
+# just past the prefix and the payload is `data[at:at + n]`.
+@requires(at >= 0 and at <= end and end <= len(data), "the cursor and the limit lie inside data")
+@ensures(result >= 0 and at + result <= end, "the payload fits inside the message")
+public func read_length(data: bytes, mut at: int, end: int) -> int fails Error:
+    mut pos = at
+    const raw = try read_varint(data, mut pos, end)
+    if raw > u64(end - pos):
+        fail Error.bad_length
+    at = pos
+    return int(raw)
+
+
+# Skip the value of a field whose key was just read.  Groups are skipped (balanced: the end-group tag must
+# carry the start's field number; the nesting is counted against `depth`); an end-group with no start is an error.
+@requires(at >= 0 and at <= end and end <= len(data), "the cursor and the limit lie inside data")
+@ensures(at >= old(at) and at <= end, "skipping stays inside the message")
+public func skip_value(data: bytes, mut at: int, end: int, key: Key, depth: int) -> Unit fails Error:
+    mut pos = at
+    const wire_type = key.wire_type
+    if wire_type == VARINT:
+        _ = try read_varint(data, mut pos, end)
+    elif wire_type == FIXED64:
+        _ = try read_fixed64(data, mut pos, end)
+    elif wire_type == FIXED32:
+        _ = try read_fixed32(data, mut pos, end)
+    elif wire_type == LEN:
+        const n = try read_length(data, mut pos, end)
+        pos += n
+    elif wire_type == START_GROUP:
+        if depth <= 0:
+            fail Error.recursion_limit
+        try skip_group(data, mut pos, end, key.number, depth - 1)
+    elif wire_type == END_GROUP:
+        fail Error.unmatched_end_group
+    else:
+        fail Error.bad_wire_type(value=wire_type)
+    at = pos
+
+
+# Skip fields up to and including the end-group tag of group `number`.
+func skip_group(data: bytes, mut at: int, end: int, number: int, depth: int) -> Unit fails Error:
+    mut pos = at
+    while True:
+        if pos >= end:
+            fail Error.truncated
+        const key = try read_key(data, mut pos, end)
+        if key.wire_type == END_GROUP:
+            if key.number != number:
+                fail Error.unmatched_end_group
+            at = pos
+            return
+        try skip_value(data, mut pos, end, key, depth)
+
+
+# Skip the field whose key was just read and append its octets, from `field_start`, to `unknown`.
+public func keep_unknown(mut unknown: byte_builder.Builder, data: bytes, mut at: int, end: int, key: Key, depth: int, field_start: int) -> Unit fails Error:
+    try skip_value(data, mut at, end, key, depth)
+    _ = byte_builder.append_range(mut unknown, data, field_start, at)
+
+
+# Decode `data[start:end]` as UTF-8 text.
+public func read_text(data: bytes, start: int, end: int) -> str fails Error:
+    return try strings.decode(data[start:end])
+
+
+# ---- writing ----
+public func put_varint(mut out: byte_builder.Builder, value: u64):
+    mut v = value
+    while v >= 128u64:
+        _ = byte_builder.append_byte(mut out, int(bit_or(bit_and(v, 127u64), 128u64)))
+        v = shift_right(v, 7u64)
+    _ = byte_builder.append_byte(mut out, int(v))
+
+
+@requires(number >= 1 and number <= 536870911, "a field number is 1 to 2^29 - 1")
+@requires(wire_type >= 0 and wire_type <= 5, "a wire type is 0 to 5")
+public func put_key(mut out: byte_builder.Builder, number: int, wire_type: int):
+    put_varint(mut out, u64(number * 8 + wire_type))
+
+
+public func put_fixed32(mut out: byte_builder.Builder, value: u32):
+    binary.put_u32_le(mut out, value)
+
+
+public func put_fixed64(mut out: byte_builder.Builder, value: u64):
+    binary.put_u64_le(mut out, value)
+
+
+# A length-delimited field: key, length, payload.
+public func put_len_field(mut out: byte_builder.Builder, number: int, payload: bytes):
+    put_key(mut out, number, LEN)
+    put_varint(mut out, u64(len(payload)))
+    byte_builder.append(mut out, payload)
+
+
+public func put_text_field(mut out: byte_builder.Builder, number: int, text: str):
+    put_key(mut out, number, LEN)
+    put_varint(mut out, u64(len(text)))
+    byte_builder.append_text(mut out, text)

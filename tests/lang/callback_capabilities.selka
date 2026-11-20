@@ -1,0 +1,103 @@
+# A function value whose signature takes a capability can be stored in a record,
+# read into a local and passed as a parameter (CAPFN). The capability arrives at
+# each call, so the value stores none, and the holder stays an ordinary record.
+import filesystem
+
+record Evaluator:
+    depth: int
+    eval_node: func(mut state: Evaluator, fs: Filesystem, n: int) -> int fails str
+
+
+record Context:
+    eval_node: func(mut state: Evaluator, fs: Filesystem, n: int) -> int fails str
+    limit: int
+
+
+func read_size(mut state: Evaluator, fs: Filesystem, n: int) -> int fails str:
+    state.depth += n
+    const text = try fs.read_text("data.txt")
+    return len(text) + state.depth
+
+
+# The record's own function field, read into a local and called with `mut` of the record.
+func through_field(mut state: Evaluator, fs: Filesystem, n: int) -> int fails str:
+    const hook = state.eval_node
+    return try hook(mut state, fs, n)
+
+
+# The same function type as a plain parameter.
+func apply_hook(hook: func(mut state: Evaluator, fs: Filesystem, n: int) -> int fails str, mut state: Evaluator, fs: Filesystem, n: int) -> int fails str:
+    return try hook(mut state, fs, n)
+
+
+# The function type inside a context record that is passed down a call chain.
+func through_context(mut state: Evaluator, context: Context, fs: Filesystem, n: int) -> int fails str:
+    const hook = context.eval_node
+    if n > context.limit:
+        return 0
+    return try hook(mut state, fs, n)
+
+
+func filled() -> Filesystem:
+    const fs = filesystem.memory()
+    _ = fs.write_text("data.txt", "hello")
+    return fs
+
+
+public func test_a_stored_capability_callback_is_called_with_mut_of_its_owner() -> bool:
+    const fs = filled()
+    mut ev = Evaluator(depth=0, eval_node=read_size)
+    match through_field(mut ev, fs, 3):
+        case Ok(value):
+            return value == 8 and ev.depth == 3
+        case Err(_):
+            return False
+
+
+public func test_a_capability_callback_is_accepted_as_a_plain_parameter() -> bool:
+    const fs = filled()
+    mut ev = Evaluator(depth=0, eval_node=read_size)
+    match apply_hook(read_size, mut ev, fs, 2):
+        case Ok(value):
+            return value == 7 and ev.depth == 2
+        case Err(_):
+            return False
+
+
+public func test_a_capability_callback_passes_down_a_context_record() -> bool:
+    const fs = filled()
+    mut ev = Evaluator(depth=0, eval_node=read_size)
+    const context = Context(eval_node=read_size, limit=5)
+    match through_context(mut ev, context, fs, 4):
+        case Ok(value):
+            return value == 9 and ev.depth == 4
+        case Err(_):
+            return False
+
+
+# A record holds a Filesystem and a function field whose function takes `mut` of that record. The
+# function type is the only recursion, so the record stays an ordinary record that owns its filesystem.
+record Machine:
+    fs: Filesystem
+    depth: int
+    step: func(mut state: Machine, n: int) -> int fails str
+
+
+func run_step(mut state: Machine, n: int) -> int fails str:
+    state.depth += n
+    const text = try state.fs.read_text("data.txt")
+    return len(text) + state.depth
+
+
+func call_step(mut state: Machine, n: int) -> int fails str:
+    const step = state.step
+    return try step(mut state, n)
+
+
+public func test_a_record_holding_a_filesystem_calls_its_hook_with_mut_of_itself() -> bool:
+    mut machine = Machine(fs=filled(), depth=0, step=run_step)
+    match call_step(mut machine, 3):
+        case Ok(value):
+            return value == 8 and machine.depth == 3
+        case Err(_):
+            return False

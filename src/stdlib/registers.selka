@@ -1,0 +1,113 @@
+# Hardware registers: `read8`, `read16` and `read32` load from a register address and `write8`, `write16` and `write32`
+# store to one, through a `Registers` capability. On a device (`--target thumbv6m-none`) `main(reg: Registers)` receives
+# the hardware's registers, and each read or write is one volatile load or store of its width at the address; the
+# functions below the six (`simulated`, `poke32`, `script32`, `pin32` and the log readers) exist only for a simulated
+# bank, and a device build that calls one is refused. On Linux a `main` cannot ask for one; a test makes a simulated bank
+# with `registers.simulated()`, so library code that drives hardware runs with no board.
+#
+# A simulated bank is one little-endian memory of bytes: a 32-bit write at `A` is read back by `read8` at `A` to `A+3`
+# and by `read16` at `A` and `A+2`, and an address never written or poked reads 0. Every write is also logged, oldest
+# first (`write_count`, `write_address`, `write_value`, `write_width`, `writes`, `last_write`); `poke32` sets what a
+# read answers without a log entry, as the hardware itself would change a register; `script32` makes a word's next
+# reads answer a list of values, as a running timer or a changing status does, and `pin32` fixes bits a read answers
+# whatever the code writes, as a read-only status bit inside a control register does. `simulated()` allocates everything
+# a bank will use, room for 4,096 distinct words and 16,384 log entries, so reads, writes, `poke32` and `pin32` never
+# allocate and are legal in a `@noalloc` function; `script32` copies its values into the bank when it is given them.
+# A full bank or log traps with `R_REGISTER_BANK`. Banks are independent, and each lives until the program, or the test
+# trial, ends; a `parallel` task may make its own.
+#
+# One logged write: the address, the value written and its width in bits (8, 16 or 32).
+public record RegisterWrite:
+    address: u32
+    value: u32
+    width: int
+
+
+# A fresh simulated bank: every address reads 0 and the log is empty. Building one needs no capability.
+public builtin func simulated() -> Registers
+
+
+# The octet at `address`.
+public builtin func read8(reg: Registers, address: u32) -> u8
+
+
+# The 16-bit little-endian value at `address` and `address + 1`.
+public builtin func read16(reg: Registers, address: u32) -> u16
+
+
+# The 32-bit little-endian value at `address` to `address + 3`.
+public builtin func read32(reg: Registers, address: u32) -> u32
+
+
+# Store one octet at `address`, and log the write.
+public builtin func write8(reg: Registers, address: u32, value: u8)
+
+
+# Store a 16-bit value at `address`, little-endian, and log the write.
+public builtin func write16(reg: Registers, address: u32, value: u16)
+
+
+# Store a 32-bit value at `address`, little-endian, and log the write.
+public builtin func write32(reg: Registers, address: u32, value: u32)
+
+
+# Start the device's second core (an RP2040's core 1) running `entry`, a top-level function, with its own `Registers`,
+# its own stack and its own heap, while `main` goes on: True when core 1 now runs `entry`, False when it cannot start
+# (the platform has one core, as QEMU's has; core 1 was started already; or it did not answer the start sequence).
+# The two cores share no heap value: they talk through the hardware (the SIO FIFOs, the spinlocks, a memory window both
+# reach through `Registers`). When `entry` returns, core 1 reports its result and its leak check and stops; a trap on
+# either core stops both, and `main` returning stops core 1. Only a device has it: a build for the host is refused
+# (`E_TARGET_DEVICE_REGISTERS`).
+public builtin func start_core1(reg: Registers, entry: func(Registers) -> int) -> bool
+
+
+# Set what reads at `address` to `address + 3` answer, as the hardware would: the write is not logged.
+public builtin func poke32(reg: Registers, address: u32, value: u32)
+
+
+# The next reads of the 32-bit word that holds `address` answer `values` in order, one per read that touches the word,
+# and then the stored word again, as a running timer or a status that changes does. Writes during the script change the
+# stored word and are logged; the script answers first. A new script replaces what is left of the old one, and an
+# empty list ends it. The values are copied now, so the reads still allocate nothing.
+public builtin func script32(reg: Registers, address: u32, values: u32[])
+
+
+# Every read of the 32-bit word that holds `address` answers the bits `mask` selects from `value`, whatever the code
+# writes or pokes there, as a read-only bit inside a register does (a PLL's lock bit): the other bits read as stored.
+# A write is still logged with the value the code wrote. A mask of 0 unpins the word. Pinned bits apply to a script's
+# values too.
+public builtin func pin32(reg: Registers, address: u32, mask: u32, value: u32)
+
+
+# How many writes the bank has logged.
+public builtin func write_count(reg: Registers) -> int
+
+
+# The address of logged write `index`, 0 being the oldest; an index outside the log traps as a list index does.
+public builtin func write_address(reg: Registers, index: int) -> u32
+
+
+# The value of logged write `index`.
+public builtin func write_value(reg: Registers, index: int) -> u32
+
+
+# The width in bits of logged write `index`: 8, 16 or 32.
+public builtin func write_width(reg: Registers, index: int) -> int
+
+
+# Every logged write, oldest first.
+public func writes(reg: Registers) -> RegisterWrite[]:
+    mut out: RegisterWrite[] = []
+    for index in range(write_count(reg)):
+        append(mut out, RegisterWrite(address=write_address(reg, index), value=write_value(reg, index), width=write_width(reg, index)))
+    return out
+
+
+# The value of the newest write logged at `address`, or None when the bank never logged one there.
+public func last_write(reg: Registers, address: u32) -> u32?:
+    mut index = write_count(reg) - 1
+    while index >= 0:
+        if write_address(reg, index) == address:
+            return Some(write_value(reg, index))
+        index -= 1
+    return None

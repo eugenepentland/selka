@@ -1,0 +1,162 @@
+# A `match mut` on a field of a record whose binding is written in a loop, on a place two fields deep, or on a field of
+# a list element (FX7b). Each use of the binding projects it again from the container; the union-tag rule did not
+# relate those reads to the match's own tag test (the record is a merge of the tested value and the rebuilt one in a
+# loop, or another read of the inner record or the element), so the builder now tests the tag where it reads, and the
+# gate's `verify-ir-proof` can hold these tests. Each test writes through the binding and reads the value back.
+enum Leaf:
+    none
+    count(n: int)
+    items(values: int[])
+
+
+record Pot:
+    label: str
+    leaf: Leaf
+
+
+record Shelf:
+    name: str
+    pot: Pot
+
+
+func leaf_total(l: Leaf) -> int:
+    match l:
+        case count(n=n):
+            return n
+        case items(values=values):
+            mut t = 0
+            for v in values:
+                t += v
+            return t
+        case none:
+            return -1
+
+
+func bump(mut v: int, by: int):
+    v = v + by
+
+
+func grow(mut p: Pot, by: int) -> int:
+    match mut p.leaf:
+        case count(n=n):
+            for step in range(by):
+                n += step
+            return n
+        case items(values=_):
+            return -2
+        case none:
+            return -1
+
+
+public func test_a_mut_parameter_field_written_in_a_for_loop() -> bool:
+    mut one = Pot(label="one", leaf=Leaf.count(n=10))
+    return grow(mut one, 4) == 16 and leaf_total(one.leaf) == 16
+
+
+public func test_a_local_field_written_in_a_while_loop_with_break() -> bool:
+    mut p = Pot(label="p", leaf=Leaf.count(n=1))
+    match mut p.leaf:
+        case count(n=n):
+            while True:
+                n = n * 2
+                if n > 20:
+                    break
+        case items(values=_):
+            return False
+        case none:
+            return False
+    return leaf_total(p.leaf) == 32
+
+
+public func test_nested_loops_with_continue_and_a_mut_argument() -> bool:
+    mut p = Pot(label="p", leaf=Leaf.count(n=0))
+    match mut p.leaf:
+        case count(n=n):
+            for a in range(3):
+                for b in range(4):
+                    if b % 2 == 0:
+                        continue
+                    bump(mut n, a + b)
+        case items(values=_):
+            return False
+        case none:
+            return False
+    return leaf_total(p.leaf) == 18
+
+
+public func test_a_list_payload_appended_in_a_loop() -> bool:
+    mut p = Pot(label="p", leaf=Leaf.items(values=[1]))
+    match mut p.leaf:
+        case items(values=values):
+            for i in range(4):
+                append(mut values, i)
+        case count(n=_):
+            return False
+        case none:
+            return False
+    return leaf_total(p.leaf) == 7
+
+
+public func test_a_place_two_fields_deep() -> bool:
+    mut s = Shelf(name="s", pot=Pot(label="p", leaf=Leaf.count(n=3)))
+    match mut s.pot.leaf:
+        case count(n=n):
+            n += 4
+            for i in range(2):
+                n += i
+        case items(values=_):
+            return False
+        case none:
+            return False
+    return leaf_total(s.pot.leaf) == 8 and s.pot.label == "p"
+
+
+public func test_a_field_of_a_list_element() -> bool:
+    mut pots = [Pot(label="a", leaf=Leaf.none), Pot(label="b", leaf=Leaf.count(n=2))]
+    match mut pots[1].leaf:
+        case count(n=n):
+            for i in range(3):
+                n += i
+        case items(values=_):
+            return False
+        case none:
+            return False
+    return leaf_total(pots[1].leaf) == 5 and leaf_total(pots[0].leaf) == -1
+
+
+public func test_a_field_of_an_option_payload() -> bool:
+    mut o: Pot? = Some(Pot(label="o", leaf=Leaf.count(n=1)))
+    match mut o:
+        case Some(p):
+            match mut p.leaf:
+                case count(n=n):
+                    for i in range(3):
+                        n += i
+                case items(values=_):
+                    return False
+                case none:
+                    return False
+        case None:
+            return False
+    match o:
+        case Some(p):
+            return leaf_total(p.leaf) == 4
+        case None:
+            return False
+
+
+public func test_a_binding_written_on_one_branch_is_read_after_the_join() -> bool:
+    # The union is a `phi` where the branches join, of the tested value and the rebuilt one: shape P justifies the read
+    # with no test of its own (only a loop's header `phi` gets one), and the gate's `tag-phi-operand` mutants need it.
+    mut p = Pot(label="p", leaf=Leaf.count(n=1))
+    mut x = Leaf.count(n=1)
+    match mut x:
+        case count(n=n):
+            if leaf_total(p.leaf) > 0:
+                n = 5
+            n = n + 1
+        case items(values=_):
+            return False
+        case none:
+            return False
+    return leaf_total(x) == 6

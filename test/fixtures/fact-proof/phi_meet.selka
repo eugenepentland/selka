@@ -1,0 +1,27 @@
+# Two loop phis whose stated interval only the meet of two bounds gives: the hull of their operands and the counted-loop
+# growth bound. `decode` is the protobuf library's base64 accumulator (lane VT, D-VT-4); `phase_of` moves by +3 and wraps at 5.
+func decode(t: str) -> int:
+    mut accumulated = 0
+    mut bits = 0
+    for i in range(len(t)):
+        accumulated = accumulated * 64 + 1
+        bits += 6
+        if bits >= 8:
+            bits -= 8
+            accumulated = accumulated % 16
+    return accumulated
+
+
+func phase_of(t: str) -> int:
+    mut phase = 0
+    for i in range(len(t)):
+        phase += 3
+        if phase >= 5:
+            phase -= 5
+    return phase
+
+
+func main(out: Stream) -> int:
+    print(out, decode("aGVsbG8"))
+    print(out, phase_of("abcdefg"))
+    return 0

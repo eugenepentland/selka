@@ -1,0 +1,8 @@
+# Lists that temporary_elements.selka takes one element of, from another module (F-55).
+public record Part:
+    name: str
+    pins: str[]
+
+
+public func parts() -> Part[]:
+    return [Part(name="R1", pins=["1", "2"]), Part(name="C1", pins=["3"])]

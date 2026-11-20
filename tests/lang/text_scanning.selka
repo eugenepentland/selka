@@ -1,0 +1,128 @@
+# `times` copies of `piece` by doubling, so a long input costs a logarithmic
+# number of guest steps and stays inside a test's instruction budget.
+import bytes
+import strings
+
+func repeated(piece: str, times: int) -> str:
+    mut out = ""
+    mut chunk = copy(piece)
+    mut remaining = times
+    while remaining > 0:
+        if remaining % 2 == 1:
+            out = out + chunk
+        remaining = remaining // 2
+        if remaining > 0:
+            chunk = chunk + chunk
+    return out
+
+
+# `count` is non-overlapping and left to right wherever the matches sit: at
+# either end, next to each other, or behind candidates whose first octet
+# matches and whose rest does not.
+# spec: TEXT-SCAN-1
+public func test_count_is_non_overlapping_at_every_position() -> bool:
+    mut ok = strings.count("aaa", "aa") == 1 and strings.count("aaaa", "aa") == 2 and strings.count("abababa", "aba") == 2
+    ok = ok and strings.count("abcab", "ab") == 2 and strings.count("xab", "ab") == 1 and strings.count("abx", "ab") == 1
+    ok = ok and strings.count("abc", "abc") == 1 and strings.count("abc", "z") == 0 and strings.count("", "a") == 0
+    ok = ok and strings.count("ab", "abc") == 0 and strings.count("a,b,,c,", ",") == 4
+    ok = ok and strings.count("aaaaaaaaaaaaaaaaaaaaaabaab", "aab") == 2
+    return ok and strings.count("aaaaaaaaaaaaaaaaaaaaaaaa", "aab") == 0
+
+
+# A valid UTF-8 needle can only match where a scalar starts, so counting and
+# finding by octets answers the scalar question exactly; `find` still answers a
+# scalar index.
+# spec-case: TEXT-SCAN-1
+public func test_count_and_find_multibyte_needles_and_haystacks() -> bool:
+    mut ok = strings.count("héllo wörld é", "é") == 2 and strings.count("日本日本日", "日本") == 2
+    ok = ok and strings.count("😀😀😀", "😀😀") == 1 and strings.count("ééééééééééééx", "éx") == 1
+    ok = ok and strings.count("ééééééééééééé", "éx") == 0 and strings.count("é", "e") == 0
+    ok = ok and strings.char_find(("日本語テキスト"), "テ") == 3 and strings.char_find(("ééééééééééééx"), "éx") == 11
+    return ok and strings.char_find(("aé"), "é") == 1 and strings.char_find(("ééx"), "x") == 2
+
+
+# Long inputs: the scan is linear however dense the matches or the false
+# candidates are.
+# spec-case: TEXT-SCAN-1
+public func test_count_and_find_over_long_inputs() -> bool:
+    mut lines = repeated("item,1\n", 100000)
+    mut ok = strings.char_count(lines) == 700000 and strings.count(lines, "item") == 100000 and strings.count(lines, ",1") == 100000
+    ok = ok and strings.count(lines, "\n") == 100000 and strings.count(lines, "1\ni") == 99999
+    mut run = repeated("a", 100000) + "b"
+    ok = ok and strings.count(run, "ab") == 1 and strings.count(run, "aab") == 1 and strings.count(run, "aa") == 50000
+    ok = ok and strings.char_find(run, "ab") == 99999 and strings.char_find(run, "aab") == 99998 and strings.count(run, "ba") == 0
+    return ok and strings.count(repeated("ab", 500000), "ba") == 499999
+
+
+# `replace` sizes its result in one scan and copies the unchanged runs between
+# matches whole; matches at either end, adjacent matches and removals keep
+# Python's answers, and the result's length counts scalars.
+# spec: TEXT-SCAN-2
+public func test_replace_copies_runs_between_non_overlapping_matches() -> bool:
+    mut ok = strings.replace("aaa", "aa", "b") == "ba" and strings.replace("aaaa", "aa", "b") == "bb"
+    ok = ok and strings.replace("abcab", "ab", "") == "c" and strings.replace("abxab", "ab", "YZ") == "YZxYZ"
+    ok = ok and strings.replace("abc", "z", "y") == "abc" and strings.replace("ab", "abc", "x") == "ab"
+    ok = ok and strings.replace("", "a", "b") == "" and strings.replace("aaaaaaaaaaaaaaaaaaaaaab", "ab", "X") == "aaaaaaaaaaaaaaaaaaaaaX"
+    mut plain = strings.replace("héllo été", "é", "e")
+    ok = ok and plain == "hello ete" and strings.char_count(plain) == 9 and strings.char_find(plain, "t") == 7
+    mut wide = strings.replace("a-b-c", "-", "😀")
+    ok = ok and wide == "a😀b😀c" and strings.char_count(wide) == 5 and strings.char_at(wide, 3) == "😀" and strings.char_find(wide, "c") == 4
+    return ok and strings.replace("日本日本", "日本", "x") == "xx"
+
+
+# spec-case: TEXT-SCAN-2
+public func test_replace_over_long_inputs() -> bool:
+    mut text = repeated("item,1\n", 100000)
+    mut rewritten = strings.replace(text, "item", "it")
+    mut ok = strings.char_count(rewritten) == 500000 and strings.count(rewritten, "it,1\n") == 100000
+    ok = ok and strings.starts_with(rewritten, "it,1\nit,1") and strings.ends_with(rewritten, "it,1\n")
+    mut run = repeated("a", 100001)
+    mut halved = strings.replace(run, "aa", "b")
+    ok = ok and strings.char_count(halved) == 50001 and strings.ends_with(halved, "bba") and strings.count(halved, "b") == 50000
+    return ok and strings.count(strings.replace(text, "\n", ""), "item,1item") == 50000
+
+
+# `split(separator)` keeps every empty piece, cuts non-overlapping left to
+# right, and a piece of a non-ASCII text measures and indexes its own scalars.
+# spec: TEXT-SCAN-3
+public func test_split_keeps_empty_pieces_and_measures_each_piece() -> bool:
+    mut parts = strings.split("a,b,,c,", ",")
+    mut ok = len(parts) == 5 and parts[0] == "a" and parts[1] == "b" and parts[2] == ""
+    ok = ok and parts[3] == "c" and parts[4] == ""
+    mut edges = strings.split(",", ",")
+    ok = ok and len(edges) == 2 and edges[0] == "" and edges[1] == ""
+    mut whole = strings.split("abc", "abcd")
+    ok = ok and len(whole) == 1 and whole[0] == "abc" and len(strings.split("", ",")) == 1
+    mut pair = strings.split("aaa", "aa")
+    ok = ok and len(pair) == 2 and pair[0] == "" and pair[1] == "a"
+    mut dashed = strings.split("a--b--c", "--")
+    ok = ok and len(dashed) == 3 and dashed[2] == "c"
+    mut mixed = strings.split("é|😀é|x", "|")
+    ok = ok and len(mixed) == 3 and strings.char_count(mixed[0]) == 1 and strings.char_count(mixed[1]) == 2 and strings.char_count(mixed[2]) == 1
+    ok = ok and strings.char_at(mixed[1], 1) == "é" and strings.char_at(mixed[1], strings.char_count(mixed[1]) - 2) == "😀" and mixed[2] == "x"
+    mut arrows = strings.split("a→b→c", "→")
+    return ok and len(arrows) == 3 and arrows[1] == "b" and arrows[2] == "c"
+
+
+# spec-case: TEXT-SCAN-3
+public func test_split_over_long_inputs() -> bool:
+    mut halves = strings.split((repeated("x", 200000) + "|" + repeated("é", 100000)), "|")
+    mut ok = len(halves) == 2 and strings.char_count(halves[0]) == 200000 and strings.char_count(halves[1]) == 100000
+    ok = ok and strings.char_find((halves[1]), "é") == 0 and strings.char_at(halves[1], 99999) == "é"
+    mut words = strings.split(repeated("é,", 2000), ",")
+    ok = ok and len(words) == 2001 and strings.char_count(words[0]) == 1 and words[1999] == "é" and words[2000] == ""
+    mut fields = strings.split(repeated("ab--", 2000), "--")
+    return ok and len(fields) == 2001 and fields[1000] == "ab" and fields[2000] == ""
+
+
+# A byte string splits through the same search.
+# spec-case: TEXT-SCAN-3
+public func test_byte_string_separator_split_uses_the_same_cuts() -> bool:
+    mut parts = bytes.split(b",aaaaaaaaaaaaaaaaaaaab--c,,--", b"--")
+    mut ok = len(parts) == 3 and parts[0] == b",aaaaaaaaaaaaaaaaaaaab" and parts[1] == b"c,," and parts[2] == b""
+    mut pair = bytes.split(b"aaa", b"aa")
+    return ok and len(pair) == 2 and pair[0] == b"" and pair[1] == b"a"
+
+
+func main() -> int:
+    return 0

@@ -1,0 +1,168 @@
+# One process plays both ends of a loopback connection and prints what the event
+# loop reports at every step (NETWORK-POLL-1 to NETWORK-POLL-4). The poller binds
+# the endpoint below and the blocking client dials it; a test replaces the port and
+# compares the transcript. Nothing here waits for a peer that is not already there.
+import byte_builder
+import network
+import strings
+
+func main(net: Network, out: Stream) -> int:
+    with net.host("127.0.0.1:18090") as scoped:
+        match network.open_poller(scoped):
+            case ok(poller):
+                return probe(own poller, scoped, out)
+            case err(code):
+                print(out, "open failed", code)
+                return 1
+
+
+# Send `data` to the poller's peer, blocking, and hand the connection back.
+func client_write(own client: network.Connection, data: bytes) -> network.Connection:
+    mut live = own client
+    match write_resource[network.Written](live, data):
+        case Ok(_):
+            return live
+        case Err(code):
+            _ = code
+            return live
+
+
+# Read what the poller sent: up to 16 bytes, appended to `raw`, and the eof flag in `done`.
+func client_read(own client: network.Connection, mut raw: byte_builder.Builder, mut done: network.Outcome) -> network.Connection:
+    mut live = own client
+    match read_resource[network.Read[16]](live):
+        case Ok(chunk):
+            mut index = 0
+            while index < int(chunk.length):
+                _ = byte_builder.append_byte(mut raw, int(chunk.bytes[index]))
+                index += 1
+            done.code = 0
+            if chunk.eof:
+                done.code = 1
+        case Err(code):
+            done.code = 100 + code
+    return live
+
+
+func show(label: str, outcome: network.Outcome, out: Stream):
+    print(out, label, "code", outcome.code, "value", outcome.value)
+
+
+func text(raw: byte_builder.Builder) -> str:
+    match strings.decode(byte_builder.finish(raw)):
+        case Ok(value):
+            return value
+        case Err(_):
+            return "?"
+
+
+func probe(own poller: network.Poller, scoped: Network, out: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut scratch = byte_builder.create()
+    live = network.port(own live, network.LISTENER, mut outcome)
+    print(out, "port", outcome.value)
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "limit ok", outcome.value >= 512, "open", outcome.extra)
+    live = network.wait(own live, 0, mut ready)
+    print(out, "empty wait", ready.count)
+    live = network.accept(own live, mut outcome)
+    show("accept before connect", outcome, out)
+    match network.connect(scoped):
+        case ok(dialed):
+            mut client = own dialed
+            live = network.wait(own live, 2000, mut ready)
+            print(out, "listener wait", ready.count, ready.ids[0], ready.flags[0])
+            live = network.accept(own live, mut outcome)
+            show("accept", outcome, out)
+            const id = outcome.value
+            live = network.recv(own live, id, mut scratch, mut outcome)
+            show("recv before data", outcome, out)
+            live = network.peer(own live, id, mut outcome)
+            print(out, "peer", network.format_address(outcome.value, 0), outcome.extra > 0)
+            live = network.connection_limit(own live, mut outcome)
+            print(out, "open", outcome.extra)
+            client = client_write(own client, b"hello")
+            live = network.wait(own live, 2000, mut ready)
+            print(out, "data wait", ready.count, ready.ids[0] == id, ready.flags[0])
+            mut raw = byte_builder.create()
+            live = network.recv(own live, id, mut raw, mut outcome)
+            show("recv", outcome, out)
+            print(out, "received", text(raw))
+            # A send reports what the kernel took and takes an offset, not a slice.
+            live = network.send(own live, id, b"world!", 0, mut outcome)
+            show("send", outcome, out)
+            live = network.send(own live, id, b"abcdef", 3, mut outcome)
+            show("send from offset 3", outcome, out)
+            live = network.send(own live, id, b"abc", 3, mut outcome)
+            show("send nothing", outcome, out)
+            mut seen = byte_builder.create()
+            mut done = network.new_outcome()
+            client = client_read(own client, mut seen, mut done)
+            print(out, "client read", text(seen))
+            # An id that is not open, and a stale one, answer unknown.
+            live = network.send(own live, id + 1, b"x", 0, mut outcome)
+            show("send to wrong id", outcome, out)
+            live = network.recv(own live, 5, mut scratch, mut outcome)
+            show("recv from slot id", outcome, out)
+            # Interest: writable is reported only when asked for.
+            live = network.wait(own live, 0, mut ready)
+            print(out, "quiet wait", ready.count)
+            live = network.set_interest(own live, id, network.EVENT_WRITABLE, mut outcome)
+            live = network.wait(own live, 2000, mut ready)
+            print(out, "writable wait", ready.count, ready.flags[0])
+            live = network.set_interest(own live, id, 0, mut outcome)
+            client = client_write(own client, b"x")
+            live = network.wait(own live, 100, mut ready)
+            print(out, "muted wait", ready.count)
+            live = network.set_interest(own live, id, network.EVENT_READABLE, mut outcome)
+            live = network.wait(own live, 2000, mut ready)
+            print(out, "unmuted wait", ready.count, ready.flags[0])
+            live = network.recv(own live, id, mut scratch, mut outcome)
+            show("recv x", outcome, out)
+            live = network.set_interest(own live, id, 8, mut outcome)
+            show("bad interest", outcome, out)
+            # The idle flag arrives once per quiet period.
+            live = network.set_idle_timeout(own live, 150, mut outcome)
+            live = network.wait(own live, 5000, mut ready)
+            print(out, "idle wait", ready.count, ready.ids[0] == id, ready.flags[0])
+            live = network.wait(own live, 0, mut ready)
+            print(out, "idle again at once", ready.count)
+            live = network.set_idle_timeout(own live, 0, mut outcome)
+            # Half-close: the client sees end of stream while the id stays open.
+            live = network.shutdown_send(own live, id, mut outcome)
+            show("shutdown", outcome, out)
+            mut after = byte_builder.create()
+            client = client_read(own client, mut after, mut done)
+            print(out, "client eof", done.code)
+            # The client goes away: readable and hangup, then closed.
+            match network.close(own client):
+                case ok(_):
+                    return finish(own live, id, out)
+                case err(failure):
+                    print(out, "client close failed", failure.code)
+                    return 3
+        case err(code):
+            print(out, "connect failed", code)
+            return 2
+
+
+func finish(own poller: network.Poller, id: int, out: Stream) -> int:
+    mut live = own poller
+    mut outcome = network.new_outcome()
+    mut ready = network.new_ready()
+    mut scratch = byte_builder.create()
+    live = network.wait(own live, 2000, mut ready)
+    print(out, "hangup wait", ready.count, ready.ids[0] == id, ready.flags[0])
+    live = network.recv(own live, id, mut scratch, mut outcome)
+    show("recv after hangup", outcome, out)
+    live = network.close_connection(own live, id, mut outcome)
+    show("close", outcome, out)
+    live = network.recv(own live, id, mut scratch, mut outcome)
+    show("recv after close", outcome, out)
+    live = network.close_connection(own live, id, mut outcome)
+    show("close again", outcome, out)
+    live = network.connection_limit(own live, mut outcome)
+    print(out, "open at end", outcome.extra)
+    return 0

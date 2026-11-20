@@ -1,0 +1,3 @@
+public func program() -> i64:
+    mut f = 42
+    return f

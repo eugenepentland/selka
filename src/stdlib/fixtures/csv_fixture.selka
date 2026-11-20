@@ -1,0 +1,57 @@
+import csv
+import strings
+
+func expect_parse(source: str, wanted: str[][]):
+    match csv.parse(source):
+        case Ok(rows):
+            assert rows == wanted, "unexpected rows"
+        case Err(error):
+            assert False, csv.message(error)
+
+
+func expect_unterminated(source: str):
+    match csv.parse(source):
+        case Ok(_):
+            assert False, "accepted an unterminated quote"
+        case Err(error):
+            match error:
+                case UnterminatedQuote(value=detail):
+                    assert strings.char_count(detail) > 0, "empty error message"
+                case UnexpectedQuote(value=detail):
+                    assert False, detail
+                case UnexpectedCharacter(value=detail):
+                    assert False, detail
+
+
+func main() -> int:
+    expect_parse("", [])
+    expect_parse("a,b\n", [["a", "b"]])
+    expect_parse("a,b", [["a", "b"]])
+    expect_parse("a\n\nb\n", [["a"], [], ["b"]])
+    expect_parse("a,b\r\nc,d\r\n", [["a", "b"], ["c", "d"]])
+    expect_parse("a\rb\r", [["a"], ["b"]])
+    expect_parse("\"a,b\",\"x\"\"y\"\n", [["a,b", "x\"y"]])
+    expect_parse("\"a\nb\",c\n", [["a\nb", "c"]])
+    expect_parse("\"\",\"\"\n", [["", ""]])
+    expect_parse(",,\n", [["", "", ""]])
+    expect_parse("λ,é\n", [["λ", "é"]])
+    expect_unterminated("\"a,b\n")
+    const rows = [["a", "b,c", "d\"e"], ["", "line\nbreak", "λ"], []]
+    expect_parse(csv.write(rows), rows)
+    assert csv.write([]) == "", "empty input rendered text"
+    assert csv.write([[]]) == "\n", "blank row not preserved"
+    assert csv.write([[""]]) == "\"\"\n", "lone empty field not quoted"
+    match csv.parse_table("name,age\nada,41\n"):
+        case Ok(table):
+            assert table.header == ["name", "age"], "bad header"
+            assert table.rows == [["ada", "41"]], "bad table rows"
+            assert csv.write_table(table) == "name,age\nada,41\n", "bad table rendering"
+        case Err(error):
+            assert False, csv.message(error)
+    match csv.parse_table(""):
+        case Ok(table):
+            assert len(table.header) == 0, "empty table has a header"
+            assert len(table.rows) == 0, "empty table has rows"
+        case Err(error):
+            assert False, csv.message(error)
+    return 42

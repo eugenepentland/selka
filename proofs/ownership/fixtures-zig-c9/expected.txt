@@ -1,0 +1,19 @@
+fixtures-zig-c9/trap-abandon.cert ok_abandon_holder accept
+fixtures-zig-c9/trap-abandon.cert bad_holder_unlisted reject J2 b1 0
+fixtures-zig-c9/trap-abandon.cert ok_abandon_root_dropped_after accept
+fixtures-zig-c9/trap-abandon.cert bad_abandon_used reject J2 b1 0
+fixtures-zig-c9/trap-abandon.cert bad_abandon_not_live reject J2 b0 2
+fixtures-zig-c9/trap-abandon.cert bad_abandon_scalar reject J2 b0 0
+fixtures-zig-c9/trap-abandon.cert bad_abandon_outside_region reject J2 b0 1
+fixtures-zig-c9/trap-abandon.cert bad_abandon_group reject J2 b0 4
+fixtures-zig-c9/trap-abandon.cert bad_abandon_not_a_predecessor reject J1 b1 -
+fixtures-zig-c9/trap-abandon.cert bad_abandon_unsorted reject J1 b1 -
+fixtures-zig-c9/trap-abandon.cert bad_abandon_repeated reject J1 b1 -
+fixtures-zig-c9/trap-abandon.cert bad_abandon_phi_operand reject J2 b0 1
+fixtures-zig-c9/trap-abandon.cert ok_abandon_branch_chain accept
+fixtures-zig-c9/trap-abandon.cert bad_branch_chain_unlisted reject J2 b1 1
+fixtures-zig-c9/trap-abandon.cert ok_abandon_through_chain accept
+fixtures-zig-c9/trap-abandon.cert bad_open_take_on_one_edge reject J8 b3 0
+fixtures-zig-c9/trap-abandon.cert ok_open_take_container_abandoned accept
+fixtures-zig-c9/trap-abandon.cert bad_roots_swapped reject J4 b3 1
+fixtures-zig-c9/trap-abandon.cert bad_closing_under_a_guard reject J8 b3 0

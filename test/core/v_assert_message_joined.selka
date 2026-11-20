@@ -1,0 +1,9 @@
+func check(item: str) -> int:
+    assert len(item) == 6, "failed for: " + item
+    return len(item)
+
+
+func main(out: Stream) -> int:
+    print(out, check("second"))
+    print(out, check("third"))
+    return 0

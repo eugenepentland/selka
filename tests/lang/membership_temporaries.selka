@@ -1,0 +1,85 @@
+# `in` and `not in` take a field of a call's result as either operand, as `==` does (F-56): the operator reads its
+# operands and keeps nothing, and the call's result lives to the end of the statement. Text, bytes, a dictionary and a
+# set are each the right operand once.
+import membership_temporaries_support as support
+import sets
+import testing
+
+record Options:
+    problem: str
+    raw: bytes
+    table: dict[str, int]
+    names: set[str]
+
+
+record Wrapper:
+    inner: Options
+
+
+enum Slot:
+    full(text: str)
+    empty
+
+
+func parse(text: str) -> Options:
+    mut table: dict[str, int] = {}
+    table["k"] = 1
+    mut names: set[str] = set()
+    sets.add(mut names, "s")
+    return Options(problem=copy(text), raw=b"abc", table=own table, names=own names)
+
+
+func wrapped(text: str) -> Wrapper:
+    return Wrapper(inner=parse(text))
+
+
+func mentions[T](value: T, needle: str) -> bool:
+    return needle in parse("generic " + needle).problem
+
+
+func checked(text: str) -> int fails str:
+    if "empty" in parse(text).problem:
+        fail "empty: " + text
+    return len(text)
+
+
+public func test_in_reads_a_field_of_a_call_s_result_as_either_operand() -> bool:
+    assert "a" in parse("abc").problem
+    assert "z" not in parse("abc").problem
+    assert parse("b").problem in "abc"
+    assert parse("a").problem in parse("abc").problem
+    return "b" in wrapped("abc").inner.problem
+
+
+public func test_in_reads_bytes_a_dictionary_and_a_set_field_of_a_call_s_result() -> bool:
+    assert b"b" in parse("x").raw
+    assert "k" in parse("x").table
+    assert "q" not in parse("x").table
+    return "s" in parse("x").names
+
+
+public func test_in_on_a_field_of_a_call_s_result_is_returned_bound_and_generic() -> bool:
+    const found = "group" in support.parse("empty group name").problem
+    assert found
+    assert mentions(1, "needle")
+    return "x" not in support.parse("y").flags
+
+
+public func test_in_on_a_field_of_a_call_s_result_in_a_fallible_function_and_a_match_mut_arm() -> bool:
+    mut slot = Slot.full(text="abc")
+    match mut slot:
+        case full(text):
+            if "b" in parse(text).problem:
+                text = "seen"
+        case empty:
+            pass
+    match checked("empty set"):
+        case Ok(_):
+            return False
+        case Err(message):
+            assert message == "empty: empty set"
+    match slot:
+        case full(text):
+            return text == "seen"
+        case empty:
+            return False

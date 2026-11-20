@@ -1,0 +1,284 @@
+# A group of started programs on a scripted Process: it starts nothing, so every program of the group has already ended with
+# the `Output` of the rule that answered it, and the group's bookkeeping (keys, order, what a wait removes, what a close
+# answers) is what these tests check. Real programs, the waits that sleep and the process groups are in
+# `src/process_group_test.zig`.
+import process
+
+func quiet(code: int) -> process.Output:
+    return process.exited(code, b"", b"")
+
+
+# The key `group_start` answered for `argv` (without output files), or -1 when it failed.
+func begin(proc: Process, mut jobs: process.Group, argv: str[]) -> int:
+    match process.group_start(proc, mut jobs, process.command(copy(argv)), None, None):
+        case Ok(key):
+            return key
+        case Err(_):
+            return -1
+
+
+# What the next wait for the first program answered, as `key:exited:code`, or the failure's message.
+func first(proc: Process, mut jobs: process.Group) -> str:
+    match process.group_wait_any(proc, mut jobs):
+        case Ok(found):
+            return f"{found.key}:{found.output.exited}:{found.output.code}"
+        case Err(error):
+            return process.message(error)
+
+
+# How many programs the close of the group answered, or -1 when it failed.
+func end(proc: Process, own jobs: process.Group) -> int:
+    match process.group_close(proc, own jobs, 0):
+        case Ok(rest):
+            return len(rest)
+        case Err(_):
+            return -1
+
+
+# The failure's message of a signal to `key`, or `sent`.
+func signalled(proc: Process, mut jobs: process.Group, key: int, number: int) -> str:
+    match process.group_signal(proc, mut jobs, key, number):
+        case Ok(_):
+            return "sent"
+        case Err(error):
+            return process.message(error)
+
+
+func jobs_script() -> Process:
+    return process.scripted(
+        [
+            process.Rule(program="ok", reply=process.Reply.Exit(output=quiet(0))),
+            process.Rule(program="bad", reply=process.Reply.Exit(output=quiet(3))),
+            process.Rule(program="gone", reply=process.Reply.Missing),
+            process.Rule(program="refused", reply=process.Reply.Refused(message="cannot run 'refused': permission denied")),
+        ],
+    )
+
+
+func numbered() -> process.Rule[]:
+    mut rules: process.Rule[] = []
+    for index in range(64):
+        append(mut rules, process.Rule(program="job", reply=process.Reply.Exit(output=quiet(index)), args=Some([str(index)])))
+    return rules
+
+
+public func test_an_empty_group_holds_nothing_and_has_nothing_to_wait_for() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const size = process.group_size(mut jobs)
+    const waited = first(proc, mut jobs)
+    const closed = end(proc, own jobs)
+    return size == 0 and waited == "the group has no program to wait for" and closed == 0
+
+
+func scene_0() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const key = begin(proc, mut jobs, ["bad"])
+    const size = process.group_size(mut jobs)
+    mut number = -1
+    match process.group_pid(mut jobs, key):
+        case Some(found):
+            number = found
+        case None:
+            number = -2
+    const waited = first(proc, mut jobs)
+    const after = process.group_size(mut jobs)
+    mut gone = False
+    match process.group_pid(mut jobs, key):
+        case Some(_):
+            gone = False
+        case None:
+            gone = True
+    const closed = end(proc, own jobs)
+    return key == 0 and size == 1 and number == process.SCRIPTED_PID and waited == "0:True:3" and after == 0 and gone and closed == 0
+
+
+public func test_a_program_starts_into_the_group_and_a_wait_answers_its_key_and_status() -> bool:
+    return scene_0()
+
+
+func scene_1() -> bool:
+    const proc = process.scripted(numbered())
+    mut jobs = process.group()
+    mut ok = True
+    for index in range(64):
+        if begin(proc, mut jobs, ["job", str(index)]) != index:
+            ok = False
+    if process.group_size(mut jobs) != 64:
+        ok = False
+    for index in range(64):
+        if first(proc, mut jobs) != f"{index}:True:{index}":
+            ok = False
+    const seen_0 = process.group_size(mut jobs)
+    const closed = end(proc, own jobs)
+    return ok and seen_0 == 0 and closed == 0
+
+
+public func test_sixty_four_programs_start_and_are_answered_in_the_order_they_started() -> bool:
+    return scene_1()
+
+
+func scene_2() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const key = begin(proc, mut jobs, ["ok"])
+    mut ok = key == 0
+    match process.group_wait_any_within(proc, mut jobs, 0):
+        case Ok(found):
+            match found:
+                case Some(done):
+                    ok = ok and done.key == 0 and done.output.exited and done.output.code == 0
+                case None:
+                    ok = False
+        case Err(_):
+            ok = False
+    match process.group_wait_any_within(proc, mut jobs, -1):
+        case Ok(_):
+            ok = False
+        case Err(error):
+            ok = ok and process.message(error) != ""
+    const closed = end(proc, own jobs)
+    return ok and closed == 0
+
+
+public func test_a_wait_with_a_limit_answers_what_has_ended_and_refuses_a_negative_limit() -> bool:
+    return scene_2()
+
+
+public func test_a_key_is_never_given_twice_and_a_failed_start_leaves_the_group_as_it_was() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const a = begin(proc, mut jobs, ["ok"])
+    const missing = begin(proc, mut jobs, ["gone"])
+    const refused = begin(proc, mut jobs, ["refused"])
+    const empty = begin(proc, mut jobs, [])
+    const b = begin(proc, mut jobs, ["bad"])
+    _ = first(proc, mut jobs)
+    const c = begin(proc, mut jobs, ["ok"])
+    const seen_0 = process.group_size(mut jobs)
+    const closed = end(proc, own jobs)
+    return a == 0 and missing == -1 and refused == -1 and empty == -1 and b == 1 and c == 2 and seen_0 == 2 and closed == 2
+
+
+func scene_3() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    mut request = process.command(["ok"])
+    request.input = b"fed"
+    mut ok = False
+    match process.group_start(proc, mut jobs, request, None, None):
+        case Ok(_):
+            ok = False
+        case Err(error):
+            ok = process.message(error) == "process.group_start gives the program no standard input: leave request.input empty"
+    const seen_0 = process.group_size(mut jobs)
+    const closed = end(proc, own jobs)
+    return ok and seen_0 == 0 and closed == 0
+
+
+public func test_a_request_with_input_is_refused_as_start_refuses_it() -> bool:
+    return scene_3()
+
+
+func scene_4() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    mut key = -1
+    match process.group_start_to(proc, mut jobs, process.command(["bad"]), process.Destination.Discard, process.Destination.File(path="err.log")):
+        case Ok(started):
+            key = started
+        case Err(_):
+            key = -2
+    const seen_0 = first(proc, mut jobs)
+    const closed = end(proc, own jobs)
+    return key == 0 and seen_0 == "0:True:3" and closed == 0
+
+
+public func test_group_start_to_takes_a_destination_for_each_stream() -> bool:
+    return scene_4()
+
+
+func scene_5() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const a = begin(proc, mut jobs, ["ok"])
+    const b = begin(proc, mut jobs, ["bad"])
+    mut ok = a == 0 and b == 1
+    ok = ok and signalled(proc, mut jobs, 0, process.SIGTERM) == "sent"
+    ok = ok and first(proc, mut jobs) == "0:True:0"
+    ok = ok and signalled(proc, mut jobs, 0, process.SIGKILL) == "sent"
+    ok = ok and signalled(proc, mut jobs, 7, process.SIGTERM) == "the group has no program with key 7"
+    ok = ok and signalled(proc, mut jobs, -1, process.SIGTERM) == "the group has no program with key -1"
+    ok = ok and signalled(proc, mut jobs, 1, 65) == "a signal number is 1 to 64, not 65"
+    ok = ok and signalled(proc, mut jobs, 1, 0) == "a signal number is 1 to 64, not 0"
+    match process.group_signal_all(proc, mut jobs, process.SIGTERM):
+        case Ok(_):
+            pass
+        case Err(_):
+            ok = False
+    match process.group_signal_all(proc, mut jobs, 99):
+        case Ok(_):
+            ok = False
+        case Err(_):
+            pass
+    const closed = end(proc, own jobs)
+    return ok and closed == 1
+
+
+public func test_a_signal_names_a_key_the_group_gave_and_does_nothing_to_a_program_already_ended() -> bool:
+    return scene_5()
+
+
+func scene_6() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const a = begin(proc, mut jobs, ["ok"])
+    const b = begin(proc, mut jobs, ["bad"])
+    const c = begin(proc, mut jobs, ["ok"])
+    mut line = ""
+    match process.group_stop(proc, mut jobs, 100):
+        case Ok(stopped):
+            for item in stopped:
+                line = line + f"{item.key}:{item.output.code} "
+        case Err(_):
+            line = "failed"
+    const d = begin(proc, mut jobs, ["bad"])
+    const seen_0 = process.group_size(mut jobs)
+    const closed = end(proc, own jobs)
+    return a == 0 and b == 1 and c == 2 and line == "0:0 1:3 2:0 " and d == 3 and seen_0 == 1 and closed == 1
+
+
+public func test_stop_answers_every_program_in_start_order_and_leaves_the_group_open() -> bool:
+    return scene_6()
+
+
+func scene_7() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const a = begin(proc, mut jobs, ["bad"])
+    const b = begin(proc, mut jobs, ["ok"])
+    const c = begin(proc, mut jobs, ["ok"])
+    const waited = first(proc, mut jobs)
+    mut line = ""
+    match process.group_close(proc, own jobs, 0):
+        case Ok(rest):
+            for item in rest:
+                line = line + f"{item.key} "
+        case Err(_):
+            line = "failed"
+    return a == 0 and b == 1 and c == 2 and waited == "0:True:3" and line == "1 2 "
+
+
+public func test_close_answers_the_programs_no_wait_has_answered_and_not_the_ones_it_has() -> bool:
+    return scene_7()
+
+
+public func test_a_scripted_group_makes_no_pid_and_logs_each_request() -> bool:
+    const proc = jobs_script()
+    mut jobs = process.group()
+    const a = begin(proc, mut jobs, ["ok", "one"])
+    const b = begin(proc, mut jobs, ["bad", "two", "three"])
+    const calls = process.calls(proc)
+    const closed = end(proc, own jobs)
+    return a == 0 and b == 1 and len(calls) == 2 and calls[1].argv == ["bad", "two", "three"] and closed == 2

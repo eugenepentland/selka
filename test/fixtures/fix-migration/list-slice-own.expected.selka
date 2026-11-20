@@ -1,0 +1,17 @@
+import parallel
+
+func double(x: int) -> int:
+    return x * 2
+
+func consume(own xs: int[]) -> int:
+    return len(xs)
+
+func total(xs: int[]) -> int:
+    return len(parallel.map(xs, double))
+
+func main(out: Stream) -> int:
+    const data = [1, 2, 3, 4, 5, 6]
+    print(out, consume(copy(data[1:4])))
+    print(out, len(parallel.map(data[1:3], double)))
+    print(out, total(data))
+    return 0

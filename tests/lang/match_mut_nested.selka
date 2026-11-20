@@ -1,0 +1,215 @@
+# A `match mut` on a payload binding of an enclosing `match mut` arm (FX7). The inner binding's place lies below two union
+# payloads, and each use projects it again from the held container; its payload reads and takes used to have no tag
+# test the IR verifier's union-tag rule accepts, so no test of this shape could be added to the gate. Each test writes
+# through the inner binding and reads the value back from the outer owner. A nested match on a list element is pinned in
+# src/core/nested_match_mut_test.zig instead: its outer reads are of shape M, which the gate caps.
+enum Sh:
+    empty
+    rad(value: int)
+
+
+enum Bag:
+    none
+    items(values: int[])
+
+
+enum Outer:
+    nothing
+    boxed(inner: Sh)
+
+
+enum OuterBag:
+    nothing
+    holding(bag: Bag, count: int)
+
+
+enum Deep:
+    bottom
+    level(outer: Outer)
+
+
+record Holder:
+    tag: int
+    outer: Outer
+
+
+func inner_value(o: Outer) -> int:
+    match o:
+        case boxed(inner=sh):
+            match sh:
+                case rad(value=v):
+                    return v
+                case empty:
+                    return -1
+        case nothing:
+            return -2
+
+
+public func test_scalar_payload_written_two_levels_down() -> bool:
+    mut o = Outer.boxed(inner=Sh.rad(value=1))
+    match mut o:
+        case boxed(inner=sh):
+            match mut sh:
+                case rad(value=v):
+                    v = v + 8
+                case empty:
+                    return False
+        case nothing:
+            return False
+    return inner_value(o) == 9
+
+
+public func test_owned_payload_appended_two_levels_down() -> bool:
+    mut o = OuterBag.holding(bag=Bag.items(values=[1]), count=1)
+    match mut o:
+        case holding(bag=b, count=c):
+            match mut b:
+                case items(values=v):
+                    append(mut v, 8)
+                    append(mut v, 9)
+                case none:
+                    return False
+            c = c + 2
+        case nothing:
+            return False
+    match o:
+        case holding(bag=b, count=c):
+            match b:
+                case items(values=v):
+                    return len(v) == 3 and v[2] == 9 and c == 3
+                case none:
+                    return False
+        case nothing:
+            return False
+
+
+public func test_three_levels_of_match_mut() -> bool:
+    mut d = Deep.level(outer=Outer.boxed(inner=Sh.rad(value=5)))
+    match mut d:
+        case level(outer=o):
+            match mut o:
+                case boxed(inner=sh):
+                    match mut sh:
+                        case rad(value=v):
+                            v = v * 3
+                        case empty:
+                            return False
+                case nothing:
+                    return False
+        case bottom:
+            return False
+    match d:
+        case level(outer=o):
+            return inner_value(o) == 15
+        case bottom:
+            return False
+
+
+public func test_inner_binding_read_and_written_in_a_loop() -> bool:
+    mut o = Outer.boxed(inner=Sh.rad(value=0))
+    match mut o:
+        case boxed(inner=sh):
+            match mut sh:
+                case rad(value=v):
+                    for i in range(5):
+                        v = v + i
+                case empty:
+                    return False
+        case nothing:
+            return False
+    return inner_value(o) == 10
+
+
+func bump_inner(mut o: Outer, by: int) -> bool:
+    match mut o:
+        case boxed(inner=sh):
+            match mut sh:
+                case rad(value=v):
+                    v = v + by
+                    return True
+                case empty:
+                    return False
+        case nothing:
+            return False
+
+
+public func test_outer_through_a_mut_parameter() -> bool:
+    mut o = Outer.boxed(inner=Sh.rad(value=2))
+    assert bump_inner(mut o, 40)
+    return inner_value(o) == 42
+
+
+public func test_outer_is_a_record_field() -> bool:
+    mut h = Holder(tag=7, outer=Outer.boxed(inner=Sh.rad(value=1)))
+    match mut h.outer:
+        case boxed(inner=sh):
+            match mut sh:
+                case rad(value=v):
+                    v = v + h.tag
+                case empty:
+                    return False
+        case nothing:
+            return False
+    return inner_value(h.outer) == 8 and h.tag == 7
+
+
+public func test_inner_option_written_through() -> bool:
+    mut o: Sh? = Some(Sh.rad(value=4))
+    match mut o:
+        case Some(sh):
+            match mut sh:
+                case rad(value=v):
+                    v = v - 1
+                case empty:
+                    return False
+        case None:
+            return False
+    match o:
+        case Some(sh):
+            match sh:
+                case rad(value=v):
+                    return v == 3
+                case empty:
+                    return False
+        case None:
+            return False
+
+
+public func test_outer_binding_written_after_the_inner_match() -> bool:
+    mut o = Outer.boxed(inner=Sh.rad(value=1))
+    match mut o:
+        case boxed(inner=sh):
+            match mut sh:
+                case rad(value=v):
+                    v = v + 1
+                case empty:
+                    return False
+            if inner_value(Outer.boxed(inner=copy(sh))) == 2:
+                sh = Sh.empty
+        case nothing:
+            return False
+    return inner_value(o) == -1
+
+
+func doubled_inner(k: int) -> int fails str:
+    if k < 0:
+        fail "negative"
+    mut o = Outer.boxed(inner=Sh.rad(value=k))
+    match mut o:
+        case boxed(inner=sh):
+            match mut sh:
+                case rad(value=v):
+                    v = v * 2
+                case empty:
+                    fail "empty"
+        case nothing:
+            fail "nothing"
+    return inner_value(o)
+
+
+public func test_nested_match_mut_in_a_fails_function() -> bool:
+    match doubled_inner(21):
+        case Ok(n):
+            return n == 42
+        case Err(_):
+            return False

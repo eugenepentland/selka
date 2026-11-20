@@ -1,0 +1,10 @@
+public func program() -> i64:
+    mut x = 3
+    while False:
+        x = 100
+    if x < 2:
+        return 8
+    elif x == 3:
+        return 9
+    else:
+        return 10

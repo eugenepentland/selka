@@ -1,0 +1,149 @@
+# Preserve former negative positions at each access, including after receiver resizing.
+import lists
+
+func former_position(length: int, index: int) -> int:
+    if index < 0:
+        return length + index
+    return index
+
+
+record Payload:
+    left: int[]
+    right: int[]
+
+
+enum Item:
+    empty
+    value(value: Payload)
+    number(value: int)
+
+
+record Pool:
+    items: Item[]
+
+
+func selected(pool: Pool, at: int) -> Payload:
+    match pool.items[former_position(len(pool.items), at)]:
+        case value(value=payload):
+            return copy(payload)
+        case _:
+            return Payload(left=[], right=[])
+
+
+func replace_and_grow(mut pool: Pool):
+    pool.items = []
+    mut i = 0
+    while i < 300:
+        append(mut pool.items, Item.number(value=i))
+        i += 1
+
+
+func through_callback(mut pool: Pool, at: int) -> Payload:
+    const selected_item = copy(pool.items[former_position(len(pool.items), at)])
+    match selected_item:
+        case value(value=payload):
+            replace_and_grow(mut pool)
+            mut result = copy(payload)
+            append(mut result.left, 11)
+            return result
+        case _:
+            return Payload(left=[], right=[])
+
+
+public func test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
+    mut pool = Pool(items=[Item.value(value=Payload(left=[3], right=[7]))])
+    mut result = selected(pool, -1)
+    replace_and_grow(mut pool)
+    append(mut result.left, 9)
+    return result.left == [3, 9] and result.right == [7] and len(pool.items) == 300
+
+
+public func test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
+    mut values = [5]
+    mut pool = Pool(items=[Item.value(value=Payload(left=copy(values), right=copy(values)))])
+    mut saved = copy(pool)
+    mut result = through_callback(mut pool, 0)
+    mut old = selected(saved, 0)
+    return result.left == [5, 11] and result.right == [5] and old.left == [5] and old.right == [5] and values == [5]
+
+
+func repeated(pool: Pool) -> int:
+    mut total = 0
+    mut i = 0
+    while i < len(pool.items):
+        match pool.items[i]:
+            case value(value=payload):
+                total = total + payload.left[0] + payload.right[0]
+            case number(value=number):
+                total = total + number
+            case empty:
+                total += 1
+        i += 1
+    return total
+
+
+public func test_repeated_pattern_slots_switch_between_owned_and_plain_arms() -> bool:
+    mut pool = Pool(items=[Item.value(value=Payload(left=[2], right=[3])), Item.empty, Item.number(value=7), Item.value(value=Payload(left=[11], right=[13]))])
+    return repeated(pool) == 37
+
+
+enum Outer:
+    empty
+    values(value: Item[])
+
+
+func nested(rows: Outer[]) -> Payload:
+    match rows[0]:
+        case values(value=inner):
+            match inner[len(inner) - 1]:
+                case value(value=payload):
+                    return copy(payload)
+                case _:
+                    return Payload(left=[], right=[])
+        case _:
+            return Payload(left=[], right=[])
+
+
+public func test_nested_matches_publish_the_selected_payload() -> bool:
+    mut rows = [Outer.values(value=[Item.value(value=Payload(left=[23], right=[29]))])]
+    mut result = nested(rows)
+    lists.clear(mut rows)
+    append(mut result.right, 31)
+    return result.left == [23] and result.right == [29, 31]
+
+
+func changing_index(mut pool: Pool) -> int:
+    pool.items = [Item.value(value=Payload(left=[41], right=[43]))]
+    return 0
+
+
+func index_callback(mut pool: Pool) -> Payload:
+    const receiver_snapshot = copy(pool.items)
+    match receiver_snapshot[changing_index(mut pool)]:
+        case value(value=payload):
+            return copy(payload)
+        case _:
+            return Payload(left=[], right=[])
+
+
+public func test_index_callback_keeps_the_original_receiver_snapshot() -> bool:
+    mut pool = Pool(items=[Item.value(value=Payload(left=[37], right=[39]))])
+    mut result = index_callback(mut pool)
+    return result.left == [37] and selected(pool, 0).left == [41]
+
+
+public func test_payload_free_arm_and_empty_return_keep_clean_guards() -> bool:
+    mut pool = Pool(items=[Item.empty, Item.number(value=53)])
+    mut first = selected(pool, 0)
+    mut second = selected(pool, -1)
+    return len(first.left) == 0 and len(second.right) == 0
+
+
+func main(out: Stream) -> int:
+    print(out, test_returned_payload_outlives_rebound_and_grown_pool())
+    print(out, test_arm_callback_keeps_snapshot_and_duplicate_children())
+    print(out, test_repeated_pattern_slots_switch_between_owned_and_plain_arms())
+    print(out, test_nested_matches_publish_the_selected_payload())
+    print(out, test_index_callback_keeps_the_original_receiver_snapshot())
+    print(out, test_payload_free_arm_and_empty_return_keep_clean_guards())
+    return 0

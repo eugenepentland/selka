@@ -1,0 +1,4 @@
+{"version": 1, "device": "qemu-memory",
+ "devices": {"qemu-memory": {"target": "thumbv6m-none", "links": ["platform.c"],
+   "memory": {"boot": ["0x0", "1K"], "ram": ["0x20000000", "264K"]},
+   "place": {"vectors": "boot", "code": "ram"}, "stack": "16K"}}}

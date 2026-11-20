@@ -1,0 +1,11 @@
+build-slot: gate slot 1, FIFO ticket 3132 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 42e5838afdb0)
+guardian: diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1: 0/1298 source file(s) in scope for the 50 per-file check(s); 36 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 37 finding(s), none in scope — report-only (--verbose for detail)
+guardian: repeated-string-literal: 272 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 86 checks — 0 blocking, 1 report-only — diff-scoped vs c3af167479a75ef96a94f7fe90d10ebffc7998c1, 0 file(s) in scope
+
+Build Summary: ended by --fail-fast at the first failing step; its failures follow
+test/fix_cli_test.zig:3688: names velocity/README.md but `cli` in build_test_inputs.zig does not cover it
+declare each path in build_test_inputs.zig (or run with -Dtest-rerun=true to bypass the cache once)
+failed command: sh scripts/quiet-driver.sh python3 tests/test_inputs_coverage.py

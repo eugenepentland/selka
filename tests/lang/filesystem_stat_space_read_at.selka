@@ -1,0 +1,326 @@
+# The three filesystem additions of friction F-45, F-46 and F-48, on the in-memory Filesystem a test receives: `Stat.device`
+# with `device_major` and `device_minor`, `statfs` (the size, free and available bytes of the filesystem that holds a path)
+# and `read_at` (at most N octets of a file from a byte offset). The real provider's answers are pinned beside the native
+# durable fixture (src/core/durable_fixture.c) and in src/io_paths_test.zig.
+import filesystem
+import strings
+
+const MEMORY_SIZE: int = 1073741824
+
+
+const MEMORY_FREE: int = 536870912
+
+
+const MEMORY_AVAILABLE: int = 402653184
+
+
+# "ok" for a success, else the failure text.
+func note_bytes(result: Result[bytes, str]) -> str:
+    match result:
+        case Ok(_):
+            return "ok"
+        case Err(message):
+            return copy(message)
+
+
+func space_of(fs: Filesystem, path: str) -> filesystem.Space:
+    match filesystem.statfs(fs, path):
+        case Ok(space):
+            return space
+        case Err(_):
+            return filesystem.Space(size_bytes=-1, free_bytes=-1, available_bytes=-1)
+
+
+func is_missing(fs: Filesystem, path: str) -> bool:
+    match filesystem.statfs(fs, path):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Missing:
+                    return True
+                case Failed(message=_):
+                    return False
+
+
+func is_failed(fs: Filesystem, path: str) -> bool:
+    match filesystem.statfs(fs, path):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Missing:
+                    return False
+                case Failed(message=_):
+                    return True
+
+
+func device_of(fs: Filesystem, path: str) -> u64:
+    match filesystem.stat(fs, path):
+        case Ok(found):
+            return found.device
+        case Err(_):
+            return 99u64
+
+
+func read_text_at(fs: Filesystem, path: str, offset: int, count: int) -> str:
+    match filesystem.read_at(fs, path, offset, count):
+        case Ok(data):
+            match strings.decode(data):
+                case Ok(text):
+                    return text
+                case Err(_):
+                    return "not text"
+        case Err(message):
+            return "error: " + message
+
+
+# ---- F-46: the device of a file ----
+public func test_every_entry_of_a_memory_filesystem_is_on_the_one_documented_device() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_file("dir/file", b"x")
+    _ = filesystem.symlink(fs, "file", "dir/link")
+    return device_of(fs, "dir") == filesystem.MEMORY_DEVICE and device_of(fs, "dir/file") == filesystem.MEMORY_DEVICE and device_of(fs, "dir/link") == filesystem.MEMORY_DEVICE and device_of(fs, "") == filesystem.MEMORY_DEVICE
+
+
+public func test_the_memory_device_is_major_0_and_minor_1() -> bool:
+    return filesystem.MEMORY_DEVICE == 1u64 and filesystem.device_major(filesystem.MEMORY_DEVICE) == 0 and filesystem.device_minor(filesystem.MEMORY_DEVICE) == 1
+
+
+public func test_a_stat_follow_names_the_device_too() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("file", b"x")
+    match filesystem.stat_follow(fs, "file"):
+        case Ok(found):
+            return found.device == filesystem.MEMORY_DEVICE and found.inode > 0u64
+        case Err(_):
+            return False
+
+
+# The numbers `major(3)` and `minor(3)` take out of a `dev_t`, as the kernel packs them for `stat(2)`: a small pair in two
+# bytes, and a pair wide enough to use the high bits of both.
+public func test_device_major_and_minor_take_a_dev_t_apart_like_glibc() -> bool:
+    if filesystem.device_major(64512u64) != 252 or filesystem.device_minor(64512u64) != 0:
+        return False
+    if filesystem.device_major(66309u64) != 259 or filesystem.device_minor(66309u64) != 5:
+        return False
+    if filesystem.device_major(2065u64) != 8 or filesystem.device_minor(2065u64) != 17:
+        return False
+    if filesystem.device_major(316661085455770u64) != 74565 or filesystem.device_minor(316661085455770u64) != 424090:
+        return False
+    return filesystem.device_major(1048575u64) == 4095 and filesystem.device_minor(1048575u64) == 255
+
+
+public func test_the_device_of_a_hand_built_stat_defaults_to_zero() -> bool:
+    const built = filesystem.Stat(kind=filesystem.PathKind.Regular, size=1, modified=2, inode=3u64)
+    return built.device == 0u64 and built.mode == 0 and built.changed == 0
+
+
+# The wording `/proc/locks` uses: major and minor in hexadecimal, then the inode.
+public func test_a_lock_file_is_named_the_way_proc_locks_names_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("slot.lock", b"")
+    match filesystem.stat(fs, "slot.lock"):
+        case Ok(found):
+            const name = hex_pair(filesystem.device_major(found.device), filesystem.device_minor(found.device)) + ":" + str(int(found.inode))
+            return name == "00:01:" + str(int(found.inode))
+        case Err(_):
+            return False
+
+
+func hex_digit(value: int) -> str:
+    if value < 10:
+        return str(value)
+    if value == 10:
+        return "a"
+    if value == 11:
+        return "b"
+    if value == 12:
+        return "c"
+    if value == 13:
+        return "d"
+    if value == 14:
+        return "e"
+    return "f"
+
+
+func hex_pair(major: int, minor: int) -> str:
+    return hex_digit(major // 16) + hex_digit(major % 16) + ":" + hex_digit(minor // 16) + hex_digit(minor % 16)
+
+
+# ---- F-45: the space of a filesystem ----
+public func test_a_memory_filesystem_answers_the_documented_space_for_any_existing_path() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_file("dir/file", b"some bytes")
+    for path in ["", "dir", "dir/file"]:
+        const space = space_of(fs, path)
+        if space.size_bytes != MEMORY_SIZE or space.free_bytes != MEMORY_FREE or space.available_bytes != MEMORY_AVAILABLE:
+            return False
+    return space_of(fs, ".").size_bytes == MEMORY_SIZE and is_failed(fs, "/")
+
+
+public func test_the_memory_space_does_not_move_when_the_filesystem_fills() -> bool:
+    const fs = filesystem.memory()
+    const before = space_of(fs, "")
+    _ = fs.write_file("big", b"0123456789")
+    const after = space_of(fs, "")
+    return before.free_bytes == after.free_bytes and before.size_bytes == after.size_bytes
+
+
+public func test_the_three_numbers_of_a_memory_space_tell_the_fields_apart() -> bool:
+    const space = space_of(filesystem.memory(), "")
+    return space.available_bytes < space.free_bytes and space.free_bytes < space.size_bytes and space.available_bytes > 0
+
+
+public func test_statfs_of_nothing_is_missing_and_of_a_bad_path_is_a_refusal() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    return is_missing(fs, "nothing") and is_missing(fs, "dir/nothing") and is_missing(fs, "nothing/below") and is_failed(fs, "../dir") and is_failed(fs, "/dir")
+
+
+# FR18: a stand-in reads a path as a restricted program's is read (docs/io.md, "How a path is read"): its root is the
+# working directory, named by the empty path and by `.`, and `/` is outside it, for `statfs` and `stat` alike.
+public func test_statfs_and_stat_of_dot_name_the_root_of_memory_and_slash_is_outside_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("lib")
+    const root = space_of(fs, "").size_bytes == MEMORY_SIZE and space_of(fs, "lib/../lib").size_bytes == MEMORY_SIZE
+    const stat_dot = not match_failed_stat(fs, ".")
+    const stat_slash = match_failed_stat(fs, "/")
+    return root and space_of(fs, ".").size_bytes == MEMORY_SIZE and is_failed(fs, "/") and stat_dot and stat_slash
+
+
+func match_failed_stat(fs: Filesystem, path: str) -> bool:
+    match filesystem.stat(fs, path):
+        case Ok(_):
+            return False
+        case Err(error):
+            match error:
+                case Missing:
+                    return False
+                case Failed(message=_):
+                    return True
+
+
+public func test_statfs_is_a_read_so_a_read_only_or_narrowed_filesystem_answers_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("sub")
+    const frozen = fs.read_only()
+    const narrowed = fs.dir("sub")
+    return space_of(frozen, "sub").size_bytes == MEMORY_SIZE and space_of(narrowed, "").size_bytes == MEMORY_SIZE and is_failed(narrowed, "../sub")
+
+
+public func test_statfs_follows_the_same_walk_as_stat_for_an_unsearchable_directory() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("closed")
+    _ = fs.write_file("closed/file", b"x")
+    _ = filesystem.chmod(fs, "closed", 0o600)
+    return is_failed(fs, "closed/file")
+
+
+public func test_the_raw_statfs_builtin_answers_three_words() -> bool:
+    const fs = filesystem.memory()
+    match fs.statfs_path(""):
+        case Ok(packed):
+            return len(packed) == 24
+        case Err(_):
+            return False
+
+
+# ---- F-48: reading from an offset ----
+public func test_read_at_answers_what_was_appended_since_the_last_look() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("log", b"first\n")
+    if read_text_at(fs, "log", 0, 1000) != "first\n":
+        return False
+    mut seen = 6
+    if read_text_at(fs, "log", seen, 1000) != "":
+        return False
+    _ = fs.atomic_write_file("log", b"first\nsecond\n")
+    if read_text_at(fs, "log", seen, 1000) != "second\n":
+        return False
+    seen += 7
+    return read_text_at(fs, "log", seen, 1000) == ""
+
+
+public func test_read_at_answers_fewer_octets_at_the_end_and_none_past_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("data", b"0123456789")
+    return read_text_at(fs, "data", 0, 4) == "0123" and read_text_at(fs, "data", 4, 4) == "4567" and read_text_at(fs, "data", 8, 4) == "89" and read_text_at(fs, "data", 10, 4) == "" and read_text_at(fs, "data", 11, 4) == "" and read_text_at(fs, "data", 1000000, 4) == ""
+
+
+public func test_read_at_of_nothing_asked_is_empty_and_of_everything_is_the_whole_file() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("data", b"0123456789")
+    return read_text_at(fs, "data", 3, 0) == "" and read_text_at(fs, "data", 0, 10) == "0123456789" and read_text_at(fs, "data", 0, 11) == "0123456789"
+
+
+public func test_read_at_of_an_empty_file_is_empty_at_any_offset() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("empty", b"")
+    return read_text_at(fs, "empty", 0, 10) == "" and read_text_at(fs, "empty", 5, 10) == ""
+
+
+public func test_read_at_reads_octets_that_are_not_text() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("raw", b"\x00\xff\x80abc")
+    match filesystem.read_at(fs, "raw", 1, 3):
+        case Ok(data):
+            return len(data) == 3 and data[0] == 255 and data[1] == 128 and data[2] == 97
+        case Err(_):
+            return False
+
+
+public func test_read_at_refuses_what_it_cannot_read_with_the_real_wording() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("dir")
+    _ = fs.write_file("dir/file", b"x")
+    _ = filesystem.symlink(fs, "dir/file", "link")
+    if note_bytes(filesystem.read_at(fs, "missing", 0, 10)) != "read at 'missing': the path does not exist":
+        return False
+    if note_bytes(filesystem.read_at(fs, "dir", 0, 10)) != "read at 'dir': permission denied":
+        return False
+    if not strings.starts_with(note_bytes(filesystem.read_at(fs, "link", 0, 10)), "read at 'link': "):
+        return False
+    if read_text_at(fs, "dir/../dir/file", 0, 10) != "x":
+        return False
+    return note_bytes(filesystem.read_at(fs, "../file", 0, 10)) == "read at '../file': denied: '../file' is outside the granted directories"
+
+
+public func test_read_at_refuses_a_negative_offset_or_count_and_a_count_over_the_bound() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("data", b"0123456789")
+    return read_text_at(fs, "data", -1, 4) == "error: read at 'data': the offset must not be negative" and read_text_at(fs, "data", 0, -1) == "error: read at 'data': max_bytes must not be negative" and read_text_at(fs, "data", 0, 67108865) == "error: read at 'data': max_bytes is over the 64 MiB bound of one read" and read_text_at(fs, "data", 0, 67108864) == "0123456789"
+
+
+public func test_read_at_is_a_read_so_a_read_only_filesystem_allows_it() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("data", b"0123456789")
+    const frozen = fs.read_only()
+    return read_text_at(frozen, "data", 2, 3) == "234"
+
+
+public func test_read_at_through_a_narrowed_filesystem_uses_the_narrowed_paths() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.mkdir("logs")
+    _ = fs.write_file("logs/run.log", b"abcdef")
+    const logs = fs.dir("logs")
+    return read_text_at(logs, "run.log", 2, 2) == "cd" and strings.starts_with(read_text_at(logs, "../run.log", 0, 2), "error: ")
+
+
+public func test_read_at_needs_the_read_bit_of_the_file() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("secret", b"abcdef")
+    _ = filesystem.chmod(fs, "secret", 0o200)
+    return read_text_at(fs, "secret", 0, 3) == "error: read at 'secret': permission denied"
+
+
+public func test_the_raw_read_at_builtin_takes_the_offset_as_eight_little_endian_octets() -> bool:
+    const fs = filesystem.memory()
+    _ = fs.write_file("data", b"0123456789")
+    match fs.read_at_path("data", b"\x03\x00\x00\x00\x00\x00\x00\x00", 4):
+        case Ok(data):
+            return data == b"3456"
+        case Err(_):
+            return False

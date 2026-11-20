@@ -1,0 +1,49 @@
+# Guest tests that call C (D-FFI-7): `selka test --allow-host --link test/core/c_interop.c` hands each test that
+# declares `host: Host` the live Host. Without `--allow-host` the Host tests fail and the rest pass.
+extern type Thing
+
+
+extern func ffi_span_sum(host: Host, data: bytes, scale: i64) -> i64
+
+
+extern func ffi_give(host: Host, mode: i64) -> bytes
+
+
+extern func ffi_split(host: Host, value: i64, mut high: i64, mut low: i32, mut ok: bool) -> i32
+
+
+extern func ffi_thing_new(host: Host, value: i64) -> Thing
+
+
+extern func ffi_thing_value(host: Host, thing: Thing) -> i64
+
+
+extern func ffi_thing_free(host: Host, thing: Thing) -> Unit
+
+
+public func test_span_reaches_c(host: Host) -> bool:
+    return ffi_span_sum(host, b"\x01\x02", 10) == 32
+
+
+public func test_bytes_are_copied(host: Host) -> bool:
+    return ffi_give(host, 0) == b"hi\x00\xffz" and len(ffi_give(host, 2)) == 0
+
+
+public func test_out_parameters(host: Host) -> bool:
+    mut high = 0
+    mut low = i32(0)
+    mut ok = False
+    const rc = ffi_split(host, 81604378629, mut high, mut low, mut ok)
+    return rc == i32(7) and high == 19 and low == i32(5) and ok
+
+
+public func test_handles(host: Host, out: Stream) -> bool:
+    const thing = ffi_thing_new(host, 9)
+    const value = ffi_thing_value(host, thing)
+    ffi_thing_free(host, thing)
+    print(out, value)
+    return value == 9 and thing != Thing()
+
+
+public func test_null_handle() -> bool:
+    return Thing() == Thing()

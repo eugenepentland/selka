@@ -1,0 +1,5 @@
+func len(value: int) -> int:
+    return value + 1
+
+func main() -> int:
+    return len(41)

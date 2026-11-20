@@ -1,0 +1,138 @@
+# A `match mut` binding given to an operation that makes a new value from it (FX12, 15 November 2026). The binding is a
+# name for its place, so every use projects the payload from the held container; an operation that reads the binding as
+# its receiver (`value.strip("x")`, written `strings.strip_chars(value, "x")` since W13-S5, `copy(value)`,
+# `strings.upper(value)`, `3 in value` on a set) used to read the binding's own SSA variable instead, which a `match mut`
+# binding never has, and ended with SIGSEGV. The whole matrix of payload types, uses and places is
+# `test/match_mut_matrix_cli_test.zig`.
+import bytes
+import sets
+import strings
+
+enum Slot:
+    Text(value: str)
+    Raw(data: bytes)
+    Items(list: int[])
+    Members(members: set[int])
+    Empty
+
+
+func stripped(mut slots: Slot[]) -> str:
+    match mut slots[0]:
+        case Text(value):
+            return strings.strip_chars(value, "x")
+        case Raw(data):
+            return "raw"
+        case Items(list):
+            return "items"
+        case Members(members):
+            return "members"
+        case Empty:
+            return "empty"
+
+
+public func test_a_text_method_with_a_character_set_reads_the_bound_text() -> bool:
+    mut slots = [Slot.Text(value="xax")]
+    return stripped(mut slots) == "a"
+
+
+public func test_copy_library_functions_and_split_of_a_bound_text_read_the_element() -> bool:
+    mut slots = [Slot.Text(value="a b")]
+    mut copied = ""
+    mut upper = ""
+    mut parts = 0
+    match mut slots[0]:
+        case Text(value):
+            copied = copy(value)
+            upper = strings.upper(value)
+            parts = len(strings.words(value))
+        case Raw(data):
+            return False
+        case Items(list):
+            return False
+        case Members(members):
+            return False
+        case Empty:
+            return False
+    return copied == "a b" and upper == "A B" and parts == 2
+
+
+public func test_a_bound_text_still_writes_through_after_a_copy_of_it() -> bool:
+    mut slots = [Slot.Text(value="ab")]
+    match mut slots[0]:
+        case Text(value):
+            const before = copy(value)
+            value = before + "!"
+        case Raw(data):
+            return False
+        case Items(list):
+            return False
+        case Members(members):
+            return False
+        case Empty:
+            return False
+    match slots[0]:
+        case Text(value):
+            return value == "ab!"
+        case Raw(data):
+            return False
+        case Items(list):
+            return False
+        case Members(members):
+            return False
+        case Empty:
+            return False
+
+
+public func test_bytes_list_and_set_bindings_given_to_new_value_operations() -> bool:
+    mut slots = [Slot.Raw(data=b"xax"), Slot.Items(list=[3, 1]), Slot.Members(members=set())]
+    mut trimmed: bytes = b""
+    mut copied: int[] = []
+    mut found = True
+    match mut slots[0]:
+        case Raw(data):
+            trimmed = bytes.strip_chars(data, b"x")
+        case Text(value):
+            return False
+        case Items(list):
+            return False
+        case Members(members):
+            return False
+        case Empty:
+            return False
+    match mut slots[1]:
+        case Items(list):
+            copied = copy(list)
+        case Text(value):
+            return False
+        case Raw(data):
+            return False
+        case Members(members):
+            return False
+        case Empty:
+            return False
+    match mut slots[2]:
+        case Members(members):
+            found = 3 in members
+        case Text(value):
+            return False
+        case Raw(data):
+            return False
+        case Items(list):
+            return False
+        case Empty:
+            return False
+    return trimmed == b"a" and copied == [3, 1] and not found
+
+
+public func test_a_byte_buffer_in_a_format_hole_shows_what_print_shows() -> bool:
+    const buffer = byte_buffer([97, 98, 1])
+    return f"<{buffer}>" == "<b'ab\\x01'>"
+
+
+func main() -> int:
+    assert test_a_text_method_with_a_character_set_reads_the_bound_text()
+    assert test_copy_library_functions_and_split_of_a_bound_text_read_the_element()
+    assert test_a_bound_text_still_writes_through_after_a_copy_of_it()
+    assert test_bytes_list_and_set_bindings_given_to_new_value_operations()
+    assert test_a_byte_buffer_in_a_format_hole_shows_what_print_shows()
+    return 0

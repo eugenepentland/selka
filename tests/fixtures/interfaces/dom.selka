@@ -1,0 +1,16 @@
+public record Meters:
+    value: u32
+
+
+func raw(value: u32) -> Meters:
+    return Meters(value=value)
+
+
+public func from(value: u32) -> Meters:
+    if value > 1000u32:
+        return raw(1000u32)
+    return raw(value + 1u32)
+
+
+public func number(value: Meters) -> u32:
+    return (value).value

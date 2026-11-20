@@ -1,0 +1,83 @@
+import dicts
+import lists
+
+func step(state: int) -> int:
+    return (state * 1103515245 + 12345) % 2147483648
+
+
+# A table of five keys has one popped and put back thousands of times, the way an event loop moves a
+# connection's state out of its table and back on every wake-up. The key goes to the end of the
+# insertion order each time, every value keeps its count, and nothing else is disturbed.
+# spec: DICT-TOMBSTONES-1
+public func test_pop_and_put_back_keeps_every_entry_and_the_insertion_order() -> bool:
+    mut table: dict[int, int] = {}
+    for key in range(5):
+        table[key] = key * 10
+    mut cycle = 0
+    while cycle < 5000:
+        mut key = cycle % 5
+        mut value = dicts.pop(mut table, key)
+        table[key] = value + 1
+        cycle += 1
+    if len(table) != 5:
+        return False
+    mut expected = 0
+    for key in table:
+        if key != expected or table[key] != key * 10 + 1000:
+            return False
+        expected += 1
+    return expected == 5
+
+
+# A single entry churned forty thousand times stays a single entry; a table that fills past the point
+# where it gets an index, shrinks again to a few entries and keeps churning agrees with a plain
+# list model of the same operations after every round of one hundred.
+# spec-case: DICT-TOMBSTONES-1
+public func test_churn_across_the_index_threshold_matches_a_list_model() -> bool:
+    mut single: dict[int, int] = {}
+    single[7] = 0
+    mut cycle = 0
+    while cycle < 40000:
+        mut value = dicts.pop(mut single, 7)
+        single[7] = value + 1
+        cycle += 1
+    if len(single) != 1 or single[7] != 40000:
+        return False
+    mut table: dict[int, int] = {}
+    mut keys: int[] = []
+    mut values: int[] = []
+    mut state = 12345
+    mut round = 0
+    while round < 80:
+        mut width = 3
+        if round % 4 == 1:
+            width = 14
+        mut operations = 0
+        while operations < 100:
+            state = step(state)
+            mut key = (state // 65536) % 20
+            if key in table:
+                mut found = lists.index_of(keys, key)
+                mut value = dicts.pop(mut table, key)
+                if value != values[found]:
+                    return False
+                _ = lists.pop_at(mut keys, found)
+                _ = lists.pop_at(mut values, found)
+                if len(keys) < width:
+                    table[key] = value + 1
+                    append(mut keys, key)
+                    append(mut values, value + 1)
+            elif len(keys) < width:
+                table[key] = round
+                append(mut keys, key)
+                append(mut values, round)
+            operations += 1
+        if len(table) != len(keys):
+            return False
+        mut at = 0
+        for key in table:
+            if key != keys[at] or table[key] != values[at]:
+                return False
+            at += 1
+        round += 1
+    return True

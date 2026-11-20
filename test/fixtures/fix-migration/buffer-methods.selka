@@ -1,0 +1,13 @@
+func main(out: Stream) -> int:
+    mut empty: int[] = []
+    mut data = byte_buffer(empty)
+    _ = data.append_byte(65)
+    data.append(b"BC")
+    _ = data.append_int(1)
+    data.append_utf8("é")
+    _ = data.append_range(b"0123", 1, 3)
+    _ = data.reserve(4096)
+    print(out, len(data), bytes(data) == b"ABC1\xc3\xa912")
+    data.clear()
+    print(out, len(data))
+    return 0

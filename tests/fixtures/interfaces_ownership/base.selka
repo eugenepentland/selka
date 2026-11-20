@@ -1,0 +1,3 @@
+# A dependency of `lib`: `relay` passes its `from` contract through to callers two modules away.
+public func pick(xs: str[]) -> str from xs:
+    return xs[len(xs) - 1]

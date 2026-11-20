@@ -1,0 +1,6 @@
+import dicts
+
+func main() -> int:
+    mut prices = {"pear": 3, "fig": 5, "kiwi": 2}
+    mut doubled = {name: price * 2 for name, price in dicts.items(prices) if price > 2}
+    return doubled["fig"] + len(doubled)

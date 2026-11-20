@@ -1,0 +1,26 @@
+# Batched tests (NEW-CORE-TEST-BATCH-1) share a process, yet each trial starts
+# fresh: output and the memory ceiling are its own, whatever ran before it. Run with
+# --max-steps 0 and a small --max-memory, and no short --timeout-ms: every test here
+# must finish, and a wall-clock limit short enough to fire on a hang would also fire
+# on a loaded machine. The wall-clock limit has its own fixture, c_runner_batch_hang.selka.
+public func test_a_prints_then_fails(out: Stream) -> bool:
+    print(out, "noisy")
+    return False
+
+
+public func test_b_fails_quietly() -> bool:
+    return False
+
+
+public func test_c_exhausts_memory() -> bool:
+    mut values: int[] = []
+    while True:
+        append(mut values, len(values))
+    return True
+
+
+public func test_d_allocates_after() -> bool:
+    mut values: int[] = []
+    for i in range(100000):
+        append(mut values, i)
+    return len(values) == 100000

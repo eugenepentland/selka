@@ -1,0 +1,299 @@
+{
+  "schema": "collection-edges-v1",
+  "fixtures": [
+    {
+      "case": "list_scan",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 15
+    },
+    {
+      "case": "list_scan",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 504
+    },
+    {
+      "case": "list_scan",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 20349
+    },
+    {
+      "case": "list_append",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 29
+    },
+    {
+      "case": "list_append",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 1086
+    },
+    {
+      "case": "list_append",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 220269
+    },
+    {
+      "case": "list_filter",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 0
+    },
+    {
+      "case": "list_filter",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 168
+    },
+    {
+      "case": "list_filter",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 25959
+    },
+    {
+      "case": "dict_lookup",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 31
+    },
+    {
+      "case": "dict_lookup",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 355
+    },
+    {
+      "case": "dict_lookup",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 14812
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 31
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 355
+    },
+    {
+      "case": "dict_lookup_str",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 14812
+    },
+    {
+      "case": "dict_update",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 65
+    },
+    {
+      "case": "dict_update",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 774
+    },
+    {
+      "case": "dict_update",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 26145
+    },
+    {
+      "case": "dict_update_str",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 65
+    },
+    {
+      "case": "dict_update_str",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 774
+    },
+    {
+      "case": "dict_update_str",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 26145
+    },
+    {
+      "case": "set_dedup",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 1
+    },
+    {
+      "case": "set_dedup",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 3
+    },
+    {
+      "case": "set_dedup",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 42
+    },
+    {
+      "case": "alloc_short",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 24
+    },
+    {
+      "case": "alloc_short",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 1638
+    },
+    {
+      "case": "alloc_short",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 475997858
+    },
+    {
+      "case": "alloc_retained",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 24
+    },
+    {
+      "case": "alloc_retained",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 1638
+    },
+    {
+      "case": "alloc_retained",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 475997858
+    },
+    {
+      "case": "mutate_nested",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 104
+    },
+    {
+      "case": "mutate_nested",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 1026
+    },
+    {
+      "case": "mutate_nested",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 14242
+    },
+    {
+      "case": "sort_int",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 29
+    },
+    {
+      "case": "sort_int",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 1086
+    },
+    {
+      "case": "sort_int",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 220269
+    },
+    {
+      "case": "sort_records",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 495
+    },
+    {
+      "case": "sort_records",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 15822
+    },
+    {
+      "case": "sort_records",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 3035163
+    },
+    {
+      "case": "lox_eval",
+      "size": 2,
+      "iterations": 1,
+      "seed": 1,
+      "checksum": 11
+    },
+    {
+      "case": "lox_eval",
+      "size": 3,
+      "iterations": 3,
+      "seed": 42,
+      "checksum": 1254
+    },
+    {
+      "case": "lox_eval",
+      "size": 17,
+      "iterations": 7,
+      "seed": 999983,
+      "checksum": 5277545
+    }
+  ]
+}

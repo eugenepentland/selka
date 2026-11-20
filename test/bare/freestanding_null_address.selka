@@ -1,0 +1,19 @@
+# A `@freestanding` function calling through the address 0 on a device (MCU-NOC2C): the null check is the freestanding
+# fault with `R_FOREIGN_TARGET`'s code, before any jump, which the fault handler reports in every build mode.
+# bare-status: 1
+# bare-text: error[R_FOREIGN_TARGET] freestanding_null_address.selka:15
+# bare-link: freestanding_extern.c
+extern func no_address(host: Host) -> u32
+
+
+@address
+extern func weigh_at(host: Host, target: u32, a: i32, b: i32) -> i32
+
+
+@freestanding
+func flash_like(host: Host, target: u32) -> i32:
+    return weigh_at(host, target, i32(1), i32(1))
+
+
+func main(host: Host) -> int:
+    return int(flash_like(host, no_address(host)))

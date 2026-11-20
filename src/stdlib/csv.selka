@@ -1,0 +1,289 @@
+import buffers
+import lists
+import strings
+
+# One rejected CSV document, carrying the source position and the reason.
+public enum Error:
+    UnterminatedQuote(value: str)
+    UnexpectedQuote(value: str)
+    UnexpectedCharacter(value: str)
+
+
+# The human-readable reason carried by a rejected CSV document.
+public func message(error: Error) -> str:
+    match error:
+        case UnterminatedQuote(value=detail):
+            return copy(detail)
+        case UnexpectedQuote(value=detail):
+            return copy(detail)
+        case UnexpectedCharacter(value=detail):
+            return copy(detail)
+
+
+# A parsed CSV document: the first row is the header.
+public record Table:
+    header: str[]
+    rows: str[][]
+
+
+# One field of a document: its text and whether the document wrote it inside quotes.
+public record Field:
+    text: str
+    quoted: bool
+
+
+# A byte cursor over a document, tracking the source position for errors.
+record Scanner:
+    data: bytes
+    position: int
+    line: int
+    column: int
+
+
+func at_end(scanner: Scanner) -> bool:
+    return scanner.position >= len(scanner.data)
+
+
+func peek(scanner: Scanner) -> int:
+    if at_end(scanner):
+        return 0 - 1
+    return scanner.data[scanner.position]
+
+
+func advance(mut scanner: Scanner) -> int:
+    mut byte = scanner.data[scanner.position]
+    scanner.position += 1
+    if byte == 10:
+        scanner.line += 1
+        scanner.column = 1
+    else:
+        scanner.column += 1
+    return byte
+
+
+func located(scanner: Scanner, reason: str) -> str:
+    return copy(reason) + f" at line {scanner.line}, column {scanner.column}"
+
+
+func decode_span(data: bytes, start: int, end: int) -> str fails Error:
+    match strings.decode(data[start:end]):
+        case Ok(text):
+            return text
+        case Err(_):
+            assert False
+            fail Error.UnexpectedCharacter(value="field is not valid UTF-8")
+
+
+func decode_buffer(out: byte_buffer) -> str fails Error:
+    match strings.decode(out):
+        case Ok(text):
+            return text
+        case Err(_):
+            assert False
+            fail Error.UnexpectedCharacter(value="field is not valid UTF-8")
+
+
+func read_quoted(mut scanner: Scanner) -> str fails Error:
+    _ = advance(mut scanner)
+    mut empty: int[] = []
+    mut out = byte_buffer(empty)
+    mut span = scanner.position
+    while not at_end(scanner):
+        mut byte = peek(scanner)
+        if byte == 34:
+            _ = buffers.append_range(mut out, scanner.data, span, scanner.position)
+            _ = advance(mut scanner)
+            if peek(scanner) == 34:
+                _ = buffers.append_byte(mut out, 34)
+                _ = advance(mut scanner)
+                span = scanner.position
+                continue
+            return try decode_buffer(out)
+        _ = advance(mut scanner)
+    fail Error.UnterminatedQuote(value=located(scanner, "unterminated quoted field"))
+
+
+func read_unquoted(mut scanner: Scanner) -> str fails Error:
+    mut start = scanner.position
+    while not at_end(scanner):
+        mut byte = peek(scanner)
+        if byte in b",\n\r":
+            break
+        if byte == 34:
+            fail Error.UnexpectedQuote(value=located(scanner, "quote inside an unquoted field"))
+        _ = advance(mut scanner)
+    return try decode_span(scanner.data, start, scanner.position)
+
+
+func read_field(mut scanner: Scanner) -> str fails Error:
+    if peek(scanner) == 34:
+        return try read_quoted(mut scanner)
+    return try read_unquoted(mut scanner)
+
+
+# A blank line is an empty row: when the scanner stands on one, step over its line ending and answer True.
+func skip_blank_line(mut scanner: Scanner) -> bool:
+    if at_end(scanner):
+        return True
+    const byte = peek(scanner)
+    if byte == 10:
+        _ = advance(mut scanner)
+        return True
+    if byte == 13:
+        _ = advance(mut scanner)
+        if peek(scanner) == 10:
+            _ = advance(mut scanner)
+        return True
+    return False
+
+
+# After a field: True when a comma, now stepped over, says another field of the row follows; False at the end of the
+# row (its line ending stepped over) or of the document.
+func more_in_row(mut scanner: Scanner) -> bool fails Error:
+    if at_end(scanner):
+        return False
+    const byte = peek(scanner)
+    if byte == 44:
+        _ = advance(mut scanner)
+        return True
+    if byte == 10:
+        _ = advance(mut scanner)
+        return False
+    if byte == 13:
+        _ = advance(mut scanner)
+        if peek(scanner) == 10:
+            _ = advance(mut scanner)
+        return False
+    fail Error.UnexpectedCharacter(value=located(scanner, "unexpected character after a field"))
+
+
+func read_row(mut scanner: Scanner) -> str[] fails Error:
+    mut fields: str[] = []
+    if skip_blank_line(mut scanner):
+        return fields
+    while True:
+        mut field = try read_field(mut scanner)
+        append(mut fields, own field)
+        const more = try more_in_row(mut scanner)
+        if not more:
+            return fields
+    return fields
+
+
+func read_field_row(mut scanner: Scanner) -> Field[] fails Error:
+    mut fields: Field[] = []
+    if skip_blank_line(mut scanner):
+        return fields
+    while True:
+        const quoted = peek(scanner) == 34
+        mut text = try read_field(mut scanner)
+        append(mut fields, Field(text=own text, quoted=quoted))
+        const more = try more_in_row(mut scanner)
+        if not more:
+            return fields
+    return fields
+
+
+# Parse RFC 4180 CSV text into rows. A blank line is an empty row.
+public func parse(text: str) -> str[][] fails Error:
+    mut scanner = Scanner(data=strings.encode(text), position=0, line=1, column=1)
+    mut rows: str[][] = []
+    if at_end(scanner):
+        return rows
+    while True:
+        mut row = try read_row(mut scanner)
+        append(mut rows, own row)
+        if at_end(scanner):
+            return rows
+    return rows
+
+
+# Parse CSV text as `parse` does, keeping for each field whether the document wrote it in quotes: `a,,b` and
+# `a,"",b` give the same texts but a different `quoted` for the middle field.
+public func parse_fields(text: str) -> Field[][] fails Error:
+    mut scanner = Scanner(data=strings.encode(text), position=0, line=1, column=1)
+    mut rows: Field[][] = []
+    if at_end(scanner):
+        return rows
+    while True:
+        mut row = try read_field_row(mut scanner)
+        append(mut rows, own row)
+        if at_end(scanner):
+            return rows
+    return rows
+
+
+# Parse CSV text whose first row names the columns.
+public func parse_table(text: str) -> Table fails Error:
+    mut rows = try parse(text)
+    if len(rows) == 0:
+        mut header: str[] = []
+        return Table(header=own header, rows=own rows)
+    const header = lists.pop_at(mut rows, 0)
+    return Table(header=own header, rows=own rows)
+
+
+func write_field(mut out: byte_buffer, field: str):
+    mut data = strings.encode(field)
+    mut quote = False
+    for byte in data:
+        if byte in b'",\n\r':
+            quote = True
+            break
+    if not quote:
+        _ = buffers.append_range(mut out, data, 0, len(data))
+        return
+    _ = buffers.append_byte(mut out, 34)
+    for byte in data:
+        if byte == 34:
+            _ = buffers.append_byte(mut out, 34)
+        _ = buffers.append_byte(mut out, byte)
+    _ = buffers.append_byte(mut out, 34)
+    return
+
+
+func write_row(mut out: byte_buffer, row: str[]):
+    if len(row) == 1 and row[0] == "":
+        # One empty field needs quotes, or a reader sees a blank line.
+        _ = buffers.append_byte(mut out, 34)
+        _ = buffers.append_byte(mut out, 34)
+        _ = buffers.append_byte(mut out, 10)
+        return
+    mut index = 0
+    for field in row:
+        if index != 0:
+            _ = buffers.append_byte(mut out, 44)
+        write_field(mut out, field)
+        index += 1
+    _ = buffers.append_byte(mut out, 10)
+    return
+
+
+func rendered(out: byte_buffer) -> str:
+    match strings.decode(out):
+        case Ok(text):
+            return text
+        case Err(_):
+            assert False
+            return ""
+
+
+# Render rows as RFC 4180 text, quoting only fields that need it.
+public func write(rows: str[][]) -> str:
+    mut empty: int[] = []
+    mut out = byte_buffer(empty)
+    for row in rows:
+        write_row(mut out, row)
+    return rendered(out)
+
+
+# Render a table, header first.
+public func write_table(table: Table) -> str:
+    if len(table.header) == 0 and len(table.rows) == 0:
+        return ""
+    mut empty: int[] = []
+    mut out = byte_buffer(empty)
+    write_row(mut out, table.header)
+    for row in table.rows:
+        write_row(mut out, row)
+    return rendered(out)

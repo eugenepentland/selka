@@ -1,0 +1,102 @@
+# The record a `from` function returns goes where the field it returns would go (H3 for records, lane OC, plan Part B stage
+# O3): into a local record, list, dictionary or option of borrows, with the function's sources as the owners, so wrapping a
+# field in an accessor keeps what the bare field can do. No `copy(...)` is written and nothing is copied. The escapes keep
+# their refusals; they are pinned in src/core/lent_record_results_test.zig.
+record Item:
+    name: str
+    count: int
+
+
+record Shelf:
+    first: Item
+    items: Item[]
+
+
+record ItemBox:
+    value: Item
+
+
+func make_shelf(n: int) -> Shelf:
+    return Shelf(first=Item(name=f"first{n}", count=n), items=[Item(name=f"item{n}", count=n + 1)])
+
+
+func first_of(shelf: Shelf) -> Item from shelf:
+    return shelf.first
+
+
+func element_of(shelf: Shelf) -> Item from shelf:
+    return shelf.items[0]
+
+
+func in_a_record(shelf: Shelf) -> int:
+    const box = ItemBox(value=first_of(shelf))
+    return box.value.count + len(box.value.name)
+
+
+func boxed_first(shelf: Shelf) -> ItemBox from shelf:
+    return ItemBox(value=first_of(shelf))
+
+
+func in_a_list(shelf: Shelf) -> int:
+    mut held: Item[] = []
+    append(mut held, first_of(shelf))
+    append(mut held, element_of(shelf))
+    mut total = 0
+    for item in held:
+        total += item.count
+    return total
+
+
+func in_a_dictionary(shelf: Shelf) -> int:
+    mut held: dict[int, Item] = {}
+    held[1] = first_of(shelf)
+    held[2] = element_of(shelf)
+    return held[1].count * 10 + held[2].count
+
+
+func in_an_option(shelf: Shelf) -> int:
+    const held: Item? = Some(element_of(shelf))
+    match held:
+        case Some(item):
+            return item.count
+        case None:
+            return -1
+
+
+func after_the_borrow(n: int) -> int:
+    mut shelf = make_shelf(n)
+    const box = ItemBox(value=first_of(shelf))
+    const before = box.value.count
+    # The borrow ended at its last use: the owner may change, and then be given away.
+    shelf.first = Item(name="x", count=100)
+    return before + take_count(own shelf)
+
+
+func take_count(own shelf: Shelf) -> int:
+    return shelf.first.count
+
+
+public func test_a_from_result_goes_into_a_local_record() -> bool:
+    return in_a_record(make_shelf(3)) == 9
+
+
+public func test_from_results_go_into_a_local_list() -> bool:
+    return in_a_list(make_shelf(3)) == 7
+
+
+public func test_from_results_go_into_a_local_dictionary() -> bool:
+    return in_a_dictionary(make_shelf(3)) == 34
+
+
+public func test_a_from_result_goes_into_a_local_option() -> bool:
+    return in_an_option(make_shelf(5)) == 6
+
+
+public func test_the_owner_changes_and_moves_after_the_borrows_last_use() -> bool:
+    return after_the_borrow(2) == 102
+
+
+public func test_a_record_of_a_from_result_returns_under_from() -> bool:
+    const shelf = make_shelf(4)
+    const box = boxed_first(shelf)
+    return box.value.count == 4 and box.value.name == "first4"

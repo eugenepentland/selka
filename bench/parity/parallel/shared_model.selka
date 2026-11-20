@@ -1,0 +1,33 @@
+# shared_model: parallel.map over 4096 items where every item reads one shared list of 2^20 integers, lent to every item
+# with no copy (PARALLEL.md, program 3). Each item sums 1000 model entries and adds its work chain.
+import parallel
+
+func work(seed: int, rounds: int) -> int:
+    mut t = seed % 1000003
+    for i in range(rounds):
+        t = (t * 31 + i) % 1000003
+    return t
+
+
+func lookup(x: int, model: int[], rounds: int) -> int:
+    mut s = 0
+    for j in range(1000):
+        s += model[(x * 7919 + j * 104729) % len(model)]
+    return s % 1000003 + work(x, rounds)
+
+
+func main(out: Stream) -> int:
+    const items = 4096
+    const rounds = 100000
+    mut model: int[] = []
+    for k in range(1048576):
+        append(mut model, (k * 2654435761 + 12345) % 1000003)
+    mut xs: int[] = []
+    for i in range(items):
+        append(mut xs, i)
+    const results = parallel.map(xs, lookup, model, rounds)
+    mut checksum = 0
+    for r in results:
+        checksum += r
+    print(out, "shared_model", items, rounds, "checksum", checksum)
+    return 0

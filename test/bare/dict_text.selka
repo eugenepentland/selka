@@ -1,0 +1,10 @@
+# A dictionary with text keys: insert, update, membership, lookup.
+func main() -> int:
+    mut counts: dict[str, int] = {}
+    for i in range(60):
+        const key = f"k{i % 9}"
+        if key in counts:
+            counts[key] = counts[key] + i
+        else:
+            counts[key] = i
+    return (counts["k3"] + counts["k8"] + len(counts)) % 256

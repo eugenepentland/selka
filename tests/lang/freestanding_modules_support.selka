@@ -1,0 +1,12 @@
+# Public `@freestanding` functions for freestanding_modules.selka (MCU-NOC2C): the promise crosses the module's interface,
+# so a freestanding function of the importer may call them.
+@freestanding
+public func scaled(value: u32, factor: u32) -> u32:
+    return value * factor + 1
+
+
+@freestanding
+public func first_or(words: FixedArray[u32, 4], fallback: u32) -> u32:
+    if words[0] == 0:
+        return fallback
+    return words[0]

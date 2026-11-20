@@ -1,0 +1,63 @@
+# Sorts by integer, text and nested record keys with many ties, ascending and descending, in place and as copies. The
+# status mixes the order of the payloads each sort leaves, so a wrong or unstable sort changes it (Linux is the reference).
+record Person:
+    name: str
+    age: int
+    id: int
+
+
+record NameAge:
+    name: str
+    age: int
+
+
+record Outer:
+    inner: NameAge
+    level: int
+
+
+func age_of(p: Person) -> int:
+    return p.age
+
+
+func name_of(p: Person) -> str:
+    return copy(p.name)
+
+
+func name_age(p: Person) -> NameAge:
+    return NameAge(name=copy(p.name), age=p.age)
+
+
+func outer_of(p: Person) -> Outer:
+    return Outer(inner=NameAge(name=copy(p.name), age=0 - p.age), level=p.id % 2)
+
+
+# The ids in order, folded into one number: any two orders that differ give different numbers with high probability.
+func mix(people: Person[]) -> int:
+    mut total = 7
+    for i in range(len(people)):
+        total = (total * 131 + people[i].id) % 1000003
+    return total
+
+
+func main() -> int:
+    mut people: Person[] = []
+    for i in range(40):
+        mut name = f"p{(i * 3) % 5}"
+        if i % 4 == 0:
+            name = ""
+        append(mut people, Person(name=own name, age=(i * 7) % 6 - 2, id=i))
+    mut total = mix(sorted(people, key=age_of))
+    total += mix(sorted(people, key=age_of, reverse=True)) * 3
+    total += mix(sorted(people, key=name_of)) * 5
+    total += mix(sorted(people, key=name_of, reverse=True)) * 7
+    total += mix(sorted(people, key=name_age)) * 11
+    total += mix(sorted(people, key=outer_of, reverse=True)) * 13
+    sort(mut people, key=outer_of)
+    total += mix(people) * 17
+    mut words: str[] = []
+    for i in range(30):
+        append(mut words, f"w{(i * 11) % 7}{i % 2}")
+    sort(mut words, reverse=True)
+    total += len(words[0]) * 19 + len(words[29])
+    return total % 251

@@ -1,0 +1,105 @@
+# O2: accepting a one-sided move does not permit another use after the join.
+# Both incoming paths must still destroy their owners exactly once.
+import filesystem
+
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+func consume_rows(own rows: str[][]) -> int:
+    return len(rows)
+
+
+func unused_join(own rows: str[][], condition: bool) -> int:
+    mut count = 0
+    if condition:
+        count = consume_rows(own rows)
+    return count
+
+
+func unused_generic_join[T](own rows: str[][], condition: bool, value: T) -> int:
+    _ = value
+    mut count = 0
+    if condition:
+        count = consume_rows(own rows)
+    return count
+
+
+public func test_unused_join_destroys_nested_owners_on_both_paths() -> bool:
+    mut total = 0
+    for index in range(32):
+        total += unused_join([["taken-" + str(index)], ["child"]], True)
+        total += unused_join([["kept-" + str(index)], ["child"]], False)
+    return total == 64
+
+
+public func test_unused_generic_join_destroys_nested_owners_on_both_paths() -> bool:
+    mut total = 0
+    for index in range(32):
+        total += unused_generic_join([["taken-" + str(index)], ["child"]], True, index)
+        total += unused_generic_join([["kept-" + str(index)], ["child"]], False, index)
+    return total == 64
+
+
+func consume_file(own file: File) -> int:
+    _ = own file
+    return 1
+
+
+func unused_resource_join(own file: File, condition: bool) -> int:
+    mut count = 0
+    if condition:
+        count = consume_file(own file)
+    return count
+
+
+func unused_generic_resource_join[T](own file: File, condition: bool, value: T) -> int:
+    _ = value
+    mut count = 0
+    if condition:
+        count = consume_file(own file)
+    return count
+
+
+func exercise_resource_join(condition: bool, generic: bool) -> bool:
+    mut fs = filesystem.memory()
+    with fs.open("data", "w") as output:
+        _ = output.write("owned")
+    with fs.read_only() as readonly:
+        match acquire_resource[Open](readonly, FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])):
+            case ok(file):
+                mut count = 0
+                if generic:
+                    count = unused_generic_resource_join(own file, condition, 7)
+                else:
+                    count = unused_resource_join(own file, condition)
+                if condition:
+                    return count == 1
+                return count == 0
+            case err(code):
+                _ = code
+                return False
+
+
+public func test_unused_resource_joins_release_the_taken_and_untaken_handles() -> bool:
+    return exercise_resource_join(True, False) and exercise_resource_join(False, False)
+
+
+public func test_unused_generic_resource_joins_release_the_taken_and_untaken_handles() -> bool:
+    return exercise_resource_join(True, True) and exercise_resource_join(False, True)
+
+
+func grow_rows(mut rows: str[][]) -> str[]:
+    for index in range(96):
+        append(mut rows, ["grown-" + str(index)])
+    return ["replacement"]
+
+
+public func test_indexed_assignment_finishes_rhs_growth_before_borrowing_the_receiver() -> bool:
+    mut rows = [["discarded" + str(1)], ["retained" + str(2)]]
+    rows[0] = grow_rows(mut rows)
+    return len(rows) == 98 and rows[0][0] == "replacement" and rows[1][0] == "retained2" and rows[97][0] == "grown-95"

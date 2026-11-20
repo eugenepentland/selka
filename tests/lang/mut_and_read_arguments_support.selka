@@ -1,0 +1,12 @@
+# A writer and a reader in another module, for mut_and_read_arguments.selka (F-24).
+public record Log:
+    lines: str[]
+    prefix: str
+
+
+public func write(mut log: Log, line: str):
+    append(mut log.lines, copy(line))
+
+
+public func label(log: Log) -> str:
+    return log.prefix + str(len(log.lines))

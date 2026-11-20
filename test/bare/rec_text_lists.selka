@@ -1,0 +1,24 @@
+# Lists of records that hold text and lists: a record element is stored inline, its fields are blocks.
+record Shelf:
+    label: str
+    items: str[]
+    count: int
+
+
+func make(n: int) -> Shelf:
+    mut items: str[] = []
+    for i in range(n):
+        append(mut items, f"item{i}-{n}")
+    return Shelf(label=f"shelf{n}", items=own items, count=n)
+
+
+func main() -> int:
+    mut shelves: Shelf[] = []
+    for n in range(1, 9):
+        append(mut shelves, make(n))
+    mut total = 0
+    for s in shelves:
+        total += len(s.label) + s.count
+        for item in s.items:
+            total += len(item)
+    return total % 256

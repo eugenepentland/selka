@@ -1,0 +1,30 @@
+test-cli
++- verification action cli member 0 0 pass, 975 skip, 1 fail (976 total)
+test: FAIL — 1 failed of 1
+test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'parse_matrix_cli_test.test.parse grid: bytes.parse_int and bytes.parse_float of data from every source run as the same parse of a local copy does' failed:
+       ====== expected this output: =========
+       ␃
+       
+       ======== instead found this: =========
+       test/fixtures/parse-matrix/bytes_parse_float_cells.selka (--debug-o0 --verify-facts): build failed: General protection exception (no address available)
+       crash-state: si_code=0x80 trap=13 error=0x0 rflags=0x10202 df=0
+       ␃
+       
+       ======================================
+       First difference occurs on line 1:
+       expected:
+       
+       ^ (end of string)
+       found:
+       test/fixtures/parse-matrix/bytes_parse_float_cells.selka (--debug-o0 --verify-facts): build failed: General protection exception (no address available)
+       ^ ('\x74')
+       /home/u/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x171b685 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/u/ai/canopy/mylang/test/parse_matrix_cli_test.zig:78:5: 0x1491016 in test.parse grid: bytes.parse_int and bytes.parse_float of data from every source run as the same parse of a local copy does (integration.zig)
+           try testing.expectEqualStrings(want, got);
+           ^
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 0 --root-id test/integration.zig -- sh -c "..."
+
+Build Summary: 17/19 steps succeeded (1 failed); 0/976 tests passed (975 skipped, 1 failed)

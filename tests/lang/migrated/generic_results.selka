@@ -1,0 +1,9 @@
+import generic_results_case_1 as c1
+
+# spec: GENERIC-BODY-2
+public func test_generic_try_converts_a_narrower_error_into_a() -> bool:
+    return c1.program() == 8
+
+
+func main() -> int:
+    return 0

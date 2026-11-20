@@ -1,0 +1,71 @@
+# The parses of text read a borrowed text in place wherever it comes from (FR28): `parse_f32` of a `str` parameter stopped the
+# build with E_CORE_HIDDEN_COPY while the same call on a local, a literal or `parse_float` of the parameter ran. The grid that maps
+# every parse by the source of its text is test/fixtures/parse-matrix (test/parse_matrix_cli_test.zig); these tests pin the shapes a
+# program writes: a parameter, a field of one, an element, a slice, a trim, a loop variable and a `match` binding.
+import strings
+
+record Holder:
+    text: str = ""
+
+
+func half_f32(text: str) -> f32:
+    return parse_f32(text).unwrap_or(0.0) / 2.0
+
+
+func half_float(text: str) -> float:
+    return parse_float(text).unwrap_or(0.0) / 2.0
+
+
+func field_f32(holder: Holder) -> f32:
+    return parse_f32(holder.text).unwrap_or(-1.0)
+
+
+func element_f32(items: str[], index: int) -> f32:
+    return parse_f32(items[index]).unwrap_or(-1.0)
+
+
+func slice_f32(text: str, count: int) -> f32:
+    return parse_f32(text[1:1 + count]).unwrap_or(-1.0)
+
+
+func trimmed_f32(text: str) -> f32:
+    return parse_f32(strings.strip(text)).unwrap_or(-1.0)
+
+
+func looped_f32(items: str[]) -> f32:
+    mut total: f32 = 0.0
+    for item in items:
+        total = total + parse_f32(item).unwrap_or(0.0)
+    return total
+
+
+func matched_f32(maybe: str?) -> f32:
+    match maybe:
+        case Some(text):
+            return parse_f32(text).unwrap_or(-1.0)
+        case None:
+            return -2.0
+
+
+func bound_f32(text: str) -> f32:
+    const parsed = parse_f32(text)
+    if parsed is Some(value):
+        return value
+    return -1.0
+
+
+public func test_parse_f32_of_a_text_parameter_builds_and_runs() -> bool:
+    return half_f32("3.5") == 1.75f32 and half_f32("x") == 0.0f32 and half_float("3.5") == 1.75
+
+
+public func test_parse_f32_of_a_bound_parameter_builds_and_runs() -> bool:
+    return bound_f32("2.5") == 2.5f32 and bound_f32("") == -1.0f32
+
+
+public func test_parse_f32_of_a_field_an_element_and_a_slice() -> bool:
+    const items = ["x", "0.5", "y"]
+    return field_f32(Holder(text="1.5")) == 1.5f32 and element_f32(items, 1) == 0.5f32 and slice_f32("<7.5>", 3) == 7.5f32
+
+
+public func test_parse_f32_of_a_trim_a_loop_variable_and_a_match_binding() -> bool:
+    return trimmed_f32("  4.25 ") == 4.25f32 and looped_f32(["1.5", "2.0", "n"]) == 3.5f32 and matched_f32(Some("8.0")) == 8.0f32 and matched_f32(None) == -2.0f32

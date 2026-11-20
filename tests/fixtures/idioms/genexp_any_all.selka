@@ -1,0 +1,10 @@
+func main() -> int:
+    mut xs = [3, 8, 1]
+    mut total = 0
+    if any(x > 7 for x in xs):
+        total += 10
+    if all(x > 0 for x in xs):
+        total += 20
+    if not all(x > 1 for x in xs):
+        total += 1
+    return total

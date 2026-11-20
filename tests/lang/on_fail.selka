@@ -1,0 +1,282 @@
+# `on fail:` (D-FFI-15, docs/results-and-options.md#cleanup-on-failure): the accepted half of the rule's table. Each
+# function records what its clauses and its ordinary path did in a `mut` log, and each test forces the failure at every
+# step in turn. The refused half is in src/on_fail_test.zig, because a guest test cannot expect a rejection.
+@linear
+record Token:
+    id: int
+
+
+record Switch:
+    on: bool
+    count: int = 0
+
+
+func make(id: int) -> Token:
+    return Token(id=id)
+
+
+func close(own token: Token, mut log: int[]):
+    append(mut log, own token.id)
+
+
+# Fails when `n` is `at`: the failure each test moves along the steps.
+func step(n: int, at: int) -> int fails str:
+    if n == at:
+        fail "step"
+    return n
+
+
+func checked_close(own token: Token, mut log: int[], fails_now: bool) -> Unit fails str:
+    close(own token, mut log)
+    if fails_now:
+        fail "close"
+
+
+func one_line(at: int, mut log: int[]) -> int fails str:
+    const token = make(1)
+    on fail: close(own token, mut log)
+    const a = try step(1, at)
+    const b = try step(2, at)
+    close(own token, mut log)
+    return a + b
+
+
+func outcome(result: Result[int, str]) -> int:
+    match result:
+        case Ok(value):
+            return value
+        case Err(_):
+            return -1
+
+
+public func test_one_line_clause_runs_on_each_failure_and_not_on_success() -> bool:
+    mut ok_log: int[] = []
+    mut first_log: int[] = []
+    mut second_log: int[] = []
+    const ok = outcome(one_line(0, mut ok_log))
+    const first = outcome(one_line(1, mut first_log))
+    const second = outcome(one_line(2, mut second_log))
+    return ok == 3 and ok_log == [1] and first == -1 and first_log == [1] and second == -1 and second_log == [1]
+
+
+func block_form(flag: bool, mut log: int[]) -> int fails str:
+    const token = make(2)
+    on fail:
+        append(mut log, 100)
+        close(own token, mut log)
+    if flag:
+        fail "flagged"
+    close(own token, mut log)
+    return 0
+
+
+public func test_block_clause_runs_before_a_fail_statement() -> bool:
+    mut failed: int[] = []
+    mut passed: int[] = []
+    return outcome(block_form(True, mut failed)) == -1 and failed == [100, 2] and outcome(block_form(False, mut passed)) == 0 and passed == [2]
+
+
+func two_clauses(at: int, mut log: int[]) -> int fails str:
+    const first = make(1)
+    on fail: close(own first, mut log)
+    const second = make(2)
+    on fail: close(own second, mut log)
+    _ = try step(1, at)
+    close(own second, mut log)
+    _ = try step(2, at)
+    close(own first, mut log)
+    return 0
+
+
+public func test_two_clauses_run_latest_first_and_a_consumed_owner_disarms_its_clause() -> bool:
+    mut early: int[] = []
+    mut late: int[] = []
+    mut none: int[] = []
+    const early_result = outcome(two_clauses(1, mut early))
+    const late_result = outcome(two_clauses(2, mut late))
+    const none_result = outcome(two_clauses(0, mut none))
+    return early_result == -1 and early == [2, 1] and late_result == -1 and late == [2, 1] and none_result == 0 and none == [2, 1]
+
+
+func nested_exits(at: int, choice: int, mut log: int[]) -> int fails str:
+    const token = make(3)
+    on fail: close(own token, mut log)
+    mut total = 0
+    for i in range(3):
+        const value = try step(10 + i, at)
+        total += value
+    match choice:
+        case 1:
+            _ = try step(20, at)
+        case _:
+            pass
+    if choice == 2:
+        if total > 0:
+            try step(30, at)
+    close(own token, mut log)
+    return total
+
+
+public func test_exits_in_a_loop_a_match_arm_and_nested_blocks_run_the_clause() -> bool:
+    mut looped: int[] = []
+    mut matched: int[] = []
+    mut nested: int[] = []
+    mut fine: int[] = []
+    const in_loop = outcome(nested_exits(11, 1, mut looped))
+    const in_arm = outcome(nested_exits(20, 1, mut matched))
+    const in_if = outcome(nested_exits(30, 2, mut nested))
+    const passed = outcome(nested_exits(0, 2, mut fine))
+    return in_loop == -1 and looped == [3] and in_arm == -1 and matched == [3] and in_if == -1 and nested == [3] and passed == 33 and fine == [3]
+
+
+func per_iteration(at: int, mut log: int[]) -> int fails str:
+    for i in range(3):
+        _ = try step(i * 10, at)
+        const token = make(i)
+        on fail: close(own token, mut log)
+        _ = try step(i * 10 + 1, at)
+        close(own token, mut log)
+    return 0
+
+
+public func test_a_clause_in_a_loop_body_is_armed_for_its_own_iteration_only() -> bool:
+    mut before: int[] = []
+    mut after: int[] = []
+    const before_result = outcome(per_iteration(10, mut before))
+    const after_result = outcome(per_iteration(11, mut after))
+    return before_result == -1 and before == [0] and after_result == -1 and after == [0, 1]
+
+
+func inner(at: int, mut log: int[]) -> int fails str:
+    const token = make(5)
+    on fail: close(own token, mut log)
+    _ = try step(1, at)
+    close(own token, mut log)
+    return 1
+
+
+func outer(at: int, mut log: int[]) -> int fails str:
+    const token = make(6)
+    on fail: close(own token, mut log)
+    _ = try inner(at, mut log)
+    close(own token, mut log)
+    return 2
+
+
+public func test_a_callee_runs_its_own_clauses_and_the_caller_then_runs_its() -> bool:
+    mut failed: int[] = []
+    mut passed: int[] = []
+    return outcome(outer(1, mut failed)) == -1 and failed == [5, 6] and outcome(outer(0, mut passed)) == 2 and passed == [5, 6]
+
+
+func early_return(flag: bool, at: int, mut log: int[]) -> int fails str:
+    const token = make(7)
+    on fail: close(own token, mut log)
+    if flag:
+        close(own token, mut log)
+        return 1
+    _ = try step(1, at)
+    close(own token, mut log)
+    return 0
+
+
+public func test_return_runs_no_clause_and_a_branch_that_leaves_does_not_disarm() -> bool:
+    mut returned: int[] = []
+    mut failed: int[] = []
+    const early = outcome(early_return(True, 1, mut returned))
+    const late = outcome(early_return(False, 1, mut failed))
+    return early == 1 and returned == [7] and late == -1 and failed == [7]
+
+
+func late_value(at: int, mut log: int[]) -> int fails str:
+    mut stage = 0
+    on fail: append(mut log, stage)
+    stage = 1
+    _ = try step(1, at)
+    stage = 2
+    _ = try step(2, at)
+    return stage
+
+
+public func test_a_clause_without_linear_values_reads_values_at_the_exit() -> bool:
+    mut first: int[] = []
+    mut second: int[] = []
+    mut none: int[] = []
+    const first_result = outcome(late_value(1, mut first))
+    const second_result = outcome(late_value(2, mut second))
+    const none_result = outcome(late_value(0, mut none))
+    return first_result == -1 and first == [1] and second_result == -1 and second == [2] and none_result == 2 and none == []
+
+
+func own_exit(fails_now: bool, mut log: int[]) -> int fails str:
+    const token = make(8)
+    on fail: close(own token, mut log)
+    _ = try step(1, 2)
+    try checked_close(own token, mut log, fails_now)
+    return 0
+
+
+public func test_an_exit_that_consumes_the_owner_does_not_run_its_clause() -> bool:
+    mut failed: int[] = []
+    mut passed: int[] = []
+    return outcome(own_exit(True, mut failed)) == -1 and failed == [8] and outcome(own_exit(False, mut passed)) == 0 and passed == [8]
+
+
+func both_branches(flag: bool, at: int, mut log: int[]) -> int fails str:
+    const token = make(9)
+    on fail: close(own token, mut log)
+    _ = try step(1, at)
+    if flag:
+        close(own token, mut log)
+    else:
+        append(mut log, 90)
+        close(own token, mut log)
+    _ = try step(2, at)
+    return 0
+
+
+public func test_an_owner_consumed_on_every_branch_disarms_after_the_branches() -> bool:
+    mut first: int[] = []
+    mut second: int[] = []
+    const first_result = outcome(both_branches(True, 1, mut first))
+    const second_result = outcome(both_branches(False, 2, mut second))
+    return first_result == -1 and first == [9] and second_result == -1 and second == [90, 9]
+
+
+func toggle(on: bool) -> bool:
+    return not on
+
+
+public func test_on_is_still_a_name_for_a_variable_a_parameter_and_a_field() -> bool:
+    mut on = 1
+    on = on + 1
+    const switch = Switch(on=True)
+    return on == 2 and toggle(switch.on) == False
+
+
+func head_consumes(at: int, mut log: int[]) -> int fails str:
+    mut held: Token? = Some(make(4))
+    on fail:
+        match own held:
+            case Some(token):
+                close(own token, mut log)
+            case None:
+                pass
+    _ = try step(1, at)
+    match own held:
+        case Some(token):
+            on fail: close(own token, mut log)
+            append(mut log, 40)
+            _ = try step(2, at)
+            close(own token, mut log)
+        case None:
+            pass
+    return 0
+
+
+public func test_a_match_own_head_disarms_the_clause_for_its_arms() -> bool:
+    mut early: int[] = []
+    mut late: int[] = []
+    const early_result = outcome(head_consumes(1, mut early))
+    const late_result = outcome(head_consumes(2, mut late))
+    return early_result == -1 and early == [4] and late_result == -1 and late == [40, 4]

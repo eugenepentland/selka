@@ -1,0 +1,24 @@
+func select(flag: bool) -> int:
+    const value: int
+    if flag:
+        value = 3
+    else:
+        value = 4
+    return value
+
+
+func early(flag: bool) -> int:
+    const value: int
+    if flag:
+        return 7
+    value = 8
+    return value
+
+
+# spec-case: DECL-CONST-DEFINITE-1
+public func test_const_definite_assignment() -> bool:
+    assert select(True) == 3
+    assert select(False) == 4
+    assert early(True) == 7
+    assert early(False) == 8
+    return True

@@ -1,0 +1,21 @@
+# A shared constant zero rather than a dynamic index in the helper.
+import lists
+
+func replace(mut rows: int[][], take: bool):
+    const index: u64 = 0
+    if take:
+        _ = lists.exchange(mut rows, index, [2])
+    else:
+        rows[index] = [3]
+
+
+func main(args: str[], out: Stream) -> int:
+    mut rows = [[1]]
+    const take = len(args) > 0
+    replace(mut rows, take)
+    if take:
+        assert rows == [[2]]
+    else:
+        assert rows == [[3]]
+    print(out, "sibling zero overwrite passed")
+    return 0

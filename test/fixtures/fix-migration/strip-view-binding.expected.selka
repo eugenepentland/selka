@@ -1,0 +1,10 @@
+# `strings.strip` answers a view of its text, so a binding of it must be a copy
+# when the text it views is later replaced.
+import strings
+
+func main(out: Stream) -> int:
+    mut source = "  abc  "
+    const clean = copy(strings.strip(source))
+    source = "changed"
+    print(out, clean)
+    return 0

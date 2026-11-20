@@ -1,0 +1,954 @@
+# FR79V: frame packing (`emit_homes.zig`, `Planner.pack`) lets call results of one size share one stack slot once a
+# function's slots pass 4,096 bytes. Each function below keeps 512-byte values live across loops, both arms of an `if` and
+# a `match`, later calls, field views, `mut` arguments, `own` moves, a task argument, failing calls and recursion, beside
+# many short-lived ones (`acc += sumb(mk(...))`) that pack into the same slots: a wrong share prints a wrong checksum. The
+# expected values are those of the compiler before packing (main 9e420786ce).
+import parallel
+
+record Big:
+    f0: int
+    f1: int
+    f2: int
+    f3: int
+    f4: int
+    f5: int
+    f6: int
+    f7: int
+    f8: int
+    f9: int
+    f10: int
+    f11: int
+    f12: int
+    f13: int
+    f14: int
+    f15: int
+    f16: int
+    f17: int
+    f18: int
+    f19: int
+    f20: int
+    f21: int
+    f22: int
+    f23: int
+    f24: int
+    f25: int
+    f26: int
+    f27: int
+    f28: int
+    f29: int
+    f30: int
+    f31: int
+    f32: int
+    f33: int
+    f34: int
+    f35: int
+    f36: int
+    f37: int
+    f38: int
+    f39: int
+    f40: int
+    f41: int
+    f42: int
+    f43: int
+    f44: int
+    f45: int
+    f46: int
+    f47: int
+    f48: int
+    f49: int
+    f50: int
+    f51: int
+    f52: int
+    f53: int
+    f54: int
+    f55: int
+    f56: int
+    f57: int
+    f58: int
+    f59: int
+    f60: int
+    f61: int
+    f62: int
+    f63: int
+
+
+record Tagged:
+    name: str
+    f0: int
+    f1: int
+    f2: int
+    f3: int
+    f4: int
+    f5: int
+    f6: int
+    f7: int
+    f8: int
+    f9: int
+    f10: int
+    f11: int
+    f12: int
+    f13: int
+    f14: int
+    f15: int
+    f16: int
+    f17: int
+    f18: int
+    f19: int
+    f20: int
+    f21: int
+    f22: int
+    f23: int
+    f24: int
+    f25: int
+    f26: int
+    f27: int
+    f28: int
+    f29: int
+    f30: int
+    f31: int
+    f32: int
+    f33: int
+    f34: int
+    f35: int
+    f36: int
+    f37: int
+    f38: int
+    f39: int
+    f40: int
+    f41: int
+    f42: int
+    f43: int
+    f44: int
+    f45: int
+    f46: int
+    f47: int
+    f48: int
+    f49: int
+    f50: int
+    f51: int
+    f52: int
+    f53: int
+    f54: int
+    f55: int
+    f56: int
+    f57: int
+    f58: int
+    f59: int
+    f60: int
+    f61: int
+
+
+record Oops:
+    why: str
+    f0: int
+    f1: int
+    f2: int
+    f3: int
+    f4: int
+    f5: int
+    f6: int
+    f7: int
+    f8: int
+    f9: int
+    f10: int
+    f11: int
+    f12: int
+    f13: int
+    f14: int
+    f15: int
+    f16: int
+    f17: int
+    f18: int
+    f19: int
+    f20: int
+    f21: int
+    f22: int
+    f23: int
+    f24: int
+    f25: int
+    f26: int
+    f27: int
+    f28: int
+    f29: int
+    f30: int
+    f31: int
+    f32: int
+    f33: int
+    f34: int
+    f35: int
+    f36: int
+    f37: int
+    f38: int
+    f39: int
+    f40: int
+    f41: int
+    f42: int
+    f43: int
+    f44: int
+    f45: int
+    f46: int
+    f47: int
+    f48: int
+    f49: int
+    f50: int
+    f51: int
+    f52: int
+    f53: int
+    f54: int
+    f55: int
+    f56: int
+    f57: int
+    f58: int
+    f59: int
+    f60: int
+    f61: int
+
+
+record Holder:
+    inner: Big
+    k: int
+
+
+record HolderT:
+    inner: Tagged
+    k: int
+
+
+record Pair:
+    left: Tagged
+    right: Tagged
+
+
+enum Shape:
+    wide(b: Big)
+    tall(t: Tagged)
+    flat(n: int)
+
+
+func mk(i: int) -> Big:
+    return Big(f0=i * 1 + 0, f1=i * 2 + 1, f2=i * 3 + 2, f3=i * 4 + 3, f4=i * 5 + 4, f5=i * 6 + 5, f6=i * 7 + 6, f7=i * 8 + 7, f8=i * 9 + 8, f9=i * 10 + 9, f10=i * 11 + 10, f11=i * 12 + 11, f12=i * 13 + 12, f13=i * 14 + 13, f14=i * 15 + 14, f15=i * 16 + 15, f16=i * 17 + 16, f17=i * 18 + 17, f18=i * 19 + 18, f19=i * 20 + 19, f20=i * 21 + 20, f21=i * 22 + 21, f22=i * 23 + 22, f23=i * 24 + 23, f24=i * 25 + 24, f25=i * 26 + 25, f26=i * 27 + 26, f27=i * 28 + 27, f28=i * 29 + 28, f29=i * 30 + 29, f30=i * 31 + 30, f31=i * 32 + 31, f32=i * 33 + 32, f33=i * 34 + 33, f34=i * 35 + 34, f35=i * 36 + 35, f36=i * 37 + 36, f37=i * 38 + 37, f38=i * 39 + 38, f39=i * 40 + 39, f40=i * 41 + 40, f41=i * 42 + 41, f42=i * 43 + 42, f43=i * 44 + 43, f44=i * 45 + 44, f45=i * 46 + 45, f46=i * 47 + 46, f47=i * 48 + 47, f48=i * 49 + 48, f49=i * 50 + 49, f50=i * 51 + 50, f51=i * 52 + 51, f52=i * 53 + 52, f53=i * 54 + 53, f54=i * 55 + 54, f55=i * 56 + 55, f56=i * 57 + 56, f57=i * 58 + 57, f58=i * 59 + 58, f59=i * 60 + 59, f60=i * 61 + 60, f61=i * 62 + 61, f62=i * 63 + 62, f63=i * 64 + 63)
+
+
+func mkt(i: int) -> Tagged:
+    return Tagged(name=f"t{i}", f0=i + 0, f1=i + 1, f2=i + 2, f3=i + 3, f4=i + 4, f5=i + 5, f6=i + 6, f7=i + 7, f8=i + 8, f9=i + 9, f10=i + 10, f11=i + 11, f12=i + 12, f13=i + 13, f14=i + 14, f15=i + 15, f16=i + 16, f17=i + 17, f18=i + 18, f19=i + 19, f20=i + 20, f21=i + 21, f22=i + 22, f23=i + 23, f24=i + 24, f25=i + 25, f26=i + 26, f27=i + 27, f28=i + 28, f29=i + 29, f30=i + 30, f31=i + 31, f32=i + 32, f33=i + 33, f34=i + 34, f35=i + 35, f36=i + 36, f37=i + 37, f38=i + 38, f39=i + 39, f40=i + 40, f41=i + 41, f42=i + 42, f43=i + 43, f44=i + 44, f45=i + 45, f46=i + 46, f47=i + 47, f48=i + 48, f49=i + 49, f50=i + 50, f51=i + 51, f52=i + 52, f53=i + 53, f54=i + 54, f55=i + 55, f56=i + 56, f57=i + 57, f58=i + 58, f59=i + 59, f60=i + 60, f61=i + 61)
+
+
+func mko(i: int) -> Oops:
+    return Oops(why=f"oops{i}", f0=i * 2 + 0, f1=i * 2 + 1, f2=i * 2 + 2, f3=i * 2 + 3, f4=i * 2 + 4, f5=i * 2 + 5, f6=i * 2 + 6, f7=i * 2 + 7, f8=i * 2 + 8, f9=i * 2 + 9, f10=i * 2 + 10, f11=i * 2 + 11, f12=i * 2 + 12, f13=i * 2 + 13, f14=i * 2 + 14, f15=i * 2 + 15, f16=i * 2 + 16, f17=i * 2 + 17, f18=i * 2 + 18, f19=i * 2 + 19, f20=i * 2 + 20, f21=i * 2 + 21, f22=i * 2 + 22, f23=i * 2 + 23, f24=i * 2 + 24, f25=i * 2 + 25, f26=i * 2 + 26, f27=i * 2 + 27, f28=i * 2 + 28, f29=i * 2 + 29, f30=i * 2 + 30, f31=i * 2 + 31, f32=i * 2 + 32, f33=i * 2 + 33, f34=i * 2 + 34, f35=i * 2 + 35, f36=i * 2 + 36, f37=i * 2 + 37, f38=i * 2 + 38, f39=i * 2 + 39, f40=i * 2 + 40, f41=i * 2 + 41, f42=i * 2 + 42, f43=i * 2 + 43, f44=i * 2 + 44, f45=i * 2 + 45, f46=i * 2 + 46, f47=i * 2 + 47, f48=i * 2 + 48, f49=i * 2 + 49, f50=i * 2 + 50, f51=i * 2 + 51, f52=i * 2 + 52, f53=i * 2 + 53, f54=i * 2 + 54, f55=i * 2 + 55, f56=i * 2 + 56, f57=i * 2 + 57, f58=i * 2 + 58, f59=i * 2 + 59, f60=i * 2 + 60, f61=i * 2 + 61)
+
+
+func sumb(b: Big) -> int:
+    return b.f0 * 1 + b.f1 * 2 + b.f2 * 3 + b.f3 * 4 + b.f4 * 5 + b.f5 * 6 + b.f6 * 7 + b.f7 * 8 + b.f8 * 9 + b.f9 * 10 + b.f10 * 11 + b.f11 * 12 + b.f12 * 13 + b.f13 * 14 + b.f14 * 15 + b.f15 * 16 + b.f16 * 17 + b.f17 * 18 + b.f18 * 19 + b.f19 * 20 + b.f20 * 21 + b.f21 * 22 + b.f22 * 23 + b.f23 * 24 + b.f24 * 25 + b.f25 * 26 + b.f26 * 27 + b.f27 * 28 + b.f28 * 29 + b.f29 * 30 + b.f30 * 31 + b.f31 * 32 + b.f32 * 33 + b.f33 * 34 + b.f34 * 35 + b.f35 * 36 + b.f36 * 37 + b.f37 * 38 + b.f38 * 39 + b.f39 * 40 + b.f40 * 41 + b.f41 * 42 + b.f42 * 43 + b.f43 * 44 + b.f44 * 45 + b.f45 * 46 + b.f46 * 47 + b.f47 * 48 + b.f48 * 49 + b.f49 * 50 + b.f50 * 51 + b.f51 * 52 + b.f52 * 53 + b.f53 * 54 + b.f54 * 55 + b.f55 * 56 + b.f56 * 57 + b.f57 * 58 + b.f58 * 59 + b.f59 * 60 + b.f60 * 61 + b.f61 * 62 + b.f62 * 63 + b.f63 * 64
+
+
+func sumt(t: Tagged) -> int:
+    return len(t.name) * 1000 + t.f0 * 1 + t.f1 * 2 + t.f2 * 3 + t.f3 * 4 + t.f4 * 5 + t.f5 * 6 + t.f6 * 7 + t.f7 * 8 + t.f8 * 9 + t.f9 * 10 + t.f10 * 11 + t.f11 * 12 + t.f12 * 13 + t.f13 * 14 + t.f14 * 15 + t.f15 * 16 + t.f16 * 17 + t.f17 * 18 + t.f18 * 19 + t.f19 * 20 + t.f20 * 21 + t.f21 * 22 + t.f22 * 23 + t.f23 * 24 + t.f24 * 25 + t.f25 * 26 + t.f26 * 27 + t.f27 * 28 + t.f28 * 29 + t.f29 * 30 + t.f30 * 31 + t.f31 * 32 + t.f32 * 33 + t.f33 * 34 + t.f34 * 35 + t.f35 * 36 + t.f36 * 37 + t.f37 * 38 + t.f38 * 39 + t.f39 * 40 + t.f40 * 41 + t.f41 * 42 + t.f42 * 43 + t.f43 * 44 + t.f44 * 45 + t.f45 * 46 + t.f46 * 47 + t.f47 * 48 + t.f48 * 49 + t.f49 * 50 + t.f50 * 51 + t.f51 * 52 + t.f52 * 53 + t.f53 * 54 + t.f54 * 55 + t.f55 * 56 + t.f56 * 57 + t.f57 * 58 + t.f58 * 59 + t.f59 * 60 + t.f60 * 61 + t.f61 * 62
+
+
+func sumo(o: Oops) -> int:
+    return len(o.why) * 1000 + o.f0 * 1 + o.f1 * 2 + o.f2 * 3 + o.f3 * 4 + o.f4 * 5 + o.f5 * 6 + o.f6 * 7 + o.f7 * 8 + o.f8 * 9 + o.f9 * 10 + o.f10 * 11 + o.f11 * 12 + o.f12 * 13 + o.f13 * 14 + o.f14 * 15 + o.f15 * 16 + o.f16 * 17 + o.f17 * 18 + o.f18 * 19 + o.f19 * 20 + o.f20 * 21 + o.f21 * 22 + o.f22 * 23 + o.f23 * 24 + o.f24 * 25 + o.f25 * 26 + o.f26 * 27 + o.f27 * 28 + o.f28 * 29 + o.f29 * 30 + o.f30 * 31 + o.f31 * 32 + o.f32 * 33 + o.f33 * 34 + o.f34 * 35 + o.f35 * 36 + o.f36 * 37 + o.f37 * 38 + o.f38 * 39 + o.f39 * 40 + o.f40 * 41 + o.f41 * 42 + o.f42 * 43 + o.f43 * 44 + o.f44 * 45 + o.f45 * 46 + o.f46 * 47 + o.f47 * 48 + o.f48 * 49 + o.f49 * 50 + o.f50 * 51 + o.f51 * 52 + o.f52 * 53 + o.f53 * 54 + o.f54 * 55 + o.f55 * 56 + o.f56 * 57 + o.f57 * 58 + o.f58 * 59 + o.f59 * 60 + o.f60 * 61 + o.f61 * 62
+
+
+func bump(b: Big, d: int) -> Big:
+    return Big(f0=b.f0 + d * 1, f1=b.f1 + d * 2, f2=b.f2 + d * 3, f3=b.f3 + d * 4, f4=b.f4 + d * 5, f5=b.f5 + d * 1, f6=b.f6 + d * 2, f7=b.f7 + d * 3, f8=b.f8 + d * 4, f9=b.f9 + d * 5, f10=b.f10 + d * 1, f11=b.f11 + d * 2, f12=b.f12 + d * 3, f13=b.f13 + d * 4, f14=b.f14 + d * 5, f15=b.f15 + d * 1, f16=b.f16 + d * 2, f17=b.f17 + d * 3, f18=b.f18 + d * 4, f19=b.f19 + d * 5, f20=b.f20 + d * 1, f21=b.f21 + d * 2, f22=b.f22 + d * 3, f23=b.f23 + d * 4, f24=b.f24 + d * 5, f25=b.f25 + d * 1, f26=b.f26 + d * 2, f27=b.f27 + d * 3, f28=b.f28 + d * 4, f29=b.f29 + d * 5, f30=b.f30 + d * 1, f31=b.f31 + d * 2, f32=b.f32 + d * 3, f33=b.f33 + d * 4, f34=b.f34 + d * 5, f35=b.f35 + d * 1, f36=b.f36 + d * 2, f37=b.f37 + d * 3, f38=b.f38 + d * 4, f39=b.f39 + d * 5, f40=b.f40 + d * 1, f41=b.f41 + d * 2, f42=b.f42 + d * 3, f43=b.f43 + d * 4, f44=b.f44 + d * 5, f45=b.f45 + d * 1, f46=b.f46 + d * 2, f47=b.f47 + d * 3, f48=b.f48 + d * 4, f49=b.f49 + d * 5, f50=b.f50 + d * 1, f51=b.f51 + d * 2, f52=b.f52 + d * 3, f53=b.f53 + d * 4, f54=b.f54 + d * 5, f55=b.f55 + d * 1, f56=b.f56 + d * 2, f57=b.f57 + d * 3, f58=b.f58 + d * 4, f59=b.f59 + d * 5, f60=b.f60 + d * 1, f61=b.f61 + d * 2, f62=b.f62 + d * 3, f63=b.f63 + d * 4)
+
+
+func mkh(i: int) -> Holder:
+    return Holder(inner=mk(i), k=i)
+
+
+func mkht(i: int) -> HolderT:
+    return HolderT(inner=mkt(i), k=i)
+
+
+func inner_of(h: Holder) -> Big:
+    return h.inner
+
+
+func tagged_of(h: HolderT) -> Tagged from h:
+    return h.inner
+
+
+func poke(mut b: Big, k: int):
+    b.f3 = b.f3 + k
+    b.f60 = b.f60 * 2
+
+
+func maybe(i: int) -> Big fails Oops:
+    if i % 3 == 2:
+        fail mko(i)
+    return mk(i)
+
+
+func keep(own t: Tagged) -> Tagged:
+    return t
+
+
+func task_sum(b: Big) -> int:
+    return sumb(b)
+
+
+func shape_of(n: int, k: int) -> Shape:
+    if k % 3 == 0:
+        return Shape.wide(b=mk(n + k))
+    if k % 3 == 1:
+        return Shape.tall(t=mkt(n + k))
+    return Shape.flat(n=n + k)
+
+
+func a_loop(n: int) -> int:
+    mut acc = 0
+    const before = mk(n)
+    acc += sumb(mk(n + 100))
+    acc += sumb(mk(n + 101))
+    acc += sumb(mk(n + 102))
+    acc += sumb(mk(n + 103))
+    acc += sumb(mk(n + 104))
+    acc += sumb(mk(n + 105))
+    acc += sumb(mk(n + 106))
+    acc += sumb(mk(n + 107))
+    mut carry = mk(n + 1)
+    mut i = 0
+    while i < 6:
+        const inner = mk(n + i * 7)
+        const inner2 = bump(inner, i)
+        acc += sumb(inner2) * 3 + sumb(inner)
+        carry = bump(carry, i)
+        i += 1
+    acc += sumb(before) * 5 + sumb(carry) * 7
+    return acc
+
+
+func a_if(n: int, c: bool) -> int:
+    mut acc = 0
+    const x = mk(n)
+    const y = mk(n + 1)
+    acc += sumb(mk(n + 200))
+    acc += sumb(mk(n + 201))
+    acc += sumb(mk(n + 202))
+    acc += sumb(mk(n + 203))
+    acc += sumb(mk(n + 204))
+    acc += sumb(mk(n + 205))
+    acc += sumb(mk(n + 206))
+    acc += sumb(mk(n + 207))
+    mut j = mk(n + 2)
+    if c:
+        acc += sumb(mk(n + 3))
+        j = bump(x, 4)
+        acc += sumb(mk(n + 5))
+    else:
+        acc += sumb(mk(n + 6))
+        j = bump(y, 5)
+    const z = mk(n + 7)
+    acc += sumb(j) * 3 + sumb(x) * 5 + sumb(y) * 7 + sumb(z) * 11
+    return acc
+
+
+func a_match(n: int, k: int) -> int:
+    mut acc = 0
+    const x = mk(n)
+    acc += sumb(mk(n + 300))
+    acc += sumb(mk(n + 301))
+    acc += sumb(mk(n + 302))
+    acc += sumb(mk(n + 303))
+    acc += sumb(mk(n + 304))
+    acc += sumb(mk(n + 305))
+    acc += sumb(mk(n + 306))
+    acc += sumb(mk(n + 307))
+    mut j = mk(n + 1)
+    match shape_of(n, k):
+        case wide(b):
+            const c = mk(n + 2)
+            const d = mk(n + 3)
+            acc += sumb(c) + sumb(d) * 2 + sumb(b) * 3
+            j = bump(b, 1)
+        case tall(t):
+            const c = mk(n + 4)
+            acc += sumb(c) + sumt(t) * 5
+            j = bump(c, 2)
+        case flat(n=m):
+            const c = mk(m)
+            j = bump(x, m)
+            acc += sumb(c)
+    acc += sumb(j) * 7 + sumb(x) * 11
+    return acc
+
+
+func a_later(n: int) -> int:
+    mut acc = 0
+    const a = mk(n)
+    const b = mk(n + 1)
+    acc += sumb(b)
+    acc += sumb(mk(n + 400))
+    acc += sumb(mk(n + 401))
+    acc += sumb(mk(n + 402))
+    acc += sumb(mk(n + 403))
+    acc += sumb(mk(n + 404))
+    acc += sumb(mk(n + 405))
+    acc += sumb(mk(n + 406))
+    acc += sumb(mk(n + 407))
+    const c = mk(n + 2)
+    const d = mk(n + 3)
+    acc += sumb(c) + sumb(d) * 2
+    const e = bump(c, 3)
+    acc += sumb(e) * 3
+    acc += sumb(a) * 13
+    return acc
+
+
+func a_from(n: int) -> int:
+    mut acc = 0
+    const v = inner_of(mkh(n))
+    const t = tagged_of(mkht(n + 1))
+    acc += sumb(mk(n + 500))
+    acc += sumb(mk(n + 501))
+    acc += sumb(mk(n + 502))
+    acc += sumb(mk(n + 503))
+    acc += sumb(mk(n + 504))
+    acc += sumb(mk(n + 505))
+    acc += sumb(mk(n + 506))
+    acc += sumb(mk(n + 507))
+    const w = mk(n + 9)
+    acc += sumb(v) * 3 + sumt(t) * 5 + sumb(w)
+    return acc
+
+
+func a_view(n: int) -> int:
+    mut acc = 0
+    const h = mkh(n)
+    const v = h.inner
+    const ht = mkht(n + 1)
+    const t = ht.inner
+    acc += sumb(mk(n + 600))
+    acc += sumb(mk(n + 601))
+    acc += sumb(mk(n + 602))
+    acc += sumb(mk(n + 603))
+    acc += sumb(mk(n + 604))
+    acc += sumb(mk(n + 605))
+    acc += sumb(mk(n + 606))
+    acc += sumb(mk(n + 607))
+    const w = mk(n + 9)
+    acc += sumb(v) * 3 + sumt(t) * 5 + sumb(w) + h.k + ht.k
+    return acc
+
+
+func a_mut(n: int) -> int:
+    mut acc = 0
+    mut b = mk(n)
+    acc += sumb(mk(n + 700))
+    acc += sumb(mk(n + 701))
+    acc += sumb(mk(n + 702))
+    acc += sumb(mk(n + 703))
+    poke(mut b, 5)
+    acc += sumb(mk(n + 800))
+    acc += sumb(mk(n + 801))
+    acc += sumb(mk(n + 802))
+    acc += sumb(mk(n + 803))
+    poke(mut b, 6)
+    const c = mk(n + 1)
+    acc += sumb(b) * 3 + sumb(c)
+    return acc
+
+
+func a_own(n: int) -> int:
+    mut acc = 0
+    const a = mkt(n)
+    const b = mkt(n + 1)
+    acc += sumb(mk(n + 900))
+    acc += sumb(mk(n + 901))
+    acc += sumb(mk(n + 902))
+    acc += sumb(mk(n + 903))
+    const moved = keep(own a)
+    acc += sumb(mk(n + 1000))
+    acc += sumb(mk(n + 1001))
+    acc += sumb(mk(n + 1002))
+    acc += sumb(mk(n + 1003))
+    const p = Pair(left=own b, right=mkt(n + 2))
+    const c = mk(n + 3)
+    acc += sumt(moved) * 3 + sumt(p.left) * 5 + sumt(p.right) * 7 + sumb(c)
+    return acc
+
+
+func a_task(n: int) -> int:
+    mut acc = 0
+    const b = mk(n)
+    acc += sumb(mk(n + 1100))
+    acc += sumb(mk(n + 1101))
+    acc += sumb(mk(n + 1102))
+    acc += sumb(mk(n + 1103))
+    acc += sumb(mk(n + 1104))
+    acc += sumb(mk(n + 1105))
+    acc += sumb(mk(n + 1106))
+    acc += sumb(mk(n + 1107))
+    with parallel.group() as g:
+        const t = g.submit(task_sum, b)
+        const c = mk(n + 1)
+        acc += sumb(c)
+        acc += t.result() * 3
+    const d = mk(n + 2)
+    acc += sumb(d) + sumb(b) * 5
+    return acc
+
+
+func a_try_inner(n: int) -> int fails Oops:
+    mut acc = 0
+    const keepme = mk(n)
+    acc += sumb(mk(n + 1200))
+    acc += sumb(mk(n + 1201))
+    acc += sumb(mk(n + 1202))
+    acc += sumb(mk(n + 1203))
+    acc += sumb(mk(n + 1204))
+    acc += sumb(mk(n + 1205))
+    acc += sumb(mk(n + 1206))
+    acc += sumb(mk(n + 1207))
+    for i in range(5):
+        const v = try maybe(i * 3)
+        const w = mk(n + i)
+        acc += sumb(v) + sumb(w) * 2
+    acc += sumb(keepme) * 3
+    return acc
+
+
+func a_try(n: int) -> int:
+    mut acc = 0
+    const keepme = mk(n)
+    acc += sumb(mk(n + 1300))
+    acc += sumb(mk(n + 1301))
+    acc += sumb(mk(n + 1302))
+    acc += sumb(mk(n + 1303))
+    acc += sumb(mk(n + 1304))
+    acc += sumb(mk(n + 1305))
+    acc += sumb(mk(n + 1306))
+    acc += sumb(mk(n + 1307))
+    for i in range(6):
+        match maybe(n + i):
+            case Ok(v):
+                const w = mk(i)
+                acc += sumb(v) + sumb(w) * 2
+            case Err(e):
+                const w = mk(i + 1)
+                acc += sumo(e) * 3 + sumb(w)
+    match a_try_inner(n):
+        case Ok(x):
+            acc += x
+        case Err(e):
+            acc += sumo(e)
+    acc += sumb(keepme) * 5
+    return acc
+
+
+func ping(n: int) -> Big:
+    mut acc = 0
+    const a = mk(n)
+    acc += sumb(mk(n + 1400))
+    acc += sumb(mk(n + 1401))
+    acc += sumb(mk(n + 1402))
+    acc += sumb(mk(n + 1403))
+    acc += sumb(mk(n + 1404))
+    acc += sumb(mk(n + 1405))
+    acc += sumb(mk(n + 1406))
+    acc += sumb(mk(n + 1407))
+    if n <= 0:
+        return bump(a, acc % 7)
+    const r = pong(n - 1)
+    const b = mk(n + 1)
+    return bump(r, (sumb(a) + sumb(b) + acc) % 11)
+
+
+func pong(n: int) -> Big:
+    mut acc = 0
+    const a = mk(n * 2)
+    acc += sumb(mk(n + 1500))
+    acc += sumb(mk(n + 1501))
+    acc += sumb(mk(n + 1502))
+    acc += sumb(mk(n + 1503))
+    acc += sumb(mk(n + 1504))
+    acc += sumb(mk(n + 1505))
+    acc += sumb(mk(n + 1506))
+    acc += sumb(mk(n + 1507))
+    const r = ping(n - 1)
+    const b = mk(n + 3)
+    return bump(r, (sumb(a) * 3 + sumb(b) + acc) % 13)
+
+
+record Odd:
+    f0: int
+    f1: int
+    f2: int
+    f3: int
+    f4: int
+    f5: int
+    f6: int
+    f7: int
+    f8: int
+    f9: int
+    f10: int
+    f11: int
+    f12: int
+    f13: int
+    f14: int
+    f15: int
+    f16: int
+    f17: int
+    f18: int
+    f19: int
+    f20: int
+    f21: int
+    f22: int
+    f23: int
+    f24: int
+    f25: int
+    f26: int
+    f27: int
+    f28: int
+    f29: int
+    f30: int
+    f31: int
+    f32: int
+    f33: int
+    f34: int
+    f35: int
+    f36: int
+    f37: int
+    f38: int
+    f39: int
+    f40: int
+    f41: int
+    f42: int
+    f43: int
+    f44: int
+    f45: int
+    f46: int
+    f47: int
+    f48: int
+    f49: int
+    f50: int
+    f51: int
+    f52: int
+    f53: int
+    f54: int
+    f55: int
+    f56: int
+    f57: int
+    f58: int
+    f59: int
+    f60: int
+    f61: int
+    f62: int
+    f63: int
+    f64: int
+
+
+func mkodd(i: int) -> Odd:
+    return Odd(f0=i + 0, f1=i + 3, f2=i + 6, f3=i + 9, f4=i + 12, f5=i + 15, f6=i + 18, f7=i + 21, f8=i + 24, f9=i + 27, f10=i + 30, f11=i + 33, f12=i + 36, f13=i + 39, f14=i + 42, f15=i + 45, f16=i + 48, f17=i + 51, f18=i + 54, f19=i + 57, f20=i + 60, f21=i + 63, f22=i + 66, f23=i + 69, f24=i + 72, f25=i + 75, f26=i + 78, f27=i + 81, f28=i + 84, f29=i + 87, f30=i + 90, f31=i + 93, f32=i + 96, f33=i + 99, f34=i + 102, f35=i + 105, f36=i + 108, f37=i + 111, f38=i + 114, f39=i + 117, f40=i + 120, f41=i + 123, f42=i + 126, f43=i + 129, f44=i + 132, f45=i + 135, f46=i + 138, f47=i + 141, f48=i + 144, f49=i + 147, f50=i + 150, f51=i + 153, f52=i + 156, f53=i + 159, f54=i + 162, f55=i + 165, f56=i + 168, f57=i + 171, f58=i + 174, f59=i + 177, f60=i + 180, f61=i + 183, f62=i + 186, f63=i + 189, f64=i + 192)
+
+
+func sumodd(o: Odd) -> int:
+    return o.f0 * 2 + o.f1 * 3 + o.f2 * 4 + o.f3 * 5 + o.f4 * 6 + o.f5 * 7 + o.f6 * 8 + o.f7 * 9 + o.f8 * 10 + o.f9 * 11 + o.f10 * 12 + o.f11 * 13 + o.f12 * 14 + o.f13 * 15 + o.f14 * 16 + o.f15 * 17 + o.f16 * 18 + o.f17 * 19 + o.f18 * 20 + o.f19 * 21 + o.f20 * 22 + o.f21 * 23 + o.f22 * 24 + o.f23 * 25 + o.f24 * 26 + o.f25 * 27 + o.f26 * 28 + o.f27 * 29 + o.f28 * 30 + o.f29 * 31 + o.f30 * 32 + o.f31 * 33 + o.f32 * 34 + o.f33 * 35 + o.f34 * 36 + o.f35 * 37 + o.f36 * 38 + o.f37 * 39 + o.f38 * 40 + o.f39 * 41 + o.f40 * 42 + o.f41 * 43 + o.f42 * 44 + o.f43 * 45 + o.f44 * 46 + o.f45 * 47 + o.f46 * 48 + o.f47 * 49 + o.f48 * 50 + o.f49 * 51 + o.f50 * 52 + o.f51 * 53 + o.f52 * 54 + o.f53 * 55 + o.f54 * 56 + o.f55 * 57 + o.f56 * 58 + o.f57 * 59 + o.f58 * 60 + o.f59 * 61 + o.f60 * 62 + o.f61 * 63 + o.f62 * 64 + o.f63 * 65 + o.f64 * 66
+
+
+record Holder2:
+    h: Holder
+    k: int
+
+
+func mkh2(i: int) -> Holder2:
+    return Holder2(h=mkh(i), k=i * 2)
+
+
+func b_task_temp(n: int) -> int:
+    mut acc = 0
+    acc += sumb(mk(n + 2100))
+    acc += sumb(mk(n + 2101))
+    acc += sumb(mk(n + 2102))
+    acc += sumb(mk(n + 2103))
+    acc += sumb(mk(n + 2104))
+    acc += sumb(mk(n + 2105))
+    acc += sumb(mk(n + 2106))
+    acc += sumb(mk(n + 2107))
+    with parallel.group() as g:
+        const t1 = g.submit(task_sum, mk(n))
+        const t2 = g.submit(task_sum, bump(mk(n + 1), 3))
+        acc += sumb(mk(n + 2200))
+        acc += sumb(mk(n + 2201))
+        acc += sumb(mk(n + 2202))
+        acc += sumb(mk(n + 2203))
+        acc += sumb(mk(n + 2204))
+        acc += sumb(mk(n + 2205))
+        acc += sumb(mk(n + 2206))
+        acc += sumb(mk(n + 2207))
+        acc += t1.result() * 3 + t2.result() * 5
+    return acc
+
+
+func b_swap(n: int) -> int:
+    mut acc = 0
+    mut a = mk(n)
+    mut b = mk(n + 1)
+    acc += sumb(mk(n + 2300))
+    acc += sumb(mk(n + 2301))
+    acc += sumb(mk(n + 2302))
+    acc += sumb(mk(n + 2303))
+    acc += sumb(mk(n + 2304))
+    acc += sumb(mk(n + 2305))
+    acc += sumb(mk(n + 2306))
+    acc += sumb(mk(n + 2307))
+    for i in range(5):
+        const t = a
+        a = bump(b, i)
+        b = t
+        acc += sumb(mk(i)) + sumb(a) * 2
+    acc += sumb(a) * 3 + sumb(b) * 5
+    return acc
+
+
+func b_inside_only(n: int) -> int:
+    mut acc = 0
+    const pre = mk(n)
+    const pre2 = mkodd(n)
+    acc += sumb(mk(n + 2400))
+    acc += sumb(mk(n + 2401))
+    acc += sumb(mk(n + 2402))
+    acc += sumb(mk(n + 2403))
+    acc += sumb(mk(n + 2404))
+    acc += sumb(mk(n + 2405))
+    acc += sumb(mk(n + 2406))
+    acc += sumb(mk(n + 2407))
+    mut i = 0
+    while i < 5:
+        acc += sumb(pre) * (i + 1) + sumodd(pre2)
+        const x = mk(n + i * 11)
+        const y = bump(x, i)
+        const o = mkodd(i)
+        acc += sumb(y) + sumodd(o)
+        if i == 3:
+            const z = mk(i)
+            acc += sumb(z)
+            i += 1
+            continue
+        i += 1
+    return acc
+
+
+func b_nested_view(n: int) -> int:
+    mut acc = 0
+    const v = mkh2(n).h.inner
+    acc += sumb(mk(n + 2500))
+    acc += sumb(mk(n + 2501))
+    acc += sumb(mk(n + 2502))
+    acc += sumb(mk(n + 2503))
+    acc += sumb(mk(n + 2504))
+    acc += sumb(mk(n + 2505))
+    acc += sumb(mk(n + 2506))
+    acc += sumb(mk(n + 2507))
+    const w = mkh2(n + 1)
+    const v2 = w.h.inner
+    acc += sumb(mk(n + 2600))
+    acc += sumb(mk(n + 2601))
+    acc += sumb(mk(n + 2602))
+    acc += sumb(mk(n + 2603))
+    acc += sumb(v) * 3 + sumb(v2) * 5 + w.k
+    return acc
+
+
+func b_join_keep(n: int, c: bool) -> int:
+    mut acc = 0
+    const x0 = mk(n)
+    mut x = x0
+    acc += sumb(mk(n + 2700))
+    acc += sumb(mk(n + 2701))
+    acc += sumb(mk(n + 2702))
+    acc += sumb(mk(n + 2703))
+    if c:
+        acc += sumb(mk(n + 1))
+        x = mk(n + 2)
+    const after = mk(n + 3)
+    acc += sumb(mk(n + 2800))
+    acc += sumb(mk(n + 2801))
+    acc += sumb(mk(n + 2802))
+    acc += sumb(mk(n + 2803))
+    acc += sumb(x) * 3 + sumb(x0) * 5 + sumb(after) * 7
+    return acc
+
+
+func b_mixed(n: int) -> int:
+    mut acc = 0
+    const s0 = shape_of(n, 0)
+    const o0 = mkodd(n)
+    acc += sumb(mk(n + 2900))
+    acc += sumb(mk(n + 2901))
+    acc += sumb(mk(n + 2902))
+    acc += sumb(mk(n + 2903))
+    const s1 = shape_of(n, 1)
+    const o1 = mkodd(n + 1)
+    for i in range(4):
+        const s = shape_of(n, i)
+        const o = mkodd(n + i)
+        match s:
+            case wide(b):
+                acc += sumb(b) + sumodd(o)
+            case tall(t):
+                acc += sumt(t) + sumodd(o) * 2
+            case flat(n=m):
+                acc += m + sumodd(o) * 3
+    match s0:
+        case wide(b):
+            acc += sumb(b) * 11
+        case tall(t):
+            acc += sumt(t) * 13
+        case flat(n=m):
+            acc += m * 17
+    match s1:
+        case wide(b):
+            acc += sumb(b) * 19
+        case tall(t):
+            acc += sumt(t) * 23
+        case flat(n=m):
+            acc += m * 29
+    acc += sumodd(o0) * 31 + sumodd(o1) * 37
+    return acc
+
+
+func b_break(n: int) -> int:
+    mut acc = 0
+    const keepme = mk(n)
+    mut last = mk(n + 1)
+    acc += sumb(mk(n + 3000))
+    acc += sumb(mk(n + 3001))
+    acc += sumb(mk(n + 3002))
+    acc += sumb(mk(n + 3003))
+    acc += sumb(mk(n + 3004))
+    acc += sumb(mk(n + 3005))
+    acc += sumb(mk(n + 3006))
+    acc += sumb(mk(n + 3007))
+    for i in range(10):
+        const v = mk(n + i)
+        if i == 6:
+            last = v
+            break
+        const w = bump(v, i)
+        acc += sumb(w)
+    acc += sumb(keepme) * 3 + sumb(last) * 5
+    return acc
+
+
+func check_t(i: int) -> int fails Oops:
+    if i % 4 == 3:
+        fail mko(i)
+    return i
+
+
+func c_text_fail(n: int) -> int fails Oops:
+    mut acc = 0
+    const a = mkt(n)
+    acc += sumt(mkt(n + 3100))
+    acc += sumt(mkt(n + 3101))
+    acc += sumt(mkt(n + 3102))
+    acc += sumt(mkt(n + 3103))
+    acc += sumt(mkt(n + 3104))
+    acc += sumt(mkt(n + 3105))
+    acc += sumt(mkt(n + 3106))
+    acc += sumt(mkt(n + 3107))
+    const b = mkt(n + 1)
+    acc += sumt(a)
+    const c = mkt(n + 2)
+    acc += try check_t(n)
+    const d = mkt(n + 3)
+    acc += sumt(b) + sumt(c) * 2
+    acc += try check_t(n + 1)
+    acc += sumt(mkt(n + 3200))
+    acc += sumt(mkt(n + 3201))
+    acc += sumt(mkt(n + 3202))
+    acc += sumt(mkt(n + 3203))
+    acc += sumt(d) * 3
+    return acc
+
+
+func c_text_loop(n: int) -> int:
+    mut acc = 0
+    const keepme = mkt(n)
+    mut carry = mkt(n + 1)
+    acc += sumt(mkt(n + 3300))
+    acc += sumt(mkt(n + 3301))
+    acc += sumt(mkt(n + 3302))
+    acc += sumt(mkt(n + 3303))
+    acc += sumt(mkt(n + 3304))
+    acc += sumt(mkt(n + 3305))
+    acc += sumt(mkt(n + 3306))
+    acc += sumt(mkt(n + 3307))
+    for i in range(6):
+        const t = mkt(n + i)
+        match c_text_fail(n + i):
+            case Ok(v):
+                acc += v + sumt(t)
+                carry = keep(own carry)
+            case Err(e):
+                acc += sumo(e) + sumt(t) * 2
+                carry = mkt(i)
+    acc += sumt(keepme) * 3 + sumt(carry) * 5
+    return acc
+
+
+func c_text_return(n: int, k: int) -> Tagged:
+    mut acc = 0
+    const a = mkt(n)
+    const b = mkt(n + 1)
+    acc += sumt(mkt(n + 3400))
+    acc += sumt(mkt(n + 3401))
+    acc += sumt(mkt(n + 3402))
+    acc += sumt(mkt(n + 3403))
+    acc += sumt(mkt(n + 3404))
+    acc += sumt(mkt(n + 3405))
+    acc += sumt(mkt(n + 3406))
+    acc += sumt(mkt(n + 3407))
+    if k == 0:
+        return a
+    if k == 1:
+        return b
+    const c = mkt(n + 2)
+    if k == 2:
+        return keep(own c)
+    return mkt(acc % 1000)
+
+
+public func test_a_value_made_before_a_loop_survives_the_values_made_inside_it() -> bool:
+    return a_loop(3) == 128833120 and b_inside_only(5) == 1747861830 and b_break(9) == 2172813760
+
+
+public func test_values_live_across_both_arms_of_an_if_and_a_match_survive() -> bool:
+    if a_if(4, True) != 169936000 or a_if(5, False) != 172729440:
+        return False
+    if b_join_keep(7, True) != 1988380160 or b_join_keep(7, False) != 1987040640:
+        return False
+    return a_match(6, 0) == 237887520 and a_match(6, 1) == 237433225 and a_match(6, 2) == 234536640
+
+
+public func test_a_call_result_survives_later_results_of_its_size() -> bool:
+    return a_later(7) == 310086400 and b_swap(4) == 1662308960 and b_mixed(8) == 1076825986
+
+
+public func test_borrowed_results_and_field_views_survive_later_calls() -> bool:
+    return a_from(8) == 371198835 and a_view(9) == 443838899 and b_nested_view(6) == 2734944174
+
+
+public func test_mut_arguments_own_moves_and_task_arguments_keep_their_slots() -> bool:
+    return a_mut(10) == 549951802 and a_own(11) == 692322082 and a_task(12) == 810736160 and b_task_temp(3) == 3090821760
+
+
+public func test_failing_calls_in_loops_keep_values_and_errors_apart() -> bool:
+    mut total = 0
+    for i in range(8):
+        match c_text_fail(i):
+            case Ok(v):
+                total += v
+            case Err(e):
+                total += sumo(e) * 7
+    return a_try(13) == 1851279150 and total == 303719998 and c_text_loop(5) == 280472481
+
+
+public func test_returned_values_and_recursion_through_two_functions_keep_their_slots() -> bool:
+    if sumt(c_text_return(1, 0)) != 83375 or sumt(c_text_return(2, 1)) != 87281:
+        return False
+    if sumt(c_text_return(3, 2)) != 91187 or sumt(c_text_return(4, 3)) != 388090:
+        return False
+    return sumb(ping(9)) == 178880

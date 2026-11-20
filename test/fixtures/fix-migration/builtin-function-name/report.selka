@@ -1,0 +1,7 @@
+# A re-export that makes the bare `max` below call `helpers.max`.
+import helpers
+export helpers.max
+
+
+public func summary() -> int:
+    return max(3, 4)

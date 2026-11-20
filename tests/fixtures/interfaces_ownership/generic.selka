@@ -1,0 +1,6 @@
+# Through a generic: `first` declares `-> T from xs`, the repair W3 step 2 asks of a body judged at its declaration, so its
+# `str` instance is accepted by both checks (before, it was refused inside the template: goal G7's exception G7-X2).
+import lib
+
+func main() -> int:
+    return len(lib.first(["a", "b"]))

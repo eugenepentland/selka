@@ -1,0 +1,636 @@
+import argparse
+import dicts
+import json
+import strings
+
+# Summarize the engine's `selka test` shadow log: the Selka port of scripts/engine_shadow_summary.py, which prints the
+# same report byte for byte (tools/selka/shadow_summary_test.selka pins it against the Python original's output, and
+# tests/test_selka_tools.py runs both tools on the same logs).
+#
+# Usage: shadow_summary LOG [--examples N] [--json]
+#        shadow_summary --self-test
+#
+# Not reproduced, because the Python original raises (a traceback and status 1) instead of answering: a log line that is
+# valid JSON but not an object, a counter that is null, and a file that is not UTF-8. Two places where the Selka parser
+# is stricter than Python's `json.loads`: a line with a duplicate key, NaN or Infinity counts as unreadable, and an
+# integer outside the signed 64-bit range reads as a float.
+# The summary-line counters, in the order the report and its JSON name them.
+func counters() -> str[]:
+    return ["observed", "unobserved", "old_reuse", "engine_reuse", "agree", "soundness", "verdict_differs", "efficiency", "plan", "verify", "dropped", "spent_us"]
+
+
+# The disagreement classes, in report order.
+func classes() -> str[]:
+    return ["soundness", "verify", "plan", "efficiency"]
+
+
+# One bucket of disagreements: the receipts' reason, the engine's reason, how many tests, and the first examples.
+public record Bucket:
+    old: str
+    engine: str
+    count: int
+    examples: json.Json[]
+
+
+# What `summarize` found.
+public record Report:
+    processes: int
+    totals: int[]
+    have_totals: bool
+    counted: dict[str, int]
+    buckets: Bucket[][]
+    index: dict[str, int]
+
+
+# The lines of a log that parsed, and how many were unreadable.
+public record Log:
+    lines: json.Json[]
+    bad: int
+
+
+# The engine's reason without the file or path it names.
+public func normalize(reason: str) -> str:
+    if strings.find(reason, "environment") is not None and strings.ends_with(reason, " changed"):
+        if strings.starts_with(reason, "plan: "):
+            return "plan: keyed environment changed"
+        return "keyed environment changed"
+    mut prefix = ""
+    mut rest = copy(reason)
+    if strings.starts_with(reason, "plan: "):
+        prefix = "plan: "
+        rest = copy(reason[6:])
+    const words = ["file", "exists", "listing", "tool", "query"]
+    for word in words:
+        if strings.starts_with(rest, f"{word} ") and strings.ends_with(rest, " changed") and len(rest) >= len(word) + 9:
+            return f"{prefix}<{word}> changed"
+    return copy(reason)
+
+
+# The log's JSON lines. Blank lines are skipped and the unreadable ones counted.
+public func read_lines(text: str) -> Log:
+    mut lines: json.Json[] = []
+    mut bad = 0
+    for raw in strings.split(text, "\n"):
+        const line = strings.strip(raw)
+        if len(line) == 0:
+            continue
+        match json.loads(line):
+            case Ok(value):
+                append(mut lines, own value)
+            case Err(_):
+                bad += 1
+    return Log(lines=own lines, bad=bad)
+
+
+func is_object(value: json.Json) -> bool:
+    return value is object
+
+
+# The text member `key` of an object, or None.
+func text_of(line: json.Json, key: str) -> str?:
+    const member = json.get(line, key)
+    match member:
+        case Some(found):
+            const text = try json.as_str(found)
+            return Some(copy(text))
+        case None:
+            return None
+
+
+# Python's `bool(value)` for the JSON values a log holds.
+func truthy(value: json.Json) -> bool:
+    match value:
+        case null:
+            return False
+        case boolean(value=flag):
+            return flag
+        case integer(value=number):
+            return number != 0
+        case number(value=number):
+            return number != 0.0
+        case text(value=text):
+            return len(text) > 0
+        case array(value=items):
+            return len(items) > 0
+        case object(value=fields):
+            return len(fields) > 0
+
+
+func truthy_member(line: json.Json, key: str) -> bool:
+    const member = json.get(line, key)
+    match member:
+        case Some(found):
+            return truthy(found)
+        case None:
+            return False
+
+
+# `int(line.get(key, 0))` for the numbers a log holds.
+func count_of(line: json.Json, key: str) -> int:
+    const member = json.get(line, key)
+    match member:
+        case Some(found):
+            match found:
+                case integer(value=number):
+                    return number
+                case number(value=number):
+                    return int(number)
+                case boolean(value=flag):
+                    if flag:
+                        return 1
+                    return 0
+                case text(value=text):
+                    match parse_int(text):
+                        case Some(number):
+                            return number
+                        case None:
+                            return 0
+                case _:
+                    return 0
+        case None:
+            return 0
+
+
+# `int(line.get("tests") or 1)`: how many tests one line stands for.
+func weight_of(line: json.Json) -> int:
+    if not truthy_member(line, "tests"):
+        return 1
+    const count = count_of(line, "tests")
+    return count
+
+
+# `(line.get(key) or {}).get("reason", fallback)` for the receipts' side.
+func old_reason(line: json.Json) -> str:
+    const member = json.get(line, "old")
+    match member:
+        case Some(old):
+            match text_of(old, "reason"):
+                case Some(text):
+                    return text
+                case None:
+                    return ""
+        case None:
+            return ""
+
+
+# The engine's reason, normalized; a line without one falls back to its `detail`.
+func engine_reason(line: json.Json) -> str:
+    const member = json.get(line, "engine")
+    match member:
+        case Some(engine):
+            match text_of(engine, "reason"):
+                case Some(text):
+                    return normalize(text)
+                case None:
+                    pass
+        case None:
+            pass
+    match text_of(line, "detail"):
+        case Some(text):
+            return normalize(text)
+        case None:
+            return ""
+
+
+func class_position(name: str) -> int:
+    mut position = 0
+    for known in classes():
+        if known == name:
+            return position
+        position += 1
+    return 0 - 1
+
+
+func counter_position(name: str) -> int:
+    mut position = 0
+    for known in counters():
+        if known == name:
+            return position
+        position += 1
+    return 0 - 1
+
+
+# Count a disagreement line into its class's buckets.
+func add_line(mut report: Report, line: json.Json, name: str, examples: int):
+    const position = class_position(name)
+    const weight = weight_of(line)
+    dicts.add(mut report.counted, copy(name), weight)
+    const old = old_reason(line)
+    const engine = engine_reason(line)
+    const key = f"{name}\x1f{old}\x1f{engine}"
+    if key not in report.index:
+        report.index[copy(key)] = len(report.buckets[position])
+        mut none: json.Json[] = []
+        append(mut report.buckets[position], Bucket(old=copy(old), engine=copy(engine), count=0, examples=own none))
+    const at = report.index[key]
+    report.buckets[position][at].count += weight
+    if len(report.buckets[position][at].examples) < examples:
+        append(mut report.buckets[position][at].examples, copy(line))
+
+
+# Count a summary line's counters.
+func add_summary(mut report: Report, line: json.Json):
+    report.processes += 1
+    report.have_totals = True
+    mut position = 0
+    for name in counters():
+        report.totals[position] += count_of(line, name)
+        position += 1
+
+
+# Summarize a log's lines, keeping up to `examples` example lines per bucket.
+public func summarize(lines: json.Json[], examples: int) -> Report:
+    mut totals: int[] = []
+    for _ in counters():
+        append(mut totals, 0)
+    mut counted: dict[str, int] = {}
+    mut buckets: Bucket[][] = []
+    for _ in classes():
+        mut empty: Bucket[] = []
+        append(mut buckets, own empty)
+    mut index: dict[str, int] = {}
+    mut report = Report(processes=0, totals=own totals, have_totals=False, counted=own counted, buckets=own buckets, index=own index)
+    for line in lines:
+        if not is_object(line):
+            continue
+        match text_of(line, "class"):
+            case Some(name):
+                if name == "summary":
+                    add_summary(mut report, line)
+                elif class_position(name) >= 0:
+                    add_line(mut report, line, name, examples)
+            case None:
+                pass
+    return report
+
+
+# `"%.1f%%"` of part over whole, or "n/a" for an empty whole.
+public func rate(part: int, whole: int) -> str:
+    if whole == 0:
+        return "n/a"
+    const percent = 100.0 * float(part) / float(whole)
+    return f"{percent:.1f}%"
+
+
+func total(report: Report, name: str) -> int:
+    return report.totals[counter_position(name)]
+
+
+func lines_of(report: Report, name: str) -> int:
+    if name in report.counted:
+        return report.counted[name]
+    return 0
+
+
+# The bucket positions of one class, largest count first and otherwise in the order they were first seen.
+func by_count(buckets: Bucket[]) -> int[]:
+    mut order: int[] = []
+    mut position = 0
+    while position < len(buckets):
+        mut at = len(order)
+        append(mut order, position)
+        while at > 0 and buckets[order[at - 1]].count < buckets[position].count:
+            order[at] = order[at - 1]
+            at -= 1
+        order[at] = position
+        position += 1
+    return order
+
+
+# The text report.
+public func render(report: Report) -> str:
+    const observed = total(report, "observed")
+    mut out: str[] = [f"engine shadow: {report.processes} process summaries"]
+    append(mut out, f"  tests compared {observed} (unobserved {total(report, 'unobserved')}); receipts reused {total(report, 'old_reuse')} ({rate(total(report, 'old_reuse'), observed)}), engine would reuse {total(report, 'engine_reuse')} ({rate(total(report, 'engine_reuse'), observed)}); agree {total(report, 'agree')} ({rate(total(report, 'agree'), observed)})")
+    append(mut out, f"  soundness {total(report, 'soundness')} (verdict differs {total(report, 'verdict_differs')}), efficiency {total(report, 'efficiency')}, plan {total(report, 'plan')}, verify {total(report, 'verify')}, dropped {total(report, 'dropped')}")
+    const seconds = float(total(report, "spent_us")) / 1000000.0
+    append(mut out, f"  time spent observing {seconds:.2f} s, summed over threads")
+    mut position = 0
+    for name in classes():
+        const found = report.buckets[position]
+        position += 1
+        if len(found) == 0:
+            continue
+        append(mut out, "")
+        append(mut out, f"{name} ({lines_of(report, name)} tests in {len(found)} buckets)")
+        for at in by_count(found):
+            const bucket = found[at]
+            mut old = copy(bucket.old)
+            if len(old) == 0:
+                old = "-"
+            mut engine = copy(bucket.engine)
+            if len(engine) == 0:
+                engine = "-"
+            append(mut out, f"  {bucket.count:>6}  receipts: {old:<24} engine: {engine}")
+            for line in bucket.examples:
+                mut where = ""
+                match text_of(line, "test"):
+                    case Some(text):
+                        where = own text
+                    case None:
+                        pass
+                if len(where) == 0:
+                    match text_of(line, "entry"):
+                        case Some(text):
+                            where = own text
+                        case None:
+                            pass
+                mut extra = ""
+                if truthy_member(line, "verdict_differs"):
+                    extra = " verdict differs"
+                append(mut out, f"          e.g. {where}{extra}")
+    return strings.join(out, "\n")
+
+
+# Whether the log holds what the exit status calls a failure: a differing verdict, a plan line or a verify line.
+public func failing(report: Report) -> bool:
+    return total(report, "verdict_differs") != 0 or total(report, "plan") != 0 or total(report, "verify") != 0 or lines_of(report, "plan") != 0 or lines_of(report, "verify") != 0
+
+
+# Python's `repr(float)`: shortest digits, an exponent below 1e-4 and from 1e16.
+func py_float(value: float) -> str:
+    const plain = str(value)
+    mut negative = False
+    mut body = copy(plain)
+    if strings.starts_with(plain, "-"):
+        negative = True
+        body = copy(plain[1:])
+    const dot = strings.find(body, ".")
+    mut whole = copy(body)
+    mut fraction = ""
+    match dot:
+        case Some(at):
+            whole = copy(body[0:at])
+            fraction = copy(body[at + 1:])
+        case None:
+            pass
+    const all = whole + fraction
+    mut lead = 0
+    while lead < len(all) and all[lead] == 48:
+        lead += 1
+    if lead == len(all):
+        if negative:
+            return "-0.0"
+        return "0.0"
+    mut digits = copy(all[lead:])
+    while len(digits) > 1 and digits[len(digits) - 1] == 48:
+        digits = copy(digits[0:len(digits) - 1])
+    const exponent = len(whole) - lead - 1
+    mut sign = ""
+    if negative:
+        sign = "-"
+    if 0 - 4 <= exponent < 16:
+        return copy(plain)
+    mut mantissa = copy(digits[0:1])
+    if len(digits) > 1:
+        mantissa = mantissa + "." + digits[1:]
+    mut exp_sign = "+"
+    mut exp_value = exponent
+    if exponent < 0:
+        exp_sign = "-"
+        exp_value = 0 - exponent
+    mut exp_text = str(exp_value)
+    if len(exp_text) < 2:
+        exp_text = "0" + exp_text
+    return f"{sign}{mantissa}e{exp_sign}{exp_text}"
+
+
+func hex4(value: int) -> str:
+    return f"\\u{value:04x}"
+
+
+# Python's `json.dumps` string form: ASCII only, every other character a \u escape (a surrogate pair above the BMP).
+func py_text(text: str) -> str:
+    mut out: str[] = ['"']
+    for ch in strings.chars(text):
+        const code = ord(ch)
+        if code == 34:
+            append(mut out, '\\"')
+        elif code == 92:
+            append(mut out, "\\\\")
+        elif code == 10:
+            append(mut out, "\\n")
+        elif code == 13:
+            append(mut out, "\\r")
+        elif code == 9:
+            append(mut out, "\\t")
+        elif code == 8:
+            append(mut out, "\\b")
+        elif code == 12:
+            append(mut out, "\\f")
+        elif 32 <= code < 127:
+            append(mut out, copy(ch))
+        elif code < 65536:
+            append(mut out, hex4(code))
+        else:
+            const shifted = code - 65536
+            append(mut out, hex4(55296 + shifted // 1024))
+            append(mut out, hex4(56320 + shifted % 1024))
+    append(mut out, '"')
+    return strings.join(out, "")
+
+
+# Python's `json.dumps(value)`: ", " and ": " separators, ASCII escapes, floats as `repr`.
+public func dumps(value: json.Json) -> str:
+    match value:
+        case null:
+            return "null"
+        case boolean(value=flag):
+            if flag:
+                return "true"
+            return "false"
+        case integer(value=number):
+            return str(number)
+        case number(value=number):
+            return py_float(number)
+        case text(value=text):
+            return py_text(text)
+        case array(value=items):
+            mut pieces: str[] = []
+            for item in items:
+                append(mut pieces, dumps(item))
+            return "[" + strings.join(pieces, ", ") + "]"
+        case object(value=fields):
+            mut pieces: str[] = []
+            for key in dicts.keys(fields):
+                append(mut pieces, py_text(key) + ": " + dumps(fields[key]))
+            return "{" + strings.join(pieces, ", ") + "}"
+
+
+# The report as Python's `json.dumps` prints it.
+public func render_json(report: Report) -> str:
+    mut totals: str[] = []
+    if report.have_totals:
+        mut position = 0
+        for name in counters():
+            append(mut totals, f'"{name}": {report.totals[position]}')
+            position += 1
+    mut lines: str[] = []
+    for name in dicts.keys(report.counted):
+        append(mut lines, f'"{name}": {report.counted[name]}')
+    mut groups: str[] = []
+    mut position = 0
+    for name in classes():
+        mut entries: str[] = []
+        for bucket in report.buckets[position]:
+            mut examples: str[] = []
+            for line in bucket.examples:
+                append(mut examples, dumps(line))
+            append(mut entries, f"{{\"old\": {py_text(bucket.old)}, \"engine\": {py_text(bucket.engine)}, \"count\": {bucket.count}, \"examples\": [{strings.join(examples, ', ')}]}}")
+        append(mut groups, f"\"{name}\": [{strings.join(entries, ', ')}]")
+        position += 1
+    return f"{{\"processes\": {report.processes}, \"totals\": {{{strings.join(totals, ', ')}}}, \"lines\": {{{strings.join(lines, ', ')}}}, \"buckets\": {{{strings.join(groups, ', ')}}}}}"
+
+
+func self_test_log() -> str[]:
+    return [
+        '{"v": 1, "class": "efficiency", "test": "a::t1", "entry": "a.selka", "old": {"decision": "reuse", "reason": "whole-receipt-hit"}, "engine": {"decision": "rerun", "reason": "plan: file /x/a.selka changed"}}',
+        '{"v": 1, "class": "efficiency", "entry": "b.selka", "tests": 4, "old": {"decision": "reuse", "reason": "whole-report-hit"}, "engine": {"decision": "rerun", "reason": "plan: no record"}}',
+        '{"v": 1, "class": "soundness", "test": "a::t2", "entry": "a.selka", "old": {"decision": "rerun", "reason": "no-success-receipt"}, "engine": {"decision": "reuse", "reason": "record is valid"}, "verdict_differs": %s}',
+        '{"v": 1, "class": "summary", "pid": 1, "observed": 10, "old_reuse": 5, "engine_reuse": 4, "agree": 8, "soundness": 1, "verdict_differs": %s, "efficiency": 5, "plan": 0, "dropped": 0}',
+    ]
+
+
+# The self-test's log with the two flags that decide whether it fails.
+func self_test_report(verdict: str, summary: str) -> Report:
+    mut lines: json.Json[] = []
+    mut at = 0
+    for raw in self_test_log():
+        mut text = strings.replace(raw, "%s", "false")
+        if at == 2:
+            text = strings.replace(raw, "%s", verdict)
+        if at == 3:
+            text = strings.replace(raw, "%s", summary)
+        match json.loads(text):
+            case Ok(value):
+                append(mut lines, own value)
+            case Err(_):
+                pass
+        at += 1
+    return summarize(lines, 2)
+
+
+# The Python original's self-test: the same log, the same checks.
+public func self_test() -> str:
+    const report = self_test_report("false", "0")
+    if report.processes != 1 or lines_of(report, "efficiency") != 5 or lines_of(report, "soundness") != 1:
+        return "engine_shadow_summary self-test failed: counts"
+    if failing(report):
+        return "engine_shadow_summary self-test failed: a clean log failed"
+    const text = render(report)
+    if strings.find(text, "plan: <file> changed") is None or strings.find(text, "no-success-receipt") is None or strings.find(text, "whole-report-hit") is None:
+        return "engine_shadow_summary self-test failed: report text"
+    if not failing(self_test_report("true", "1")):
+        return "engine_shadow_summary self-test failed: a differing verdict passed"
+    return "engine_shadow_summary self-test passed"
+
+
+# Python's `repr(str)` for a path: single quotes unless the text holds one and no double quote.
+func py_repr(text: str) -> str:
+    mut quote = "'"
+    if strings.find(text, "'") is not None and strings.find(text, '"') is None:
+        quote = '"'
+    mut out: str[] = [copy(quote)]
+    for ch in strings.chars(text):
+        const code = ord(ch)
+        if ch == quote or code == 92:
+            append(mut out, "\\" + ch)
+        elif code == 10:
+            append(mut out, "\\n")
+        elif code == 13:
+            append(mut out, "\\r")
+        elif code == 9:
+            append(mut out, "\\t")
+        elif code < 32 or code == 127:
+            append(mut out, f"\\x{code:02x}")
+        else:
+            append(mut out, copy(ch))
+    append(mut out, copy(quote))
+    return strings.join(out, "")
+
+
+# The text Python's OSError prints for a failed read of `path`, from the runtime's `message`.
+public func os_error_text(path: str, message: str) -> str:
+    const shown = py_repr(path)
+    if strings.find(message, "does not exist") is not None:
+        return f"[Errno 2] No such file or directory: {shown}"
+    if strings.find(message, "is a directory") is not None:
+        return f"[Errno 21] Is a directory: {shown}"
+    if strings.find(message, "permission denied") is not None:
+        return f"[Errno 13] Permission denied: {shown}"
+    return copy(message)
+
+
+func parse_spec() -> argparse.Spec:
+    mut spec = argparse.new("engine_shadow_summary", "Summarize the engine's selka test shadow log.")
+    argparse.add_flag(mut spec, "json", "", "print the report as JSON")
+    argparse.add_option_default(mut spec, "examples", "", "N", "examples per bucket", "3")
+    argparse.add_positional(mut spec, "LOG", "the shadow log")
+    return spec
+
+
+func all_digits(text: str) -> bool:
+    if len(text) == 0:
+        return False
+    for byte in strings.encode(text):
+        if byte < 48 or byte > 57:
+            return False
+    return True
+
+
+# Run the tool: `argv` is the arguments without the program name. Returns the exit status.
+public func run(argv: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    if len(argv) == 1 and argv[0] == "--self-test":
+        const verdict = self_test()
+        print(out, verdict)
+        if verdict == "engine_shadow_summary self-test passed":
+            return 0
+        return 1
+    const first = "Summarize the engine's `selka test` shadow log (docs/tooling/engine.md#the-shadow-in-selka-test)."
+    const spec = parse_spec()
+    match argparse.parse(spec, argv):
+        case Err(error):
+            match error:
+                case MissingPositional(name=_):
+                    print(err, "usage: engine_shadow_summary.py LOG [--examples N] [--json]")
+                case _:
+                    print(err, first)
+            return 2
+        case Ok(parsed):
+            if parsed.help:
+                print(err, first)
+                return 2
+            mut examples = 3
+            match argparse.get(parsed, "examples"):
+                case Some(text):
+                    if not all_digits(text):
+                        print(err, first)
+                        return 2
+                    match parse_int(text):
+                        case Some(number):
+                            examples = number
+                        case None:
+                            print(err, first)
+                            return 2
+                case None:
+                    pass
+            match fs.read_text(parsed.positionals[0]):
+                case Err(message):
+                    print(err, f"engine_shadow_summary: {os_error_text(parsed.positionals[0], message)}")
+                    return 2
+                case Ok(text):
+                    const log = read_lines(text)
+                    const report = summarize(log.lines, examples)
+                    if argparse.has(parsed, "json"):
+                        print(out, render_json(report))
+                    else:
+                        print(out, render(report))
+                        if log.bad > 0:
+                            print(out, f"({log.bad} unreadable lines skipped)")
+                    if failing(report):
+                        return 1
+                    return 0
+
+
+func main(argv: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    return run(argv, fs, out, err)

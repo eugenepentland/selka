@@ -1,0 +1,282 @@
+import hex
+import http
+import strings
+
+# An adversarial table for the HTTP codec (lane FR13, 14 November 2026, after the security review of F-62 to F-66): messages that a
+# strict peer and a lax peer would read differently, the sort that request smuggling is made of. Each probe says what the codec
+# answers and why that is the RFC's answer (RFC 9110 and RFC 9112). "OK" lines show the method, target, version, fields,
+# body and, after `length=`, how many octets the message took; an "ERR" line is the refusal. Where the codec is stricter than
+# the RFC requires (a list in Content-Length, a blank before a bare chunk size, an empty line before the request line)
+# the probe's `why` says so: refusing is the safe answer when two readers might disagree.
+record Probe:
+    label: str
+    wire: bytes
+    closed: bool
+    why: str
+    expected: str
+
+
+func fmt_str(text: str) -> str:
+    return str(strings.char_count(text)) + ":" + text
+
+
+func fmt_error(error: http.Error) -> str:
+    match error:
+        case Incomplete:
+            return "Incomplete"
+        case Malformed(value=detail):
+            return "Malformed:" + fmt_str(detail)
+        case Unsupported(value=detail):
+            return "Unsupported:" + fmt_str(detail)
+        case HeaderTooLarge(value=detail):
+            return "HeaderTooLarge:" + fmt_str(detail)
+        case BodyTooLarge(value=detail):
+            return "BodyTooLarge:" + fmt_str(detail)
+        case UnsupportedVersion(value=detail):
+            return "UnsupportedVersion:" + fmt_str(detail)
+
+
+func fmt_fields(fields: http.Header[]) -> str:
+    mut out = ""
+    for item in fields:
+        out = out + "[" + fmt_str(item.name) + "=" + fmt_str(item.value) + "]"
+    return out
+
+
+func request_text(data: bytes) -> str:
+    match http.parse_request_prefix(data, http.Limits()):
+        case Ok(parsed):
+            return "OK " + fmt_str(parsed.request.method) + fmt_str(parsed.request.target) + fmt_str(parsed.request.version) + fmt_fields(parsed.request.headers) + "body=" + hex.encode(parsed.request.body) + " length=" + str(parsed.length) + " path=" + fmt_str(http.path(parsed.request)) + " query=" + fmt_str(http.query(parsed.request))
+        case Err(error):
+            return "ERR " + fmt_error(error)
+
+
+func response_text(data: bytes, closed: bool) -> str:
+    match http.parse_response_prefix(data, closed):
+        case Ok(parsed):
+            return "OK " + fmt_str(parsed.response.version) + str(parsed.response.status) + fmt_str(parsed.response.reason) + fmt_fields(parsed.response.headers) + "body=" + hex.encode(parsed.response.body) + " length=" + str(parsed.length)
+        case Err(error):
+            return "ERR " + fmt_error(error)
+
+
+func request_probes() -> Probe[]:
+    return [
+        Probe(label="obsolete line folding", wire=b"GET / HTTP/1.1\r\nA: b\r\n c\r\n\r\n", closed=False, why="RFC 9112 5.2: a server MUST reject a message with obs-fold or replace it; the codec rejects", expected="ERR Malformed:45:obsolete header line folding is not supported"),
+        Probe(label="space before the colon", wire=b"GET / HTTP/1.1\r\nHost : x\r\n\r\n", closed=False, why="RFC 9112 5.1: no whitespace between a field name and its colon, a server MUST reject", expected="ERR Malformed:41:header name contains an invalid character"),
+        Probe(label="empty field name", wire=b"GET / HTTP/1.1\r\n: x\r\n\r\n", closed=False, why="RFC 9110 5.1: a field name is a nonempty token", expected="ERR Malformed:24:header field has no name"),
+        Probe(label="NUL in a field value", wire=b"GET / HTTP/1.1\r\nA: b\x00c\r\n\r\n", closed=False, why="RFC 9110 5.5: a recipient of a NUL, CR or LF in a value MUST reject it or replace it with a space", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="NUL in a field name", wire=b"GET / HTTP/1.1\r\nA\x00B: c\r\n\r\n", closed=False, why="RFC 9110 5.6.2: a name is made of token characters", expected="ERR Malformed:41:header name contains an invalid character"),
+        Probe(label="NUL in the target", wire=b"GET /a\x00b HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986: a target has no control octet", expected="ERR Malformed:43:request target contains a control character"),
+        Probe(label="Transfer-Encoding chunked, identity", wire=b"POST / HTTP/1.1\r\nTransfer-Encoding: chunked, identity\r\n\r\n0\r\n\r\n", closed=False, why="RFC 9112 6.1: chunked must be the last coding; stacked codings are not implemented, 501", expected="ERR Unsupported:40:chunked request bodies are not supported"),
+        Probe(label="Transfer-Encoding and Content-Length", wire=b"POST / HTTP/1.1\r\nTransfer-Encoding: chunked\r\nContent-Length: 4\r\n\r\nabcd", closed=False, why="RFC 9112 6.3: both is an error that might be smuggling; the codec refuses it", expected="ERR Unsupported:40:chunked request bodies are not supported"),
+        Probe(label="two equal Content-Length fields", wire=b"POST / HTTP/1.1\r\nContent-Length: 4\r\nContent-Length: 4\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: identical values may be taken as one", expected="OK 4:POST1:/8:HTTP/1.1[14:Content-Length=1:4][14:Content-Length=1:4]body=61626364 length=61 path=1:/ query=0:"),
+        Probe(label="two different Content-Length fields", wire=b"POST / HTTP/1.1\r\nContent-Length: 4\r\ncontent-length: 5\r\n\r\nabcde", closed=False, why="RFC 9110 8.6: differing values are an unrecoverable framing error", expected="ERR Malformed:33:conflicting Content-Length values"),
+        Probe(label="Content-Length as a list", wire=b"POST / HTTP/1.1\r\nContent-Length: 4, 4\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: Content-Length is 1*DIGIT; a list is not, and the codec refuses it rather than combine it", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length with a plus", wire=b"POST / HTTP/1.1\r\nContent-Length: +4\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: 1*DIGIT, no sign", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length with an underscore", wire=b"POST / HTTP/1.1\r\nContent-Length: 0_4\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: 1*DIGIT, no separator", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length minus zero", wire=b"POST / HTTP/1.1\r\nContent-Length: -0\r\n\r\n", closed=False, why="RFC 9110 8.6: 1*DIGIT, no sign", expected="ERR Malformed:26:Content-Length is negative"),
+        Probe(label="Content-Length negative", wire=b"POST / HTTP/1.1\r\nContent-Length: -1\r\n\r\n", closed=False, why="RFC 9110 8.6: 1*DIGIT, no sign", expected="ERR Malformed:26:Content-Length is negative"),
+        Probe(label="Content-Length hexadecimal", wire=b"POST / HTTP/1.1\r\nContent-Length: 0x4\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: decimal digits only", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length with a fraction", wire=b"POST / HTTP/1.1\r\nContent-Length: 4.0\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: digits only", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length in Arabic-Indic digits", wire=b"POST / HTTP/1.1\r\nContent-Length: \xd9\xa4\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: ASCII digits only", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length then a no-break space", wire=b"POST / HTTP/1.1\r\nContent-Length: 4\xc2\xa0\r\n\r\nabcd", closed=False, why="RFC 9110 5.6.3: only space and tab are optional whitespace", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length empty", wire=b"POST / HTTP/1.1\r\nContent-Length:\r\n\r\n", closed=False, why="RFC 9110 8.6: 1*DIGIT needs a digit", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="Content-Length of 19 digits", wire=b"POST / HTTP/1.1\r\nContent-Length: 1000000000000000000\r\n\r\n", closed=False, why="no body can be that long; the codec reads at most 18 digits", expected="ERR Malformed:38:Content-Length has more than 18 digits"),
+        Probe(label="Content-Length with leading zeros", wire=b"POST / HTTP/1.1\r\nContent-Length: 0004\r\n\r\nabcd", closed=False, why="RFC 9110 8.6: 1*DIGIT allows leading zeros; the value is decimal", expected="OK 4:POST1:/8:HTTP/1.1[14:Content-Length=4:0004]body=61626364 length=45 path=1:/ query=0:"),
+        Probe(label="Content-Length with a tab around it", wire=b"POST / HTTP/1.1\r\nContent-Length: \t4\t\r\n\r\nabcd", closed=False, why="RFC 9110 5.6.3: tab is optional whitespace", expected="OK 4:POST1:/8:HTTP/1.1[14:Content-Length=1:4]body=61626364 length=44 path=1:/ query=0:"),
+        Probe(label="Content-Length past the limit", wire=b"POST / HTTP/1.1\r\nContent-Length: 999999999\r\n\r\n", closed=False, why="a body past the limit is refused with 413", expected="ERR BodyTooLarge:42:body length is outside the supported limit"),
+        Probe(label="bare LF line ends", wire=b"GET / HTTP/1.1\nHost: x\n\n", closed=False, why="RFC 9112 2.2 lets a recipient end a line at a bare LF; this codec does not, so it waits for the CRLF CRLF that never comes", expected="ERR Incomplete"),
+        Probe(label="bare LF ends a value", wire=b"GET / HTTP/1.1\r\nA: b\n\r\nC: d\r\n\r\n", closed=False, why="RFC 9110 5.5: a bare LF in a value is rejected, never trimmed away", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="bare CR ends a value", wire=b"GET / HTTP/1.1\r\nA: b\r\r\nC: d\r\n\r\n", closed=False, why="RFC 9112 2.2: a bare CR is not a line end, and RFC 9110 5.5 rejects it in a value", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="bare LF inside a value", wire=b"GET / HTTP/1.1\r\nA: b\nc\r\n\r\n", closed=False, why="RFC 9110 5.5: a bare LF in a value is rejected", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="control octets around a value", wire=b"GET / HTTP/1.1\r\nA: \x1fb\x1c\r\n\r\n", closed=False, why="RFC 9110 5.6.3: only space and tab are trimmed, the rest are control octets in a value", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="vertical tab and form feed around a value", wire=b"GET / HTTP/1.1\r\nA:\x0bb\x0c\r\n\r\n", closed=False, why="RFC 9110 5.5: field values hold no control octet but tab", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="DEL in a value", wire=b"GET / HTTP/1.1\r\nA: b\x7f\r\n\r\n", closed=False, why="RFC 9110 5.5: 0x7f is a control octet", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="no-break spaces around a value are the value", wire=b"GET / HTTP/1.1\r\nA:\xc2\xa0b\xc2\xa0\r\n\r\n", closed=False, why="RFC 9110 5.5: octets 0x80 to 0xff are obs-text, part of a value; only space and tab are trimmed", expected="OK 3:GET1:/8:HTTP/1.1[1:A=3: b ]body= length=27 path=1:/ query=0:"),
+        Probe(label="invalid UTF-8 in a value", wire=b"GET / HTTP/1.1\r\nA: \xff\xfe\r\n\r\n", closed=False, why="the codec reads values as UTF-8 text", expected="ERR Malformed:31:header value is not valid UTF-8"),
+        Probe(label="header line with no colon", wire=b"GET / HTTP/1.1\r\nHost\r\n\r\n", closed=False, why="RFC 9112 5: a field line has a colon", expected="ERR Malformed:24:header field has no name"),
+        Probe(label="empty line before the request line", wire=b"\r\nGET / HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 2.2: a server SHOULD ignore an empty line before the request line; the codec refuses it", expected="ERR Malformed:21:request line is empty"),
+        Probe(label="blank line in the fields", wire=b"GET / HTTP/1.1\r\nA: b\r\n\r\nC: d\r\n\r\n", closed=False, why="the first blank line ends the section; the rest is the body or the next message", expected="OK 3:GET1:/8:HTTP/1.1[1:A=1:b]body= length=24 path=1:/ query=0:"),
+        Probe(label="two spaces in the request line", wire=b"GET  / HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3: single SP between parts; a recipient MAY be lenient, the codec is not", expected="ERR Malformed:54:request line parts must be separated by a single space"),
+        Probe(label="tab between the request line parts", wire=b"GET\t/\tHTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3: the separator is SP", expected="ERR Malformed:54:request line parts must be separated by a single space"),
+        Probe(label="space before the method", wire=b" GET / HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3: a request line starts with the method", expected="ERR Malformed:54:request line parts must be separated by a single space"),
+        Probe(label="space after the version", wire=b"GET / HTTP/1.1 \r\n\r\n", closed=False, why="RFC 9112 3: one SP between parts and none after the version", expected="ERR Malformed:54:request line parts must be separated by a single space"),
+        Probe(label="lower-case method", wire=b"get / HTTP/1.1\r\n\r\n", closed=False, why="RFC 9110 9.1: a method is case-sensitive, so get is a method of its own (http.method lower-cases it for comparison)", expected="OK 3:get1:/8:HTTP/1.1body= length=18 path=1:/ query=0:"),
+        Probe(label="method with a separator", wire=b"G(T / HTTP/1.1\r\n\r\n", closed=False, why="RFC 9110 9.1: a method is a token", expected="ERR Malformed:35:request method is not a valid token"),
+        Probe(label="version HTTP/1.10", wire=b"GET / HTTP/1.10\r\n\r\n", closed=False, why="RFC 9112 2.3: DIGIT.DIGIT, so 1.10 is no version; the codec answers 501, a version a server cannot name in a 505", expected="ERR Unsupported:40:only HTTP/1.0 and HTTP/1.1 are supported"),
+        Probe(label="lower-case http version", wire=b"GET / http/1.1\r\n\r\n", closed=False, why="RFC 9112 2.3: HTTP-name is case-sensitive", expected="ERR Unsupported:40:only HTTP/1.0 and HTTP/1.1 are supported"),
+        Probe(label="version HTTP/1.2", wire=b"GET / HTTP/1.2\r\n\r\n", closed=False, why="a version spelled right but not 1.0 or 1.1, 505", expected="ERR UnsupportedVersion:40:only HTTP/1.0 and HTTP/1.1 are supported"),
+        Probe(label="version with a control octet", wire=b"GET / HTTP/1.1\x00\r\n\r\n", closed=False, why="RFC 9112 2.3: no control octet in a version", expected="ERR Malformed:44:request version contains a control character"),
+        Probe(label="version with a bare CR", wire=b"GET / HTTP/1.1\r\r\n\r\n", closed=False, why="RFC 9112 2.2: a bare CR is not a line end", expected="ERR Malformed:44:request version contains a control character"),
+        Probe(label="HTTP/0.9 request line", wire=b"GET /\r\n\r\n", closed=False, why="RFC 9112 3: a request line has a version", expected="ERR Malformed:27:request line has no version"),
+        Probe(label="a fourth part in the request line", wire=b"GET / HTTP/1.1 extra\r\n\r\n", closed=False, why="RFC 9112 3: three parts; the version is the last, and a fourth is none of the codec's business", expected="ERR Malformed:49:request line must have method, target and version"),
+        Probe(label="a request line of a method alone", wire=b"GET\r\n\r\n", closed=False, why="RFC 9112 3: a request line has a target and a version", expected="ERR Malformed:49:request line must have method, target and version"),
+        Probe(label="asterisk target", wire=b"OPTIONS * HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2.4: asterisk-form", expected="OK 7:OPTIONS1:*8:HTTP/1.1body= length=22 path=0: query=0:"),
+        Probe(label="authority target", wire=b"CONNECT example.test:443 HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2.3: authority-form", expected="OK 7:CONNECT16:example.test:4438:HTTP/1.1body= length=37 path=0: query=0:"),
+        Probe(label="absolute target", wire=b"GET http://example.test/a?b=c HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2.2: absolute-form", expected="OK 3:GET25:http://example.test/a?b=c8:HTTP/1.1body= length=42 path=2:/a query=3:b=c"),
+        Probe(label="absolute target without a path", wire=b"GET http://example.test HTTP/1.1\r\n\r\n", closed=False, why="RFC 9110 7.1: an empty path is /", expected="OK 3:GET19:http://example.test8:HTTP/1.1body= length=36 path=1:/ query=0:"),
+        Probe(label="target without a leading slash", wire=b"GET admin/x HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2: none of the four forms", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="target with a fragment", wire=b"GET /admin#x HTTP/1.1\r\n\r\n", closed=False, why="RFC 9110 7.1: a fragment is never sent in a target", expected="ERR Malformed:34:request target contains a fragment"),
+        Probe(label="target with a fragment and a query", wire=b"GET /a#b?c=1 HTTP/1.1\r\n\r\n", closed=False, why="RFC 9110 7.1: no fragment", expected="ERR Malformed:34:request target contains a fragment"),
+        Probe(label="empty fragment", wire=b"GET /a# HTTP/1.1\r\n\r\n", closed=False, why="RFC 9110 7.1: no fragment", expected="ERR Malformed:34:request target contains a fragment"),
+        Probe(label="URL inside the path", wire=b"GET /public/x://h/admin/delete HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2.1: starts with /, so origin-form; its path is all of it", expected="OK 3:GET26:/public/x://h/admin/delete8:HTTP/1.1body= length=43 path=26:/public/x://h/admin/delete query=0:"),
+        Probe(label="URL inside the query", wire=b"GET /view?file=https://h/x HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2.1: origin-form; the URL is query text", expected="OK 3:GET22:/view?file=https://h/x8:HTTP/1.1body= length=39 path=5:/view query=16:file=https://h/x"),
+        Probe(label="two slashes", wire=b"GET //x/y HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986 3.3: an empty first segment is a path", expected="OK 3:GET5://x/y8:HTTP/1.1body= length=22 path=5://x/y query=0:"),
+        Probe(label="scheme only", wire=b"GET http:// HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986 3.2: an absolute-form target needs an authority", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="scheme that starts with a digit", wire=b"GET 1http://h/ HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986 3.1: a scheme starts with a letter", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="authority without a port", wire=b"CONNECT example.test HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3.2.3: host:port", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="authority with an empty port", wire=b"CONNECT example.test: HTTP/1.1\r\n\r\n", closed=False, why="the codec needs one to five digits", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="authority with a port too large", wire=b"CONNECT example.test:65536 HTTP/1.1\r\n\r\n", closed=False, why="a port is at most 65535", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="authority with an IPv6 literal", wire=b"CONNECT [::1]:8080 HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986 3.2.2: IP-literal", expected="OK 7:CONNECT10:[::1]:80808:HTTP/1.1body= length=31 path=0: query=0:"),
+        Probe(label="authority with two colons", wire=b"CONNECT a:b:80 HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986 3.2.2: a name has no colon", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="question mark first", wire=b"GET ?a=b HTTP/1.1\r\n\r\n", closed=False, why="none of the four forms", expected="ERR Malformed:69:request target is not an origin, absolute, authority or asterisk form"),
+        Probe(label="target with a tab", wire=b"GET /a\tb HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 3: no whitespace in a target", expected="ERR Malformed:43:request target contains a control character"),
+        Probe(label="target with a high-bit path", wire=b"GET /caf\xc3\xa9 HTTP/1.1\r\n\r\n", closed=False, why="RFC 3986 asks for percent-encoding; the codec reads UTF-8 octets as it did", expected="OK 3:GET5:/café8:HTTP/1.1body= length=23 path=5:/café query=0:"),
+        Probe(label="body shorter than declared", wire=b"POST / HTTP/1.1\r\nContent-Length: 4\r\n\r\nab", closed=False, why="RFC 9112 6.3: the message is incomplete", expected="ERR Incomplete"),
+        Probe(label="bytes after the body", wire=b"POST / HTTP/1.1\r\nContent-Length: 4\r\n\r\nabcdGET /two HTTP/1.1\r\n\r\n", closed=False, why="the codec reads one message; the length says where the next starts", expected="OK 4:POST1:/8:HTTP/1.1[14:Content-Length=1:4]body=61626364 length=42 path=1:/ query=0:"),
+        Probe(label="header name with a high bit", wire=b"GET / HTTP/1.1\r\nCaf\xc3\xa9: x\r\n\r\n", closed=False, why="RFC 9110 5.6.2: a name is made of token characters", expected="ERR Malformed:41:header name contains an invalid character"),
+        Probe(label="name with an underscore", wire=b"GET / HTTP/1.1\r\nX_Forwarded: x\r\n\r\n", closed=False, why="an underscore is a token character", expected="OK 3:GET1:/8:HTTP/1.1[11:X_Forwarded=1:x]body= length=34 path=1:/ query=0:"),
+    ]
+
+
+func response_probes() -> Probe[]:
+    return [
+        Probe(label="status 2_00", wire=b"HTTP/1.1 2_00 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9110 15: a status code is three digits", expected="ERR Malformed:36:status code is not a decimal integer"),
+        Probe(label="status +200", wire=b"HTTP/1.1 +200 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: status-code = 3DIGIT", expected="ERR Malformed:36:status code is not a decimal integer"),
+        Probe(label="status with a leading zero", wire=b"HTTP/1.1 0200 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: exactly three digits", expected="ERR Malformed:40:status code must be exactly three digits"),
+        Probe(label="status 099", wire=b"HTTP/1.1 099 Low\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9110 15: codes start at 100", expected="ERR Malformed:31:status code is outside 100..999"),
+        Probe(label="status 1000", wire=b"HTTP/1.1 1000 High\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: exactly three digits", expected="ERR Malformed:40:status code must be exactly three digits"),
+        Probe(label="status 2000", wire=b"HTTP/1.1 2000 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: exactly three digits; the count of digits is what is wrong, not the range", expected="ERR Malformed:40:status code must be exactly three digits"),
+        Probe(label="status 99", wire=b"HTTP/1.1 99 Low\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: exactly three digits", expected="ERR Malformed:40:status code must be exactly three digits"),
+        Probe(label="status line with a blank where the code goes", wire=b"HTTP/1.1  \r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: a status-line has a code", expected="ERR Malformed:30:status line has no status code"),
+        Probe(label="status line that starts with a space", wire=b" HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: a status-line starts with the version", expected="ERR Malformed:39:status line must start with the version"),
+        Probe(label="status 999", wire=b"HTTP/1.1 999 Odd\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9110 15: three digits; the codec allows 100 to 999", expected="OK 8:HTTP/1.19993:Odd[14:Content-Length=1:0]body= length=39"),
+        Probe(label="status without a reason", wire=b"HTTP/1.1 200\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: the reason phrase is optional", expected="OK 8:HTTP/1.12000:[14:Content-Length=1:0]body= length=35"),
+        Probe(label="status line with a control octet in the version", wire=b"HTTP/1.1\x00 200 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 2.3: no control octet", expected="ERR Malformed:48:status line version contains a control character"),
+        Probe(label="reason with a bare CR", wire=b"HTTP/1.1 200 O\rK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: a reason phrase holds no control octet but tab", expected="ERR Malformed:43:status reason contains an invalid character"),
+        Probe(label="reason with a tab", wire=b"HTTP/1.1 200 O\tK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: reason-phrase allows HTAB", expected="OK 8:HTTP/1.12003:O\tK[14:Content-Length=1:0]body= length=39"),
+        Probe(label="reason with a vertical tab at its end", wire=b"HTTP/1.1 200 OK\x0b\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 4: a reason phrase holds no control octet but tab", expected="ERR Malformed:43:status reason contains an invalid character"),
+        Probe(label="bare LF line ends", wire=b"HTTP/1.1 200 OK\nContent-Length: 0\n\n", closed=False, why="the codec waits for CRLF CRLF", expected="ERR Incomplete"),
+        Probe(label="two Content-Length fields that differ", wire=b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\nContent-Length: 2\r\n\r\nab", closed=False, why="RFC 9110 8.6", expected="ERR Malformed:33:conflicting Content-Length values"),
+        Probe(label="Content-Length 1_0", wire=b"HTTP/1.1 200 OK\r\nContent-Length: 1_0\r\n\r\n0123456789", closed=False, why="RFC 9110 8.6: digits only", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="chunked and Content-Length", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nContent-Length: 5\r\n\r\n0\r\n\r\n", closed=False, why="RFC 9112 6.3: both is an error", expected="ERR Malformed:40:chunked response also has Content-Length"),
+        Probe(label="chunked, identity", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked, identity\r\n\r\n0\r\n\r\n", closed=False, why="RFC 9112 6.1: chunked must be last", expected="ERR Unsupported:52:only a single chunked transfer encoding is supported"),
+        Probe(label="two Transfer-Encoding fields", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n", closed=False, why="RFC 9110 5.3: the fields would combine to chunked, chunked, which RFC 9112 6.1 forbids", expected="ERR Unsupported:52:only a single chunked transfer encoding is supported"),
+        Probe(label="204 that claims to be chunked", wire=b"HTTP/1.1 204 No Content\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 6.3: a 204 ends at its first blank line whatever its fields say, and a server MUST NOT send Transfer-Encoding in one", expected="ERR Malformed:64:a response with this status has no body, so it cannot be chunked"),
+        Probe(label="304 with a Content-Length", wire=b"HTTP/1.1 304 Not Modified\r\nContent-Length: 5\r\n\r\nhello", closed=False, why="RFC 9112 6.3: a 304 has no body whatever its fields say", expected="OK 8:HTTP/1.130412:Not Modified[14:Content-Length=1:5]body= length=48"),
+        Probe(label="chunk size with 0x", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0x5\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1: chunk-size = 1*HEXDIG", expected="ERR Malformed:29:chunk size is not hexadecimal"),
+        Probe(label="chunk size with a plus", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n+5\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1: no sign", expected="ERR Malformed:29:chunk size is not hexadecimal"),
+        Probe(label="chunk size with a minus", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n-5\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1: no sign", expected="ERR Malformed:29:chunk size is not hexadecimal"),
+        Probe(label="chunk size with leading zeros", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0000005\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1: 1*HEXDIG allows them", expected="OK 8:HTTP/1.12002:OK[17:Transfer-Encoding=7:chunked]body=68656c6c6f length=68"),
+        Probe(label="empty chunk size", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1: at least one digit", expected="ERR Malformed:16:empty chunk size"),
+        Probe(label="chunk size too large", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nFFFFFFFFFFFF\r\n", closed=False, why="a chunk past the body limit is refused with 413", expected="ERR BodyTooLarge:23:chunk size is too large"),
+        Probe(label="chunk size with a space after it", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5 \r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1.1: blanks belong before a ;, so the codec refuses them after a bare size", expected="ERR Malformed:29:chunk size is not hexadecimal"),
+        Probe(label="chunk extension", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5;name=value\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1.1: an extension is read for its octets and ignored", expected="OK 8:HTTP/1.12002:OK[17:Transfer-Encoding=7:chunked]body=68656c6c6f length=73"),
+        Probe(label="blank before a chunk extension", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5 \t;a=b\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1.1: BWS before the semicolon", expected="OK 8:HTTP/1.12002:OK[17:Transfer-Encoding=7:chunked]body=68656c6c6f length=68"),
+        Probe(label="chunk extension with a control octet", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5;a=\x01\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 7.1.1: an extension holds no control octet", expected="ERR Malformed:45:chunk size line contains an invalid character"),
+        Probe(label="chunk extension with a bare LF", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5;a=b\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 2.2: a bare LF is not a line end, and a peer that takes it for one reads a different chunk", expected="ERR Malformed:45:chunk size line contains an invalid character"),
+        Probe(label="chunk extension with a bare CR", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5;a=b\rc\r\nhello\r\n0\r\n\r\n", closed=False, why="RFC 9112 2.2: a bare CR is not a line end", expected="ERR Malformed:45:chunk size line contains an invalid character"),
+        Probe(label="chunk data not followed by CRLF", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhelloXX0\r\n\r\n", closed=False, why="RFC 9112 7.1: chunk-data is followed by CRLF", expected="ERR Malformed:34:chunk data is not followed by CRLF"),
+        Probe(label="chunk shorter than its size", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhel", closed=False, why="the message is incomplete", expected="ERR Incomplete"),
+        Probe(label="last chunk missing", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n", closed=False, why="RFC 9112 7.1: the body ends at the last chunk", expected="ERR Incomplete"),
+        Probe(label="trailer", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\nX-Sum: 1\r\n\r\n", closed=False, why="RFC 9112 7.1.2: trailer fields are read and not handed on", expected="OK 8:HTTP/1.12002:OK[17:Transfer-Encoding=7:chunked]body=68656c6c6f length=72"),
+        Probe(label="trailer naming Content-Length", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\nContent-Length: 99\r\n\r\n", closed=False, why="RFC 9110 6.5.1: a sender MUST NOT put a framing field in a trailer", expected="ERR Malformed:45:trailer names a field that frames the message"),
+        Probe(label="trailer naming Transfer-Encoding", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\ntransfer-encoding: identity\r\n\r\n", closed=False, why="RFC 9110 6.5.1: a sender MUST NOT put a framing field in a trailer", expected="ERR Malformed:45:trailer names a field that frames the message"),
+        Probe(label="trailer with folding", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0\r\nX: a\r\n b\r\n\r\n", closed=False, why="RFC 9112 5.2: obs-fold", expected="ERR Malformed:46:obsolete trailer line folding is not supported"),
+        Probe(label="trailer with a control octet at the end of its value", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0\r\nX: a\x0b\r\n\r\n", closed=False, why="RFC 9110 5.5", expected="ERR Malformed:43:trailer value contains an invalid character"),
+        Probe(label="trailer name with a space", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0\r\nX Y: a\r\n\r\n", closed=False, why="RFC 9110 5.6.2: a name is a token", expected="ERR Malformed:42:trailer name contains an invalid character"),
+        Probe(label="trailer without a name", wire=b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n: a\r\n\r\n", closed=False, why="RFC 9110 5.1", expected="ERR Malformed:25:trailer field has no name"),
+        Probe(label="response folding", wire=b"HTTP/1.1 200 OK\r\nA: b\r\n c\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 5.2: a client MUST reject or replace obs-fold in a response", expected="ERR Malformed:45:obsolete header line folding is not supported"),
+        Probe(label="response header with a bare LF at the end of a value", wire=b"HTTP/1.1 200 OK\r\nA: b\n\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9110 5.5", expected="ERR Malformed:42:header value contains an invalid character"),
+        Probe(label="response header with no-break spaces around the length", wire=b"HTTP/1.1 200 OK\r\nContent-Length:\xc2\xa05\xc2\xa0\r\n\r\nhello", closed=False, why="RFC 9110 8.6 and 5.6.3: digits only, and only space and tab are trimmed", expected="ERR Malformed:39:Content-Length is not a decimal integer"),
+        Probe(label="close-delimited body", wire=b"HTTP/1.1 200 OK\r\nA: b\r\n\r\nrest", closed=True, why="RFC 9112 6.3: the close of the connection ends the body", expected="OK 8:HTTP/1.12002:OK[1:A=1:b]body=72657374 length=29"),
+        Probe(label="close-delimited body before the close", wire=b"HTTP/1.1 200 OK\r\nA: b\r\n\r\nrest", closed=False, why="the response is incomplete until the peer closes", expected="ERR Incomplete"),
+        Probe(label="response line without a status code", wire=b"HTTP/1.1\r\n\r\n", closed=False, why="RFC 9112 4: a status-line has a code", expected="ERR Malformed:30:status line has no status code"),
+        Probe(label="HTTP/1.10 status line", wire=b"HTTP/1.10 200 OK\r\nContent-Length: 0\r\n\r\n", closed=False, why="RFC 9112 2.3", expected="ERR Unsupported:40:only HTTP/1.0 and HTTP/1.1 are supported"),
+    ]
+
+
+# The index of the first probe the codec answers differently from the table, or -1.
+func first_request_mismatch() -> int:
+    mut index = 0
+    for item in request_probes():
+        if request_text(item.wire) != item.expected:
+            return index
+        index += 1
+    return 0 - 1
+
+
+func first_response_mismatch() -> int:
+    mut index = 0
+    for item in response_probes():
+        if response_text(item.wire, item.closed) != item.expected:
+            return index
+        index += 1
+    return 0 - 1
+
+
+# The text of a message parsed from `wire[0:length]` alone, with the length the first parse reported cut from the text,
+# so that two parses of the same message can be compared.
+func without_length(text: str) -> str from text:
+    const at = strings.char_find(text, " length=")
+    if at < 0:
+        return text
+    return strings.char_slice(text, 0, at)
+
+
+# A request the codec accepts is the same request when the bytes after it are cut off and when others follow it (RFC 9112 6.3:
+# the length is where the message ends, and what follows is the next message's). The index of the first probe that is not, or -1.
+func first_request_that_depends_on_what_follows() -> int:
+    mut index = 0
+    for item in request_probes():
+        const whole = request_text(item.wire)
+        if strings.starts_with(whole, "OK "):
+            match http.parse_request_prefix(item.wire, http.Limits()):
+                case Ok(parsed):
+                    if without_length(request_text(item.wire[0:parsed.length])) != without_length(whole):
+                        return index
+                    if request_text(item.wire + b"GET /next HTTP/1.1\r\n\r\n") != whole:
+                        return index
+                case Err(_):
+                    return index
+        index += 1
+    return 0 - 1
+
+
+func first_response_that_depends_on_what_follows() -> int:
+    mut index = 0
+    for item in response_probes():
+        if not item.closed:
+            const whole = response_text(item.wire, False)
+            if strings.starts_with(whole, "OK "):
+                match http.parse_response_prefix(item.wire, False):
+                    case Ok(parsed):
+                        if without_length(response_text(item.wire[0:parsed.length], False)) != without_length(whole):
+                            return index
+                        if response_text(item.wire + b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n", False) != whole:
+                            return index
+                    case Err(_):
+                        return index
+        index += 1
+    return 0 - 1
+
+
+# Every request of the table is read or refused as the table says.
+public func test_adversarial_requests_are_read_or_refused_as_the_table_says() -> bool:
+    return first_request_mismatch() < 0
+
+
+# Every response of the table likewise, with the peer open or closed as the probe says.
+public func test_adversarial_responses_are_read_or_refused_as_the_table_says() -> bool:
+    return first_response_mismatch() < 0
+
+
+# The table has at least forty messages, so a deleted probe is noticed.
+public func test_the_adversarial_table_holds_at_least_forty_messages() -> bool:
+    return len(request_probes()) + len(response_probes()) >= 40
+
+
+# Property: for what the codec accepts, the octets after the message never change what it says, and cutting them off gives
+# the same message (RFC 9112 6.3).
+public func test_accepted_messages_do_not_depend_on_the_bytes_after_them() -> bool:
+    return first_request_that_depends_on_what_follows() < 0 and first_response_that_depends_on_what_follows() < 0

@@ -1,0 +1,154 @@
+import buffers
+
+record State:
+    values: int[]
+
+
+record Outer:
+    state: State
+
+
+func push(mut values: int[]):
+    append(mut values, 14)
+
+
+public func test_heap_record_field_mutation_preserves_snapshot() -> bool:
+    mut state = State(values=[12])
+    mut saved = copy(state)
+    append(mut state.values, 14)
+    return saved.values == [12] and state.values == [12, 14]
+
+
+public func test_nested_heap_field_mut_argument_preserves_snapshot() -> bool:
+    mut state = Outer(state=State(values=[12]))
+    mut saved = copy(state)
+    push(mut state.state.values)
+    return saved.state.values == [12] and state.state.values == [12, 14]
+
+
+public func test_named_field_copy_is_independent_of_its_source() -> bool:
+    mut state = State(values=[12])
+    mut saved = copy(state)
+    mut copied = copy(state.values)
+    append(mut copied, 14)
+    return saved.values == [12] and state.values == [12] and copied == [12, 14]
+
+
+public func test_list_element_and_record_field_path_preserves_snapshot() -> bool:
+    mut states = [Outer(state=State(values=[12]))]
+    mut saved = copy(states)
+    append(mut states[0].state.values, 14)
+    return saved[0].state.values == [12] and states[0].state.values == [12, 14]
+
+
+record Mapping:
+    values: dict[int, int[]]
+
+
+public func test_dictionary_and_record_field_path_preserves_snapshot() -> bool:
+    mut state = Mapping(values={1: [12]})
+    mut saved = copy(state)
+    append(mut state.values[1], 14)
+    return saved.values[1] == [12] and state.values[1] == [12, 14]
+
+
+public func test_loop_field_receivers_preserve_prior_snapshots() -> bool:
+    mut state = State(values=[12])
+    mut saved = copy(state)
+    mut i = 0
+    while i < 4:
+        append(mut state.values, i)
+        i += 1
+    return saved.values == [12] and state.values == [12, 0, 1, 2, 3]
+
+
+record Output:
+    buffer: int[]
+    count: int
+
+
+record Wrapped:
+    inner: Output
+
+
+func append_output(mut out: Output, value: int):
+    append(mut out.buffer, value)
+
+
+func append_through(mut out: Output, value: int):
+    append_output(mut out, value)
+
+
+func append_wrapped(mut wrapped: Wrapped, value: int):
+    append(mut wrapped.inner.buffer, value)
+
+
+public func test_mut_record_argument_preserves_a_record_snapshot() -> bool:
+    mut output = Output(buffer=[1], count=0)
+    mut before = copy(output)
+    append_output(mut output, 2)
+    return before.buffer == [1] and output.buffer == [1, 2]
+
+
+public func test_mut_record_argument_preserves_a_field_snapshot() -> bool:
+    mut output = Output(buffer=[1], count=0)
+    mut before = copy(output.buffer)
+    append_through(mut output, 2)
+    return before == [1] and output.buffer == [1, 2]
+
+
+public func test_mut_record_argument_preserves_nested_snapshots() -> bool:
+    mut wrapped = Wrapped(inner=Output(buffer=[1], count=0))
+    mut whole = copy(wrapped)
+    mut inner = copy(wrapped.inner)
+    append_wrapped(mut wrapped, 2)
+    return whole.inner.buffer == [1] and inner.buffer == [1] and wrapped.inner.buffer == [1, 2]
+
+
+public func test_mut_record_argument_preserves_a_byte_buffer_snapshot() -> bool:
+    mut values: int[] = []
+    mut sink = Sink(buffer=byte_buffer(values))
+    fill_sink(mut sink, b"xy")
+    mut before = copy(sink)
+    fill_sink(mut sink, b"z")
+    return bytes(before.buffer) == b"xy" and bytes(sink.buffer) == b"xyz"
+
+
+record Sink:
+    buffer: byte_buffer
+
+
+func fill_sink(mut sink: Sink, value: bytes):
+    _ = buffers.append_range(mut sink.buffer, value, 0, len(value))
+
+
+record Table:
+    rows: int[][]
+    count: int
+
+
+func store_row(mut table: Table, index: int, row: int[]):
+    table.rows[index] = copy(row)
+
+
+public func test_mut_record_element_store_preserves_a_field_snapshot() -> bool:
+    mut table = Table(rows=[[1], [2, 3]], count=0)
+    mut before = copy(table.rows)
+    store_row(mut table, 1, [4])
+    return before == [[1], [2, 3]] and table.rows == [[1], [4]]
+
+
+# Run the same assertions without test-harness accounting or result wrapping.
+func main(out: Stream) -> int:
+    print(out, test_heap_record_field_mutation_preserves_snapshot())
+    print(out, test_nested_heap_field_mut_argument_preserves_snapshot())
+    print(out, test_named_field_copy_is_independent_of_its_source())
+    print(out, test_list_element_and_record_field_path_preserves_snapshot())
+    print(out, test_dictionary_and_record_field_path_preserves_snapshot())
+    print(out, test_loop_field_receivers_preserve_prior_snapshots())
+    print(out, test_mut_record_argument_preserves_a_record_snapshot())
+    print(out, test_mut_record_argument_preserves_a_field_snapshot())
+    print(out, test_mut_record_argument_preserves_nested_snapshots())
+    print(out, test_mut_record_argument_preserves_a_byte_buffer_snapshot())
+    print(out, test_mut_record_element_store_preserves_a_field_snapshot())
+    return 0

@@ -1,0 +1,14 @@
+# Three independent type errors in one body and one in another: one check reports all four, in source order.
+func first(n: int) -> int:
+    const label: int = b"x"
+    const flag: bool = 3
+    missing_call()
+    return n
+
+
+func second() -> int:
+    return unknown_value
+
+
+func main() -> int:
+    return first(1) + second()

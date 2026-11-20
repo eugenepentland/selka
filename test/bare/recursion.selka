@@ -1,0 +1,15 @@
+# A deep recursion (500 frames) and a branching one.
+func depth(n: int) -> int:
+    if n == 0:
+        return 0
+    return 1 + depth(n - 1)
+
+
+func fib(n: int) -> int:
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+
+func main() -> int:
+    return (depth(500) + fib(18)) % 256

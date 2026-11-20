@@ -1,0 +1,108 @@
+# netlist_union_find: union by size with path halving over random connections, CSR
+# adjacency, then 16 BFS runs over one reused distance array and queue
+# (SUITE.md section 13).
+import lists
+
+func xorshift(input: u64) -> u64:
+    mut x = input
+    x = bit_xor(x, shift_left(x, 13u64))
+    x = bit_xor(x, shift_right(x, 7u64))
+    return bit_xor(x, shift_left(x, 17u64))
+
+
+# The shared checksum step: (c * 31 + v) mod 1000000007, for non-negative v.
+func mix(c: int, v: int) -> int:
+    return (c * 31 + v) % 1000000007
+
+
+# The root of `start`'s set, halving the path as it climbs.
+func find(mut parent: int[], start: int) -> int:
+    mut x = start
+    while parent[x] != x:
+        parent[x] = parent[parent[x]]
+        x = parent[x]
+    return x
+
+
+func main(out: Stream) -> int:
+    const pins = 1000000
+    const conns = 1000000
+    mut state = 88172645463325252u64
+    mut conn_a: int[] = []
+    mut conn_b: int[] = []
+    for _ in range(conns):
+        state = xorshift(state)
+        append(mut conn_a, int(shift_right(state, 33u64)) % pins)
+        state = xorshift(state)
+        append(mut conn_b, int(shift_right(state, 33u64)) % pins)
+    mut parent: int[] = []
+    mut size: int[] = []
+    for x in range(pins):
+        append(mut parent, x)
+        append(mut size, 1)
+    for e in range(conns):
+        mut ra = find(mut parent, conn_a[e])
+        mut rb = find(mut parent, conn_b[e])
+        if ra != rb:
+            if size[ra] < size[rb]:
+                const swap = ra
+                ra = rb
+                rb = swap
+            parent[rb] = ra
+            size[ra] = size[ra] + size[rb]
+    mut nets = 0
+    mut largest = 0
+    mut roots_mix = 0
+    for x in range(pins):
+        if parent[x] == x:
+            nets += 1
+            if size[x] > largest:
+                largest = size[x]
+            roots_mix = mix(roots_mix, size[x])
+    mut offset: int[] = lists.filled(pins + 1, 0)
+    for e in range(conns):
+        offset[conn_a[e] + 1] = offset[conn_a[e] + 1] + 1
+        offset[conn_b[e] + 1] = offset[conn_b[e] + 1] + 1
+    for x in range(pins):
+        offset[x + 1] = offset[x + 1] + offset[x]
+    mut cursor = copy(offset)
+    mut adj: int[] = lists.filled(2 * conns, 0)
+    for e in range(conns):
+        const a = conn_a[e]
+        const b = conn_b[e]
+        adj[cursor[a]] = b
+        cursor[a] = cursor[a] + 1
+        adj[cursor[b]] = a
+        cursor[b] = cursor[b] + 1
+    print(out, f"pins {pins} connections {conns} nets {nets} largest {largest} roots_mix {roots_mix}")
+    mut dist: int[] = lists.filled(pins, -1)
+    mut queue: int[] = lists.filled(pins, 0)
+    mut distances_mix = 0
+    for _ in range(16):
+        state = xorshift(state)
+        const source = int(shift_right(state, 33u64)) % pins
+        for x in range(pins):
+            dist[x] = -1
+        dist[source] = 0
+        queue[0] = source
+        mut head = 0
+        mut tail = 1
+        while head < tail:
+            const u = queue[head]
+            head += 1
+            const step_distance = dist[u] + 1
+            for index in range(offset[u], offset[u + 1]):
+                const v = adj[index]
+                if dist[v] < 0:
+                    dist[v] = step_distance
+                    queue[tail] = v
+                    tail += 1
+        mut depth = 0
+        for x in range(pins):
+            if dist[x] > depth:
+                depth = dist[x]
+        print(out, f"source {source} reached {tail} depth {depth}")
+        for x in range(pins):
+            distances_mix = mix(distances_mix, dist[x] + 1)
+    print(out, f"distances_mix {distances_mix}")
+    return 0

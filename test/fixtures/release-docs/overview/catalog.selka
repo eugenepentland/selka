@@ -1,0 +1,43 @@
+"""Catalog values and their public representation.
+
+The record keeps its amount explicit for callers.
+"""
+
+
+@invariant(self.amount >= 0)
+public record Item:
+    """A nonnegative amount in the catalog."""
+    amount: int = 4
+
+
+public enum Choice:
+    """Either an absent item or its stated amount."""
+    absent
+    present(amount: int)
+
+
+@ensures(result >= 0)
+public func value(named extra: int = 0) -> int:
+    """Read the item amount without changing it.
+
+    >>> value()
+    4
+    """
+    return private_helper() + extra
+
+
+public func pending() -> int:
+    """A deliberately incomplete operation awaiting design."""
+    return todo[int]()
+
+
+public func update(mut item: Item, amount: int) -> Unit:
+    """Set the amount carried by `catalog::Item`.
+
+    >>> const value = 1
+    """
+    item.amount = amount
+
+
+func private_helper() -> int:
+    return 4

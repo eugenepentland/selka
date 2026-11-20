@@ -1,0 +1,29 @@
+record Holder:
+    items: int[]
+    tag: int
+
+
+func measure(xs: int[]) -> int:
+    return len(xs)
+
+
+func bump(mut xs: int[]):
+    append(mut xs, 1)
+
+
+func keep_own(own xs: int[]) -> int:
+    return len(xs)
+
+
+func cell_mut_rows_read_loop(mut o: int[][]) -> int:
+    mut total = 0
+    const e = o[1]
+    for i in range(1):
+        append(mut o, [7])
+        total += len(e)
+    return total
+
+
+func main(out: Stream) -> int:
+    print(out, 0)
+    return 0

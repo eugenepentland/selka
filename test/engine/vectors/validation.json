@@ -1,0 +1,99 @@
+{
+  "format": "selka-engine-vectors-v1",
+  "about": "Validation scenarios over an in-memory filesystem. Each step is a new process over the same store: it applies its edits, queries the listed nodes of the graph in order, and expects these counts: recomputed (kind bodies run), served (queries answered from a record), early_cutoffs (dependencies recomputed to the result their dependent recorded), reads (file reads the world was asked for, whether to hash or to compute). A node's result is the pieces of its reads joined with '|' (a file's bytes, '~' when absent, '1' or '0' for an existence test, the sorted names of a listing joined with ',', a variable's value or '~', 'p' for a placement variable, a dependency's result), folded by 'concat' (as is), 'length' (decimal length), 'parity' ('even' or 'odd') or 'empty' (''). Edits: write [path, text] (a new file or in place, stamped with the clock), touch path, replace [path, text] (new inode), remove path, set_variable [name, value], unset_variable name, advance_ms n. A variable named PLACE_* is a placement variable. The clock starts at 1000000000000 ns; a step's setup advances it as it says.",
+  "scenarios": [
+    {
+      "name": "an unchanged file is served by the next process without reading it",
+      "graph": { "nodes": [ { "ops": [ { "file": "/src/a.txt" } ] } ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [], "query": [ 0 ], "results": [ "alpha" ], "expect": { "recomputed": 0, "served": 1, "early_cutoffs": 0, "reads": 0 } }
+      ]
+    },
+    {
+      "name": "a touched file with the same bytes is served after one hash",
+      "graph": { "nodes": [ { "ops": [ { "file": "/src/a.txt" } ] } ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "advance_ms": 1000 }, { "touch": "/src/a.txt" } ], "query": [ 0 ], "results": [ "alpha" ], "expect": { "recomputed": 0, "served": 1, "early_cutoffs": 0, "reads": 1 } }
+      ]
+    },
+    {
+      "name": "a changed file is recomputed",
+      "graph": { "nodes": [ { "ops": [ { "file": "/src/a.txt" } ] } ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "advance_ms": 1000 }, { "write": [ "/src/a.txt", "omega" ] } ], "query": [ 0 ], "results": [ "omega" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 2 } }
+      ]
+    },
+    {
+      "name": "a dependency recomputed to the same result leaves its dependent valid: an early cutoff",
+      "graph": { "nodes": [
+        { "ops": [ { "file": "/src/a.txt" } ], "fold": "length" },
+        { "ops": [ { "node": 0 }, { "file": "/src/b.txt" } ] }
+      ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "write": [ "/src/b.txt", "bee" ] }, { "advance_ms": 1000 } ], "query": [ 1 ], "results": [ "5|bee" ], "expect": { "recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 2 } },
+        { "edits": [ { "advance_ms": 1000 }, { "write": [ "/src/a.txt", "gamma" ] }, { "advance_ms": 1000 } ], "query": [ 1 ], "results": [ "5|bee" ], "expect": { "recomputed": 1, "served": 1, "early_cutoffs": 1, "reads": 2 } }
+      ]
+    },
+    {
+      "name": "a dependency whose result changed recomputes its dependent",
+      "graph": { "nodes": [
+        { "ops": [ { "file": "/src/a.txt" } ], "fold": "length" },
+        { "ops": [ { "node": 0 } ] }
+      ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "advance_ms": 1000 } ], "query": [ 1 ], "results": [ "5" ], "expect": { "recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "advance_ms": 1000 }, { "write": [ "/src/a.txt", "longer" ] } ], "query": [ 1 ], "results": [ "6" ], "expect": { "recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 2 } }
+      ]
+    },
+    {
+      "name": "a placement variable changing leaves a query served",
+      "graph": { "nodes": [ { "ops": [ { "placement": "PLACE_CACHE" }, { "file": "/src/a.txt" } ] } ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "set_variable": [ "PLACE_CACHE", "/one" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "p|alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "set_variable": [ "PLACE_CACHE", "/two" ] } ], "query": [ 0 ], "results": [ "p|alpha" ], "expect": { "recomputed": 0, "served": 1, "early_cutoffs": 0, "reads": 0 } }
+      ]
+    },
+    {
+      "name": "a keyed variable changing recomputes a query",
+      "graph": { "nodes": [ { "ops": [ { "variable": "MODE" }, { "file": "/src/a.txt" } ] } ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "alpha" ] }, { "set_variable": [ "MODE", "debug" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "debug|alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "set_variable": [ "MODE", "release" ] } ], "query": [ 0 ], "results": [ "release|alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "unset_variable": "MODE" } ], "query": [ 0 ], "results": [ "~|alpha" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } }
+      ]
+    },
+    {
+      "name": "a file rewritten within the racy window with the same size is not served stale",
+      "graph": { "nodes": [ { "ops": [ { "file": "/src/a.txt" } ] } ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.txt", "aaaaa" ] }, { "advance_ms": 1000 }, { "write": [ "/src/a.txt", "bbbbb" ] } ], "query": [ 0 ], "results": [ "bbbbb" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "write": [ "/src/a.txt", "ccccc" ] } ], "query": [ 0 ], "results": [ "ccccc" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 2 } }
+      ]
+    },
+    {
+      "name": "a file that was looked for and absent, and then appears, is a change",
+      "graph": { "nodes": [ { "ops": [ { "file": "/src/late.txt" }, { "exists": "/src/probe" } ] } ] },
+      "steps": [
+        { "edits": [ { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "~|0" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [], "query": [ 0 ], "results": [ "~|0" ], "expect": { "recomputed": 0, "served": 1, "early_cutoffs": 0, "reads": 0 } },
+        { "edits": [ { "write": [ "/src/late.txt", "here" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "here|0" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } },
+        { "edits": [ { "write": [ "/src/probe", "x" ] }, { "advance_ms": 1000 } ], "query": [ 0 ], "results": [ "here|1" ], "expect": { "recomputed": 1, "served": 0, "early_cutoffs": 0, "reads": 1 } }
+      ]
+    },
+    {
+      "name": "a listing sees a name appear, and its filter keeps it blind to the names it does not keep",
+      "graph": { "nodes": [
+        { "ops": [ { "listing": { "path": "/src", "filter": 0 } } ] },
+        { "ops": [ { "listing": { "path": "/src", "filter": 1 } } ] }
+      ] },
+      "steps": [
+        { "edits": [ { "write": [ "/src/a.selka", "" ] }, { "advance_ms": 1000 } ], "query": [ 0, 1 ], "results": [ "a.selka", "a.selka" ], "expect": { "recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 0 } },
+        { "edits": [ { "write": [ "/src/notes.txt", "" ] }, { "advance_ms": 1000 } ], "query": [ 0, 1 ], "results": [ "a.selka,notes.txt", "a.selka" ], "expect": { "recomputed": 1, "served": 1, "early_cutoffs": 0, "reads": 0 } },
+        { "edits": [ { "write": [ "/src/b.selka", "" ] }, { "advance_ms": 1000 } ], "query": [ 0, 1 ], "results": [ "a.selka,b.selka,notes.txt", "a.selka,b.selka" ], "expect": { "recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 0 } }
+      ]
+    }
+  ]
+}

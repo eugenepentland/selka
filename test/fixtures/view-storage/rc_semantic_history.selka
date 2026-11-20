@@ -1,0 +1,131 @@
+record History:
+    live: DictValues[int, int]
+    snapshot: dict[int, int]
+
+
+record Envelope:
+    value: History
+
+
+enum Chain:
+    empty
+    link(value: History, rest: Chain)
+
+
+public func test_snapshot_then_owner_mutation_preserves_the_view_of_the_shared_original() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut result = History(live, live.mapping)
+    result.snapshot[1] = 11
+    mapping[1] = 13
+    return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_owner_then_snapshot_mutation_preserves_the_same_original_view() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut result = History(live, live.mapping)
+    mapping[1] = 13
+    result.snapshot[1] = 11
+    return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_sharing_before_view_creation_still_affects_the_next_owner_mutation() -> bool:
+    mut mapping = {1: 7}
+    mut snapshot = mapping
+    snapshot[1] = 11
+    mut live = mapping.values()
+    mapping[1] = 13
+    return list(live) == [7] and snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_view_created_after_both_detaches_follows_the_new_owner() -> bool:
+    mut mapping = {1: 7}
+    mut snapshot = mapping
+    snapshot[1] = 11
+    mapping[1] = 13
+    mut live = mapping.values()
+    mapping[1] = 17
+    return list(live) == [17] and snapshot[1] == 11 and mapping[1] == 17
+
+
+public func test_copying_only_whole_views_keeps_the_mapping_live() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut sibling = live
+    mapping[1] = 13
+    return list(live) == [13] and list(sibling) == [13]
+
+
+public func test_nested_record_keeps_the_original_view_after_both_writes() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut result = Envelope(History(live, live.mapping))
+    result.value.snapshot[1] = 11
+    mapping[1] = 13
+    return list(result.value.live) == [7] and result.value.snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_fixed_array_keeps_the_original_view_after_both_writes() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut results: FixedArray[History, 1] = [History(live, live.mapping)]
+    results[0].snapshot[1] = 11
+    mapping[1] = 13
+    return list(results[0].live) == [7] and results[0].snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_list_element_keeps_the_original_view_after_both_writes() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut results = [History(live, live.mapping)]
+    results[0].snapshot[1] = 11
+    mapping[1] = 13
+    return list(results[0].live) == [7] and results[0].snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_boxed_variant_materialization_keeps_the_original_view() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut chain = Chain.link(value=History(live, live.mapping), rest=Chain.empty)
+    match chain:
+        case Chain.link(value=item, rest=_):
+            mut result = item
+            result.snapshot[1] = 11
+            mapping[1] = 13
+            return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+        case Chain.empty:
+            return False
+
+
+public func test_heap_read_only_projection_does_not_detach_a_live_mapping() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut size = len(live.mapping)
+    mapping[1] = 13
+    return size == 1 and list(live) == [13]
+
+
+public func test_arena_read_only_projection_does_not_detach_a_live_mapping() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut size = len(live.mapping)
+    mapping[1] = 13
+    return size == 1 and list(live) == [13]
+
+
+public func test_arena_snapshot_then_owner_mutation_keeps_the_shared_original() -> bool:
+    mut mapping = {1: 7}
+    mut live = mapping.values()
+    mut result = History(live, live.mapping)
+    result.snapshot[1] = 11
+    mapping[1] = 13
+    return list(result.live) == [7] and result.snapshot[1] == 11 and mapping[1] == 13
+
+
+public func test_arena_append_of_a_fresh_mapping_does_not_create_a_semantic_snapshot() -> bool:
+    mut rows: dict[int, int][] = []
+    rows.append({1: 7})
+    mut live = rows[0].values()
+    rows[0][1] = 13
+    return list(live) == [13] and rows[0][1] == 13

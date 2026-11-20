@@ -1,0 +1,25 @@
+record Holder:
+    items: int[]
+    tag: int
+
+
+func measure(xs: int[]) -> int:
+    return len(xs)
+
+
+func bump(mut xs: int[]):
+    append(mut xs, 1)
+
+
+func keep_own(own xs: int[]) -> int:
+    return len(xs)
+
+
+func cell_plain_list_return_none(o: int[]) -> int[]:
+    const e = o
+    return e
+
+
+func main(out: Stream) -> int:
+    print(out, 0)
+    return 0

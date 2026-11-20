@@ -1,0 +1,13 @@
+# 64-bit arithmetic on a 32-bit CPU: products, division and remainder of large values, from a list the compiler
+# cannot fold away.
+func main() -> int:
+    mut seeds: int[] = []
+    mut x: int = 1234567890
+    for i in range(1, 40):
+        x = (x * 6364136 + i) % 4294967291
+        append(mut seeds, x)
+    mut total: int = 0
+    for i in range(len(seeds)):
+        const v = seeds[i] * (seeds[(i + 7) % len(seeds)] % 2000000 + 1)
+        total = total + v // (i * 1000003 + 1) + v % 97 - v // 9000000000000
+    return total % 251 + 1

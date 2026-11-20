@@ -1,0 +1,500 @@
+import strings
+
+# A signed span of wall-clock time, counted in nanoseconds.
+public record Duration:
+    nanoseconds: int
+
+
+# A point on the host's Unix clock, counted in nanoseconds since the epoch.
+public record Instant:
+    unix_nanoseconds: int
+
+
+# Typed carrier for one host clock read.
+result Reading:
+    ok: int,
+    err: int
+
+
+# Largest magnitude a nanosecond count can hold.
+func limit() -> int:
+    return 9223372036854775807
+
+
+# A duration of the given number of nanoseconds.
+public func nanoseconds(count: int) -> Duration:
+    return Duration(nanoseconds=count)
+
+
+# A duration of whole microseconds, rejecting counts beyond the signed range.
+public func microseconds(count: int) -> Duration fails str:
+    return try scaled(count, 1000)
+
+
+# A duration of whole milliseconds, rejecting counts beyond the signed range.
+public func milliseconds(count: int) -> Duration fails str:
+    return try scaled(count, 1000000)
+
+
+# A duration of whole seconds, rejecting counts beyond the signed range.
+public func seconds(count: int) -> Duration fails str:
+    return try scaled(count, 1000000000)
+
+
+# A duration for a count of units, checked against the nanosecond range.
+func scaled(count: int, unit: int) -> Duration fails str:
+    mut reach = limit() // unit
+    if count > reach or count < 0 - reach:
+        fail "duration does not fit a 64-bit nanosecond count"
+    return Duration(nanoseconds=count * unit)
+
+
+# Two durations added, rejecting a total outside the nanosecond range.
+public func sum(first: Duration, second: Duration) -> Duration fails str:
+    if second.nanoseconds > 0 and first.nanoseconds > limit() - second.nanoseconds:
+        fail "duration sum does not fit a 64-bit nanosecond count"
+    if second.nanoseconds < 0 and first.nanoseconds < (0 - limit() - 1) - second.nanoseconds:
+        fail "duration sum does not fit a 64-bit nanosecond count"
+    return Duration(nanoseconds=first.nanoseconds + second.nanoseconds)
+
+
+# The second duration subtracted from the first, rejecting range overflow.
+public func difference(first: Duration, second: Duration) -> Duration fails str:
+    if second.nanoseconds == 0 - limit() - 1:
+        fail "duration difference does not fit a 64-bit nanosecond count"
+    return try sum(first, Duration(nanoseconds=0 - second.nanoseconds))
+
+
+# Three-way comparison of two durations.
+public func compare(first: Duration, second: Duration) -> int:
+    if first.nanoseconds < second.nanoseconds:
+        return 0 - 1
+    if first.nanoseconds > second.nanoseconds:
+        return 1
+    return 0
+
+
+# A duration as a floating count of seconds, rounded to binary64.
+public func to_seconds(value: Duration) -> float:
+    return float(value.nanoseconds) / 1000000000.0
+
+
+# A duration truncated toward zero to whole milliseconds.
+public func to_milliseconds(value: Duration) -> int:
+    if value.nanoseconds >= 0:
+        return value.nanoseconds // 1000000
+    if value.nanoseconds == 0 - limit() - 1:
+        return 0 - 9223372036854
+    return 0 - (0 - value.nanoseconds) // 1000000
+
+
+# The current wall-clock instant, read through an explicit clock capability. Under `--restrict` a program's clock reads
+# wall time only with `--allow-clock`; without it `now` fails ("the wall clock is not granted") while `monotonic` and
+# `sleep` keep working.
+public func now(clock: Clock) -> Instant fails str:
+    match clock_now[Reading](clock):
+        case ok(count):
+            return Instant(unix_nanoseconds=count)
+        case err(code):
+            if code == 5:
+                fail "the wall clock is not granted: pass `--allow-clock`"
+            if code == 1:
+                fail "clock capability is unavailable"
+            if code == 2:
+                fail "clock capability was denied"
+            fail "clock capability failed"
+
+
+# A simulated clock that reads `start` until it is advanced. It grants no real
+# authority, so building one needs no capability and is not an effect, and code
+# that reads it through `now` cannot tell it from a host clock.
+public func simulated_clock(start: Instant) -> Clock:
+    return __stand_in[Clock](start.unix_nanoseconds)
+
+
+# A Clock stand-in for fault-injection tests: it reads `start` like `simulated_clock`, answers its first `reads` calls
+# of `now` and then fails every one the way a provider that has stopped working does, with `clock capability failed`. A
+# count below one fails the first read. `advance`, `sleep` and `monotonic` keep working. It grants no real authority and
+# is deterministic, so a test that uses it stays cached.
+public func failing_clock(start: Instant, reads: int) -> Clock:
+    const clock = simulated_clock(start)
+    _ = __stand_fail(clock, reads)
+    return clock
+
+
+# Move a simulated clock by `duration`, backward for a negative one, the way a
+# wall clock may step. A host-granted clock cannot be moved.
+public func advance(clock: Clock, duration: Duration) -> Unit fails str:
+    mut status = __clock_advance(clock, duration.nanoseconds)
+    if status == 1:
+        fail "only a simulated clock can be advanced"
+    if status == 2:
+        fail "the simulated clock would leave the 64-bit nanosecond range"
+    return ()
+
+
+# An instant rebuilt from a stored Unix nanosecond count.
+public func from_unix_nanoseconds(count: int) -> Instant:
+    return Instant(unix_nanoseconds=count)
+
+
+# An instant advanced by a duration, rejecting a result outside the epoch range.
+public func after(start: Instant, duration: Duration) -> Instant fails str:
+    if duration.nanoseconds > 0 and start.unix_nanoseconds > limit() - duration.nanoseconds:
+        fail "instant does not fit a 64-bit Unix nanosecond count"
+    if duration.nanoseconds < 0 and start.unix_nanoseconds < (0 - limit() - 1) - duration.nanoseconds:
+        fail "instant does not fit a 64-bit Unix nanosecond count"
+    return Instant(unix_nanoseconds=start.unix_nanoseconds + duration.nanoseconds)
+
+
+# The nonnegative span between two instants, rejecting a reversed pair.
+public func elapsed(start: Instant, end: Instant) -> Duration fails str:
+    if end.unix_nanoseconds < start.unix_nanoseconds:
+        fail "elapsed needs an end at or after its start"
+    if start.unix_nanoseconds < 0 and end.unix_nanoseconds > limit() + start.unix_nanoseconds:
+        fail "elapsed span does not fit a 64-bit nanosecond count"
+    return Duration(nanoseconds=end.unix_nanoseconds - start.unix_nanoseconds)
+
+
+# Whether a deadline has been reached at the given instant.
+public func expired(deadline: Instant, current: Instant) -> bool:
+    return current.unix_nanoseconds >= deadline.unix_nanoseconds
+
+
+# The clock's monotonic reading in nanoseconds: it never decreases, and a wall-clock step (`advance` on a simulated
+# clock) does not move it. Use it to measure elapsed time; `now` is the wall clock.
+public func monotonic(clock: Clock) -> int:
+    return __clock_monotonic(clock)
+
+
+# Wait `count` nanoseconds on `clock` (`sleep(clock, 1000000)` is one millisecond). A host clock waits for real; a
+# simulated clock advances by that much instead, so a test that sleeps runs at once. A count of zero or less waits
+# for nothing.
+public func sleep(clock: Clock, count: int) -> Unit:
+    __clock_sleep(clock, count)
+    return ()
+
+
+# A calendar date and time of day in UTC, to the nanosecond: the proleptic Gregorian calendar, no leap seconds.
+public record Civil:
+    year: int
+    month: int
+    day: int
+    hour: int
+    minute: int
+    second: int
+    nanosecond: int
+
+
+# Whether `year` is a Gregorian leap year.
+public func is_leap_year(year: int) -> bool:
+    if year % 4 != 0:
+        return False
+    if year % 100 != 0:
+        return True
+    return year % 400 == 0
+
+
+# The number of days in `month` (1 to 12) of `year`, or 0 for a month outside that range.
+public func days_in_month(year: int, month: int) -> int:
+    if month < 1 or month > 12:
+        return 0
+    if month == 2:
+        if is_leap_year(year):
+            return 29
+        return 28
+    if month in b"\x04\x06\t\x0b":
+        return 30
+    return 31
+
+
+# Days from 1970-01-01 to a Gregorian date (negative before it), for any valid month and day.
+func days_from_civil(year: int, month: int, day: int) -> int:
+    mut shifted_year = year
+    mut shifted_month = month + 9
+    if month > 2:
+        shifted_month = month - 3
+    else:
+        shifted_year -= 1
+    const era = shifted_year // 400
+    const year_of_era = shifted_year - era * 400
+    const day_of_year = (153 * shifted_month + 2) // 5 + day - 1
+    const day_of_era = year_of_era * 365 + year_of_era // 4 - year_of_era // 100 + day_of_year
+    return era * 146097 + day_of_era - 719468
+
+
+# The date `days` after 1970-01-01, with a zero time of day.
+func civil_from_days(days: int) -> Civil:
+    const shifted = days + 719468
+    const era = shifted // 146097
+    const day_of_era = shifted - era * 146097
+    const year_of_era = (day_of_era - day_of_era // 1460 + day_of_era // 36524 - day_of_era // 146096) // 365
+    const day_of_year = day_of_era - (365 * year_of_era + year_of_era // 4 - year_of_era // 100)
+    const month_index = (5 * day_of_year + 2) // 153
+    const day = day_of_year - (153 * month_index + 2) // 5 + 1
+    mut month = month_index + 3
+    mut year = year_of_era + era * 400
+    if month_index >= 10:
+        month = month_index - 9
+        year += 1
+    return Civil(year=year, month=month, day=day, hour=0, minute=0, second=0, nanosecond=0)
+
+
+# The UTC date and time of an instant.
+public func to_civil(instant: Instant) -> Civil:
+    const whole = instant.unix_nanoseconds // 1000000000
+    const fraction = instant.unix_nanoseconds % 1000000000
+    const day = civil_from_days(whole // 86400)
+    const in_day = whole % 86400
+    return Civil(year=day.year, month=day.month, day=day.day, hour=in_day // 3600, minute=in_day % 3600 // 60, second=in_day % 60, nanosecond=fraction)
+
+
+# The ISO 8601 weekday of a date: Monday is 1 and Sunday is 7.
+public func weekday(civil: Civil) -> int:
+    return (days_from_civil(civil.year, civil.month, civil.day) + 3) % 7 + 1
+
+
+# The instant of a UTC date and time shifted by `offset` seconds (what a numeric zone subtracts), rejecting a field out
+# of range and an instant outside the signed 64-bit nanosecond count (1677-09-21T00:12:43.145224192Z to
+# 2262-04-11T23:47:16.854775807Z).
+func instant_of(civil: Civil, offset: int) -> Instant fails str:
+    if civil.year < 1 or civil.year > 9999:
+        fail f"year {civil.year} is outside 1 to 9999"
+    if civil.month < 1 or civil.month > 12:
+        fail f"month {civil.month} is outside 1 to 12"
+    if civil.day < 1 or civil.day > days_in_month(civil.year, civil.month):
+        fail f"day {civil.day} is not in month {civil.month} of {civil.year}"
+    if civil.hour < 0 or civil.hour > 23:
+        fail f"hour {civil.hour} is outside 0 to 23"
+    if civil.minute < 0 or civil.minute > 59:
+        fail f"minute {civil.minute} is outside 0 to 59"
+    if civil.second < 0 or civil.second > 59:
+        fail f"second {civil.second} is outside 0 to 59"
+    if civil.nanosecond < 0 or civil.nanosecond > 999999999:
+        fail f"nanosecond {civil.nanosecond} is outside 0 to 999999999"
+    const whole = days_from_civil(civil.year, civil.month, civil.day) * 86400 + civil.hour * 3600 + civil.minute * 60 + civil.second - offset
+    const fraction = civil.nanosecond
+    if whole > 9223372036 or whole < 0 - 9223372037:
+        fail "instant does not fit a 64-bit Unix nanosecond count"
+    if whole == 9223372036 and fraction > 854775807:
+        fail "instant does not fit a 64-bit Unix nanosecond count"
+    if whole == 0 - 9223372037 and fraction < 145224192:
+        fail "instant does not fit a 64-bit Unix nanosecond count"
+    if whole < 0 and fraction > 0:
+        return Instant(unix_nanoseconds=(whole + 1) * 1000000000 + (fraction - 1000000000))
+    return Instant(unix_nanoseconds=whole * 1000000000 + fraction)
+
+
+# The instant of a UTC date and time, rejecting a field out of range and an instant the nanosecond clock cannot hold.
+public func from_civil(civil: Civil) -> Instant fails str:
+    return try instant_of(civil, 0)
+
+
+# A fixed-width number from `count` ASCII digits at `at`, or -1 when any is not a digit or the text ends first.
+func digits_at(data: bytes, at: int, count: int) -> int:
+    if at < 0 or at + count > len(data):
+        return 0 - 1
+    mut value = 0
+    mut index = 0
+    while index < count:
+        const byte = data[at + index]
+        if byte < 48 or byte > 57:
+            return 0 - 1
+        value = value * 10 + (byte - 48)
+        index += 1
+    return value
+
+
+func byte_is(data: bytes, at: int, expected: int) -> bool:
+    return 0 <= at < len(data) and data[at] == expected
+
+
+# A date and time as `YYYY-MM-DDThh:mm:ss[.fraction]Z`, in UTC. The fraction is written only when it is not zero, and
+# without trailing zeros.
+public func format_rfc3339(instant: Instant) -> str:
+    const civil = to_civil(instant)
+    mut text = f"{civil.year:04d}-{civil.month:02d}-{civil.day:02d}T{civil.hour:02d}:{civil.minute:02d}:{civil.second:02d}"
+    if civil.nanosecond != 0:
+        mut digits = f"{civil.nanosecond:09d}"
+        while digits[len(digits) - 1] == 48:
+            digits = copy(digits[0:len(digits) - 1])
+        text = text + "." + digits
+    return text + "Z"
+
+
+# An RFC 3339 timestamp: `T` or `t` between date and time, one to nine fraction digits, and `Z`, `z` or a `+hh:mm` or
+# `-hh:mm` offset. A leap second (`:60`), a fraction of ten digits or more and anything after the offset are refused.
+public func parse_rfc3339(text: str) -> Instant fails str:
+    const data = strings.encode(text)
+    if len(data) < 20:
+        fail "RFC 3339 timestamp is too short"
+    const year = digits_at(data, 0, 4)
+    const month = digits_at(data, 5, 2)
+    const day = digits_at(data, 8, 2)
+    const hour = digits_at(data, 11, 2)
+    const minute = digits_at(data, 14, 2)
+    const second = digits_at(data, 17, 2)
+    if year < 0 or month < 0 or day < 0 or hour < 0 or minute < 0 or second < 0:
+        fail "RFC 3339 timestamp has a malformed date or time"
+    if not byte_is(data, 4, 45) or not byte_is(data, 7, 45) or not byte_is(data, 13, 58) or not byte_is(data, 16, 58):
+        fail "RFC 3339 timestamp has a malformed date or time"
+    if not byte_is(data, 10, 84) and not byte_is(data, 10, 116):
+        fail "RFC 3339 timestamp needs T between the date and the time"
+    mut at = 19
+    mut fraction = 0
+    if byte_is(data, at, 46):
+        at += 1
+        mut places = 0
+        while at < len(data) and 48 <= data[at] <= 57:
+            if places < 9:
+                fraction = fraction * 10 + (data[at] - 48)
+            places += 1
+            at += 1
+        if places == 0 or places > 9:
+            fail "RFC 3339 fraction needs one to nine digits"
+        while places < 9:
+            fraction = fraction * 10
+            places += 1
+    mut offset = 0
+    if byte_is(data, at, 90) or byte_is(data, at, 122):
+        at += 1
+    elif byte_is(data, at, 43) or byte_is(data, at, 45):
+        const sign_is_minus = data[at] == 45
+        const offset_hour = digits_at(data, at + 1, 2)
+        const offset_minute = digits_at(data, at + 4, 2)
+        if offset_hour < 0 or offset_minute < 0 or not byte_is(data, at + 3, 58):
+            fail "RFC 3339 offset must be +hh:mm or -hh:mm"
+        if offset_hour > 23 or offset_minute > 59:
+            fail "RFC 3339 offset is out of range"
+        offset = offset_hour * 3600 + offset_minute * 60
+        if sign_is_minus:
+            offset = 0 - offset
+        at += 6
+    else:
+        fail "RFC 3339 timestamp needs Z or a numeric offset"
+    if at != len(data):
+        fail "RFC 3339 timestamp has trailing text"
+    return try instant_of(Civil(year=year, month=month, day=day, hour=hour, minute=minute, second=second, nanosecond=fraction), offset)
+
+
+# An HTTP date in its preferred form (IMF-fixdate): `Sun, 06 Nov 1994 08:49:37 GMT`. The fraction of a second is dropped.
+public func format_http_date(instant: Instant) -> str:
+    const civil = to_civil(instant)
+    const day_index = weekday(civil) - 1
+    const day_names = "MonTueWedThuFriSatSun"
+    const month_names = "JanFebMarAprMayJunJulAugSepOctNovDec"
+    const day_name = day_names[day_index * 3:day_index * 3 + 3]
+    const month_name = month_names[(civil.month - 1) * 3:(civil.month - 1) * 3 + 3]
+    return f"{day_name}, {civil.day:02d} {month_name} {civil.year:04d} {civil.hour:02d}:{civil.minute:02d}:{civil.second:02d} GMT"
+
+
+# Whether the octets at `at` spell `expected`.
+func matches(data: bytes, at: int, expected: str) -> bool:
+    if at < 0 or at + len(expected) > len(data):
+        return False
+    mut index = 0
+    while index < len(expected):
+        if data[at + index] != expected[index]:
+            return False
+        index += 1
+    return True
+
+
+# The number 1 to 12 of a three-letter English month name at `at`, or 0.
+func month_number(data: bytes, at: int) -> int:
+    const names = "JanFebMarAprMayJunJulAugSepOctNovDec"
+    mut index = 0
+    while index < 12:
+        if matches(data, at, names[index * 3:index * 3 + 3]):
+            return index + 1
+        index += 1
+    return 0
+
+
+# Whether a three-letter English weekday name is at `at`.
+func short_weekday_at(data: bytes, at: int) -> bool:
+    const names = "MonTueWedThuFriSatSun"
+    mut index = 0
+    while index < 7:
+        if matches(data, at, names[index * 3:index * 3 + 3]):
+            return True
+        index += 1
+    return False
+
+
+# The length of the full English weekday name at `at` followed by a comma and a space, or 0.
+func full_weekday_at(data: bytes, at: int) -> int:
+    const names = ["Monday, ", "Tuesday, ", "Wednesday, ", "Thursday, ", "Friday, ", "Saturday, ", "Sunday, "]
+    for name in names:
+        if matches(data, at, name):
+            return len(name)
+    return 0
+
+
+# The time of day `hh:mm:ss` at `at` in seconds, or -1.
+func clock_at(data: bytes, at: int) -> int:
+    const hour = digits_at(data, at, 2)
+    const minute = digits_at(data, at + 3, 2)
+    const second = digits_at(data, at + 6, 2)
+    if hour < 0 or minute < 0 or second < 0 or not byte_is(data, at + 2, 58) or not byte_is(data, at + 5, 58):
+        return 0 - 1
+    if hour > 23 or minute > 59 or second > 59:
+        return 0 - 1
+    return hour * 3600 + minute * 60 + second
+
+
+# The instant of a date and a time of day in seconds, as the HTTP date forms give them (no fraction, always GMT).
+func http_instant(year: int, month: int, day: int, clock: int) -> Instant fails str:
+    if year < 0 or month < 1 or day < 0 or clock < 0:
+        fail "HTTP date has a malformed field"
+    return try instant_of(Civil(year=year, month=month, day=day, hour=clock // 3600, minute=clock % 3600 // 60, second=clock % 60, nanosecond=0), 0)
+
+
+# `Sun, 06 Nov 1994 08:49:37 GMT`.
+func parse_imf_fixdate(data: bytes) -> Instant fails str:
+    if len(data) != 29 or not short_weekday_at(data, 0) or not matches(data, 3, ", ") or not byte_is(data, 7, 32) or not byte_is(data, 11, 32) or not byte_is(data, 16, 32) or not matches(data, 25, " GMT"):
+        fail "HTTP date is not a valid IMF-fixdate"
+    return try http_instant(digits_at(data, 12, 4), month_number(data, 8), digits_at(data, 5, 2), clock_at(data, 17))
+
+
+# `Sunday, 06-Nov-94 08:49:37 GMT` (the obsolete RFC 850 form; a four-digit year is accepted too).
+func parse_rfc850_date(data: bytes, start: int) -> Instant fails str:
+    const day = digits_at(data, start, 2)
+    const at = start + 7
+    mut year = digits_at(data, at, 2)
+    mut next = at + 2
+    if year >= 0 and byte_is(data, next, 32):
+        if year >= 70:
+            year += 1900
+        else:
+            year += 2000
+    else:
+        year = digits_at(data, at, 4)
+        next = at + 4
+    if not byte_is(data, start + 2, 45) or not byte_is(data, start + 6, 45) or not byte_is(data, next, 32) or not matches(data, next + 9, " GMT") or len(data) != next + 13:
+        fail "HTTP date is not a valid RFC 850 date"
+    return try http_instant(year, month_number(data, start + 3), day, clock_at(data, next + 1))
+
+
+# `Sun Nov  6 08:49:37 1994` (the obsolete asctime form; the day is padded with a space).
+func parse_asctime_date(data: bytes) -> Instant fails str:
+    if len(data) != 24 or not byte_is(data, 3, 32) or not byte_is(data, 7, 32) or not byte_is(data, 10, 32) or not byte_is(data, 19, 32):
+        fail "HTTP date is not a valid asctime date"
+    mut day = digits_at(data, 8, 2)
+    if byte_is(data, 8, 32):
+        day = digits_at(data, 9, 1)
+    return try http_instant(digits_at(data, 20, 4), month_number(data, 4), day, clock_at(data, 11))
+
+
+# An HTTP date in any of the three forms RFC 9110 requires a recipient to accept: IMF-fixdate (`Sun, 06 Nov 1994
+# 08:49:37 GMT`), RFC 850 (`Sunday, 06-Nov-94 08:49:37 GMT`, two-digit years 70 to 99 meaning 19xx and 00 to 69 meaning
+# 20xx) and asctime (`Sun Nov  6 08:49:37 1994`). Names are case-sensitive; the weekday name is read but not checked
+# against the date.
+public func parse_http_date(text: str) -> Instant fails str:
+    const data = strings.encode(text)
+    const name_length = full_weekday_at(data, 0)
+    if name_length > 0:
+        return try parse_rfc850_date(data, name_length)
+    if len(data) > 3 and byte_is(data, 3, 44):
+        return try parse_imf_fixdate(data)
+    return try parse_asctime_date(data)

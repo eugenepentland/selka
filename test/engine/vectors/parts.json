@@ -1,0 +1,104 @@
+{
+  "format": "selka-engine-vectors-v2",
+  "about": "Scenarios for the projection read (record format 2, spec section 17.3), run like validation.json over an in-memory filesystem. A node may also publish parts, and a node op may read some of another node's parts. expose is a list of {name, op}: the node publishes the part called name with the digest of the node's own piece number op. A part op {node, names} reads those parts of node: its piece is the first eight hexadecimal digits of each part's digest, in the order of names, joined with ',', and '~' for a name the node does not publish. A part's digest is the BLAKE3-256 digest of the piece's bytes: 644a9bc5 is alpha, 056f1e7e is bravo, 15235afc is 'bravo changed' and cf6de96c is 'alpha changed'. Everything else is as in validation.json. A dependency fetched fresh and found to hold the parts a reader saw is an early cutoff; one found already answered in the process (memoized) is not counted again.",
+  "scenarios": [
+    {
+      "name": "a part nobody named changes: the reader is served, the producer recomputed, and the early cutoff is counted",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [1], "results": ["644a9bc5"], "expect": {"recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [{"advance_ms": 1000}, {"write": ["/src/b.txt", "bravo changed"]}, {"advance_ms": 1000}], "query": [1], "results": ["644a9bc5"], "expect": {"recomputed": 1, "served": 1, "early_cutoffs": 1, "reads": 3}}
+      ]
+    },
+    {
+      "name": "the part that was named changes: the reader is recomputed",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [1], "results": ["644a9bc5"], "expect": {"recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [{"advance_ms": 1000}, {"write": ["/src/a.txt", "alpha changed"]}, {"advance_ms": 1000}], "query": [1], "results": ["cf6de96c"], "expect": {"recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 3}}
+      ]
+    },
+    {
+      "name": "a reader of the whole result is recomputed by the change a part reader ignores",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [1, 2], "results": ["644a9bc5", "alpha|bravo"], "expect": {"recomputed": 3, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [{"advance_ms": 1000}, {"write": ["/src/b.txt", "bravo changed"]}, {"advance_ms": 1000}], "query": [1, 2], "results": ["644a9bc5", "alpha|bravo changed"], "expect": {"recomputed": 2, "served": 1, "early_cutoffs": 1, "reads": 3}}
+      ]
+    },
+    {
+      "name": "a part the dependency does not publish reads as absent, and stays absent while the dependency changes",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [3], "results": ["056f1e7e,~"], "expect": {"recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [{"advance_ms": 1000}, {"write": ["/src/a.txt", "alpha changed"]}, {"advance_ms": 1000}], "query": [3], "results": ["056f1e7e,~"], "expect": {"recomputed": 1, "served": 1, "early_cutoffs": 1, "reads": 3}}
+      ]
+    },
+    {
+      "name": "a dependency that publishes no parts has every part absent, and a change underneath it is cut off at the first reader",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [4], "results": ["~"], "expect": {"recomputed": 3, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [{"advance_ms": 1000}, {"write": ["/src/a.txt", "alpha changed"]}, {"advance_ms": 1000}], "query": [4], "results": ["~"], "expect": {"recomputed": 2, "served": 1, "early_cutoffs": 1, "reads": 3}}
+      ]
+    },
+    {
+      "name": "an unchanged producer is served to a new process with its parts, and nothing is recomputed",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [1, 3], "results": ["644a9bc5", "056f1e7e,~"], "expect": {"recomputed": 3, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [], "query": [1, 3], "results": ["644a9bc5", "056f1e7e,~"], "expect": {"recomputed": 0, "served": 3, "early_cutoffs": 0, "reads": 0}}
+      ]
+    },
+    {
+      "name": "a producer touched without changing is hashed once, and both readers are served",
+      "graph": { "nodes": [
+        {"ops": [{"file": "/src/a.txt"}, {"file": "/src/b.txt"}], "expose": [{"name": "p0", "op": 0}, {"name": "p1", "op": 1}]},
+        {"ops": [{"part": {"node": 0, "names": ["p0"]}}]},
+        {"ops": [{"node": 0}]},
+        {"ops": [{"part": {"node": 0, "names": ["p1", "pz"]}}]},
+        {"ops": [{"part": {"node": 1, "names": ["p0"]}}]}
+      ] },
+      "steps": [
+        {"edits": [{"write": ["/src/a.txt", "alpha"]}, {"write": ["/src/b.txt", "bravo"]}, {"advance_ms": 1000}], "query": [1], "results": ["644a9bc5"], "expect": {"recomputed": 2, "served": 0, "early_cutoffs": 0, "reads": 2}},
+        {"edits": [{"advance_ms": 1000}, {"touch": "/src/b.txt"}], "query": [1], "results": ["644a9bc5"], "expect": {"recomputed": 0, "served": 2, "early_cutoffs": 0, "reads": 1}}
+      ]
+    }
+  ]
+}

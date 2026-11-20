@@ -1,0 +1,78 @@
+import strings
+
+func total(values: int[]) -> int:
+    mut sum = 0
+    for value in values:
+        sum = sum + value
+    return sum
+
+
+# spec: PY-COMPREHENSION-1
+public func test_a_comprehension_maps_one_generator_optionally_filtered_into_a_fresh_list() -> bool:
+    mut source = [1, 2, 3, 4]
+    mut doubled: int[] = []
+    for value in source:
+        append(mut doubled, value * 2)
+    mut kept: int[] = []
+    for value in source:
+        if value > 2:
+            append(mut kept, value)
+    return total(doubled) + total(kept) * 3 + 1 == 42
+
+
+# spec-case: PY-COMPREHENSION-1
+public func test_comprehensions_read_strings_and_dictionaries_and_leave_the_source_unchanged() -> bool:
+    mut counts: dict[str, int] = {}
+    counts["a"] = 20
+    counts["b"] = 22
+    mut values: int[] = []
+    for key in counts:
+        append(mut values, counts[key])
+    mut letters: str[] = []
+    for piece in strings.chars("abc"):
+        if piece != "b":
+            append(mut letters, own piece)
+    mut source = [1, 2]
+    mut gather_result: int[] = []
+    for value in source:
+        const gather_value: int = value
+        append(mut gather_result, gather_value)
+    _ = gather_result
+    return values[0] + values[1] + len(letters) * 0 + len(source) * 0 == 42
+
+
+# spec: PY-COMPREHENSION-3
+public func test_a_comprehension_accepts_range_as_a_source_in_one_and_two_argument_forms() -> bool:
+    mut squares: int[] = []
+    for i in range(0, 5):
+        append(mut squares, i * i)
+    mut span: int[] = []
+    for n in range(3, 7):
+        append(mut span, n)
+    mut kept: int[] = []
+    for k in range(0, 6):
+        if k > 2:
+            append(mut kept, k)
+    mut empty: int[] = []
+    for j in range(5, 5):
+        append(mut empty, j)
+    return total(squares) + total(span) + total(kept) + len(empty) == 60
+
+
+# spec-case: PY-COMPREHENSION-3
+public func test_range_comprehension_capacity_math_preserves_signed_and_unsigned_results() -> bool:
+    mut crossed: i8[] = []
+    for i in range(-3i8, 4i8):
+        append(mut crossed, i)
+    mut unsigned: u8[] = []
+    for i in range(2u8, 6u8):
+        append(mut unsigned, i)
+    mut reversed: u8[] = []
+    for i in range(6u8, 2u8):
+        append(mut reversed, i)
+    mut materialized = list(range(-2i16, 3i16))
+    return len(crossed) + len(unsigned) * 2 + len(reversed) + len(materialized) * 5 == 40
+
+
+func main() -> int:
+    return 0

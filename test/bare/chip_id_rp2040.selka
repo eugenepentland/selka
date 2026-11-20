@@ -1,0 +1,12 @@
+# A real register on the RP2040 (MCU-B1D): SYSINFO's CHIP_ID at 0x40000000 holds the manufacturer in bits 0 to 11
+# (0x927), the part in bits 12 to 27 (2, the RP2040) and the revision in bits 28 to 31 (2 on the board, which reads
+# 0x20002927). `main` answers part * 10 + revision, or 1 when the manufacturer is not 0x927.
+# bare-platform: rp2040-ram
+# bare-status: 22
+import registers
+
+func main(reg: Registers) -> int:
+    const id = registers.read32(reg, 0x40000000)
+    if bit_and(id, 0xfff) != 0x927:
+        return 1
+    return int(bit_and(shift_right(id, 12u32), 0xffff)) * 10 + int(shift_right(id, 28u32))

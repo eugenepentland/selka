@@ -1,0 +1,96 @@
+# Hearing a stop (FR5b): a `Stop` turns `process.stop_requested` true once a stop has been heard or requested, and never
+# false again. A test's `Stop` parameter is a stand-in that no signal reaches; `process.simulated_stop()` makes another,
+# and `process.request_stop` delivers the notice. Copies of one handle share its flag; separate stand-ins do not.
+import process
+
+record Services:
+    stop: Stop
+    turns: int
+
+
+# How many turns a loop on `stop` takes before it ends, requesting the stop on turn `at`; at most 100 turns.
+func turns_until_stopped(stop: Stop, at: int) -> int:
+    mut turns = 0
+    while not process.stop_requested(stop) and turns < 100:
+        turns += 1
+        if turns == at:
+            process.request_stop(stop)
+    return turns
+
+
+func keep(stop: Stop) -> Stop:
+    return stop
+
+
+func serve(mut services: Services) -> str:
+    while not process.stop_requested(services.stop) and services.turns < 10:
+        services.turns += 1
+        if services.turns == 3:
+            process.request_stop(services.stop)
+    if process.stop_requested(services.stop):
+        return "goodbye after " + str(services.turns)
+    return "ran out"
+
+
+public func test_a_test_stop_parameter_starts_not_requested(stop: Stop) -> bool:
+    return not process.stop_requested(stop)
+
+
+public func test_a_requested_stop_reads_true_and_stays_true(stop: Stop) -> bool:
+    const before = process.stop_requested(stop)
+    process.request_stop(stop)
+    return not before and process.stop_requested(stop) and process.stop_requested(stop)
+
+
+public func test_a_simulated_stop_starts_not_requested() -> bool:
+    const stop = process.simulated_stop()
+    return not process.stop_requested(stop)
+
+
+public func test_requesting_twice_is_one_stop() -> bool:
+    const stop = process.simulated_stop()
+    process.request_stop(stop)
+    process.request_stop(stop)
+    return process.stop_requested(stop)
+
+
+public func test_a_loop_on_the_stop_ends_on_the_turn_it_is_requested() -> bool:
+    return turns_until_stopped(process.simulated_stop(), 4) == 4 and turns_until_stopped(process.simulated_stop(), 1) == 1
+
+
+public func test_copies_of_one_stop_see_one_flag() -> bool:
+    const stop = process.simulated_stop()
+    const copy = stop
+    const returned = keep(stop)
+    process.request_stop(copy)
+    return process.stop_requested(stop) and process.stop_requested(returned)
+
+
+public func test_separate_stand_ins_have_separate_flags(stop: Stop) -> bool:
+    const other = process.simulated_stop()
+    process.request_stop(other)
+    return process.stop_requested(other) and not process.stop_requested(stop)
+
+
+public func test_a_record_holds_the_stop_and_its_loop_says_goodbye() -> bool:
+    const stop = process.simulated_stop()
+    mut services = Services(stop=stop, turns=0)
+    return serve(mut services) == "goodbye after 3" and process.stop_requested(stop)
+
+
+public func test_a_list_and_an_option_hold_the_stop() -> bool:
+    const stop = process.simulated_stop()
+    const all = [stop, process.simulated_stop()]
+    const maybe: Stop? = Some(stop)
+    process.request_stop(all[0])
+    match maybe:
+        case Some(held):
+            return process.stop_requested(held) and not process.stop_requested(all[1])
+        case None:
+            return False
+
+
+public func test_a_stop_requested_before_the_loop_ends_it_before_its_first_turn() -> bool:
+    const stop = process.simulated_stop()
+    process.request_stop(stop)
+    return turns_until_stopped(stop, 50) == 0

@@ -1,0 +1,13 @@
+func classify(text: str) -> int:
+    if text.strip() == "":
+        return 0
+    const body = text.replace("a", "b")
+    const parts = body.split("-")
+    if text.startswith("x") or text.endswith("y"):
+        return 1
+    return len(text.upper()) + len(text.lower()) + len(body) + len(parts) + len(text.splitlines())
+
+
+func main(out: Stream) -> int:
+    out.print(classify("Abc"), classify("12-a2-b2"), classify("   "))
+    return 0

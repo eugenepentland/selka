@@ -1,0 +1,10 @@
+# Merge SPEC.md by bullet tag. Needs `sh scripts/setup-git.sh` once per clone;
+# without it git ignores this line and uses its ordinary text merge.
+/SPEC.md merge=spec-bullets
+
+# Dated-entry files merge by union (built into git, no setup): a conflicting hunk keeps both sides' lines, ours then
+# theirs, and never reports a conflict. Where both sides rewrite one existing line it keeps both versions, so a goals
+# row or field can appear twice: the `goals_register` gate action (tests/goals_register.py) refuses that. Entries may
+# now touch with no blank line between them after a merge.
+/CHANGES.md merge=union
+/docs/goals.md merge=union

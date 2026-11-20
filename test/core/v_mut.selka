@@ -1,0 +1,75 @@
+import lists
+
+record State:
+    items: int[]
+    count: int
+
+
+record Holder:
+    state: State
+    tag: int
+
+
+func fill(mut xs: int[], n: int) -> int:
+    for i in range(n):
+        append(mut xs, i * i)
+    return len(xs)
+
+
+func bump(mut xs: int[], i: int) -> unit:
+    xs[i] = xs[i] + 100
+
+
+func push_state(mut s: State, v: int) -> unit:
+    append(mut s.items, v)
+    s.count += 1
+
+
+func twice(mut s: State, v: int) -> int:
+    push_state(mut s, v)
+    push_state(mut s, v + 1)
+    return s.count
+
+
+func two(mut a: int[], mut b: int[]) -> int:
+    append(mut a, 1)
+    append(mut b, 2)
+    append(mut b, 3)
+    return len(a) + len(b)
+
+
+func pop_all(mut xs: int[]) -> int:
+    mut total = 0
+    while len(xs) > 0:
+        total += lists.pop(mut xs)
+    return total
+
+
+func early(mut xs: int[], stop: int) -> int:
+    for i in range(10):
+        append(mut xs, i)
+        if i == stop:
+            return i
+    return -1
+
+
+func main(out: Stream) -> int:
+    mut xs: int[] = []
+    mut r = fill(mut xs, 5)
+    print(out, r, len(xs), xs[4])
+    bump(mut xs, 2)
+    print(out, xs[2])
+    mut st = State(items=[], count=0)
+    push_state(mut st, 3)
+    print(out, st.count, len(st.items))
+    mut t = twice(mut st, 10)
+    print(out, t, st.count, len(st.items), st.items[2])
+    mut h = Holder(state=copy(st), tag=9)
+    mut n2 = fill(mut h.state.items, 2)
+    print(out, n2, len(h.state.items), len(st.items), h.tag)
+    mut a: int[] = []
+    mut b: int[] = [9]
+    print(out, two(mut a, mut b), len(a), len(b))
+    print(out, pop_all(mut xs), len(xs))
+    print(out, early(mut a, 3), len(a), early(mut a, 99), len(a))
+    return 0

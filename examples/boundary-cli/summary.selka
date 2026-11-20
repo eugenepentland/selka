@@ -1,0 +1,16 @@
+import strings
+
+func line_count(source: str) -> int:
+    if strings.char_count(source) == 0:
+        return 0
+    mut count = 1
+    for character in strings.chars(source):
+        if character == "\n":
+            count += 1
+    if strings.ends_with(source, "\n"):
+        count -= 1
+    return count
+
+
+public func render(source: str) -> str:
+    return '{"lines":' + str(line_count(source)) + ',"characters":' + str(strings.char_count(source)) + "}"

@@ -1,0 +1,237 @@
+import byte_builder
+import cache_record
+import hashes
+import hex
+import lists
+import strings
+
+# One pure step's externally publishable bytes and next byte snapshot of state.
+public record Step:
+    output: bytes
+    state: bytes
+
+
+# Immutable input, ordered chunks and initial state, captured before execution.
+# The existing dedicated directory owns a simple output filename. Limits bound
+# total captured input/chunks and total output; each state is also bounded.
+public record Request:
+    input: bytes
+    chunks: bytes[]
+    initial_state: bytes
+    output_path: str
+    max_bytes: int
+
+
+# Work performed in this invocation and verified progress reused from the journal.
+public record Report:
+    fresh: int
+    reused: int
+    output_digest: str
+    state: bytes
+
+
+# A durable run fails closed when committed evidence is damaged or incompatible.
+public enum Error:
+    Invalid
+    Storage(value: str)
+    Corrupt
+    Incompatible
+    Uncacheable
+
+
+# Describe failure without treating uncertain publication as success.
+public func message(error: Error) -> str:
+    match error:
+        case Invalid:
+            return "invalid durable request or step bounds"
+        case Storage(value=detail):
+            return copy(detail)
+        case Corrupt:
+            return "corrupt or missing committed durable evidence"
+        case Incompatible:
+            return "durable journal is incompatible with this request or implementation"
+        case Uncacheable:
+            return "durable callback has no qualified persistent identity"
+
+
+func valid_output_path(path: str) -> bool:
+    if strings.char_count(path) == 0 or strings.char_count(path) > 128 or path == "." or path == ".." or path == "run.json":
+        return False
+    if strings.starts_with(path, "chunk-") or strings.starts_with(path, ".myl-durable-"):
+        return False
+    for character in strings.chars(path):
+        if character == "/" or character == "\\" or ord(character) == 0:
+            return False
+    return True
+
+
+func valid(request: Request) -> bool:
+    if request.max_bytes < 1 or request.max_bytes > 8388608 or len(request.chunks) > 1024:
+        return False
+    if not valid_output_path(request.output_path):
+        return False
+    if len(request.input) > request.max_bytes or len(request.initial_state) > request.max_bytes:
+        return False
+    mut total = 0
+    for chunk in request.chunks:
+        if len(chunk) > request.max_bytes - total:
+            return False
+        total += len(chunk)
+    return True
+
+
+func request_descriptor(request: Request, identity: str) -> str:
+    mut fields = ["durable-request-v1", copy(identity), hashes.sha256(request.input), hex.encode(request.initial_state), copy(request.output_path), str(request.max_bytes)]
+    for chunk in request.chunks:
+        append(mut fields, hashes.sha256(chunk))
+    return hashes.sha256(cache_record.encode(fields))
+
+
+func artifact_name(index: int) -> str:
+    return "chunk-" + str(index) + ".entry"
+
+
+func journal(descriptor: str, phase: str, output: str, artifacts: str[]) -> bytes:
+    mut fields = ["durable-journal-v1", copy(descriptor), copy(phase), copy(output)]
+    for artifact in artifacts:
+        append(mut fields, copy(artifact))
+    return cache_record.encode(fields)
+
+
+func decode(data: bytes) -> str[] fails Error:
+    match cache_record.decode(data):
+        case Ok(fields):
+            return fields
+        case Err(_):
+            fail Error.Corrupt
+
+
+func unhex(value: str) -> bytes fails Error:
+    match bytes.fromhex(value):
+        case Err(_):
+            fail Error.Corrupt
+        case Ok(data):
+            if hex.encode(data) != value:
+                fail Error.Corrupt
+            return data
+
+
+func read_step(data: bytes, descriptor: str, index: int, chunk: bytes, state: bytes) -> Step fails Error:
+    const fields = try decode(data)
+    if len(fields) != 7:
+        fail Error.Corrupt
+    if fields[0] != "durable-step-v1" or fields[1] != descriptor or fields[2] != str(index):
+        fail Error.Corrupt
+    if fields[3] != hashes.sha256(chunk) or fields[4] != hashes.sha256(state):
+        fail Error.Corrupt
+    const output = try unhex(fields[5])
+    const next = try unhex(fields[6])
+    return Step(output=own output, state=own next)
+
+
+func artifact_owned(name: str) -> bool:
+    if not strings.starts_with(name, "chunk-") or not strings.ends_with(name, ".entry") or strings.char_count(name) < 13:
+        return False
+    for digit in strings.chars(strings.char_slice(name, 6, strings.char_count(name) - 6)):
+        if digit not in "0123456789":
+            return False
+    return True
+
+
+func collect(fs: Filesystem, names: str[], committed: int) -> Unit fails Error:
+    mut retained: str[] = []
+    for index in range(committed):
+        append(mut retained, artifact_name(index))
+    mut removed = False
+    for name in names:
+        if strings.starts_with(name, ".myl-durable-") or (artifact_owned(name) and not lists.contains(retained, name)):
+            _ = try fs.remove(name)
+            removed = True
+    if removed:
+        _ = try fs.sync_directory("")
+    return ()
+
+
+# Resume a chunk pipeline under an exclusive process-owned directory lease.
+# Artifacts become committed only after the journal's atomic write and directory
+# sync succeed. A killed process releases its lease; recovery checks every byte
+# before skipping work. Final output is atomically published from committed data.
+public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) -> Step) -> Report fails Error:
+    if not valid(request):
+        fail Error.Invalid
+    const identity = function_digest(compute)
+    if strings.char_count(identity) == 0:
+        fail Error.Uncacheable
+    const root = request_descriptor(request, identity)
+    with try fs.lock_directory("") as lease:
+        const names = try fs.list_directory("", 4096)
+        mut artifacts: str[] = []
+        mut published = False
+        mut expected_output = ""
+        if lists.contains(names, "run.json"):
+            const data = try fs.read_regular_file("run.json", 131072)
+            const fields = try decode(data)
+            if len(fields) < 4 or fields[0] != "durable-journal-v1":
+                fail Error.Corrupt
+            if fields[1] != root:
+                fail Error.Incompatible
+            if fields[2] != "running" and fields[2] != "published":
+                fail Error.Corrupt
+            published = fields[2] == "published"
+            expected_output = copy(fields[3])
+            for index in range(4, len(fields)):
+                append(mut artifacts, copy(fields[index]))
+            if len(artifacts) > len(request.chunks):
+                fail Error.Corrupt
+            if published and len(artifacts) != len(request.chunks):
+                fail Error.Corrupt
+            if not published and strings.char_count(expected_output) != 0:
+                fail Error.Corrupt
+        mut state = copy(request.initial_state)
+        mut output = byte_builder.create()
+        mut output_size = 0
+        for index in range(len(artifacts)):
+            const name = artifact_name(index)
+            if not lists.contains(names, name):
+                fail Error.Corrupt
+            const data = try fs.read_regular_file(name, request.max_bytes * 4 + 1024)
+            if hashes.sha256(data) != artifacts[index]:
+                fail Error.Corrupt
+            const step = try read_step(data, root, index, request.chunks[index], state)
+            if len(step.output) > request.max_bytes - output_size or len(step.state) > request.max_bytes:
+                fail Error.Corrupt
+            byte_builder.append(mut output, step.output)
+            output_size += len(step.output)
+            state = copy(step.state)
+        _ = try collect(fs, names, len(artifacts))
+        if not lists.contains(names, "run.json"):
+            _ = try fs.atomic_write_file("run.json", journal(root, "running", "", artifacts))
+        const reused = len(artifacts)
+        for index in range(reused, len(request.chunks)):
+            const step = compute(request.chunks[index], state)
+            if len(step.output) > request.max_bytes - output_size or len(step.state) > request.max_bytes:
+                fail Error.Invalid
+            const data = cache_record.encode(["durable-step-v1", copy(root), str(index), hashes.sha256(request.chunks[index]), hashes.sha256(state), hex.encode(step.output), hex.encode(step.state)])
+            _ = try fs.atomic_write_file(artifact_name(index), data)
+            append(mut artifacts, hashes.sha256(data))
+            _ = try fs.atomic_write_file("run.json", journal(root, "running", "", artifacts))
+            byte_builder.append(mut output, step.output)
+            output_size += len(step.output)
+            state = copy(step.state)
+        const completed = byte_builder.finish(output)
+        const digest = hashes.sha256(completed)
+        if published and expected_output != digest:
+            fail Error.Corrupt
+        mut output_matches = False
+        if lists.contains(names, request.output_path):
+            const existing = try fs.read_regular_file(request.output_path, request.max_bytes)
+            output_matches = existing == completed
+        if not output_matches:
+            _ = try fs.atomic_write_file(request.output_path, completed)
+        if not published:
+            _ = try fs.atomic_write_file("run.json", journal(root, "published", digest, artifacts))
+        # A previous published-journal rename may have returned an uncertain
+        # directory-sync error. Do not acknowledge that visible record until
+        # this invocation has synchronized its directory successfully.
+        _ = try fs.sync_directory("")
+        return Report(fresh=len(artifacts) - reused, reused=reused, output_digest=own digest, state=own state)

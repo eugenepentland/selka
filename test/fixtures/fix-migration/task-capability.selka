@@ -1,0 +1,21 @@
+import parallel
+
+# A program written before W28: two tasks take a capability they never read. `selka fix` deletes each such argument
+# and the parameter it filled; a task that reads its capability is left for a hand edit.
+func weigh(values: int[], _out: Stream, scale: int) -> int:
+    return len(values) * scale
+
+
+func square(value: int, _clock: Clock) -> int:
+    return value * value
+
+
+func main(out: Stream, clock: Clock) -> int:
+    const values = [1, 2, 3]
+    mut weighed = 0
+    with parallel.group() as g:
+        const t = g.submit(weigh, values, out, 2)
+        weighed = t.result()
+    const squares = parallel.map(values, square, clock)
+    print(out, weighed, squares[2])
+    return 0

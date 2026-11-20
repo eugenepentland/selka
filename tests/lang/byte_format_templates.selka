@@ -1,0 +1,107 @@
+# Zig-exact number text and a template for byte builders: `byte_format.decimal` is Zig's `{d:.N}`, `shortest` is Zig's `{d}`,
+# and `format` (with its one-, two- and three-text forms) writes a template whose `{d}`, `{d:.N}` and `{s}` placeholders take
+# numbers and texts, so one call replaces the run of literal and number appends a Zig `w.print` becomes. The vectors are what
+# the pinned Zig toolchain printed (experiments/redo-lib-fixes-20261107/capture): a differential test, not a re-derivation.
+import byte_builder
+import byte_format
+import math
+import zig_float_vectors as zig
+
+# The builder's text after one `append_decimal`.
+func decimal(value: float, places: int) -> bytes:
+    mut w = byte_builder.create()
+    _ = byte_format.decimal(mut w, value, places)
+    return byte_builder.finish(w)
+
+
+func shortest(value: float) -> bytes:
+    mut w = byte_builder.create()
+    byte_format.shortest(mut w, value)
+    return byte_builder.finish(w)
+
+
+# Report the first few differences of one column.
+func note(out: Stream, column: str, bits: u64, want: bytes, got: bytes, mut failures: int):
+    failures += 1
+    if failures <= 6:
+        print(out, column, "differs for bits", bits, "Zig", want, "got", got)
+
+
+public func test_shortest_and_decimal_match_zig_on_every_captured_vector(out: Stream) -> bool:
+    mut failures = 0
+    for v in zig.vectors():
+        const x = math.from_bits(v.bits)
+        if shortest(x) != v.shortest:
+            note(out, "{d}", v.bits, v.shortest, shortest(x), mut failures)
+        if decimal(x, 0) != v.fixed0:
+            note(out, "{d:.0}", v.bits, v.fixed0, decimal(x, 0), mut failures)
+        if decimal(x, 1) != v.fixed1:
+            note(out, "{d:.1}", v.bits, v.fixed1, decimal(x, 1), mut failures)
+        if decimal(x, 2) != v.fixed2:
+            note(out, "{d:.2}", v.bits, v.fixed2, decimal(x, 2), mut failures)
+        if decimal(x, 3) != v.fixed3:
+            note(out, "{d:.3}", v.bits, v.fixed3, decimal(x, 3), mut failures)
+        if decimal(x, 6) != v.fixed6:
+            note(out, "{d:.6}", v.bits, v.fixed6, decimal(x, 6), mut failures)
+    return failures == 0 and len(zig.vectors()) > 250
+
+
+public func test_decimal_rounds_the_shortest_digits_half_up_not_the_binary_value() -> bool:
+    return decimal(6.475, 2) == b"6.48" and decimal(2.675, 2) == b"2.68" and decimal(0.25, 1) == b"0.3" and decimal(-0.001, 2) == b"-0.00" and decimal(1.5, 0) == b"2"
+
+
+public func test_decimal_refuses_decimals_outside_0_to_17_and_leaves_the_builder_alone() -> bool:
+    mut w = byte_builder.create()
+    byte_builder.append(mut w, b"x")
+    if byte_format.decimal(mut w, 1.5, -1) or byte_format.decimal(mut w, 1.5, 18):
+        return False
+    return byte_builder.finish(w) == b"x" and byte_format.decimal(mut w, 1.5, 17) and len(byte_builder.finish(w)) == 20
+
+
+public func test_shortest_drops_the_point_zero_of_a_whole_number_and_keeps_the_sign_of_zero() -> bool:
+    return shortest(100.0) == b"100" and shortest(0.1) == b"0.1" and shortest(-0.0) == b"-0" and shortest(1e21) == b"1000000000000000000000" and shortest(math.from_bits(0x7ff8000000000000u64)) == b"nan"
+
+
+# The templates below are the shapes the G3 redo's SVG renderer wrote one statement at a time.
+func rect(x: float, y: float, w: float, label: bytes) -> bytes:
+    mut out = byte_builder.create()
+    byte_format.format1(mut out, b'<rect x="{d:.1}" y="{d:.1}" width="{d:.1}" data-label="{s}"/>\n', [x, y, w], label)
+    return byte_builder.finish(out)
+
+
+public func test_format_writes_a_run_of_literals_numbers_and_a_text_in_one_call() -> bool:
+    return rect(1.25, 2.0, 30.456, b"U1") == b'<rect x="1.3" y="2.0" width="30.5" data-label="U1"/>\n'
+
+
+public func test_format_numbers_only_and_braces() -> bool:
+    mut out = byte_builder.create()
+    byte_format.format(mut out, b"{{{d}, {d:.2}}} {d}", [3.0, 0.125, -0.0])
+    return byte_builder.finish(out) == b"{3, 0.13} -0"
+
+
+public func test_format_with_two_and_three_texts_takes_them_in_order() -> bool:
+    mut out = byte_builder.create()
+    byte_format.format2(mut out, b"{s}={d}{s}", [7.0], b"id", b";")
+    byte_format.format3(mut out, b"[{s}|{s}|{s}]", [], b"a", b"", b"c")
+    return byte_builder.finish(out) == b"id=7;[a||c]"
+
+
+public func test_format_of_a_plain_template_is_append() -> bool:
+    mut out = byte_builder.create()
+    byte_format.format(mut out, b"no placeholders\n", [])
+    byte_format.format(mut out, b"", [])
+    return byte_builder.finish(out) == b"no placeholders\n"
+
+
+public func test_format_appends_to_what_the_builder_holds_and_keeps_utf8_text() -> bool:
+    mut out = byte_builder.create()
+    byte_builder.append(mut out, b"<")
+    byte_format.format1(mut out, b"{s}\xce\xbb{d:.0}>", [2.5], b"\xce\xb1")
+    return byte_builder.finish(out) == b"<\xce\xb1\xce\xbb3>"
+
+
+public func test_format_takes_an_integer_as_a_float_and_prints_it_whole() -> bool:
+    mut out = byte_builder.create()
+    const count = 12345678
+    byte_format.format(mut out, b"{d} {d:.0} {d:.2}", [float(count), float(-count), float(count)])
+    return byte_builder.finish(out) == b"12345678 -12345678 12345678.00"

@@ -1,0 +1,454 @@
+# The logging module: levels, fields, the text and JSON lines, quoting and escapes, bound fields, the clock, events built in tasks.
+import dicts
+import json
+import logging
+import parallel
+import streams
+import strings
+import testing
+import time
+
+record Service:
+    name: str
+    log: logging.Logger
+
+
+func epoch_clock() -> Clock:
+    return time.simulated_clock(time.from_unix_nanoseconds(0))
+
+
+func advanced(clock: Clock, seconds: int) -> bool:
+    match time.advance(clock, time.nanoseconds(seconds * 1000000000)):
+        case Ok(_):
+            return True
+        case Err(_):
+            return False
+
+
+func is_level(found: logging.Level?, wanted: logging.Level) -> bool:
+    match found:
+        case Some(level):
+            return level == wanted
+        case None:
+            return False
+
+
+func lines_in(written: str) -> int:
+    return strings.count(written, "\n")
+
+
+func serve(service: Service, path: str):
+    logging.info(service.log, "served", [logging.text("path", path)])
+
+
+func check(path: str) -> logging.Event:
+    if len(path) > 8:
+        return logging.event(logging.Level.warn, "long path", [logging.text("path", path)])
+    return logging.event(logging.Level.info, "checked", [logging.text("path", path)])
+
+
+func looked_at(path: str) -> logging.Event:
+    return logging.event(logging.Level.debug, "looked", [logging.text("path", path)])
+
+
+public func test_a_new_logger_shows_info_and_above() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.debug(log, "d")
+    logging.info(log, "i")
+    logging.warn(log, "w")
+    logging.error(log, "e")
+    return streams.text(sink) == "INFO i\nWARN w\nERROR e\n"
+
+
+public func test_with_level_moves_the_threshold_and_leaves_the_logger_alone() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    const everything = logging.with_level(log, logging.Level.debug)
+    const quiet = logging.with_level(log, logging.Level.error)
+    logging.debug(everything, "d")
+    logging.warn(quiet, "dropped")
+    logging.error(quiet, "e")
+    logging.debug(log, "still dropped")
+    return streams.text(sink) == "DEBUG d\nERROR e\n"
+
+
+public func test_enabled_answers_for_each_level() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    const loud = logging.with_level(log, logging.Level.debug)
+    const quiet = logging.with_level(log, logging.Level.error)
+    const shown = [
+        logging.enabled(log, logging.Level.debug),
+        logging.enabled(log, logging.Level.info),
+        logging.enabled(log, logging.Level.warn),
+        logging.enabled(log, logging.Level.error),
+        logging.enabled(loud, logging.Level.debug),
+        logging.enabled(quiet, logging.Level.warn),
+        logging.enabled(quiet, logging.Level.error),
+    ]
+    return shown == [False, True, True, True, True, False, True] and streams.text(sink) == ""
+
+
+public func test_a_dropped_call_writes_nothing_and_a_message_is_still_built_by_the_caller() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    mut built = 0
+    if logging.enabled(log, logging.Level.debug):
+        built += 1
+    logging.debug(log, "hidden", [logging.text("a", "b")])
+    return built == 0 and streams.text(sink) == ""
+
+
+public func test_each_field_type_is_written_in_its_own_form() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(
+        log,
+        "m",
+        [
+            logging.text("path", "/tmp/x"),
+            logging.number("ms", 31),
+            logging.number("below", -4),
+            logging.real("load", 0.5),
+            logging.real("whole", 2.0),
+            logging.flag("yes", True),
+            logging.flag("no", False),
+        ],
+    )
+    return streams.text(sink) == "INFO m path=/tmp/x ms=31 below=-4 load=0.5 whole=2.0 yes=true no=false\n"
+
+
+public func test_a_real_that_is_not_finite_is_text_nan_and_inf_and_null_in_json() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    const zero = 0.0
+    logging.info(log, "m", [logging.real("a", zero / zero), logging.real("b", 1.0 / zero), logging.real("c", -1.0 / zero)])
+    const json_sink = streams.memory()
+    const lines = logging.as_json(logging.new(json_sink))
+    logging.info(lines, "m", [logging.real("a", zero / zero), logging.real("b", 1.0 / zero)])
+    return streams.text(sink) == "INFO m a=nan b=inf c=-inf\n" and streams.text(json_sink) == '{"level":"info","message":"m","a":null,"b":null}\n'
+
+
+public func test_a_value_is_quoted_when_it_is_empty_or_holds_a_space_an_equals_a_quote_or_a_control_byte() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(
+        log,
+        "m",
+        [
+            logging.text("plain", "/tmp/x"),
+            logging.text("empty", ""),
+            logging.text("space", "two words"),
+            logging.text("equals", "a=b"),
+            logging.text("quote", 'a"b'),
+            logging.text("tab", "a\tb"),
+            logging.text("del", "a\x7fb"),
+            logging.text("slash", "C:\\dir"),
+            logging.text("accent", "café"),
+        ],
+    )
+    const expected = 'INFO m plain=/tmp/x empty="" space="two words" equals="a=b" quote="a\\"b" tab="a\\tb" del="a\\x7fb" slash=C:\\dir accent=café\n'
+    return streams.text(sink) == expected
+
+
+public func test_each_escape_is_written_in_the_message_and_inside_quotes() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(log, 'n\nr\rt\tq"b\\x\x01e\x1bd\x7f')
+    logging.info(log, "m", [logging.text("v", 'n\nr\rt\tq"b\\x\x01e\x1bd\x7f')])
+    const message = 'INFO n\\nr\\rt\\tq\\"b\\\\x\\x01e\\x1bd\\x7f\n'
+    const field = 'INFO m v="n\\nr\\rt\\tq\\"b\\\\x\\x01e\\x1bd\\x7f"\n'
+    return streams.text(sink) == message + field
+
+
+public func test_a_hostile_message_value_key_or_name_cannot_forge_a_second_line() -> bool:
+    const sink = streams.memory()
+    const forged = "x\n2026-11-17T00:00:00Z ERROR forged\r\nERROR again"
+    const log = logging.named(logging.new(sink), forged)
+    logging.info(log, forged, [logging.text(forged, forged), logging.text("k", forged)])
+    const written = streams.text(sink)
+    return lines_in(written) == 1 and strings.ends_with(written, "\n") and strings.starts_with(written, "INFO x_")
+
+
+public func test_a_json_line_also_stays_on_one_line_when_the_message_holds_newlines() -> bool:
+    const sink = streams.memory()
+    const log = logging.as_json(logging.new(sink))
+    logging.info(log, 'a\nb\r"c"', [logging.text("k\n", "véw\x01")])
+    const written = streams.text(sink)
+    return lines_in(written) == 1 and written == '{"level":"info","message":"a\\nb\\r\\"c\\"","k\\n":"véw\\u0001"}\n'
+
+
+public func test_a_key_with_a_space_an_equals_or_nothing_is_written_with_underscores() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(log, "m", [logging.text("two words", "x"), logging.text("a=b", "y"), logging.text("", "z"), logging.text("naïve", "w")])
+    return streams.text(sink) == "INFO m two_words=x a_b=y _=z naïve=w\n"
+
+
+public func test_text_beyond_ascii_is_written_as_it_is() -> bool:
+    const sink = streams.memory()
+    const log = logging.named(logging.new(sink), "café")
+    logging.info(log, 'naïve ✓ "ok" ü', [logging.text("w", "日本 語")])
+    return streams.text(sink) == 'INFO café: naïve ✓ \\"ok\\" ü w="日本 語"\n'
+
+
+public func test_a_name_comes_before_the_message_and_a_later_name_replaces_it() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    const store = logging.named(log, "store")
+    const cache = logging.named(store, "cache")
+    logging.info(log, "plain")
+    logging.info(store, "one")
+    logging.info(cache, "two")
+    return streams.text(sink) == "INFO plain\nINFO store: one\nINFO cache: two\n"
+
+
+public func test_bound_fields_come_first_and_add_up() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    const request = logging.with_field(log, logging.text("request", "r-17"))
+    const user = logging.with_field(request, logging.number("user", 9))
+    logging.info(log, "none")
+    logging.info(request, "one", [logging.number("ms", 4)])
+    logging.info(user, "two", [logging.number("ms", 5)])
+    return streams.text(sink) == "INFO none\nINFO one request=r-17 ms=4\nINFO two request=r-17 user=9 ms=5\n"
+
+
+public func test_a_logger_without_a_clock_has_no_time_and_with_one_reads_it_at_each_line() -> bool:
+    const sink = streams.memory()
+    const plain = logging.new(sink)
+    const clock = epoch_clock()
+    const stamped = logging.with_clock(plain, clock)
+    logging.info(plain, "a")
+    logging.info(stamped, "b")
+    const moved = advanced(clock, 90)
+    logging.warn(stamped, "c")
+    logging.info(plain, "d")
+    const expected = "INFO a\n1970-01-01T00:00:00Z INFO b\n1970-01-01T00:01:30Z WARN c\nINFO d\n"
+    return moved and streams.text(sink) == expected
+
+
+public func test_a_clock_that_fails_leaves_the_time_out_and_the_line_in() -> bool:
+    const sink = streams.memory()
+    const broken = time.failing_clock(time.from_unix_nanoseconds(0), 1)
+    const log = logging.with_clock(logging.new(sink), broken)
+    logging.info(log, "first")
+    logging.info(log, "second")
+    return streams.text(sink) == "1970-01-01T00:00:00Z INFO first\nINFO second\n"
+
+
+public func test_the_time_has_the_fraction_the_clock_gives() -> bool:
+    const sink = streams.memory()
+    const clock = time.simulated_clock(time.from_unix_nanoseconds(1794908114500000000))
+    const log = logging.named(logging.with_clock(logging.new(sink), clock), "store")
+    logging.warn(log, "slow request", [logging.text("path", "/tmp/x"), logging.number("ms", 31), logging.text("note", "two words")])
+    return streams.text(sink) == '2026-11-17T09:35:14.5Z WARN store: slow request path=/tmp/x ms=31 note="two words"\n'
+
+
+public func test_a_json_line_has_time_level_logger_message_then_the_fields_in_order() -> bool:
+    const sink = streams.memory()
+    const clock = time.simulated_clock(time.from_unix_nanoseconds(1794908114000000000))
+    const log = logging.as_json(logging.named(logging.with_clock(logging.new(sink), clock), "store"))
+    logging.warn(
+        log,
+        "slow request",
+        [
+            logging.text("path", "/tmp/x"),
+            logging.number("ms", 31),
+            logging.real("load", 0.5),
+            logging.flag("ok", False),
+        ],
+    )
+    const expected = '{"time":"2026-11-17T09:35:14Z","level":"warn","logger":"store","message":"slow request","path":"/tmp/x","ms":31,"load":0.5,"ok":false}\n'
+    return streams.text(sink) == expected
+
+
+public func test_a_json_line_leaves_out_the_time_and_the_logger_it_does_not_have() -> bool:
+    const sink = streams.memory()
+    const log = logging.as_json(logging.new(sink))
+    logging.error(log, "bad")
+    return streams.text(sink) == '{"level":"error","message":"bad"}\n'
+
+
+public func test_a_json_line_reads_back_with_the_json_module_typed() -> bool:
+    const sink = streams.memory()
+    const clock = time.simulated_clock(time.from_unix_nanoseconds(0))
+    const log = logging.with_field(logging.as_json(logging.named(logging.with_clock(logging.new(sink), clock), "app")), logging.text("request", "r-1"))
+    logging.info(log, 'served "x"\n', [logging.number("ms", 12), logging.real("load", 1.5), logging.flag("cached", True), logging.text("path", "/a b")])
+    const written = streams.text(sink)
+    if lines_in(written) != 1:
+        return False
+    const value = json.loads(strings.strip(written)) else Err(_):
+        return False
+    const fields = json.as_dict(value) else:
+        return False
+    const message = json.get(value, "message") else:
+        return False
+    const words = json.as_str(message) else:
+        return False
+    return list(dicts.keys(fields)) == ["time", "level", "logger", "message", "request", "ms", "load", "cached", "path"] and words == 'served "x"\n'
+
+
+public func test_json_numbers_and_flags_are_not_text() -> bool:
+    const sink = streams.memory()
+    const log = logging.as_json(logging.new(sink))
+    logging.info(log, "m", [logging.number("n", -7), logging.real("r", 2.5), logging.flag("f", True), logging.text("t", "7")])
+    const value = json.loads(strings.strip(streams.text(sink))) else Err(_):
+        return False
+    const n = json.get(value, "n") else:
+        return False
+    const r = json.get(value, "r") else:
+        return False
+    const f = json.get(value, "f") else:
+        return False
+    const t = json.get(value, "t") else:
+        return False
+    return json.as_int(n) == Some(-7) and json.as_float(r) == Some(2.5) and json.as_bool(f) == Some(True) and json.as_str(t) == Some("7") and json.as_int(t) is None
+
+
+public func test_a_json_field_named_like_a_leading_key_gets_an_underscore_and_a_repeated_key_keeps_its_last_value() -> bool:
+    const sink = streams.memory()
+    const log = logging.with_field(logging.as_json(logging.new(sink)), logging.number("n", 1))
+    logging.info(
+        log,
+        "m",
+        [
+            logging.text("time", "t"),
+            logging.text("level", "l"),
+            logging.text("logger", "g"),
+            logging.text("message", "x"),
+            logging.number("n", 2),
+        ],
+    )
+    const expected = '{"level":"info","message":"m","n":2,"time_":"t","level_":"l","logger_":"g","message_":"x"}\n'
+    return streams.text(sink) == expected
+
+
+public func test_a_text_line_keeps_a_field_named_like_a_leading_key_as_it_is() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(log, "m", [logging.text("level", "l"), logging.text("message", "x"), logging.number("n", 1), logging.number("n", 2)])
+    return streams.text(sink) == "INFO m level=l message=x n=1 n=2\n"
+
+
+public func test_parse_level_reads_the_four_names_in_any_case() -> bool:
+    return is_level(logging.parse_level("debug"), logging.Level.debug) and is_level(logging.parse_level("info"), logging.Level.info) and is_level(logging.parse_level("warn"), logging.Level.warn) and is_level(logging.parse_level("error"), logging.Level.error) and is_level(logging.parse_level("WARN"), logging.Level.warn) and is_level(logging.parse_level("Error"), logging.Level.error)
+
+
+public func test_parse_level_answers_none_for_any_other_text() -> bool:
+    const nothing = logging.parse_level("warning") is None and logging.parse_level("") is None and logging.parse_level("loud") is None
+    return nothing and logging.parse_level(" info") is None and logging.parse_level("info ") is None and logging.parse_level("trace") is None
+
+
+public func test_a_level_from_text_sets_the_threshold() -> bool:
+    const sink = streams.memory()
+    const level = logging.parse_level("warn") else:
+        return False
+    const log = logging.with_level(logging.new(sink), level)
+    logging.info(log, "hidden")
+    logging.warn(log, "shown")
+    return streams.text(sink) == "WARN shown\n"
+
+
+public func test_a_logger_is_stored_in_a_record_and_a_copy_keeps_its_settings() -> bool:
+    const sink = streams.memory()
+    const log = logging.named(logging.with_level(logging.new(sink), logging.Level.debug), "svc")
+    const service = Service(name="main", log=copy(log))
+    serve(service, "/index")
+    logging.debug(log, "from the original")
+    logging.debug(service.log, "from the copy")
+    return streams.text(sink) == "INFO svc: served path=/index\nDEBUG svc: from the original\nDEBUG svc: from the copy\n"
+
+
+public func test_events_built_in_tasks_are_written_after_them_in_order() -> bool:
+    const sink = streams.memory()
+    const log = logging.named(logging.new(sink), "scan")
+    const events = parallel.map(["/a", "/a/very/long/path", "/b"], check)
+    for entry in events:
+        logging.write(log, entry)
+    return streams.text(sink) == "INFO scan: checked path=/a\nWARN scan: long path path=/a/very/long/path\nINFO scan: checked path=/b\n"
+
+
+public func test_writing_an_event_obeys_the_loggers_level_bound_fields_clock_and_form() -> bool:
+    const sink = streams.memory()
+    const clock = epoch_clock()
+    const base = logging.with_field(logging.with_clock(logging.new(sink), clock), logging.text("run", "7"))
+    const quiet = logging.as_json(base)
+    const events = parallel.map(["/a"], looked_at) + parallel.map(["/b"], check)
+    for entry in events:
+        logging.write(base, entry)
+        logging.write(quiet, entry)
+    const expected = '1970-01-01T00:00:00Z INFO checked run=7 path=/b\n{"time":"1970-01-01T00:00:00Z","level":"info","message":"checked","run":"7","path":"/b"}\n'
+    return streams.text(sink) == expected
+
+
+public func test_an_event_is_a_plain_value_with_its_level_message_and_fields() -> bool:
+    const made = logging.event(logging.Level.error, "boom", [logging.number("code", 3)])
+    const bare = logging.event(logging.Level.info, "bare")
+    return made.level == logging.Level.error and made.message == "boom" and len(made.fields) == 1 and len(bare.fields) == 0
+
+
+public func test_two_loggers_over_one_stream_write_whole_lines_in_the_order_called() -> bool:
+    const sink = streams.memory()
+    const first = logging.named(logging.new(sink), "a")
+    const second = logging.named(logging.new(sink), "b")
+    logging.info(first, "one")
+    logging.info(second, "two")
+    logging.info(first, "three")
+    return streams.text(sink) == "INFO a: one\nINFO b: two\nINFO a: three\n"
+
+
+public func test_a_message_may_be_empty() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(log, "")
+    logging.info(log, "", [logging.number("n", 1)])
+    return lines_in(streams.text(sink)) == 2
+
+
+public func test_the_calls_take_the_fields_by_keyword() -> bool:
+    const sink = streams.memory()
+    const log = logging.new(sink)
+    logging.info(log, "m", fields=[logging.flag("ok", True)])
+    logging.warn(message="w", log=log)
+    return streams.text(sink) == "INFO m ok=true\nWARN w\n"
+
+
+func drop_plain(out: Stream, count: int) -> int:
+    const log = logging.with_level(logging.new(out), logging.Level.error)
+    for _ in range(count):
+        logging.debug(log, "dropped")
+        logging.info(log, "dropped")
+        logging.warn(log, "dropped")
+    return count
+
+
+func drop_event(out: Stream, count: int) -> int:
+    const log = logging.with_level(logging.new(out), logging.Level.error)
+    const entry = logging.event(logging.Level.debug, "dropped", [logging.number("ms", 4)])
+    for _ in range(count):
+        logging.write(log, entry)
+    return count
+
+
+public func test_a_dropped_call_allocates_nothing() -> bool:
+    const sink = streams.memory()
+    return testing.allocations_writing(drop_plain, sink, 1000) == testing.allocations_writing(drop_plain, sink, 10)
+
+
+public func test_writing_a_dropped_event_allocates_nothing() -> bool:
+    const sink = streams.memory()
+    return testing.allocations_writing(drop_event, sink, 1000) == testing.allocations_writing(drop_event, sink, 10)
+
+
+func write_plain(out: Stream, count: int) -> int:
+    const log = logging.new(out)
+    for _ in range(count):
+        logging.info(log, "written")
+    return count
+
+
+public func test_a_written_line_allocates_so_the_counter_above_counts() -> bool:
+    const sink = streams.memory()
+    return testing.allocations_writing(write_plain, sink, 1000) > testing.allocations_writing(write_plain, sink, 10)

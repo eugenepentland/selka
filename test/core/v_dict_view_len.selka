@@ -1,0 +1,9 @@
+# len() of a dictionary view (NEW-CORE-S5-VIEW-LEN-1): `len(d.keys())` and `len(d.values())`
+# are `int`, as `len(d)` is, and print as the old core prints them.
+import dicts
+
+func main(out: Stream) -> int:
+    mut d = {"a": 1, "b": 2, "c": 3}
+    mut keys = len(dicts.keys(d))
+    print(out, keys, len(dicts.values(d)), 0 + len(dicts.keys(d)))
+    return len(dicts.values(d)) - 1

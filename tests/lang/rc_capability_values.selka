@@ -1,0 +1,16 @@
+import test_capabilities
+
+public func test_repeated_capability_lists_preserve_their_owned_results() -> bool:
+    for index in range(8):
+        if not test_capabilities.test_fixed_environment_answers_only_its_pairs():
+            return False
+        if not test_capabilities.test_memory_filesystem_opens_files_with_python_modes():
+            return False
+        if not test_capabilities.test_memory_filesystem_supports_the_whole_path_helpers():
+            return False
+    return True
+
+
+func main() -> int:
+    assert test_repeated_capability_lists_preserve_their_owned_results()
+    return 0
